@@ -26,6 +26,17 @@ workflows:
         script: |
           mkdir -p ~/Library/MobileDevice/Certificates
           echo "$CM_CERTIFICATE" | base64 --decode > ~/Library/MobileDevice/Certificates/voicejournal.p12
+      - name: Install Apple intermediate certificates
+        script: |
+          for url in \
+            "https://www.apple.com/certificateauthority/AppleWWDRCAG3.cer" \
+            "https://www.apple.com/certificateauthority/AppleWWDRCAG2.cer" \
+            "https://www.apple.com/certificateauthority/AppleRootCA-G2.cer" \
+            "https://www.apple.com/appleca/AppleIncRootCertificate.cer"; do
+            file="/tmp/$(basename "$url")"
+            curl -sSL "$url" -o "$file" || continue
+            security import "$file" -k ~/Library/Keychains/login.keychain-db || true
+          done
       - name: Set up signing certificate
         script: |
           keychain add-certificates \
