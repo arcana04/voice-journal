@@ -72,4 +72,4 @@ workflows:
         auth: integration
         submit_to_testflight: true
         beta_groups:
-          - App Store Connect Users # Codemagic の TestFlight 内部テスターグループ名に置き換え
+          - Internal Testers
