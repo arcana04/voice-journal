@@ -22,7 +22,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE entries (
@@ -39,6 +39,7 @@ class DbService {
             title TEXT NOT NULL,
             due_hint TEXT,
             due_date TEXT,
+            reminder_at TEXT,
             done INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
           )
@@ -58,6 +59,9 @@ class DbService {
           await db.execute('ALTER TABLE entries ADD COLUMN comfort_message TEXT');
           await db.execute('ALTER TABLE tasks ADD COLUMN due_date TEXT');
         }
+        if (oldVersion < 3) {
+          await db.execute('ALTER TABLE tasks ADD COLUMN reminder_at TEXT');
+        }
       },
     );
   }
@@ -70,29 +74,46 @@ class DbService {
       'comfort_message': entry.comfortMessage,
     });
 
+    final savedTasks = <TaskItem>[];
     for (final task in entry.tasks) {
-      await db.insert('tasks', {
+      final taskId = await db.insert('tasks', {
         'entry_id': entryId,
         'title': task.title,
         'due_hint': task.dueHint,
         'due_date': task.dueDate?.toIso8601String(),
+        'reminder_at': task.reminderAt?.toIso8601String(),
         'done': 0,
       });
+      savedTasks.add(TaskItem(
+        id: taskId,
+        entryId: entryId,
+        title: task.title,
+        dueHint: task.dueHint,
+        dueDate: task.dueDate,
+        reminderAt: task.reminderAt,
+      ));
     }
+    final savedNotes = <NoteItem>[];
     for (final note in entry.notes) {
-      await db.insert('notes', {
+      final noteId = await db.insert('notes', {
         'entry_id': entryId,
         'category': note.category,
         'content': note.content,
       });
+      savedNotes.add(NoteItem(
+        id: noteId,
+        entryId: entryId,
+        category: note.category,
+        content: note.content,
+      ));
     }
 
     return JournalEntry(
       id: entryId,
       createdAt: entry.createdAt,
       summary: entry.summary,
-      tasks: entry.tasks,
-      notes: entry.notes,
+      tasks: savedTasks,
+      notes: savedNotes,
       comfortMessage: entry.comfortMessage,
     );
   }
@@ -125,34 +146,6 @@ class DbService {
       ));
     }
     return entries;
-  }
-
-  /// 直近 [days] 日分の、日付ごとの記録件数を返す（ヒートマップカレンダー用）。
-  /// キーは 'yyyy-MM-dd'（ローカル日付）。
-  Future<Map<String, int>> fetchEntryCountsByDate({int days = 90}) async {
-    final db = await _database;
-    final since = DateTime.now().subtract(Duration(days: days));
-    final rows = await db.query(
-      'entries',
-      columns: ['created_at'],
-      where: 'created_at >= ?',
-      whereArgs: [since.toIso8601String()],
-    );
-
-    final counts = <String, int>{};
-    for (final row in rows) {
-      final createdAt = DateTime.parse(row['created_at'] as String).toLocal();
-      final key = _dateKey(createdAt);
-      counts[key] = (counts[key] ?? 0) + 1;
-    }
-    return counts;
-  }
-
-  static String _dateKey(DateTime date) {
-    final y = date.year.toString().padLeft(4, '0');
-    final m = date.month.toString().padLeft(2, '0');
-    final d = date.day.toString().padLeft(2, '0');
-    return '$y-$m-$d';
   }
 
   Future<void> setTaskDone(int taskId, bool done) async {

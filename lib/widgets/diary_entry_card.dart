@@ -3,15 +3,14 @@ import 'package:intl/intl.dart';
 
 import '../models/journal_entry.dart';
 
-class EntryCard extends StatelessWidget {
+/// 日記画面用のカード。ある録音から生まれた「アイデア」「感情ログ」だけを表示する。
+class DiaryEntryCard extends StatelessWidget {
   final JournalEntry entry;
-  final ValueChanged<TaskItem> onToggleTask;
   final VoidCallback onDelete;
 
-  const EntryCard({
+  const DiaryEntryCard({
     super.key,
     required this.entry,
-    required this.onToggleTask,
     required this.onDelete,
   });
 
@@ -47,30 +46,6 @@ class EntryCard extends StatelessWidget {
             if (entry.summary.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(entry.summary, style: theme.textTheme.titleMedium),
-            ],
-            if (entry.tasks.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text('ToDo', style: theme.textTheme.labelLarge),
-              const SizedBox(height: 4),
-              ...entry.tasks.map(
-                (task) => CheckboxListTile(
-                  value: task.done,
-                  onChanged: (_) => onToggleTask(task),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  title: Text(
-                    task.title,
-                    style: task.done
-                        ? theme.textTheme.bodyMedium?.copyWith(
-                            decoration: TextDecoration.lineThrough,
-                            color: theme.colorScheme.outline,
-                          )
-                        : theme.textTheme.bodyMedium,
-                  ),
-                  subtitle: _dueLabel(task) != null ? Text(_dueLabel(task)!) : null,
-                ),
-              ),
             ],
             ..._buildNoteSection(
               theme,
@@ -112,20 +87,6 @@ class EntryCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static const _weekdayKanji = ['月', '火', '水', '木', '金', '土', '日'];
-
-  String? _dueLabel(TaskItem task) {
-    final dueDate = task.dueDate;
-    if (dueDate != null) {
-      final weekday = _weekdayKanji[dueDate.weekday - 1];
-      return '${DateFormat('M月d日').format(dueDate)}($weekday)';
-    }
-    if (task.dueHint != null && task.dueHint!.isNotEmpty) {
-      return task.dueHint;
-    }
-    return null;
   }
 
   List<Widget> _buildNoteSection(

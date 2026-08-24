@@ -32,6 +32,9 @@ ${todayJst}（${weekdayJst}曜日、日本時間）。期限の相対表現は�
 【期限の自動推測】
 tasksに期限らしき表現（「明日」「来週月曜まで」「今月中」など）があれば、上記の今日の日付を基準に実際の日付（YYYY-MM-DD）を計算し due_date に入れてください。日付を一意に決められない・期限の言及がない場合は due_date は null にしてください。due_hint には元の言い回しをそのまま短く残してください。
 
+【時刻付きリマインダー】
+tasksの中に「15時に」「明日の朝9時」「夜7時に病院」のように"時刻"まで明言されているものがあれば、上記の今日の日付と日本時間を基準に実際の日時を計算し、reminder_at に "YYYY-MM-DDTHH:mm:00"（24時間表記、秒は00固定）の形式で入れてください。日付の指定がなく時刻のみの場合は今日の日付を使い、その時刻がすでに過ぎていれば翌日の日付にしてください。時刻の明言が無い場合（日付や「午前中」「そのうち」のような曖昧な言い回ししか無い場合）は reminder_at は null にしてください。
+
 【労いメッセージ】
 分類の結果、category="感情ログ" のnoteが1件以上ある場合のみ、その内容に寄り添う一言（10〜40文字程度、説教や解決策の押し付けにならない労いの言葉）を comfort_message に入れてください。感情ログが無い場合は comfort_message は null にしてください。
 
@@ -41,7 +44,7 @@ tasksに期限らしき表現（「明日」「来週月曜まで」「今月中
 {
   "summary": "全体の1行要約",
   "tasks": [
-    {"title": "タスク内容", "due_hint": "期限の元の言い回し（なければnull）", "due_date": "YYYY-MM-DD（推測できなければnull）"}
+    {"title": "タスク内容", "due_hint": "期限の元の言い回し（なければnull）", "due_date": "YYYY-MM-DD（推測できなければnull）", "reminder_at": "YYYY-MM-DDTHH:mm:00（時刻の明言が無ければnull）"}
   ],
   "notes": [
     {"category": "アイデア または 感情ログ", "content": "整理された文章"}
@@ -112,7 +115,12 @@ async function transcribe(apiKey: string, audioBuffer: Buffer, mimeType: string)
 
 interface StructuredResult {
   summary: string;
-  tasks: { title: string; due_hint: string | null; due_date: string | null }[];
+  tasks: {
+    title: string;
+    due_hint: string | null;
+    due_date: string | null;
+    reminder_at: string | null;
+  }[];
   notes: { category: string; content: string }[];
   comfort_message: string | null;
 }
@@ -179,6 +187,7 @@ export const processVoiceMemo = onCall(
 
       const structured = await structure(apiKey, transcript);
       const isoDate = /^\d{4}-\d{2}-\d{2}$/;
+      const isoDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
 
       return {
         summary: structured.summary ?? "",
@@ -186,6 +195,8 @@ export const processVoiceMemo = onCall(
           title: task.title,
           due_hint: task.due_hint ?? null,
           due_date: task.due_date && isoDate.test(task.due_date) ? task.due_date : null,
+          reminder_at:
+            task.reminder_at && isoDateTime.test(task.reminder_at) ? task.reminder_at : null,
         })),
         notes: structured.notes ?? [],
         comfort_message: structured.comfort_message ?? null,

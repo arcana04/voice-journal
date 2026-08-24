@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../config/recording_limits.dart';
 import '../services/backend_service.dart';
 import '../services/recorder_service.dart';
 import '../state/journal_store.dart';
@@ -56,7 +57,13 @@ class _HomeScreenState extends State<HomeScreen> {
       _statusMessage = null;
     });
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() => _elapsed += const Duration(seconds: 1));
+      final next = _elapsed + const Duration(seconds: 1);
+      if (next >= kMaxRecordingDuration) {
+        setState(() => _elapsed = kMaxRecordingDuration);
+        _stopAndProcess();
+        return;
+      }
+      setState(() => _elapsed = next);
     });
   }
 
@@ -149,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Text(
                 _state == RecordButtonState.recording
-                    ? _formatDuration(_elapsed)
+                    ? '${_formatDuration(_elapsed)} / ${_formatDuration(kMaxRecordingDuration)}'
                     : ' ',
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
@@ -162,6 +169,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 _statusLabel(),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
+              if (_state == RecordButtonState.idle) ...[
+                const SizedBox(height: 4),
+                Text(
+                  '1回の録音は最大$kMaxRecordingSeconds秒です',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                ),
+              ],
               if (_statusMessage != null) ...[
                 const SizedBox(height: 12),
                 Padding(
