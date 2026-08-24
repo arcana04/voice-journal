@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "447725635348",
+    "project_id": "voicejournal-bbafa",
+    "storage_bucket": "voicejournal-bbafa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:447725635348:android:e6468356a0237ecb2f2401",
+        "android_client_info": {
+          "package_name": "com.voicejournal.voicejournal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "447725635348-4sjd4q3qlelubsip8c96tmeomhp97sdd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDuRRXGV1SlFUveX9Au15H1aSEx0kLF1GU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "447725635348-4sjd4q3qlelubsip8c96tmeomhp97sdd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
