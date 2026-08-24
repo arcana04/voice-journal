@@ -62,12 +62,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _stopAndProcess() async {
     _timer?.cancel();
-    final path = await _recorder.stop();
+    String? path;
+    try {
+      path = await _recorder.stop();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _state = RecordButtonState.idle);
+      _showResultDialog('録音の停止に失敗しました', '$e');
+      return;
+    }
     setState(() => _state = RecordButtonState.processing);
 
     if (path == null) {
       setState(() => _state = RecordButtonState.idle);
-      _showMessage('録音の保存に失敗しました');
+      _showResultDialog('録音エラー', '録音の保存に失敗しました');
       return;
     }
 
@@ -84,12 +92,29 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     } catch (e) {
       if (!mounted) return;
+      final message = e is BackendServiceException ? e.message : '$e';
       setState(() {
         _state = RecordButtonState.idle;
-        _statusMessage = null;
+        _statusMessage = 'エラー: $message';
       });
-      _showMessage(e is BackendServiceException ? e.message : '処理中にエラーが発生しました');
+      _showResultDialog('処理中にエラーが発生しました', message);
     }
+  }
+
+  void _showResultDialog(String title, String message) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: SingleChildScrollView(child: Text(message)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showMessage(String message) {
