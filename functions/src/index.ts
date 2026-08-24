@@ -103,7 +103,7 @@ async function transcribe(apiKey: string, audioBuffer: Buffer, mimeType: string)
 
   if (!response.ok) {
     const body = await response.text();
-    throw new HttpsError("internal", `文字起こしに失敗しました: ${body}`);
+    throw new HttpsError("unavailable", `文字起こしに失敗しました: ${body}`);
   }
 
   const data = (await response.json()) as { text: string };
@@ -139,7 +139,7 @@ async function structure(apiKey: string, transcript: string): Promise<Structured
 
   if (!response.ok) {
     const body = await response.text();
-    throw new HttpsError("internal", `AI解析に失敗しました: ${body}`);
+    throw new HttpsError("unavailable", `AI解析に失敗しました: ${body}`);
   }
 
   const data = (await response.json()) as {
@@ -196,7 +196,9 @@ export const processVoiceMemo = onCall(
       }
       logger.error("processVoiceMemo unexpected error", err);
       const message = err instanceof Error ? err.message : String(err);
-      throw new HttpsError("internal", `処理中に予期しないエラーが発生しました: ${message}`);
+      // NOTE: コード"internal"/"unknown"はクライアントにメッセージが届かず"INTERNAL"に
+      // 潰されるため、デバッグ中は詳細が見える"unavailable"を使う。
+      throw new HttpsError("unavailable", `処理中に予期しないエラーが発生しました: ${message}`);
     }
   }
 );
