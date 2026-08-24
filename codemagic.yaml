@@ -10,7 +10,7 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.arcana04.voicejournal
       vars:
-        APP_STORE_APPLE_ID: 0000000000 # App Store Connect の App Apple ID に置き換え
+        APP_STORE_APPLE_ID: 6804627252
       flutter: stable
       xcode: latest
       cocoapods: default
