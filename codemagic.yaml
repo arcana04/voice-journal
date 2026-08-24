@@ -6,6 +6,8 @@ workflows:
     integrations:
       app_store_connect: codemagic3
     environment:
+      groups:
+        - ios_signing
       vars:
         APP_STORE_APPLE_ID: 6804627252
         BUNDLE_ID: com.arcana04.voicejournal
@@ -20,10 +22,10 @@ workflows:
           include: true
           source: true
     scripts:
-      - name: Fetch signing files
+      - name: Place signing certificate on build machine
         script: |
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE
+          mkdir -p ~/Library/MobileDevice/Certificates
+          echo "$CM_CERTIFICATE" | base64 --decode > ~/Library/MobileDevice/Certificates/voicejournal.p12
       - name: Set up signing certificate
         script: |
           keychain add-certificates
