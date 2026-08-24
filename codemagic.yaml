@@ -6,6 +6,9 @@ workflows:
     integrations:
       app_store_connect: codemagic3
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.arcana04.voicejournal
       vars:
         APP_STORE_APPLE_ID: 6804627252
         BUNDLE_ID: com.arcana04.voicejournal
@@ -20,9 +23,6 @@ workflows:
           include: true
           source: true
     scripts:
-      - name: Set up signing certificate
-        script: |
-          keychain add-certificates
       - name: Set up code signing settings on Xcode project
         script: |
           xcode-project use-profiles
