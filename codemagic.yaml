@@ -58,15 +58,9 @@ workflows:
       - name: Install CocoaPods dependencies
         script: |
           find . -name "Podfile" -maxdepth 2 -execdir pod install \;
-      - name: Determine next build number
-        script: |
-          LATEST=$(app-store-connect get-latest-testflight-build-number "$BUNDLE_ID" || echo 0)
-          echo $((LATEST + 1)) > /tmp/next_build_number.txt
-          cat /tmp/next_build_number.txt
       - name: Flutter build ipa
         script: |
           flutter build ipa --release \
-            --build-number=$(cat /tmp/next_build_number.txt) \
             --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
