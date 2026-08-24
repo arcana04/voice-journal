@@ -2,6 +2,7 @@ import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
+import { logger } from "firebase-functions/v2";
 
 initializeApp();
 
@@ -165,28 +166,37 @@ export const processVoiceMemo = onCall(
       throw new HttpsError("invalid-argument", "音声データがありません。");
     }
 
-    await consumeDailyQuota(uid);
+    try {
+      await consumeDailyQuota(uid);
 
-    const apiKey = openAiApiKey.value();
-    const audioBuffer = Buffer.from(audioBase64, "base64");
+      const apiKey = openAiApiKey.value();
+      const audioBuffer = Buffer.from(audioBase64, "base64");
 
-    const transcript = await transcribe(apiKey, audioBuffer, mimeType ?? "audio/m4a");
-    if (!transcript.trim()) {
-      throw new HttpsError("invalid-argument", "音声を認識できませんでした。");
+      const transcript = await transcribe(apiKey, audioBuffer, mimeType ?? "audio/m4a");
+      if (!transcript.trim()) {
+        throw new HttpsError("invalid-argument", "音声を認識できませんでした。");
+      }
+
+      const structured = await structure(apiKey, transcript);
+      const isoDate = /^\d{4}-\d{2}-\d{2}$/;
+
+      return {
+        summary: structured.summary ?? "",
+        tasks: (structured.tasks ?? []).map((task) => ({
+          title: task.title,
+          due_hint: task.due_hint ?? null,
+          due_date: task.due_date && isoDate.test(task.due_date) ? task.due_date : null,
+        })),
+        notes: structured.notes ?? [],
+        comfort_message: structured.comfort_message ?? null,
+      };
+    } catch (err) {
+      if (err instanceof HttpsError) {
+        throw err;
+      }
+      logger.error("processVoiceMemo unexpected error", err);
+      const message = err instanceof Error ? err.message : String(err);
+      throw new HttpsError("internal", `処理中に予期しないエラーが発生しました: ${message}`);
     }
-
-    const structured = await structure(apiKey, transcript);
-    const isoDate = /^\d{4}-\d{2}-\d{2}$/;
-
-    return {
-      summary: structured.summary ?? "",
-      tasks: (structured.tasks ?? []).map((task) => ({
-        title: task.title,
-        due_hint: task.due_hint ?? null,
-        due_date: task.due_date && isoDate.test(task.due_date) ? task.due_date : null,
-      })),
-      notes: structured.notes ?? [],
-      comfort_message: structured.comfort_message ?? null,
-    };
   }
 );
