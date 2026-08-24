@@ -45,6 +45,10 @@ workflows:
           keychain add-certificates \
             --certificate ~/Library/MobileDevice/Certificates/voicejournal.p12 \
             --certificate-password "$CM_CERTIFICATE_PASSWORD"
+      - name: Place provisioning profile on build machine
+        script: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$CM_PROVISIONING_PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/voicejournal.mobileprovision
       - name: Set up code signing settings on Xcode project
         script: |
           xcode-project use-profiles
