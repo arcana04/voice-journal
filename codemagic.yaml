@@ -6,9 +6,6 @@ workflows:
     integrations:
       app_store_connect: voicejournal_asc_api_key
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.arcana04.voicejournal
       vars:
         APP_STORE_APPLE_ID: 6804627252
         BUNDLE_ID: com.arcana04.voicejournal
