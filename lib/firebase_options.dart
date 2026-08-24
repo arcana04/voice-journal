@@ -59,11 +59,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDQnhFJa36ymUwBK1Mj1R3CVIqkprxchrU',
-    appId: '1:447725635348:ios:d541411bb062b82b2f2401',
+    appId: '1:447725635348:ios:a142b978791a18ef2f2401',
     messagingSenderId: '447725635348',
     projectId: 'voicejournal-bbafa',
     storageBucket: 'voicejournal-bbafa.firebasestorage.app',
-    iosClientId: '447725635348-mn30955eh9alrd08k43q2sd9sbgehsr0.apps.googleusercontent.com',
-    iosBundleId: 'com.voicejournal.voicejournal',
+    iosClientId: '447725635348-1tao3s49fsr220jvckludu4c0nvmasrd.apps.googleusercontent.com',
+    iosBundleId: 'com.arcana04.voicejournal',
   );
 }

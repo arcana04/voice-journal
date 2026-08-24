@@ -8,7 +8,7 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.voicejournal.voicejournal
+        bundle_identifier: com.arcana04.voicejournal
       vars:
         APP_STORE_APPLE_ID: 0000000000 # App Store Connect の App Apple ID に置き換え
       flutter: stable

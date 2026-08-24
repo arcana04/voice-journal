@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>447725635348-1tao3s49fsr220jvckludu4c0nvmasrd.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.447725635348-1tao3s49fsr220jvckludu4c0nvmasrd</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDQnhFJa36ymUwBK1Mj1R3CVIqkprxchrU</string>
+	<key>GCM_SENDER_ID</key>
+	<string>447725635348</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.arcana04.voicejournal</string>
+	<key>PROJECT_ID</key>
+	<string>voicejournal-bbafa</string>
+	<key>STORAGE_BUCKET</key>
+	<string>voicejournal-bbafa.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:447725635348:ios:a142b978791a18ef2f2401</string>
+</dict>
+</plist>
