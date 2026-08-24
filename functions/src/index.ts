@@ -7,7 +7,8 @@ initializeApp();
 
 const openAiApiKey = defineSecret("OPENAI_API_KEY");
 
-const FREE_DAILY_LIMIT = 5;
+// TODO: 本番リリース前に元の値（5程度）へ戻す。テスト中の上限詰まりを避けるため一時的に緩めている。
+const FREE_DAILY_LIMIT = 100;
 
 function buildSystemPrompt(todayJst: string, weekdayJst: string): string {
   return `あなたは日本語の日常会話・独り言を解析して構造化データに変換するAIアシスタントです。
