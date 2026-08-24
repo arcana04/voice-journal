@@ -28,7 +28,9 @@ workflows:
           echo "$CM_CERTIFICATE" | base64 --decode > ~/Library/MobileDevice/Certificates/voicejournal.p12
       - name: Set up signing certificate
         script: |
-          keychain add-certificates
+          keychain add-certificates \
+            --certificate ~/Library/MobileDevice/Certificates/voicejournal.p12 \
+            --certificate-password "$CM_CERTIFICATE_PASSWORD"
       - name: Set up code signing settings on Xcode project
         script: |
           xcode-project use-profiles
