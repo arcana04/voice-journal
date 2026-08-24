@@ -22,6 +22,9 @@ workflows:
           include: true
           source: true
     scripts:
+      - name: Set up keychain for code signing
+        script: |
+          keychain initialize
       - name: Place signing certificate on build machine
         script: |
           mkdir -p ~/Library/MobileDevice/Certificates
@@ -35,7 +38,7 @@ workflows:
             "https://www.apple.com/appleca/AppleIncRootCertificate.cer"; do
             file="/tmp/$(basename "$url")"
             curl -sSL "$url" -o "$file" || continue
-            security import "$file" -k ~/Library/Keychains/login.keychain-db || true
+            security import "$file" || true
           done
       - name: Set up signing certificate
         script: |
