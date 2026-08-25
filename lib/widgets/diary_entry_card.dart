@@ -11,12 +11,14 @@ class DiaryEntryCard extends StatelessWidget {
   final JournalEntry entry;
   final VoidCallback onDelete;
   final Future<void> Function(List<File> files) onAddPhotos;
+  final void Function(NoteItem note, String? title, String content) onUpdateNote;
 
   const DiaryEntryCard({
     super.key,
     required this.entry,
     required this.onDelete,
     required this.onAddPhotos,
+    required this.onUpdateNote,
   });
 
   Future<void> _pickPhotos(BuildContext context) async {
@@ -63,23 +65,42 @@ class DiaryEntryCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                day,
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: theme.colorScheme.primary,
-                  height: 1,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  monthLabel,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: theme.colorScheme.primary,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        day,
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: theme.colorScheme.primary,
+                          height: 1,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text(
+                          monthLabel,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  Container(
+                    width: 48,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ],
               ),
               const Spacer(),
               Padding(
@@ -104,46 +125,16 @@ class DiaryEntryCard extends StatelessWidget {
               ),
             ],
           ),
-          if (entry.summary.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(entry.summary, style: theme.textTheme.titleMedium),
-          ],
-          ..._buildNoteSection(
-            theme,
-            title: 'アイデア',
-            notes: entry.notes.where((n) => n.category == kNoteCategoryIdea).toList(),
-          ),
-          ..._buildNoteSection(
-            theme,
-            title: '感情ログ',
-            notes: entry.notes.where((n) => n.category == kNoteCategoryFeeling).toList(),
-          ),
-          if (entry.comfortMessage != null && entry.comfortMessage!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.favorite_border, size: 16, color: theme.colorScheme.primary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      entry.comfortMessage!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                  ),
-                ],
+          for (final note in entry.notes)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: _EditableNote(
+                key: ValueKey(note.id),
+                note: note,
+                categoryLabel: note.category,
+                onCommit: (title, content) => onUpdateNote(note, title, content),
               ),
             ),
-          ],
           if (entry.imagePaths.isNotEmpty) ...[
             const SizedBox(height: 12),
             _buildPhotoRow(context, theme),
@@ -214,23 +205,99 @@ class DiaryEntryCard extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildNoteSection(
-    ThemeData theme, {
-    required String title,
-    required List<NoteItem> notes,
-  }) {
-    if (notes.isEmpty) return const [];
-    return [
-      const SizedBox(height: 8),
-      Text(title, style: theme.textTheme.labelLarge),
-      const SizedBox(height: 4),
-      ...notes.map(
-        (note) => Padding(
-          padding: const EdgeInsets.only(bottom: 6),
-          child: Text(note.content, style: theme.textTheme.bodyMedium),
+}
+
+/// ノート1件分の「カテゴリ見出し・タイトル・本文」を、フォーカスが外れた
+/// タイミングでコミットする編集可能ブロック。
+class _EditableNote extends StatefulWidget {
+  final NoteItem note;
+  final String categoryLabel;
+  final void Function(String? title, String content) onCommit;
+
+  const _EditableNote({
+    super.key,
+    required this.note,
+    required this.categoryLabel,
+    required this.onCommit,
+  });
+
+  @override
+  State<_EditableNote> createState() => _EditableNoteState();
+}
+
+class _EditableNoteState extends State<_EditableNote> {
+  late final TextEditingController _titleController =
+      TextEditingController(text: widget.note.title ?? '');
+  late final TextEditingController _contentController =
+      TextEditingController(text: widget.note.content);
+  final FocusNode _titleFocus = FocusNode();
+  final FocusNode _contentFocus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _titleFocus.addListener(_handleFocusChange);
+    _contentFocus.addListener(_handleFocusChange);
+  }
+
+  void _handleFocusChange() {
+    if (!_titleFocus.hasFocus && !_contentFocus.hasFocus) {
+      final title = _titleController.text.trim();
+      final content = _contentController.text.trim();
+      if (content.isEmpty) {
+        // 本文を空にはできないので元に戻す。
+        _contentController.text = widget.note.content;
+        return;
+      }
+      widget.onCommit(title.isEmpty ? null : title, content);
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleFocus.dispose();
+    _contentFocus.dispose();
+    _titleController.dispose();
+    _contentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.categoryLabel,
+          style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.outline),
         ),
-      ),
-    ];
+        TextField(
+          controller: _titleController,
+          focusNode: _titleFocus,
+          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          decoration: InputDecoration(
+            isDense: true,
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+            hintText: 'タイトル',
+            hintStyle: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.outline),
+          ),
+        ),
+        TextField(
+          controller: _contentController,
+          focusNode: _contentFocus,
+          minLines: 1,
+          maxLines: 8,
+          style: theme.textTheme.bodyMedium,
+          decoration: const InputDecoration(
+            isDense: true,
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+      ],
+    );
   }
 }
 

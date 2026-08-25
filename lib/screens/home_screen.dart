@@ -137,6 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
         type: DraftItemType.diary,
         text: note.content,
         noteCategory: note.category,
+        noteTitle: note.title,
       ));
     }
     return items;

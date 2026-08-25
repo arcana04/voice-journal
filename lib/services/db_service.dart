@@ -22,7 +22,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE entries (
@@ -49,6 +49,7 @@ class DbService {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             entry_id INTEGER NOT NULL,
             category TEXT NOT NULL,
+            title TEXT,
             content TEXT NOT NULL,
             FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
           )
@@ -81,6 +82,9 @@ class DbService {
               FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
             )
           ''');
+        }
+        if (oldVersion < 5) {
+          await db.execute('ALTER TABLE notes ADD COLUMN title TEXT');
         }
       },
     );
@@ -118,12 +122,14 @@ class DbService {
       final noteId = await db.insert('notes', {
         'entry_id': entryId,
         'category': note.category,
+        'title': note.title,
         'content': note.content,
       });
       savedNotes.add(NoteItem(
         id: noteId,
         entryId: entryId,
         category: note.category,
+        title: note.title,
         content: note.content,
       ));
     }
@@ -200,6 +206,36 @@ class DbService {
     await db.update(
       'tasks',
       {'done': done ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [taskId],
+    );
+  }
+
+  Future<void> updateNote(int noteId, {String? title, required String content}) async {
+    final db = await _database;
+    await db.update(
+      'notes',
+      {'title': title, 'content': content},
+      where: 'id = ?',
+      whereArgs: [noteId],
+    );
+  }
+
+  Future<void> updateTaskTitle(int taskId, String title) async {
+    final db = await _database;
+    await db.update(
+      'tasks',
+      {'title': title},
+      where: 'id = ?',
+      whereArgs: [taskId],
+    );
+  }
+
+  Future<void> updateTaskReminder(int taskId, DateTime? reminderAt) async {
+    final db = await _database;
+    await db.update(
+      'tasks',
+      {'reminder_at': reminderAt?.toIso8601String()},
       where: 'id = ?',
       whereArgs: [taskId],
     );

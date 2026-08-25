@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../config/theme_colors.dart';
+
 enum RecordButtonState { idle, recording, processing }
 
 class RecordButton extends StatelessWidget {
@@ -17,6 +19,7 @@ class RecordButton extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isRecording = state == RecordButtonState.recording;
     final isProcessing = state == RecordButtonState.processing;
+    final color = isRecording ? colorScheme.error : kRecordAccentColor;
 
     return GestureDetector(
       onTap: isProcessing ? null : onTap,
@@ -26,11 +29,10 @@ class RecordButton extends StatelessWidget {
         height: 160,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: isRecording ? colorScheme.error : colorScheme.primary,
+          color: color,
           boxShadow: [
             BoxShadow(
-              color: (isRecording ? colorScheme.error : colorScheme.primary)
-                  .withValues(alpha: 0.35),
+              color: color.withValues(alpha: 0.35),
               blurRadius: 28,
               spreadRadius: 4,
             ),

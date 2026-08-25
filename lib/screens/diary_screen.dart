@@ -23,39 +23,42 @@ class _DiaryScreenState extends State<DiaryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('日記')),
-      body: Consumer<JournalStore>(
-        builder: (context, store, _) {
-          if (store.loading && store.entries.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final diaryEntries =
-              store.entries.where((e) => e.notes.isNotEmpty).toList();
-          if (diaryEntries.isEmpty) {
-            return Center(
-              child: Text(
-                'まだ日記・感想がありません\n思ったことを話してみましょう',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
+      body: SafeArea(
+        child: Consumer<JournalStore>(
+          builder: (context, store, _) {
+            if (store.loading && store.entries.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final diaryEntries =
+                store.entries.where((e) => e.notes.isNotEmpty).toList();
+            if (diaryEntries.isEmpty) {
+              return Center(
+                child: Text(
+                  'まだ日記・感想がありません\n思ったことを話してみましょう',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              );
+            }
+            return RefreshIndicator(
+              onRefresh: store.load,
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(0, 8, 0, 96),
+                itemCount: diaryEntries.length,
+                itemBuilder: (context, index) {
+                  final entry = diaryEntries[index];
+                  return DiaryEntryCard(
+                    entry: entry,
+                    onDelete: () => store.deleteEntry(entry),
+                    onAddPhotos: (files) => store.addImagesToEntry(entry, files),
+                    onUpdateNote: (note, title, content) =>
+                        store.updateNoteText(entry, note, title: title, content: content),
+                  );
+                },
               ),
             );
-          }
-          return RefreshIndicator(
-            onRefresh: store.load,
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: diaryEntries.length,
-              itemBuilder: (context, index) {
-                final entry = diaryEntries[index];
-                return DiaryEntryCard(
-                  entry: entry,
-                  onDelete: () => store.deleteEntry(entry),
-                  onAddPhotos: (files) => store.addImagesToEntry(entry, files),
-                );
-              },
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }

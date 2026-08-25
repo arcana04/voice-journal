@@ -16,6 +16,7 @@ class DraftItem {
     this.dueDate,
     this.reminderAt,
     this.noteCategory = kNoteCategoryIdea,
+    this.noteTitle,
   });
 
   final String id;
@@ -25,6 +26,7 @@ class DraftItem {
   final DateTime? dueDate;
   final DateTime? reminderAt;
   final String noteCategory;
+  final String? noteTitle;
 }
 
 /// 録音結果を「日記」「タスク」の2カテゴリに分けて表示し、テキスト修正と
@@ -71,7 +73,11 @@ class _EntryReviewState extends State<EntryReview> {
         .toList();
     final notes = _items
         .where((i) => i.type == DraftItemType.diary && i.text.trim().isNotEmpty)
-        .map((i) => NoteItem(category: i.noteCategory, content: i.text.trim()))
+        .map((i) => NoteItem(
+              category: i.noteCategory,
+              title: i.noteTitle,
+              content: i.text.trim(),
+            ))
         .toList();
     widget.onSave(tasks, notes);
   }

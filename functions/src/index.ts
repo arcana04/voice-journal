@@ -38,6 +38,9 @@ tasksの中に「15時に」「明日の朝9時」「夜7時に病院」のよ�
 【労いメッセージ】
 分類の結果、category="感情ログ" のnoteが1件以上ある場合のみ、その内容に寄り添う一言（10〜40文字程度、説教や解決策の押し付けにならない労いの言葉）を comfort_message に入れてください。感情ログが無い場合は comfort_message は null にしてください。
 
+【noteのタイトル】
+各noteについて、日記の見出しになるような短いタイトル（8〜16文字程度、体言止め推奨）を title に入れてください。例:「花火大会が楽しかった」「新しいカフェのアイデア」。
+
 【出力フォーマット】
 必ず以下のJSON形式のみで出力してください（余計な解説文は含めないでください）：
 
@@ -47,7 +50,7 @@ tasksの中に「15時に」「明日の朝9時」「夜7時に病院」のよ�
     {"title": "タスク内容", "due_hint": "期限の元の言い回し（なければnull）", "due_date": "YYYY-MM-DD（推測できなければnull）", "reminder_at": "YYYY-MM-DDTHH:mm:00（時刻の明言が無ければnull）"}
   ],
   "notes": [
-    {"category": "アイデア または 感情ログ", "content": "整理された文章"}
+    {"category": "アイデア または 感情ログ", "title": "短い見出し", "content": "整理された文章"}
   ],
   "comfort_message": "感情ログがある場合のみ短い労いの言葉。なければnull"
 }`;
@@ -121,7 +124,7 @@ interface StructuredResult {
     due_date: string | null;
     reminder_at: string | null;
   }[];
-  notes: { category: string; content: string }[];
+  notes: { category: string; title: string | null; content: string }[];
   comfort_message: string | null;
 }
 

@@ -111,4 +111,72 @@ class JournalStore extends ChangeNotifier {
     );
     notifyListeners();
   }
+
+  Future<void> updateNoteText(
+    JournalEntry entry,
+    NoteItem note, {
+    String? title,
+    required String content,
+  }) async {
+    if (note.id == null) return;
+    await _db.updateNote(note.id!, title: title, content: content);
+    final index = entries.indexWhere((e) => e.id == entry.id);
+    if (index == -1) return;
+    final updatedNotes = entries[index].notes.map((n) {
+      if (n.id != note.id) return n;
+      return n.copyWith(title: title, clearTitle: title == null, content: content);
+    }).toList();
+    entries[index] = entries[index].copyWith(notes: updatedNotes);
+    notifyListeners();
+  }
+
+  Future<void> updateTaskTitle(JournalEntry entry, TaskItem task, String title) async {
+    if (task.id == null || title.trim().isEmpty) return;
+    final trimmed = title.trim();
+    await _db.updateTaskTitle(task.id!, trimmed);
+    final index = entries.indexWhere((e) => e.id == entry.id);
+    if (index == -1) return;
+    final updatedTasks = entries[index]
+        .tasks
+        .map((t) => t.id == task.id ? t.copyWith(title: trimmed) : t)
+        .toList();
+    entries[index] = entries[index].copyWith(tasks: updatedTasks);
+    notifyListeners();
+
+    if (task.reminderAt != null && !task.done) {
+      await _reminders.scheduleTaskReminder(
+        taskId: task.id!,
+        title: trimmed,
+        scheduledAt: task.reminderAt!,
+      );
+    }
+  }
+
+  Future<void> updateTaskReminder(
+    JournalEntry entry,
+    TaskItem task,
+    DateTime? reminderAt,
+  ) async {
+    if (task.id == null) return;
+    await _db.updateTaskReminder(task.id!, reminderAt);
+    final index = entries.indexWhere((e) => e.id == entry.id);
+    if (index != -1) {
+      final updatedTasks = entries[index].tasks.map((t) {
+        if (t.id != task.id) return t;
+        return t.copyWith(reminderAt: reminderAt, clearReminder: reminderAt == null);
+      }).toList();
+      entries[index] = entries[index].copyWith(tasks: updatedTasks);
+      notifyListeners();
+    }
+
+    if (reminderAt == null) {
+      await _reminders.cancelTaskReminder(task.id!);
+    } else if (!task.done) {
+      await _reminders.scheduleTaskReminder(
+        taskId: task.id!,
+        title: task.title,
+        scheduledAt: reminderAt,
+      );
+    }
+  }
 }

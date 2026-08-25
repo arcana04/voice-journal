@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../config/theme_colors.dart';
+
 class Waveform extends StatefulWidget {
   final bool active;
   const Waveform({super.key, required this.active});
@@ -52,7 +54,7 @@ class _WaveformState extends State<Waveform>
             painter: _WavePainter(
               phase: _controller.value * 2 * pi,
               active: widget.active,
-              color: Theme.of(context).colorScheme.primary,
+              color: kRecordAccentColor,
             ),
             size: Size.infinite,
           );

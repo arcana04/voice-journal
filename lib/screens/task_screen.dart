@@ -43,7 +43,7 @@ class _TaskScreenState extends State<TaskScreen> {
           return RefreshIndicator(
             onRefresh: store.load,
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.fromLTRB(0, 8, 0, 96),
               itemCount: taskEntries.length,
               itemBuilder: (context, index) {
                 final entry = taskEntries[index];
@@ -51,6 +51,10 @@ class _TaskScreenState extends State<TaskScreen> {
                   entry: entry,
                   onToggleTask: (task) => store.toggleTask(entry, task),
                   onDelete: () => store.deleteEntry(entry),
+                  onUpdateTaskTitle: (task, title) =>
+                      store.updateTaskTitle(entry, task, title),
+                  onUpdateTaskReminder: (task, reminderAt) =>
+                      store.updateTaskReminder(entry, task, reminderAt),
                 );
               },
             ),

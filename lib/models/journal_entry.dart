@@ -17,14 +17,19 @@ class TaskItem {
     this.done = false,
   });
 
-  TaskItem copyWith({bool? done}) {
+  TaskItem copyWith({
+    bool? done,
+    String? title,
+    DateTime? reminderAt,
+    bool clearReminder = false,
+  }) {
     return TaskItem(
       id: id,
       entryId: entryId,
-      title: title,
+      title: title ?? this.title,
       dueHint: dueHint,
       dueDate: dueDate,
-      reminderAt: reminderAt,
+      reminderAt: clearReminder ? null : (reminderAt ?? this.reminderAt),
       done: done ?? this.done,
     );
   }
@@ -71,20 +76,33 @@ class NoteItem {
   final int? id;
   final int? entryId;
   final String category;
+  final String? title;
   final String content;
 
   NoteItem({
     this.id,
     this.entryId,
     required this.category,
+    this.title,
     required this.content,
   });
+
+  NoteItem copyWith({String? title, bool clearTitle = false, String? content}) {
+    return NoteItem(
+      id: id,
+      entryId: entryId,
+      category: category,
+      title: clearTitle ? null : (title ?? this.title),
+      content: content ?? this.content,
+    );
+  }
 
   Map<String, Object?> toMap() {
     return {
       'id': id,
       'entry_id': entryId,
       'category': category,
+      'title': title,
       'content': content,
     };
   }
@@ -94,13 +112,16 @@ class NoteItem {
       id: map['id'] as int?,
       entryId: map['entry_id'] as int?,
       category: map['category'] as String,
+      title: map['title'] as String?,
       content: map['content'] as String,
     );
   }
 
   factory NoteItem.fromJson(Map<String, dynamic> json) {
+    final title = (json['title'] as String?)?.trim();
     return NoteItem(
       category: (json['category'] as String? ?? 'メモ').trim(),
+      title: (title == null || title.isEmpty) ? null : title,
       content: (json['content'] as String? ?? '').trim(),
     );
   }
@@ -131,13 +152,17 @@ class JournalEntry {
     this.imagePaths = const [],
   });
 
-  JournalEntry copyWith({List<TaskItem>? tasks, List<String>? imagePaths}) {
+  JournalEntry copyWith({
+    List<TaskItem>? tasks,
+    List<NoteItem>? notes,
+    List<String>? imagePaths,
+  }) {
     return JournalEntry(
       id: id,
       createdAt: createdAt,
       summary: summary,
       tasks: tasks ?? this.tasks,
-      notes: notes,
+      notes: notes ?? this.notes,
       comfortMessage: comfortMessage,
       imagePaths: imagePaths ?? this.imagePaths,
     );
