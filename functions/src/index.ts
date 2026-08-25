@@ -10,7 +10,46 @@ const openAiApiKey = defineSecret("OPENAI_API_KEY");
 
 const FREE_DAILY_LIMIT = 5;
 
-function buildSystemPrompt(todayJst: string, weekdayJst: string, glossary?: string): string {
+type SummaryLevel = "preserve" | "standard" | "compact";
+
+function normalizeSummaryLevel(value: unknown): SummaryLevel {
+  if (value === "standard" || value === "compact" || value === "preserve") {
+    return value;
+  }
+  return "preserve";
+}
+
+function buildNotesStyleSection(level: SummaryLevel): string {
+  switch (level) {
+    case "compact":
+      return `【notesの本文（content）の書き方：超コンパクト】
+tasksと同様に、内容を要点だけに絞って短くまとめてください。
+- 言い淀みや重複表現だけでなく、瑣末な描写や繰り返しの説明も削って構いません。
+- 1つのnoteにつき1〜2文程度を目安に、核心の出来事・思いつき・感情だけを簡潔にまとめてください。
+- 一人称視点（「〜と感じた」「〜だった」など）は保ってください。`;
+    case "standard":
+      return `【notesの本文（content）の書き方：標準】
+tasksほど短くはせず、日記らしい自然な文章の長さは保ちつつ、冗長な繰り返しや脱線は整理してください。
+- 感情の手がかりになる言葉、固有名詞、印象的な言い回しはできるだけ残してください。ただし発言をそのまま書き起こす必要はなく、読みやすいよう軽く整えて構いません。
+- 客観的な三人称ではなく、話者自身の一人称視点（「〜と感じた」「〜だった」など）で自然な日記の文体にしてください。
+- 感情が動いた場面では、不自然にならない範囲で「！」も使ってください。`;
+    case "preserve":
+    default:
+      return `【notesの本文（content）の書き方：原型重視】
+tasksとは違い、notesは要約・圧縮しないでください。
+- 話者が語った「生の感情」「独特な言い回し」「情景の描写」「具体的な固有名詞」は、できる限り削除せずそのまま残してください。要点だけを抜き出した短い要約にはしないでください。
+- 取り除いてよいのは言い淀み（「えっと」「あー」など）と同じ内容の重複表現だけです。それ以外は発言の内容・順序・粒度を保ったまま、読みやすい文章に整える（整文する）程度にとどめてください。
+- 客観的な三人称の説明文にはせず、話者自身の一人称視点（「〜と感じた」「〜だった」「〜かもしれない」など）で、自然な日記の文体にリライトしてください。
+- 感情が高ぶった場面や驚き・嬉しさなどは、不自然にならない範囲で「！」も使い、実際に喋っていたときの自然なトーンを残してください。`;
+  }
+}
+
+function buildSystemPrompt(
+  todayJst: string,
+  weekdayJst: string,
+  summaryLevel: SummaryLevel,
+  glossary?: string
+): string {
   const glossarySection = glossary
     ? `\n\n【固有名詞・用語の表記】\n入力テキストは音声認識結果のため、以下の固有名詞・用語が誤った表記で紛れ込んでいる場合があります。文脈上それらを指していると判断できる場合は、正しい表記に直してから処理してください。\n${glossary}`
     : "";
@@ -24,13 +63,15 @@ function buildSystemPrompt(todayJst: string, weekdayJst: string, glossary?: stri
 ${todayJst}（${weekdayJst}曜日、日本時間）。期限の相対表現はこの日付を基準に解釈してください。
 
 【分類ルール（3分類）】
-1. フィラー（意味のない雑音・言い淀み）を除去してください。
-2. 文脈から主語や時系列を補完してください。
+1. フィラー（「えっと」「あー」等の言い淀み）や同じ内容の重複表現を除去してください。
+2. tasksは文脈から主語や時系列を補完し、簡潔な行動内容に要約してください。
 3. 発言は以下の3種類のいずれかに分類してください。
    - 【tasks（ToDo）】: 「確定した行動」。話者が実際にやる・やらないといけないと言っていること。
    - 【notes category="アイデア"】: 未確定な思いつき・疑問・アイデア・検討事項。
    - 【notes category="感情ログ"】: 感情・気分・愚痴・モヤモヤ・出来事の振り返りなど、行動を伴わない心情の吐露。
 4. 話が脱線している場合は、文脈ごとに適切に分類を分けてください。
+
+${buildNotesStyleSection(summaryLevel)}
 
 【期限の自動推測】
 tasksに期限らしき表現（「明日」「来週月曜まで」「今月中」など）があれば、上記の今日の日付を基準に実際の日付（YYYY-MM-DD）を計算し due_date に入れてください。日付を一意に決められない・期限の言及がない場合は due_date は null にしてください。due_hint には元の言い回しをそのまま短く残してください。
@@ -53,7 +94,7 @@ tasksの中に「15時に」「明日の朝9時」「夜7時に病院」のよ�
     {"title": "タスク内容", "due_hint": "期限の元の言い回し（なければnull）", "due_date": "YYYY-MM-DD（推測できなければnull）", "reminder_at": "YYYY-MM-DDTHH:mm:00（時刻の明言が無ければnull）"}
   ],
   "notes": [
-    {"category": "アイデア または 感情ログ", "title": "短い見出し", "content": "整理された文章"}
+    {"category": "アイデア または 感情ログ", "title": "短い見出し", "content": "上記「notesの本文の書き方」に従って一人称でリライトした文章"}
   ],
   "comfort_message": "感情ログがある場合のみ短い労いの言葉。なければnull"
 }`;
@@ -198,10 +239,16 @@ interface StructuredResult {
 async function structure(
   apiKey: string,
   transcript: string,
+  summaryLevel: SummaryLevel,
   glossary?: string
 ): Promise<StructuredResult> {
   const now = new Date();
-  const systemPrompt = buildSystemPrompt(jstDateString(now), jstWeekdayString(now), glossary);
+  const systemPrompt = buildSystemPrompt(
+    jstDateString(now),
+    jstWeekdayString(now),
+    summaryLevel,
+    glossary
+  );
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -252,6 +299,7 @@ interface ProcessVoiceMemoRequest {
   audioBase64: string;
   mimeType?: string;
   customWords?: (string | CustomWordEntry)[];
+  summaryLevel?: string;
 }
 
 export const processVoiceMemo = onCall(
@@ -262,7 +310,7 @@ export const processVoiceMemo = onCall(
       throw new HttpsError("unauthenticated", "認証が必要です。");
     }
 
-    const { audioBase64, mimeType, customWords } =
+    const { audioBase64, mimeType, customWords, summaryLevel } =
       (request.data ?? {}) as ProcessVoiceMemoRequest;
     if (!audioBase64) {
       throw new HttpsError("invalid-argument", "音声データがありません。");
@@ -282,7 +330,12 @@ export const processVoiceMemo = onCall(
       }
 
       const glossary = buildGlossaryContext(words);
-      const structured = await structure(apiKey, transcript, glossary);
+      const structured = await structure(
+        apiKey,
+        transcript,
+        normalizeSummaryLevel(summaryLevel),
+        glossary
+      );
       return toClientResponse(structured);
     } catch (err) {
       if (err instanceof HttpsError) {
@@ -299,6 +352,7 @@ export const processVoiceMemo = onCall(
 
 interface ProcessTextMemoRequest {
   text: string;
+  summaryLevel?: string;
 }
 
 export const processTextMemo = onCall(
@@ -309,7 +363,7 @@ export const processTextMemo = onCall(
       throw new HttpsError("unauthenticated", "認証が必要です。");
     }
 
-    const { text } = (request.data ?? {}) as ProcessTextMemoRequest;
+    const { text, summaryLevel } = (request.data ?? {}) as ProcessTextMemoRequest;
     if (!text || !text.trim()) {
       throw new HttpsError("invalid-argument", "テキストがありません。");
     }
@@ -318,7 +372,11 @@ export const processTextMemo = onCall(
       await consumeDailyQuota(uid);
 
       const apiKey = openAiApiKey.value();
-      const structured = await structure(apiKey, text.trim());
+      const structured = await structure(
+        apiKey,
+        text.trim(),
+        normalizeSummaryLevel(summaryLevel)
+      );
       return toClientResponse(structured);
     } catch (err) {
       if (err instanceof HttpsError) {
