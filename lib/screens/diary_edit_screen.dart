@@ -36,6 +36,7 @@ class DiaryEditScreen extends StatefulWidget {
 
 class _DiaryEditScreenState extends State<DiaryEditScreen> {
   List<_NoteDraft>? _drafts;
+  double _fontScale = 1.0;
 
   JournalEntry? _findEntry(JournalStore store) {
     for (final e in store.entries) {
@@ -86,6 +87,103 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
     await store.addMediaToEntry(entry, picked.map((x) => File(x.path)).toList());
   }
 
+  Future<void> _openMediaSheet(JournalStore store, JournalEntry entry) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('写真・動画をライブラリから選択'),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                _pickMedia(store, entry);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openBackgroundSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('背景', style: TextStyle(fontWeight: FontWeight.w700)),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.check_circle, color: Colors.blue),
+              title: const Text('なし'),
+              onTap: () => Navigator.of(sheetContext).pop(),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('準備中です', style: TextStyle(color: Colors.grey)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openTextStyleSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            Widget sizeOption(String label, double scale) {
+              final selected = _fontScale == scale;
+              return ListTile(
+                leading: Icon(
+                  selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  color: selected ? Colors.blue : Colors.grey,
+                ),
+                title: Text(label),
+                onTap: () {
+                  setState(() => _fontScale = scale);
+                  setSheetState(() {});
+                },
+              );
+            }
+
+            return SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(20, 16, 20, 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('文字サイズ', style: TextStyle(fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                  sizeOption('小', 0.85),
+                  sizeOption('中', 1.0),
+                  sizeOption('大', 1.25),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<JournalStore>(
@@ -107,17 +205,13 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
         return Scaffold(
           appBar: AppBar(
             actions: [
-              IconButton(
-                icon: const Icon(Icons.add_photo_alternate_outlined),
-                tooltip: '写真・動画を追加',
-                onPressed: () => _pickMedia(store, entry),
-              ),
               TextButton(
                 onPressed: () => _save(store, entry),
                 child: const Text('保存'),
               ),
             ],
           ),
+          bottomNavigationBar: _buildBottomToolbar(store, entry),
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
@@ -175,6 +269,35 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
     );
   }
 
+  Widget _buildBottomToolbar(JournalStore store, JournalEntry entry) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _ToolbarButton(
+              icon: Icons.add_photo_alternate_outlined,
+              label: '画像・動画',
+              onTap: () => _openMediaSheet(store, entry),
+            ),
+            _ToolbarButton(
+              icon: Icons.wallpaper_outlined,
+              label: '背景',
+              onTap: _openBackgroundSheet,
+            ),
+            _ToolbarButton(
+              icon: Icons.text_fields,
+              label: 'テキスト',
+              onTap: _openTextStyleSheet,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildNoteBlock(ThemeData theme, _NoteDraft d) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
@@ -183,7 +306,10 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
         children: [
           TextField(
             controller: d.titleController,
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              fontSize: (theme.textTheme.titleLarge?.fontSize ?? 22) * _fontScale,
+            ),
             decoration: InputDecoration(
               isDense: true,
               border: InputBorder.none,
@@ -197,7 +323,9 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
             controller: d.contentController,
             minLines: 3,
             maxLines: null,
-            style: theme.textTheme.bodyLarge,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontSize: (theme.textTheme.bodyLarge?.fontSize ?? 16) * _fontScale,
+            ),
             decoration: InputDecoration(
               isDense: true,
               border: InputBorder.none,
@@ -207,6 +335,34 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ToolbarButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ToolbarButton({required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: theme.colorScheme.onSurfaceVariant),
+            const SizedBox(height: 2),
+            Text(label, style: theme.textTheme.labelSmall),
+          ],
+        ),
       ),
     );
   }
