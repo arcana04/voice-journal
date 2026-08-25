@@ -172,6 +172,24 @@ async function structure(apiKey: string, transcript: string): Promise<Structured
   return JSON.parse(data.choices[0].message.content) as StructuredResult;
 }
 
+function toClientResponse(structured: StructuredResult) {
+  const isoDate = /^\d{4}-\d{2}-\d{2}$/;
+  const isoDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
+
+  return {
+    summary: structured.summary ?? "",
+    tasks: (structured.tasks ?? []).map((task) => ({
+      title: task.title,
+      due_hint: task.due_hint ?? null,
+      due_date: task.due_date && isoDate.test(task.due_date) ? task.due_date : null,
+      reminder_at:
+        task.reminder_at && isoDateTime.test(task.reminder_at) ? task.reminder_at : null,
+    })),
+    notes: structured.notes ?? [],
+    comfort_message: structured.comfort_message ?? null,
+  };
+}
+
 interface ProcessVoiceMemoRequest {
   audioBase64: string;
   mimeType?: string;
@@ -202,21 +220,7 @@ export const processVoiceMemo = onCall(
       }
 
       const structured = await structure(apiKey, transcript);
-      const isoDate = /^\d{4}-\d{2}-\d{2}$/;
-      const isoDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
-
-      return {
-        summary: structured.summary ?? "",
-        tasks: (structured.tasks ?? []).map((task) => ({
-          title: task.title,
-          due_hint: task.due_hint ?? null,
-          due_date: task.due_date && isoDate.test(task.due_date) ? task.due_date : null,
-          reminder_at:
-            task.reminder_at && isoDateTime.test(task.reminder_at) ? task.reminder_at : null,
-        })),
-        notes: structured.notes ?? [],
-        comfort_message: structured.comfort_message ?? null,
-      };
+      return toClientResponse(structured);
     } catch (err) {
       if (err instanceof HttpsError) {
         throw err;
@@ -225,6 +229,40 @@ export const processVoiceMemo = onCall(
       const message = err instanceof Error ? err.message : String(err);
       // NOTE: コード"internal"/"unknown"はクライアントにメッセージが届かず"INTERNAL"に
       // 潰されるため、デバッグ中は詳細が見える"unavailable"を使う。
+      throw new HttpsError("unavailable", `処理中に予期しないエラーが発生しました: ${message}`);
+    }
+  }
+);
+
+interface ProcessTextMemoRequest {
+  text: string;
+}
+
+export const processTextMemo = onCall(
+  { secrets: [openAiApiKey], timeoutSeconds: 60, memory: "256MiB" },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", "認証が必要です。");
+    }
+
+    const { text } = (request.data ?? {}) as ProcessTextMemoRequest;
+    if (!text || !text.trim()) {
+      throw new HttpsError("invalid-argument", "テキストがありません。");
+    }
+
+    try {
+      await consumeDailyQuota(uid);
+
+      const apiKey = openAiApiKey.value();
+      const structured = await structure(apiKey, text.trim());
+      return toClientResponse(structured);
+    } catch (err) {
+      if (err instanceof HttpsError) {
+        throw err;
+      }
+      logger.error("processTextMemo unexpected error", err);
+      const message = err instanceof Error ? err.message : String(err);
       throw new HttpsError("unavailable", `処理中に予期しないエラーが発生しました: ${message}`);
     }
   }

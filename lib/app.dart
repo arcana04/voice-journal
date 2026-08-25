@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'screens/root_screen.dart';
@@ -20,6 +21,13 @@ class VoiceJournalApp extends StatelessWidget {
           return MaterialApp(
             title: 'VoiceJournal',
             debugShowCheckedModeBanner: false,
+            locale: const Locale('ja'),
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('ja'), Locale('en')],
             themeMode: settings.darkMode ? ThemeMode.dark : ThemeMode.light,
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),

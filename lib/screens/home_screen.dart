@@ -98,23 +98,57 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final entry = await _backend.processVoiceMemo(File(path));
       if (!mounted) return;
-      setState(() {
-        _state = RecordButtonState.idle;
-        _statusMessage = null;
-        _draftSummary = entry.summary;
-        _draftCreatedAt = entry.createdAt;
-        _draftComfortMessage = entry.comfortMessage;
-        _draftItems = _buildDraftItems(entry);
-      });
+      _applyDraft(entry);
     } catch (e) {
       if (!mounted) return;
-      final message = e is BackendServiceException ? e.message : '$e';
-      setState(() {
-        _state = RecordButtonState.idle;
-        _statusMessage = 'エラー: $message';
-      });
-      _showResultDialog('処理中にエラーが発生しました', message);
+      _handleProcessingError(e);
     }
+  }
+
+  Future<void> _openTextComposer() async {
+    final text = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const _TextComposerSheet(),
+    );
+    if (text == null || text.trim().isEmpty) return;
+    await _submitText(text.trim());
+  }
+
+  Future<void> _submitText(String text) async {
+    setState(() {
+      _state = RecordButtonState.processing;
+      _statusMessage = null;
+    });
+
+    try {
+      final entry = await _backend.processTextMemo(text);
+      if (!mounted) return;
+      _applyDraft(entry);
+    } catch (e) {
+      if (!mounted) return;
+      _handleProcessingError(e);
+    }
+  }
+
+  void _applyDraft(JournalEntry entry) {
+    setState(() {
+      _state = RecordButtonState.idle;
+      _statusMessage = null;
+      _draftSummary = entry.summary;
+      _draftCreatedAt = entry.createdAt;
+      _draftComfortMessage = entry.comfortMessage;
+      _draftItems = _buildDraftItems(entry);
+    });
+  }
+
+  void _handleProcessingError(Object e) {
+    final message = e is BackendServiceException ? e.message : '$e';
+    setState(() {
+      _state = RecordButtonState.idle;
+      _statusMessage = 'エラー: $message';
+    });
+    _showResultDialog('処理中にエラーが発生しました', message);
   }
 
   List<DraftItem> _buildDraftItems(JournalEntry entry) {
@@ -204,57 +238,147 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final draftItems = _draftItems;
+    final showComposerFab = draftItems == null && _state == RecordButtonState.idle;
     return Scaffold(
       body: SafeArea(
-        child: draftItems != null
-            ? EntryReview(
-                summary: _draftSummary,
-                initialItems: draftItems,
-                onSave: _saveDraft,
-                onDiscard: _discardDraft,
-              )
-            : Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                _state == RecordButtonState.recording
-                    ? '${_formatDuration(_elapsed)} / ${_formatDuration(kMaxRecordingDuration)}'
-                    : ' ',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 16),
-              Waveform(active: _state == RecordButtonState.recording),
-              const SizedBox(height: 48),
-              RecordButton(state: _state, onTap: _onTap),
-              const SizedBox(height: 32),
-              Text(
-                _statusLabel(),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              if (_state == RecordButtonState.idle) ...[
-                const SizedBox(height: 4),
-                Text(
-                  '1回の録音は最大$kMaxRecordingSeconds秒です',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
-                ),
-              ],
-              if (_statusMessage != null) ...[
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Text(
-                    _statusMessage!,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall,
+        child: Stack(
+          children: [
+            draftItems != null
+                ? EntryReview(
+                    summary: _draftSummary,
+                    initialItems: draftItems,
+                    onSave: _saveDraft,
+                    onDiscard: _discardDraft,
+                  )
+                : Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _state == RecordButtonState.recording
+                        ? '${_formatDuration(_elapsed)} / ${_formatDuration(kMaxRecordingDuration)}'
+                        : ' ',
+                    style: Theme.of(context).textTheme.headlineMedium,
                   ),
+                  const SizedBox(height: 16),
+                  Waveform(active: _state == RecordButtonState.recording),
+                  const SizedBox(height: 48),
+                  RecordButton(state: _state, onTap: _onTap),
+                  const SizedBox(height: 32),
+                  Text(
+                    _statusLabel(),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  if (_state == RecordButtonState.idle) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      '1回の録音は最大$kMaxRecordingSeconds秒です',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                    ),
+                  ],
+                  if (_statusMessage != null) ...[
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        _statusMessage!,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (showComposerFab)
+              Positioned(
+                right: 16,
+                bottom: 120,
+                child: FloatingActionButton(
+                  heroTag: 'home_text_composer_fab',
+                  tooltip: 'テキストで入力',
+                  onPressed: _openTextComposer,
+                  child: const Icon(Icons.add),
                 ),
-              ],
-            ],
-          ),
+              ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+/// 話せない時用に、録音の代わりにテキストで内容を入力するボトムシート。
+/// 入力したテキストは録音と同じAI仕分け（日記かタスクか）にかけられる。
+class _TextComposerSheet extends StatefulWidget {
+  const _TextComposerSheet();
+
+  @override
+  State<_TextComposerSheet> createState() => _TextComposerSheetState();
+}
+
+class _TextComposerSheetState extends State<_TextComposerSheet> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
+    Navigator.of(context).pop(text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'テキストで入力',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '話せない時はこちらに入力してください。内容は録音と同じようにAIが日記かタスクかを判断します。',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            minLines: 3,
+            maxLines: 8,
+            textInputAction: TextInputAction.newline,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: '例: 明日15時に歯医者の予約を入れる',
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _submit,
+              child: const Text('AIに解析してもらう'),
+            ),
+          ),
+        ],
       ),
     );
   }

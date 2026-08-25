@@ -31,31 +31,45 @@ class BackendService {
         'audioBase64': audioBase64,
         'mimeType': 'audio/m4a',
       });
-
-      final data = result.data;
-      final tasks = (data['tasks'] as List? ?? [])
-          .map((e) => TaskItem.fromJson(Map<String, dynamic>.from(e as Map)))
-          .where((t) => t.title.isNotEmpty)
-          .toList();
-      final notes = (data['notes'] as List? ?? [])
-          .map((e) => NoteItem.fromJson(Map<String, dynamic>.from(e as Map)))
-          .where((n) => n.content.isNotEmpty)
-          .toList();
-
-      final comfortMessage = (data['comfort_message'] as String?)?.trim();
-
-      return JournalEntry(
-        createdAt: DateTime.now(),
-        summary: (data['summary'] as String? ?? '').trim(),
-        tasks: tasks,
-        notes: notes,
-        comfortMessage: (comfortMessage == null || comfortMessage.isEmpty)
-            ? null
-            : comfortMessage,
-      );
+      return _entryFromResponse(result.data);
     } on FirebaseFunctionsException catch (e) {
       throw BackendServiceException(e.message ?? '処理中にエラーが発生しました');
     }
+  }
+
+  Future<JournalEntry> processTextMemo(String text) async {
+    await _auth.ensureSignedIn();
+
+    try {
+      final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+      final callable = functions.httpsCallable('processTextMemo');
+      final result = await callable.call<Map<String, dynamic>>({'text': text});
+      return _entryFromResponse(result.data);
+    } on FirebaseFunctionsException catch (e) {
+      throw BackendServiceException(e.message ?? '処理中にエラーが発生しました');
+    }
+  }
+
+  JournalEntry _entryFromResponse(Map<String, dynamic> data) {
+    final tasks = (data['tasks'] as List? ?? [])
+        .map((e) => TaskItem.fromJson(Map<String, dynamic>.from(e as Map)))
+        .where((t) => t.title.isNotEmpty)
+        .toList();
+    final notes = (data['notes'] as List? ?? [])
+        .map((e) => NoteItem.fromJson(Map<String, dynamic>.from(e as Map)))
+        .where((n) => n.content.isNotEmpty)
+        .toList();
+
+    final comfortMessage = (data['comfort_message'] as String?)?.trim();
+
+    return JournalEntry(
+      createdAt: DateTime.now(),
+      summary: (data['summary'] as String? ?? '').trim(),
+      tasks: tasks,
+      notes: notes,
+      comfortMessage:
+          (comfortMessage == null || comfortMessage.isEmpty) ? null : comfortMessage,
+    );
   }
 
   Future<UsageStatus> fetchUsageStatus() async {
