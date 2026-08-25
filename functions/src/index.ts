@@ -108,11 +108,31 @@ export const getUsageStatus = onCall(async (request) => {
   return { used, limit: FREE_DAILY_LIMIT };
 });
 
-async function transcribe(apiKey: string, audioBuffer: Buffer, mimeType: string): Promise<string> {
+function buildTranscriptionPrompt(customWords: unknown): string | undefined {
+  if (!Array.isArray(customWords)) return undefined;
+
+  const words = customWords
+    .filter((w): w is string => typeof w === "string")
+    .map((w) => w.trim())
+    .filter((w) => w.length > 0 && w.length <= 40)
+    .slice(0, 100);
+
+  return words.length > 0 ? words.join("、") : undefined;
+}
+
+async function transcribe(
+  apiKey: string,
+  audioBuffer: Buffer,
+  mimeType: string,
+  prompt?: string
+): Promise<string> {
   const form = new FormData();
   form.append("file", new Blob([new Uint8Array(audioBuffer)], { type: mimeType }), "audio.m4a");
   form.append("model", "whisper-1");
   form.append("language", "ja");
+  if (prompt) {
+    form.append("prompt", prompt);
+  }
 
   const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
     method: "POST",
@@ -193,6 +213,7 @@ function toClientResponse(structured: StructuredResult) {
 interface ProcessVoiceMemoRequest {
   audioBase64: string;
   mimeType?: string;
+  customWords?: string[];
 }
 
 export const processVoiceMemo = onCall(
@@ -203,7 +224,8 @@ export const processVoiceMemo = onCall(
       throw new HttpsError("unauthenticated", "認証が必要です。");
     }
 
-    const { audioBase64, mimeType } = (request.data ?? {}) as ProcessVoiceMemoRequest;
+    const { audioBase64, mimeType, customWords } =
+      (request.data ?? {}) as ProcessVoiceMemoRequest;
     if (!audioBase64) {
       throw new HttpsError("invalid-argument", "音声データがありません。");
     }
@@ -213,8 +235,9 @@ export const processVoiceMemo = onCall(
 
       const apiKey = openAiApiKey.value();
       const audioBuffer = Buffer.from(audioBase64, "base64");
+      const prompt = buildTranscriptionPrompt(customWords);
 
-      const transcript = await transcribe(apiKey, audioBuffer, mimeType ?? "audio/m4a");
+      const transcript = await transcribe(apiKey, audioBuffer, mimeType ?? "audio/m4a", prompt);
       if (!transcript.trim()) {
         throw new HttpsError("invalid-argument", "音声を認識できませんでした。");
       }

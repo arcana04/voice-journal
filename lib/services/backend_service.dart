@@ -18,7 +18,10 @@ class BackendServiceException implements Exception {
 class BackendService {
   final AuthService _auth = AuthService();
 
-  Future<JournalEntry> processVoiceMemo(File audioFile) async {
+  Future<JournalEntry> processVoiceMemo(
+    File audioFile, {
+    List<String> customWords = const [],
+  }) async {
     await _auth.ensureSignedIn();
 
     final bytes = await audioFile.readAsBytes();
@@ -30,6 +33,7 @@ class BackendService {
       final result = await callable.call<Map<String, dynamic>>({
         'audioBase64': audioBase64,
         'mimeType': 'audio/m4a',
+        'customWords': customWords,
       });
       return _entryFromResponse(result.data);
     } on FirebaseFunctionsException catch (e) {

@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'screens/root_screen.dart';
+import 'state/custom_words_store.dart';
 import 'state/journal_store.dart';
 import 'state/settings_store.dart';
 
@@ -15,6 +16,7 @@ class VoiceJournalApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => SettingsStore()..load()),
         ChangeNotifierProvider(create: (_) => JournalStore()..load()),
+        ChangeNotifierProvider(create: (_) => CustomWordsStore()..load()),
       ],
       child: Consumer<SettingsStore>(
         builder: (context, settings, _) {

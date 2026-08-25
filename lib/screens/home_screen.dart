@@ -8,10 +8,12 @@ import '../config/recording_limits.dart';
 import '../models/journal_entry.dart';
 import '../services/backend_service.dart';
 import '../services/recorder_service.dart';
+import '../state/custom_words_store.dart';
 import '../state/journal_store.dart';
 import '../widgets/entry_review.dart';
 import '../widgets/record_button.dart';
 import '../widgets/waveform.dart';
+import 'custom_dictionary_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -96,7 +98,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
 
     try {
-      final entry = await _backend.processVoiceMemo(File(path));
+      final customWords = context.read<CustomWordsStore>().words;
+      final entry = await _backend.processVoiceMemo(File(path), customWords: customWords);
       if (!mounted) return;
       _applyDraft(entry);
     } catch (e) {
@@ -303,6 +306,26 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: const Icon(Icons.add),
                 ),
               ),
+            Positioned(
+              top: 4,
+              right: 4,
+              child: PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                onSelected: (value) {
+                  if (value == 'dictionary') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const CustomDictionaryScreen()),
+                    );
+                  }
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(
+                    value: 'dictionary',
+                    child: Text('カスタム辞書'),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
