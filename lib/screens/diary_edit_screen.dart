@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
+import '../state/text_style_store.dart';
 import '../widgets/media_gallery.dart';
 
 class _FontOption {
@@ -65,9 +66,18 @@ class DiaryEditScreen extends StatefulWidget {
 
 class _DiaryEditScreenState extends State<DiaryEditScreen> {
   List<_NoteDraft>? _drafts;
-  double _fontScale = 1.0;
-  int _fontFamilyIndex = 0;
-  Color? _textColor;
+  late double _fontScale;
+  late int _fontFamilyIndex;
+  late Color? _textColor;
+
+  @override
+  void initState() {
+    super.initState();
+    final defaults = context.read<TextStyleStore>();
+    _fontScale = defaults.fontScale;
+    _fontFamilyIndex = defaults.fontFamilyIndex;
+    _textColor = defaults.textColor;
+  }
 
   JournalEntry? _findEntry(JournalStore store) {
     for (final e in store.entries) {
@@ -276,6 +286,20 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                             'フォント',
                             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                           ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.star_border),
+                          tooltip: 'この設定をデフォルトにする',
+                          onPressed: () {
+                            context.read<TextStyleStore>().setDefault(
+                                  fontFamilyIndex: _fontFamilyIndex,
+                                  textColor: _textColor,
+                                  fontScale: _fontScale,
+                                );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('デフォルトに設定しました')),
+                            );
+                          },
                         ),
                         IconButton(
                           icon: const Icon(Icons.check),
