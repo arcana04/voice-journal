@@ -62,8 +62,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('設定')),
-      body: ListView(
+      body: SafeArea(
+        child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
         children: [
           SwitchListTile(
@@ -139,6 +139,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
         ],
+        ),
       ),
     );
   }

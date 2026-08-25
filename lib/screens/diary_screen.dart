@@ -145,8 +145,8 @@ class _DiaryScreenState extends State<DiaryScreen> {
           ),
           Positioned(
             left: 16,
-            bottom: 90,
-            child: FloatingActionButton.small(
+            bottom: 104,
+            child: FloatingActionButton(
               heroTag: 'diary_calendar_fab',
               onPressed: () => _pickDate(context),
               child: const Icon(Icons.calendar_month_outlined),

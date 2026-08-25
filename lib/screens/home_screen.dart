@@ -205,7 +205,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final draftItems = _draftItems;
     return Scaffold(
-      appBar: AppBar(title: const Text('VoiceJournal')),
       body: SafeArea(
         child: draftItems != null
             ? EntryReview(

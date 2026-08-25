@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../state/journal_store.dart';
 import '../widgets/task_entry_card.dart';
+import 'task_edit_screen.dart';
 
 class TaskScreen extends StatefulWidget {
   const TaskScreen({super.key});
@@ -23,9 +24,9 @@ class _TaskScreenState extends State<TaskScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('タスク')),
-      body: Consumer<JournalStore>(
-        builder: (context, store, _) {
+      body: SafeArea(
+        child: Consumer<JournalStore>(
+          builder: (context, store, _) {
           if (store.loading && store.entries.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -50,16 +51,18 @@ class _TaskScreenState extends State<TaskScreen> {
                 return TaskEntryCard(
                   entry: entry,
                   onToggleTask: (task) => store.toggleTask(entry, task),
+                  onEdit: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => TaskEditScreen(entryId: entry.id!),
+                    ),
+                  ),
                   onDelete: () => store.deleteEntry(entry),
-                  onUpdateTaskTitle: (task, title) =>
-                      store.updateTaskTitle(entry, task, title),
-                  onUpdateTaskReminder: (task, reminderAt) =>
-                      store.updateTaskReminder(entry, task, reminderAt),
                 );
               },
             ),
           );
         },
+        ),
       ),
     );
   }
