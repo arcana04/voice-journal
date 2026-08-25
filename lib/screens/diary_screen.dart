@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../state/journal_store.dart';
 import '../widgets/diary_entry_card.dart';
+import 'diary_detail_screen.dart';
 
 class DiaryScreen extends StatefulWidget {
   const DiaryScreen({super.key});
@@ -49,10 +50,17 @@ class _DiaryScreenState extends State<DiaryScreen> {
                   final entry = diaryEntries[index];
                   return DiaryEntryCard(
                     entry: entry,
-                    onDelete: () => store.deleteEntry(entry),
-                    onAddPhotos: (files) => store.addImagesToEntry(entry, files),
-                    onUpdateNote: (note, title, content) =>
-                        store.updateNoteText(entry, note, title: title, content: content),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => DiaryDetailScreen(
+                          entry: entry,
+                          onAddPhotos: (files) => store.addImagesToEntry(entry, files),
+                          onUpdateNote: (note, title, content) => store
+                              .updateNoteText(entry, note, title: title, content: content),
+                          onDelete: () => store.deleteEntry(entry),
+                        ),
+                      ),
+                    ),
                   );
                 },
               ),
