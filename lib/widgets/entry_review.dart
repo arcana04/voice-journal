@@ -217,24 +217,25 @@ class _EntryReviewState extends State<EntryReview> {
 
   Widget _buildCard(ThemeData theme, DraftItem item) {
     final handle = Icon(Icons.drag_indicator, color: theme.colorScheme.outline);
-
-    return _CardShell(
+    final cardShell = _CardShell(
       theme: theme,
-      dragHandle: LongPressDraggable<DraftItem>(
-        data: item,
-        feedback: Material(
-          color: Colors.transparent,
-          child: SizedBox(
-            width: 260,
-            child: _CardShell(theme: theme, item: item, dragging: true),
-          ),
-        ),
-        childWhenDragging: Opacity(opacity: 0.3, child: handle),
-        child: handle,
-      ),
+      dragHandle: handle,
       item: item,
       onChanged: (value) => item.text = value,
       onRemove: () => _removeItem(item),
+    );
+
+    return LongPressDraggable<DraftItem>(
+      data: item,
+      feedback: Material(
+        color: Colors.transparent,
+        child: SizedBox(
+          width: 260,
+          child: _CardShell(theme: theme, item: item, dragging: true),
+        ),
+      ),
+      childWhenDragging: Opacity(opacity: 0.3, child: cardShell),
+      child: cardShell,
     );
   }
 }

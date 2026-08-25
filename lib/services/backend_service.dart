@@ -5,6 +5,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 
 import '../models/custom_word.dart';
 import '../models/journal_entry.dart';
+import '../models/summary_level.dart';
 import '../models/usage_status.dart';
 import 'auth_service.dart';
 
@@ -22,6 +23,7 @@ class BackendService {
   Future<JournalEntry> processVoiceMemo(
     File audioFile, {
     List<CustomWord> customWords = const [],
+    SummaryLevel summaryLevel = SummaryLevel.preserve,
   }) async {
     await _auth.ensureSignedIn();
 
@@ -35,6 +37,7 @@ class BackendService {
         'audioBase64': audioBase64,
         'mimeType': 'audio/m4a',
         'customWords': customWords.map((w) => w.toJson()).toList(),
+        'summaryLevel': summaryLevel.wireValue,
       });
       return _entryFromResponse(result.data);
     } on FirebaseFunctionsException catch (e) {
@@ -42,13 +45,19 @@ class BackendService {
     }
   }
 
-  Future<JournalEntry> processTextMemo(String text) async {
+  Future<JournalEntry> processTextMemo(
+    String text, {
+    SummaryLevel summaryLevel = SummaryLevel.preserve,
+  }) async {
     await _auth.ensureSignedIn();
 
     try {
       final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
       final callable = functions.httpsCallable('processTextMemo');
-      final result = await callable.call<Map<String, dynamic>>({'text': text});
+      final result = await callable.call<Map<String, dynamic>>({
+        'text': text,
+        'summaryLevel': summaryLevel.wireValue,
+      });
       return _entryFromResponse(result.data);
     } on FirebaseFunctionsException catch (e) {
       throw BackendServiceException(e.message ?? '処理中にエラーが発生しました');

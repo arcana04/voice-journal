@@ -53,6 +53,7 @@ dependencies:
   video_player: ^2.9.2
   app_settings: ^5.1.1
   google_fonts: ^8.2.1
+  app_links: ^7.2.1
 
 dev_dependencies:
   flutter_test:

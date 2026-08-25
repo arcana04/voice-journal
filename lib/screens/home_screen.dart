@@ -6,11 +6,15 @@ import 'package:provider/provider.dart';
 
 import '../config/recording_limits.dart';
 import '../models/journal_entry.dart';
+import '../models/summary_level.dart';
 import '../services/backend_service.dart';
 import '../services/recorder_service.dart';
 import '../state/custom_words_store.dart';
 import '../state/journal_store.dart';
+import '../state/record_trigger_store.dart';
+import '../state/settings_store.dart';
 import '../widgets/entry_review.dart';
+import '../widgets/icon_button_style.dart';
 import '../widgets/record_button.dart';
 import '../widgets/waveform.dart';
 import 'custom_dictionary_screen.dart';
@@ -35,11 +39,39 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _draftComfortMessage;
   List<DraftItem>? _draftItems;
 
+  RecordTriggerStore? _recordTrigger;
+  int _lastHandledRequestId = 0;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final trigger = context.read<RecordTriggerStore>();
+    if (_recordTrigger != trigger) {
+      _recordTrigger?.removeListener(_onRecordTriggered);
+      _recordTrigger = trigger;
+      _lastHandledRequestId = trigger.requestId;
+      trigger.addListener(_onRecordTriggered);
+    }
+  }
+
   @override
   void dispose() {
+    _recordTrigger?.removeListener(_onRecordTriggered);
     _timer?.cancel();
     _recorder.dispose();
     super.dispose();
+  }
+
+  /// アクションボタン/ロック画面ウィジェットからの起動時、待機中であれば
+  /// ユーザー操作なしに録音を自動開始する（既に録音・処理中や下書きレビュー
+  /// 表示中なら何もしない）。
+  void _onRecordTriggered() {
+    final trigger = _recordTrigger;
+    if (trigger == null || trigger.requestId == _lastHandledRequestId) return;
+    _lastHandledRequestId = trigger.requestId;
+    if (_state == RecordButtonState.idle && _draftItems == null) {
+      _startRecording();
+    }
   }
 
   Future<void> _onTap() async {
@@ -99,7 +131,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final customWords = context.read<CustomWordsStore>().words;
-      final entry = await _backend.processVoiceMemo(File(path), customWords: customWords);
+      final summaryLevel = context.read<SettingsStore>().summaryLevel;
+      final entry = await _backend.processVoiceMemo(
+        File(path),
+        customWords: customWords,
+        summaryLevel: summaryLevel,
+      );
       if (!mounted) return;
       _applyDraft(entry);
     } catch (e) {
@@ -125,7 +162,8 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final entry = await _backend.processTextMemo(text);
+      final summaryLevel = context.read<SettingsStore>().summaryLevel;
+      final entry = await _backend.processTextMemo(text, summaryLevel: summaryLevel);
       if (!mounted) return;
       _applyDraft(entry);
     } catch (e) {
@@ -311,10 +349,17 @@ class _HomeScreenState extends State<HomeScreen> {
               right: 4,
               child: PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
+                style: pressableIconButtonStyle(context),
                 onSelected: (value) {
                   if (value == 'dictionary') {
                     Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const CustomDictionaryScreen()),
+                    );
+                  } else if (value == 'summaryLevel') {
+                    showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (_) => const _SummaryLevelSheet(),
                     );
                   }
                 },
@@ -322,6 +367,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   PopupMenuItem(
                     value: 'dictionary',
                     child: Text('カスタム辞書'),
+                  ),
+                  PopupMenuItem(
+                    value: 'summaryLevel',
+                    child: Text('AIの要約度'),
                   ),
                 ],
               ),
@@ -400,6 +449,75 @@ class _TextComposerSheetState extends State<_TextComposerSheet> {
               onPressed: _submit,
               child: const Text('AIに解析してもらう'),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// notes（日記）をAIがどれくらい要約・圧縮するかを3段階のスライダーで選ぶボトムシート。
+class _SummaryLevelSheet extends StatelessWidget {
+  const _SummaryLevelSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final level = context.watch<SettingsStore>().summaryLevel;
+    final index = SummaryLevel.values.indexOf(level);
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'AIの要約度',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '録音・テキストの内容を日記として仕分けるとき、AIがどれくらい短くまとめるかを選べます。タスクの簡潔さには影響しません。',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+          ),
+          const SizedBox(height: 20),
+          Slider(
+            value: index.toDouble(),
+            min: 0,
+            max: (SummaryLevel.values.length - 1).toDouble(),
+            divisions: SummaryLevel.values.length - 1,
+            label: level.label,
+            onChanged: (value) {
+              final newLevel = SummaryLevel.values[value.round()];
+              context.read<SettingsStore>().setSummaryLevel(newLevel);
+            },
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              for (final l in SummaryLevel.values)
+                Text(
+                  l.label,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: l == level
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.outline,
+                        fontWeight: l == level ? FontWeight.w700 : FontWeight.w400,
+                      ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            level.description,
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
       ),

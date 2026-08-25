@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
+import '../widgets/edit_icon_button.dart';
 import '../widgets/media_gallery.dart';
 import 'diary_edit_screen.dart';
 
@@ -64,13 +65,13 @@ class DiaryViewScreen extends StatelessWidget {
         return Scaffold(
           appBar: AppBar(
             actions: [
-              IconButton(
-                icon: const Icon(Icons.edit_outlined),
-                tooltip: '編集',
+              EditIconButton(
+                size: 24,
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => DiaryEditScreen(entryId: entryId)),
                 ),
               ),
+              const SizedBox(width: 4),
               IconButton(
                 icon: const Icon(Icons.delete_outline),
                 onPressed: () => _confirmDelete(context, store, entry),

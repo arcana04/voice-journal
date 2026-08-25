@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../models/journal_entry.dart';
 import '../utils/task_format.dart';
+import 'edit_icon_button.dart';
 
 /// タスク画面用のカード。ある録音から生まれた「ToDo」だけを表示する（読み取り専用）。
 /// タイトル・リマインダーの変更は鉛筆アイコンから編集画面で行う。
@@ -63,11 +64,8 @@ class TaskEntryCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 20),
-                  onPressed: onEdit,
-                  visualDensity: VisualDensity.compact,
-                ),
+                EditIconButton(onPressed: onEdit),
+                const SizedBox(width: 4),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, size: 20),
                   onPressed: () => _confirmDelete(context),
