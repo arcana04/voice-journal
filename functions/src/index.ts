@@ -10,8 +10,12 @@ const openAiApiKey = defineSecret("OPENAI_API_KEY");
 
 const FREE_DAILY_LIMIT = 5;
 
-function buildSystemPrompt(todayJst: string, weekdayJst: string): string {
-  return `あなたは日本語の日常会話・独り言を解析して構造化データに変換するAIアシスタントです。
+function buildSystemPrompt(todayJst: string, weekdayJst: string, glossary?: string): string {
+  const glossarySection = glossary
+    ? `\n\n【固有名詞・用語の表記】\n入力テキストは音声認識結果のため、以下の固有名詞・用語が誤った表記で紛れ込んでいる場合があります。文脈上それらを指していると判断できる場合は、正しい表記に直してから処理してください。\n${glossary}`
+    : "";
+
+  return `あなたは日本語の日常会話・独り言を解析して構造化データに変換するAIアシスタントです。${glossarySection}
 
 【入力テキストの特性】
 入力されるテキストは音声認識結果であり、日本語特有の言い淀み（「えっと」「あー」）、曖昧な文末（「〜かも」「〜じゃん」）、話の脱線、主語の省略が含まれます。
@@ -108,16 +112,46 @@ export const getUsageStatus = onCall(async (request) => {
   return { used, limit: FREE_DAILY_LIMIT };
 });
 
-function buildTranscriptionPrompt(customWords: unknown): string | undefined {
-  if (!Array.isArray(customWords)) return undefined;
+interface CustomWordEntry {
+  word: string;
+  description?: string | null;
+}
 
-  const words = customWords
-    .filter((w): w is string => typeof w === "string")
-    .map((w) => w.trim())
-    .filter((w) => w.length > 0 && w.length <= 40)
+function normalizeCustomWords(customWords: unknown): CustomWordEntry[] {
+  if (!Array.isArray(customWords)) return [];
+
+  return customWords
+    .map((w): CustomWordEntry | null => {
+      if (typeof w === "string") {
+        const word = w.trim();
+        return word ? { word } : null;
+      }
+      if (w && typeof w === "object" && typeof (w as CustomWordEntry).word === "string") {
+        const word = (w as CustomWordEntry).word.trim();
+        if (!word) return null;
+        const rawDescription = (w as CustomWordEntry).description;
+        const description =
+          typeof rawDescription === "string" && rawDescription.trim()
+            ? rawDescription.trim().slice(0, 80)
+            : undefined;
+        return { word, description };
+      }
+      return null;
+    })
+    .filter((w): w is CustomWordEntry => w !== null && w.word.length <= 40)
     .slice(0, 100);
+}
 
-  return words.length > 0 ? words.join("、") : undefined;
+function buildTranscriptionPrompt(words: CustomWordEntry[]): string | undefined {
+  const list = words.map((w) => w.word);
+  return list.length > 0 ? list.join("、") : undefined;
+}
+
+function buildGlossaryContext(words: CustomWordEntry[]): string | undefined {
+  const withDescription = words.filter((w) => w.description);
+  if (withDescription.length === 0) return undefined;
+
+  return withDescription.map((w) => `・${w.word}：${w.description}`).join("\n");
 }
 
 async function transcribe(
@@ -161,9 +195,13 @@ interface StructuredResult {
   comfort_message: string | null;
 }
 
-async function structure(apiKey: string, transcript: string): Promise<StructuredResult> {
+async function structure(
+  apiKey: string,
+  transcript: string,
+  glossary?: string
+): Promise<StructuredResult> {
   const now = new Date();
-  const systemPrompt = buildSystemPrompt(jstDateString(now), jstWeekdayString(now));
+  const systemPrompt = buildSystemPrompt(jstDateString(now), jstWeekdayString(now), glossary);
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -213,7 +251,7 @@ function toClientResponse(structured: StructuredResult) {
 interface ProcessVoiceMemoRequest {
   audioBase64: string;
   mimeType?: string;
-  customWords?: string[];
+  customWords?: (string | CustomWordEntry)[];
 }
 
 export const processVoiceMemo = onCall(
@@ -235,14 +273,16 @@ export const processVoiceMemo = onCall(
 
       const apiKey = openAiApiKey.value();
       const audioBuffer = Buffer.from(audioBase64, "base64");
-      const prompt = buildTranscriptionPrompt(customWords);
+      const words = normalizeCustomWords(customWords);
+      const prompt = buildTranscriptionPrompt(words);
 
       const transcript = await transcribe(apiKey, audioBuffer, mimeType ?? "audio/m4a", prompt);
       if (!transcript.trim()) {
         throw new HttpsError("invalid-argument", "音声を認識できませんでした。");
       }
 
-      const structured = await structure(apiKey, transcript);
+      const glossary = buildGlossaryContext(words);
+      const structured = await structure(apiKey, transcript, glossary);
       return toClientResponse(structured);
     } catch (err) {
       if (err instanceof HttpsError) {

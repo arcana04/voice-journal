@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cloud_functions/cloud_functions.dart';
 
+import '../models/custom_word.dart';
 import '../models/journal_entry.dart';
 import '../models/usage_status.dart';
 import 'auth_service.dart';
@@ -20,7 +21,7 @@ class BackendService {
 
   Future<JournalEntry> processVoiceMemo(
     File audioFile, {
-    List<String> customWords = const [],
+    List<CustomWord> customWords = const [],
   }) async {
     await _auth.ensureSignedIn();
 
@@ -33,7 +34,7 @@ class BackendService {
       final result = await callable.call<Map<String, dynamic>>({
         'audioBase64': audioBase64,
         'mimeType': 'audio/m4a',
-        'customWords': customWords,
+        'customWords': customWords.map((w) => w.toJson()).toList(),
       });
       return _entryFromResponse(result.data);
     } on FirebaseFunctionsException catch (e) {

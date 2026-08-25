@@ -1,11 +1,12 @@
 import 'package:flutter/foundation.dart';
 
+import '../models/custom_word.dart';
 import '../services/custom_words_service.dart';
 
 class CustomWordsStore extends ChangeNotifier {
   final CustomWordsService _service = CustomWordsService();
 
-  List<String> words = [];
+  List<CustomWord> words = [];
   bool _loaded = false;
   bool get loaded => _loaded;
 
@@ -15,16 +16,16 @@ class CustomWordsStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addWord(String word) async {
+  Future<void> addWord(String word, {String? description}) async {
     final trimmed = word.trim();
-    if (trimmed.isEmpty || words.contains(trimmed)) return;
-    words = [...words, trimmed];
+    if (trimmed.isEmpty || words.any((w) => w.word == trimmed)) return;
+    words = [...words, CustomWord(word: trimmed, description: description?.trim())];
     await _service.setWords(words);
     notifyListeners();
   }
 
-  Future<void> removeWord(String word) async {
-    words = words.where((w) => w != word).toList();
+  Future<void> removeWord(CustomWord word) async {
+    words = words.where((w) => w.word != word.word).toList();
     await _service.setWords(words);
     notifyListeners();
   }
