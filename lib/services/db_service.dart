@@ -201,6 +201,15 @@ class DbService {
     await batch.commit(noResult: true);
   }
 
+  Future<void> deleteImage(int entryId, String path) async {
+    final db = await _database;
+    await db.delete(
+      'entry_images',
+      where: 'entry_id = ? AND path = ?',
+      whereArgs: [entryId, path],
+    );
+  }
+
   Future<void> setTaskDone(int taskId, bool done) async {
     final db = await _database;
     await db.update(

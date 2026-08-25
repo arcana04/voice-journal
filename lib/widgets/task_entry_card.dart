@@ -21,6 +21,27 @@ class TaskEntryCard extends StatelessWidget {
     required this.onUpdateTaskReminder,
   });
 
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('削除しますか？'),
+        content: const Text('この記録を削除すると元に戻せません。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('削除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) onDelete();
+  }
+
   Future<void> _pickReminderTime(BuildContext context, TaskItem task) async {
     final now = DateTime.now();
     final initial =
@@ -58,7 +79,7 @@ class TaskEntryCard extends StatelessWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, size: 20),
-                  onPressed: onDelete,
+                  onPressed: () => _confirmDelete(context),
                   visualDensity: VisualDensity.compact,
                 ),
               ],
@@ -116,29 +137,30 @@ class TaskEntryCard extends StatelessWidget {
           const SizedBox(width: 8),
         ],
         if (reminderAt != null)
-          InkWell(
-            borderRadius: BorderRadius.circular(6),
-            onTap: () => _pickReminderTime(context, task),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.notifications_active_outlined,
-                    size: 14, color: theme.colorScheme.primary),
-                const SizedBox(width: 2),
-                Text(
-                  DateFormat('HH:mm').format(reminderAt),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.notifications_active_outlined,
+                  size: 14, color: theme.colorScheme.primary),
+              const SizedBox(width: 2),
+              Text(
+                DateFormat('HH:mm').format(reminderAt),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
                 ),
-                const SizedBox(width: 2),
-                InkWell(
-                  onTap: () => onUpdateTaskReminder(task, null),
-                  child: Icon(Icons.close, size: 14, color: theme.colorScheme.primary),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 6),
+              InkWell(
+                onTap: () => _pickReminderTime(context, task),
+                child: Icon(Icons.edit_outlined, size: 14, color: theme.colorScheme.primary),
+              ),
+              const SizedBox(width: 6),
+              InkWell(
+                onTap: () => onUpdateTaskReminder(task, null),
+                child: Icon(Icons.close, size: 14, color: theme.colorScheme.primary),
+              ),
+            ],
           )
         else
           InkWell(

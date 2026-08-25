@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../models/journal_entry.dart';
+import '../utils/media_type.dart';
 
 /// 日記画面の一覧に出す、タップで詳細画面を開くための読み取り専用プレビューカード。
 class DiaryEntryCard extends StatelessWidget {
@@ -89,8 +92,60 @@ class DiaryEntryCard extends StatelessWidget {
                   ],
                 ),
               ),
+            if (entry.imagePaths.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              _buildMediaPreview(theme),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMediaPreview(ThemeData theme) {
+    const maxShown = 4;
+    final shown = entry.imagePaths.take(maxShown).toList();
+    final remaining = entry.imagePaths.length - shown.length;
+    const thumbSize = 68.0;
+
+    return SizedBox(
+      height: thumbSize,
+      child: Row(
+        children: [
+          for (var i = 0; i < shown.length; i++) ...[
+            if (i > 0) const SizedBox(width: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                width: thumbSize,
+                height: thumbSize,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    isVideoPath(shown[i])
+                        ? const ColoredBox(
+                            color: Colors.black87,
+                            child: Icon(Icons.play_circle_fill, color: Colors.white, size: 26),
+                          )
+                        : Image.file(File(shown[i]), fit: BoxFit.cover),
+                    if (i == shown.length - 1 && remaining > 0)
+                      Container(
+                        color: Colors.black.withValues(alpha: 0.45),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '+$remaining',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

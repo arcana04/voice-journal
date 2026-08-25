@@ -97,7 +97,8 @@ class JournalStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addImagesToEntry(JournalEntry entry, List<File> files) async {
+  /// 写真・動画のファイルを entry に追加する。
+  Future<void> addMediaToEntry(JournalEntry entry, List<File> files) async {
     if (entry.id == null || files.isEmpty) return;
     final paths = <String>[];
     for (final file in files) {
@@ -108,6 +109,18 @@ class JournalStore extends ChangeNotifier {
     if (index == -1) return;
     entries[index] = entries[index].copyWith(
       imagePaths: [...entries[index].imagePaths, ...paths],
+    );
+    notifyListeners();
+  }
+
+  Future<void> removeMediaFromEntry(JournalEntry entry, String path) async {
+    if (entry.id == null) return;
+    await _db.deleteImage(entry.id!, path);
+    await _images.deleteImage(path);
+    final index = entries.indexWhere((e) => e.id == entry.id);
+    if (index == -1) return;
+    entries[index] = entries[index].copyWith(
+      imagePaths: entries[index].imagePaths.where((p) => p != path).toList(),
     );
     notifyListeners();
   }
