@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,34 @@ import 'package:provider/provider.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
 import '../widgets/media_gallery.dart';
+
+class _FontOption {
+  final String label;
+  final TextStyle Function(TextStyle base) apply;
+  const _FontOption(this.label, this.apply);
+}
+
+final List<_FontOption> _fontOptions = [
+  _FontOption('標準', (base) => base),
+  _FontOption('明朝', (base) => GoogleFonts.shipporiMincho(textStyle: base)),
+  _FontOption('手書き風', (base) => GoogleFonts.kleeOne(textStyle: base)),
+  _FontOption('ポップ', (base) => GoogleFonts.hachiMaruPop(textStyle: base)),
+  _FontOption('等幅', (base) => GoogleFonts.mPlus1Code(textStyle: base)),
+];
+
+const List<Color?> _textColorOptions = [
+  null,
+  Colors.black87,
+  Color(0xFF6B6B6B),
+  Colors.redAccent,
+  Colors.deepOrange,
+  Color(0xFFB8860B),
+  Colors.green,
+  Colors.teal,
+  Colors.blue,
+  Colors.purple,
+  Colors.pink,
+];
 
 class _NoteDraft {
   final NoteItem note;
@@ -37,6 +66,8 @@ class DiaryEditScreen extends StatefulWidget {
 class _DiaryEditScreenState extends State<DiaryEditScreen> {
   List<_NoteDraft>? _drafts;
   double _fontScale = 1.0;
+  int _fontFamilyIndex = 0;
+  Color? _textColor;
 
   JournalEntry? _findEntry(JournalStore store) {
     for (final e in store.entries) {
@@ -143,39 +174,148 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
   void _openTextStyleSheet() {
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (sheetContext, setSheetState) {
             Widget sizeOption(String label, double scale) {
               final selected = _fontScale == scale;
-              return ListTile(
-                leading: Icon(
-                  selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                  color: selected ? Colors.blue : Colors.grey,
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() => _fontScale = scale);
+                    setSheetState(() {});
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: selected ? Colors.blue.withValues(alpha: 0.12) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: selected ? Colors.blue : Colors.grey.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: selected ? Colors.blue : Colors.grey,
+                      ),
+                    ),
+                  ),
                 ),
-                title: Text(label),
+              );
+            }
+
+            Widget colorOption(Color? color) {
+              final selected = _textColor == color;
+              return Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() => _textColor = color);
+                    setSheetState(() {});
+                  },
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: color ?? Colors.transparent,
+                      border: Border.all(
+                        color: selected ? Colors.blue : Colors.grey.withValues(alpha: 0.4),
+                        width: selected ? 2 : 1,
+                      ),
+                    ),
+                    child: color == null
+                        ? Icon(Icons.block, size: 18, color: Colors.grey.withValues(alpha: 0.6))
+                        : null,
+                  ),
+                ),
+              );
+            }
+
+            Widget fontOption(int index) {
+              final option = _fontOptions[index];
+              final selected = _fontFamilyIndex == index;
+              return GestureDetector(
                 onTap: () {
-                  setState(() => _fontScale = scale);
+                  setState(() => _fontFamilyIndex = index);
                   setSheetState(() {});
                 },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: selected ? Colors.blue.withValues(alpha: 0.08) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: selected ? Colors.blue : Colors.grey.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    option.label,
+                    style: option.apply(const TextStyle(fontSize: 15)),
+                  ),
+                ),
               );
             }
 
             return SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(20, 16, 20, 4),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('文字サイズ', style: TextStyle(fontWeight: FontWeight.w700)),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'フォント',
+                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.check),
+                          tooltip: '閉じる',
+                          onPressed: () => Navigator.of(sheetContext).pop(),
+                        ),
+                      ],
                     ),
-                  ),
-                  sizeOption('小', 0.85),
-                  sizeOption('中', 1.0),
-                  sizeOption('大', 1.25),
-                ],
+                    Row(
+                      children: [
+                        sizeOption('H1', 1.5),
+                        sizeOption('H2', 1.25),
+                        sizeOption('H3', 1.0),
+                        sizeOption('H4', 0.85),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      height: 40,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          for (final color in _textColorOptions) colorOption(color),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 2.6,
+                      children: [
+                        for (var i = 0; i < _fontOptions.length; i++) fontOption(i),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -298,6 +438,15 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
     );
   }
 
+  TextStyle? _styledText(TextStyle? base) {
+    if (base == null) return null;
+    final scaled = base.copyWith(
+      fontSize: (base.fontSize ?? 16) * _fontScale,
+      color: _textColor ?? base.color,
+    );
+    return _fontOptions[_fontFamilyIndex].apply(scaled);
+  }
+
   Widget _buildNoteBlock(ThemeData theme, _NoteDraft d) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
@@ -306,9 +455,8 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
         children: [
           TextField(
             controller: d.titleController,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-              fontSize: (theme.textTheme.titleLarge?.fontSize ?? 22) * _fontScale,
+            style: _styledText(
+              theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
             decoration: InputDecoration(
               isDense: true,
@@ -323,9 +471,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
             controller: d.contentController,
             minLines: 3,
             maxLines: null,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              fontSize: (theme.textTheme.bodyLarge?.fontSize ?? 16) * _fontScale,
-            ),
+            style: _styledText(theme.textTheme.bodyLarge),
             decoration: InputDecoration(
               isDense: true,
               border: InputBorder.none,
