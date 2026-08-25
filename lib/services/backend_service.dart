@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:cloud_functions/cloud_functions.dart';
 
 import '../models/journal_entry.dart';
+import '../models/usage_status.dart';
 import 'auth_service.dart';
 
 class BackendServiceException implements Exception {
@@ -54,6 +55,23 @@ class BackendService {
       );
     } on FirebaseFunctionsException catch (e) {
       throw BackendServiceException(e.message ?? '処理中にエラーが発生しました');
+    }
+  }
+
+  Future<UsageStatus> fetchUsageStatus() async {
+    await _auth.ensureSignedIn();
+
+    try {
+      final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+      final callable = functions.httpsCallable('getUsageStatus');
+      final result = await callable.call<Map<String, dynamic>>();
+      final data = result.data;
+      return UsageStatus(
+        used: (data['used'] as num?)?.toInt() ?? 0,
+        limit: (data['limit'] as num?)?.toInt() ?? 0,
+      );
+    } on FirebaseFunctionsException catch (e) {
+      throw BackendServiceException(e.message ?? '利用状況の取得に失敗しました');
     }
   }
 }

@@ -8,8 +8,7 @@ initializeApp();
 
 const openAiApiKey = defineSecret("OPENAI_API_KEY");
 
-// TODO: 本番リリース前に元の値（5程度）へ戻す。テスト中の上限詰まりを避けるため一時的に緩めている。
-const FREE_DAILY_LIMIT = 100;
+const FREE_DAILY_LIMIT = 5;
 
 function buildSystemPrompt(todayJst: string, weekdayJst: string): string {
   return `あなたは日本語の日常会話・独り言を解析して構造化データに変換するAIアシスタントです。
@@ -94,6 +93,20 @@ async function consumeDailyQuota(uid: string): Promise<void> {
     );
   });
 }
+
+export const getUsageStatus = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) {
+    throw new HttpsError("unauthenticated", "認証が必要です。");
+  }
+
+  const db = getFirestore();
+  const usageRef = db.collection("usage").doc(`${uid}_${jstDateString()}`);
+  const snap = await usageRef.get();
+  const used = (snap.data()?.count as number | undefined) ?? 0;
+
+  return { used, limit: FREE_DAILY_LIMIT };
+});
 
 async function transcribe(apiKey: string, audioBuffer: Buffer, mimeType: string): Promise<string> {
   const form = new FormData();

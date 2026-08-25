@@ -75,4 +75,36 @@ class ReminderService {
   }
 
   Future<void> cancelTaskReminder(int taskId) => _plugin.cancel(taskId);
+
+  /// 通知が現在許可されているかどうか。プラットフォームが判定できない場合はtrue扱い。
+  Future<bool> hasNotificationPermission() async {
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android != null) {
+      return await android.areNotificationsEnabled() ?? false;
+    }
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+    if (ios != null) {
+      final options = await ios.checkPermissions();
+      return options?.isEnabled ?? false;
+    }
+    return true;
+  }
+
+  /// 通知の許可をあらためて要求する。一度拒否された後はOSがダイアログを
+  /// 出さないことが多く、その場合は呼び出し側でOS設定画面への導線を出す。
+  Future<bool> requestNotificationPermission() async {
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android != null) {
+      return await android.requestNotificationsPermission() ?? false;
+    }
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+    if (ios != null) {
+      return await ios.requestPermissions(alert: true, badge: true, sound: true) ?? false;
+    }
+    return true;
+  }
 }
