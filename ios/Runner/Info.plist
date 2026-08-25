@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>ボイスメモを録音してタスクや日記に整理するためにマイクを使用します。</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>日記に写真を追加するために写真ライブラリを使用します。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

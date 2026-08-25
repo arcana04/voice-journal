@@ -1,14 +1,17 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
 import '../models/journal_entry.dart';
 import '../services/db_service.dart';
+import '../services/image_storage_service.dart';
 import '../services/reminder_service.dart';
 
 class JournalStore extends ChangeNotifier {
   final DbService _db = DbService.instance;
   final ReminderService _reminders = ReminderService.instance;
+  final ImageStorageService _images = ImageStorageService();
 
   List<JournalEntry> entries = [];
   bool loading = false;
@@ -86,8 +89,26 @@ class JournalStore extends ChangeNotifier {
         await _reminders.cancelTaskReminder(task.id!);
       }
     }
+    for (final path in entry.imagePaths) {
+      await _images.deleteImage(path);
+    }
     await _db.deleteEntry(entry.id!);
     entries.removeWhere((e) => e.id == entry.id);
+    notifyListeners();
+  }
+
+  Future<void> addImagesToEntry(JournalEntry entry, List<File> files) async {
+    if (entry.id == null || files.isEmpty) return;
+    final paths = <String>[];
+    for (final file in files) {
+      paths.add(await _images.saveImage(file));
+    }
+    await _db.addImages(entry.id!, paths);
+    final index = entries.indexWhere((e) => e.id == entry.id);
+    if (index == -1) return;
+    entries[index] = entries[index].copyWith(
+      imagePaths: [...entries[index].imagePaths, ...paths],
+    );
     notifyListeners();
   }
 }

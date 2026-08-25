@@ -5,7 +5,7 @@ import '../services/settings_service.dart';
 class SettingsStore extends ChangeNotifier {
   final SettingsService _service = SettingsService();
 
-  bool darkMode = true;
+  bool darkMode = false;
   bool _loaded = false;
   bool get loaded => _loaded;
 

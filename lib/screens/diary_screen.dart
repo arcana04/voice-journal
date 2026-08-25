@@ -50,6 +50,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
                 return DiaryEntryCard(
                   entry: entry,
                   onDelete: () => store.deleteEntry(entry),
+                  onAddPhotos: (files) => store.addImagesToEntry(entry, files),
                 );
               },
             ),

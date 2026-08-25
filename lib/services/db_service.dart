@@ -22,7 +22,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE entries (
@@ -53,6 +53,15 @@ class DbService {
             FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
           )
         ''');
+        await db.execute('''
+          CREATE TABLE entry_images (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            entry_id INTEGER NOT NULL,
+            path TEXT NOT NULL,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
+          )
+        ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -61,6 +70,17 @@ class DbService {
         }
         if (oldVersion < 3) {
           await db.execute('ALTER TABLE tasks ADD COLUMN reminder_at TEXT');
+        }
+        if (oldVersion < 4) {
+          await db.execute('''
+            CREATE TABLE entry_images (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              entry_id INTEGER NOT NULL,
+              path TEXT NOT NULL,
+              sort_order INTEGER NOT NULL DEFAULT 0,
+              FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
+            )
+          ''');
         }
       },
     );
@@ -135,6 +155,12 @@ class DbService {
         where: 'entry_id = ?',
         whereArgs: [entryId],
       );
+      final imageRows = await db.query(
+        'entry_images',
+        where: 'entry_id = ?',
+        whereArgs: [entryId],
+        orderBy: 'sort_order ASC',
+      );
 
       entries.add(JournalEntry(
         id: entryId,
@@ -143,9 +169,30 @@ class DbService {
         tasks: taskRows.map(TaskItem.fromMap).toList(),
         notes: noteRows.map(NoteItem.fromMap).toList(),
         comfortMessage: row['comfort_message'] as String?,
+        imagePaths: imageRows.map((r) => r['path'] as String).toList(),
       ));
     }
     return entries;
+  }
+
+  /// [paths] を entryId のエントリに追加で紐付ける（既存の枚数の続きの並び順で）。
+  Future<void> addImages(int entryId, List<String> paths) async {
+    if (paths.isEmpty) return;
+    final db = await _database;
+    final existingCount = Sqflite.firstIntValue(await db.rawQuery(
+          'SELECT COUNT(*) FROM entry_images WHERE entry_id = ?',
+          [entryId],
+        )) ??
+        0;
+    final batch = db.batch();
+    for (var i = 0; i < paths.length; i++) {
+      batch.insert('entry_images', {
+        'entry_id': entryId,
+        'path': paths[i],
+        'sort_order': existingCount + i,
+      });
+    }
+    await batch.commit(noResult: true);
   }
 
   Future<void> setTaskDone(int taskId, bool done) async {
@@ -162,6 +209,7 @@ class DbService {
     final db = await _database;
     await db.delete('tasks', where: 'entry_id = ?', whereArgs: [entryId]);
     await db.delete('notes', where: 'entry_id = ?', whereArgs: [entryId]);
+    await db.delete('entry_images', where: 'entry_id = ?', whereArgs: [entryId]);
     await db.delete('entries', where: 'id = ?', whereArgs: [entryId]);
   }
 }

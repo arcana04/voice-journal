@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../config/recording_limits.dart';
+import '../models/journal_entry.dart';
 import '../services/backend_service.dart';
 import '../services/recorder_service.dart';
 import '../state/journal_store.dart';
+import '../widgets/entry_review.dart';
 import '../widgets/record_button.dart';
 import '../widgets/waveform.dart';
 
@@ -25,6 +27,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Duration _elapsed = Duration.zero;
   Timer? _timer;
   String? _statusMessage;
+
+  String _draftSummary = '';
+  DateTime? _draftCreatedAt;
+  String? _draftComfortMessage;
+  List<DraftItem>? _draftItems;
 
   @override
   void dispose() {
@@ -91,11 +98,13 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final entry = await _backend.processVoiceMemo(File(path));
       if (!mounted) return;
-      await context.read<JournalStore>().addEntry(entry);
-      if (!mounted) return;
       setState(() {
         _state = RecordButtonState.idle;
-        _statusMessage = '整理しました：${entry.summary}';
+        _statusMessage = null;
+        _draftSummary = entry.summary;
+        _draftCreatedAt = entry.createdAt;
+        _draftComfortMessage = entry.comfortMessage;
+        _draftItems = _buildDraftItems(entry);
       });
     } catch (e) {
       if (!mounted) return;
@@ -106,6 +115,52 @@ class _HomeScreenState extends State<HomeScreen> {
       });
       _showResultDialog('処理中にエラーが発生しました', message);
     }
+  }
+
+  List<DraftItem> _buildDraftItems(JournalEntry entry) {
+    final items = <DraftItem>[];
+    for (var i = 0; i < entry.tasks.length; i++) {
+      final task = entry.tasks[i];
+      items.add(DraftItem(
+        id: 'task_$i',
+        type: DraftItemType.task,
+        text: task.title,
+        dueHint: task.dueHint,
+        dueDate: task.dueDate,
+        reminderAt: task.reminderAt,
+      ));
+    }
+    for (var i = 0; i < entry.notes.length; i++) {
+      final note = entry.notes[i];
+      items.add(DraftItem(
+        id: 'note_$i',
+        type: DraftItemType.diary,
+        text: note.content,
+        noteCategory: note.category,
+      ));
+    }
+    return items;
+  }
+
+  Future<void> _saveDraft(List<TaskItem> tasks, List<NoteItem> notes) async {
+    final entry = JournalEntry(
+      createdAt: _draftCreatedAt ?? DateTime.now(),
+      summary: _draftSummary,
+      tasks: tasks,
+      notes: notes,
+      comfortMessage: _draftComfortMessage,
+    );
+    setState(() => _draftItems = null);
+    await context.read<JournalStore>().addEntry(entry);
+    if (!mounted) return;
+    setState(() => _statusMessage = '整理しました：${entry.summary}');
+  }
+
+  void _discardDraft() {
+    setState(() {
+      _draftItems = null;
+      _statusMessage = null;
+    });
   }
 
   void _showResultDialog(String title, String message) {
@@ -147,10 +202,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final draftItems = _draftItems;
     return Scaffold(
       appBar: AppBar(title: const Text('VoiceJournal')),
       body: SafeArea(
-        child: Center(
+        child: draftItems != null
+            ? EntryReview(
+                summary: _draftSummary,
+                initialItems: draftItems,
+                onSave: _saveDraft,
+                onDiscard: _discardDraft,
+              )
+            : Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

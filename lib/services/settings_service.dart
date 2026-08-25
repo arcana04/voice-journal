@@ -5,7 +5,7 @@ class SettingsService {
 
   Future<bool> getDarkMode() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_darkModePref) ?? true;
+    return prefs.getBool(_darkModePref) ?? false;
   }
 
   Future<void> setDarkMode(bool value) async {

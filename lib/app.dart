@@ -22,7 +22,7 @@ class VoiceJournalApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             themeMode: settings.darkMode ? ThemeMode.dark : ThemeMode.light,
             theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
               scaffoldBackgroundColor: Colors.white,
               useMaterial3: true,
               appBarTheme: const AppBarTheme(
@@ -32,7 +32,7 @@ class VoiceJournalApp extends StatelessWidget {
             ),
             darkTheme: ThemeData(
               colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.deepPurple,
+                seedColor: Colors.blue,
                 brightness: Brightness.dark,
               ),
               useMaterial3: true,

@@ -119,6 +119,7 @@ class JournalEntry {
   final List<TaskItem> tasks;
   final List<NoteItem> notes;
   final String? comfortMessage;
+  final List<String> imagePaths;
 
   JournalEntry({
     this.id,
@@ -127,9 +128,10 @@ class JournalEntry {
     required this.tasks,
     required this.notes,
     this.comfortMessage,
+    this.imagePaths = const [],
   });
 
-  JournalEntry copyWith({List<TaskItem>? tasks}) {
+  JournalEntry copyWith({List<TaskItem>? tasks, List<String>? imagePaths}) {
     return JournalEntry(
       id: id,
       createdAt: createdAt,
@@ -137,6 +139,7 @@ class JournalEntry {
       tasks: tasks ?? this.tasks,
       notes: notes,
       comfortMessage: comfortMessage,
+      imagePaths: imagePaths ?? this.imagePaths,
     );
   }
 }
