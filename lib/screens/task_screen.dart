@@ -99,6 +99,10 @@ class _TaskScreenState extends State<TaskScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // task_background.png はイラスト部分が画面上部の約40%で終わり、その下は
+    // 単色の背景になる。絞り込みボタンはちょうどその境目に置く。
+    final contentTop = MediaQuery.of(context).size.height * 0.40;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -108,31 +112,35 @@ class _TaskScreenState extends State<TaskScreen> {
               fit: BoxFit.cover,
             ),
           ),
-          SafeArea(
-            child: Consumer<JournalStore>(
-              builder: (context, store, _) {
-                if (store.loading && store.entries.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final taskEntries = store.entries
-                    .where((e) => e.tasks.isNotEmpty)
-                    .toList();
+          Positioned(
+            top: contentTop,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildFilterRow(theme),
+                Expanded(
+                  child: Consumer<JournalStore>(
+                    builder: (context, store, _) {
+                      if (store.loading && store.entries.isEmpty) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      final taskEntries = store.entries
+                          .where((e) => e.tasks.isNotEmpty)
+                          .toList();
 
-                final visibleEntries =
-                    <MapEntry<JournalEntry, List<TaskItem>>>[];
-                for (final entry in taskEntries) {
-                  final visible = _filterTasks(entry.tasks, _filter);
-                  if (visible.isNotEmpty) {
-                    visibleEntries.add(MapEntry(entry, visible));
-                  }
-                }
+                      final visibleEntries =
+                          <MapEntry<JournalEntry, List<TaskItem>>>[];
+                      for (final entry in taskEntries) {
+                        final visible = _filterTasks(entry.tasks, _filter);
+                        if (visible.isNotEmpty) {
+                          visibleEntries.add(MapEntry(entry, visible));
+                        }
+                      }
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildFilterRow(theme),
-                    Expanded(
-                      child: taskEntries.isEmpty
+                      return taskEntries.isEmpty
                           ? Center(
                               child: ScrimText(
                                 child: Text(
@@ -175,11 +183,11 @@ class _TaskScreenState extends State<TaskScreen> {
                                   );
                                 },
                               ),
-                            ),
-                    ),
-                  ],
-                );
-              },
+                            );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ],
