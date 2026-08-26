@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
+import '../widgets/scrim_text.dart';
 import '../widgets/task_entry_card.dart';
 import 'task_edit_screen.dart';
 
@@ -133,18 +134,22 @@ class _TaskScreenState extends State<TaskScreen> {
                     Expanded(
                       child: taskEntries.isEmpty
                           ? Center(
-                              child: Text(
-                                'まだタスクがありません\n「〜する」と話してみましょう',
-                                textAlign: TextAlign.center,
-                                style: theme.textTheme.bodyMedium,
+                              child: ScrimText(
+                                child: Text(
+                                  'まだタスクがありません\n「〜する」と話してみましょう',
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.bodyMedium,
+                                ),
                               ),
                             )
                           : visibleEntries.isEmpty
                           ? Center(
-                              child: Text(
-                                'この絞り込みに該当するタスクはありません',
-                                textAlign: TextAlign.center,
-                                style: theme.textTheme.bodyMedium,
+                              child: ScrimText(
+                                child: Text(
+                                  'この絞り込みに該当するタスクはありません',
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.bodyMedium,
+                                ),
                               ),
                             )
                           : RefreshIndicator(

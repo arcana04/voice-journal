@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
 import '../widgets/diary_entry_card.dart';
+import '../widgets/scrim_text.dart';
 import 'diary_view_screen.dart';
 
 class DiaryScreen extends StatefulWidget {
@@ -114,19 +115,27 @@ class _DiaryScreenState extends State<DiaryScreen> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                      child: Text(
-                        DateFormat('yyyy年M月').format(_visibleMonth),
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                      child: ScrimText(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        child: Text(
+                          DateFormat('yyyy年M月').format(_visibleMonth),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
                       ),
                     ),
                     Expanded(
                       child: diaryEntries.isEmpty
                           ? Center(
-                              child: Text(
-                                'この月の日記・感想はありません',
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.bodyMedium,
+                              child: ScrimText(
+                                child: Text(
+                                  'この月の日記・感想はありません',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
                               ),
                             )
                           : RefreshIndicator(

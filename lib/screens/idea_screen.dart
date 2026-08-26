@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
 import '../widgets/idea_entry_card.dart';
+import '../widgets/scrim_text.dart';
 import 'idea_edit_screen.dart';
 
 class IdeaScreen extends StatefulWidget {
@@ -52,10 +53,12 @@ class _IdeaScreenState extends State<IdeaScreen> {
 
                 if (ideaEntries.isEmpty) {
                   return Center(
-                    child: Text(
-                      'まだアイデアがありません\n思いついたことを話してみましょう',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                    child: ScrimText(
+                      child: Text(
+                        'まだアイデアがありません\n思いついたことを話してみましょう',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                     ),
                   );
                 }

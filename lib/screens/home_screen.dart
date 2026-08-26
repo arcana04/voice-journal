@@ -16,6 +16,7 @@ import '../state/settings_store.dart';
 import '../widgets/entry_review.dart';
 import '../widgets/icon_button_style.dart';
 import '../widgets/record_button.dart';
+import '../widgets/scrim_text.dart';
 import '../widgets/waveform.dart';
 import 'custom_dictionary_screen.dart';
 import 'settings_screen.dart';
@@ -313,11 +314,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              _state == RecordButtonState.recording
-                                  ? '${_formatDuration(_elapsed)} / ${_formatDuration(kMaxRecordingDuration)}'
-                                  : ' ',
-                              style: Theme.of(context).textTheme.headlineMedium,
+                            Visibility(
+                              visible: _state == RecordButtonState.recording,
+                              maintainState: true,
+                              maintainAnimation: true,
+                              maintainSize: true,
+                              child: ScrimText(
+                                child: Text(
+                                  '${_formatDuration(_elapsed)} / ${_formatDuration(kMaxRecordingDuration)}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium,
+                                ),
+                              ),
                             ),
                             const SizedBox(height: 16),
                             Waveform(
@@ -326,35 +335,49 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 48),
                             RecordButton(state: _state, onTap: _onTap),
                             const SizedBox(height: 32),
-                            Text(
-                              _statusLabel(),
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                            if (_state == RecordButtonState.idle) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                '1回の録音は最大$kMaxRecordingSeconds秒です',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .outline,
+                            ScrimText(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _statusLabel(),
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium,
+                                  ),
+                                  if (_state == RecordButtonState.idle) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '1回の録音は最大$kMaxRecordingSeconds秒です',
+                                      textAlign: TextAlign.center,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .outline,
+                                          ),
                                     ),
+                                  ],
+                                  if (_statusMessage != null) ...[
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      _statusMessage!,
+                                      textAlign: TextAlign.center,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall,
+                                    ),
+                                  ],
+                                ],
                               ),
-                            ],
-                            if (_statusMessage != null) ...[
-                              const SizedBox(height: 12),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 32,
-                                ),
-                                child: Text(
-                                  _statusMessage!,
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              ),
-                            ],
+                            ),
                           ],
                         ),
                       ),
