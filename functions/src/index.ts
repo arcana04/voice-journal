@@ -1,10 +1,19 @@
+import { execFile } from "node:child_process";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { promisify } from "node:util";
+
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions/v2";
+import ffmpegPath from "ffmpeg-static";
 
 initializeApp();
+
+const execFileAsync = promisify(execFile);
 
 const openAiApiKey = defineSecret("OPENAI_API_KEY");
 
@@ -195,6 +204,51 @@ function buildGlossaryContext(words: CustomWordEntry[]): string | undefined {
   return withDescription.map((w) => `・${w.word}：${w.description}`).join("\n");
 }
 
+interface EnhancedAudio {
+  buffer: Buffer;
+  mimeType: string;
+}
+
+/**
+ * 小声・ボソボソ声（ウィスパーボイス）でも文字起こし精度を落とさないよう、
+ * Whisperに送る前にffmpegで音量の底上げ（dynaudnorm）とノイズ除去（afftdn）をかける。
+ * 処理に失敗した場合は元の音声データのまま続行する（文字起こし自体は止めない）。
+ */
+async function enhanceAudio(inputBuffer: Buffer, mimeType: string): Promise<EnhancedAudio> {
+  if (!ffmpegPath) return { buffer: inputBuffer, mimeType };
+
+  const dir = await mkdtemp(join(tmpdir(), "voicejournal-"));
+  const inputPath = join(dir, "input.m4a");
+  const outputPath = join(dir, "output.wav");
+
+  try {
+    await writeFile(inputPath, inputBuffer);
+    await execFileAsync(ffmpegPath, [
+      "-y",
+      "-i",
+      inputPath,
+      "-af",
+      "afftdn,loudnorm=I=-16:TP=-1.5:LRA=11",
+      "-ar",
+      "16000",
+      "-ac",
+      "1",
+      outputPath,
+    ]);
+    const buffer = await readFile(outputPath);
+    return { buffer, mimeType: "audio/wav" };
+  } catch (err) {
+    logger.warn("enhanceAudio failed, using original audio", err);
+    return { buffer: inputBuffer, mimeType };
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
+function transcriptionFilename(mimeType: string): string {
+  return mimeType === "audio/wav" ? "audio.wav" : "audio.m4a";
+}
+
 async function transcribe(
   apiKey: string,
   audioBuffer: Buffer,
@@ -202,7 +256,11 @@ async function transcribe(
   prompt?: string
 ): Promise<string> {
   const form = new FormData();
-  form.append("file", new Blob([new Uint8Array(audioBuffer)], { type: mimeType }), "audio.m4a");
+  form.append(
+    "file",
+    new Blob([new Uint8Array(audioBuffer)], { type: mimeType }),
+    transcriptionFilename(mimeType)
+  );
   form.append("model", "whisper-1");
   form.append("language", "ja");
   if (prompt) {
@@ -303,7 +361,7 @@ interface ProcessVoiceMemoRequest {
 }
 
 export const processVoiceMemo = onCall(
-  { secrets: [openAiApiKey], timeoutSeconds: 120, memory: "512MiB" },
+  { secrets: [openAiApiKey], timeoutSeconds: 120, memory: "1GiB" },
   async (request) => {
     const uid = request.auth?.uid;
     if (!uid) {
@@ -320,11 +378,12 @@ export const processVoiceMemo = onCall(
       await consumeDailyQuota(uid);
 
       const apiKey = openAiApiKey.value();
-      const audioBuffer = Buffer.from(audioBase64, "base64");
+      const rawAudioBuffer = Buffer.from(audioBase64, "base64");
+      const enhanced = await enhanceAudio(rawAudioBuffer, mimeType ?? "audio/m4a");
       const words = normalizeCustomWords(customWords);
       const prompt = buildTranscriptionPrompt(words);
 
-      const transcript = await transcribe(apiKey, audioBuffer, mimeType ?? "audio/m4a", prompt);
+      const transcript = await transcribe(apiKey, enhanced.buffer, enhanced.mimeType, prompt);
       if (!transcript.trim()) {
         throw new HttpsError("invalid-argument", "音声を認識できませんでした。");
       }
