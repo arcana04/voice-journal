@@ -95,21 +95,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 final selected = backgroundStore.selected;
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: selected == null
-                      ? const Icon(Icons.wallpaper_outlined)
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: Image.asset(
-                            selected.asset,
-                            width: 24,
-                            height: 24,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                  title: Text(l10n.appBackgroundSettingsTitle),
-                  subtitle: Text(
-                    selected?.labelFor(l10n) ?? l10n.appBackgroundDefaultLabel,
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: Image.asset(
+                      selected.asset,
+                      width: 24,
+                      height: 24,
+                      fit: BoxFit.cover,
+                    ),
                   ),
+                  title: Text(l10n.appBackgroundSettingsTitle),
+                  subtitle: Text(selected.labelFor(l10n)),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(

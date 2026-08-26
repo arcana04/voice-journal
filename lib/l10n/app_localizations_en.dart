@@ -148,9 +148,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appBackgroundScreenTitle => 'Choose a background';
 
   @override
-  String get appBackgroundDefaultLabel => 'Default';
-
-  @override
   String get backgroundAurora => 'Aurora & Ice Hut';
 
   @override

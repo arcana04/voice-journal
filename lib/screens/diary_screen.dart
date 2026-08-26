@@ -88,9 +88,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: const AppBackgroundImage(
-              fallbackAsset: 'assets/images/diary_background.png',
-            ),
+            child: const AppBackgroundImage(),
           ),
           SafeArea(
             child: Consumer<JournalStore>(

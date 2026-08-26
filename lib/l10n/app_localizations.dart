@@ -350,12 +350,6 @@ abstract class AppLocalizations {
   /// **'Choose a background'**
   String get appBackgroundScreenTitle;
 
-  /// No description provided for @appBackgroundDefaultLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Default'**
-  String get appBackgroundDefaultLabel;
-
   /// No description provided for @backgroundAurora.
   ///
   /// In en, this message translates to:

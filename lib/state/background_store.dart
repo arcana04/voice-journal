@@ -4,11 +4,11 @@ import '../models/app_background.dart';
 import '../services/background_settings_service.dart';
 
 /// アプリ全体（録音・日記・アイデア・タスク）で共通に使う背景画像の選択状態。
-/// [selected]がnullの場合は「デフォルト」＝各画面固有の背景画像を使う。
+/// デフォルトは[AppBackground.starrySky]。
 class BackgroundStore extends ChangeNotifier {
   final BackgroundSettingsService _service = BackgroundSettingsService();
 
-  AppBackground? selected;
+  AppBackground selected = AppBackground.starrySky;
   bool _loaded = false;
   bool get loaded => _loaded;
 
@@ -18,9 +18,9 @@ class BackgroundStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setBackground(AppBackground? background) async {
+  Future<void> setBackground(AppBackground background) async {
     selected = background;
-    await _service.setBackgroundId(background?.id);
+    await _service.setBackgroundId(background.id);
     notifyListeners();
   }
 }

@@ -23,23 +23,8 @@ class BackgroundSelectScreen extends StatelessWidget {
           crossAxisCount: 2,
           mainAxisSpacing: 16,
           crossAxisSpacing: 16,
-          childAspectRatio: 0.85,
+          childAspectRatio: 1,
           children: [
-            _BackgroundTile(
-              label: l10n.appBackgroundDefaultLabel,
-              selected: selected == null,
-              onTap: () =>
-                  context.read<BackgroundStore>().setBackground(null),
-              child: Container(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                alignment: Alignment.center,
-                child: Icon(
-                  Icons.image_not_supported_outlined,
-                  size: 36,
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-              ),
-            ),
             for (final background in AppBackground.values)
               _BackgroundTile(
                 label: background.labelFor(l10n),
@@ -73,58 +58,50 @@ class _BackgroundTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                ClipRRect(
+    return Semantics(
+      label: label,
+      selected: selected,
+      button: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: selected
+                        ? theme.colorScheme.primary
+                        : Colors.transparent,
+                    width: 3,
+                  ),
                   borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: selected
-                            ? theme.colorScheme.primary
-                            : Colors.transparent,
-                        width: 3,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(13),
-                      child: child,
-                    ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(13),
+                  child: child,
+                ),
+              ),
+            ),
+            if (selected)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: CircleAvatar(
+                  radius: 12,
+                  backgroundColor: theme.colorScheme.primary,
+                  child: Icon(
+                    Icons.check,
+                    size: 16,
+                    color: theme.colorScheme.onPrimary,
                   ),
                 ),
-                if (selected)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: CircleAvatar(
-                      radius: 12,
-                      backgroundColor: theme.colorScheme.primary,
-                      child: Icon(
-                        Icons.check,
-                        size: 16,
-                        color: theme.colorScheme.onPrimary,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: theme.textTheme.bodyMedium,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+              ),
+          ],
+        ),
       ),
     );
   }

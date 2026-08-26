@@ -314,9 +314,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: const AppBackgroundImage(
-              fallbackAsset: 'assets/images/home_background.png',
-            ),
+            child: const AppBackgroundImage(),
           ),
           SafeArea(
             child: Stack(

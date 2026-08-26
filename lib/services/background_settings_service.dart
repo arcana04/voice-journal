@@ -8,12 +8,8 @@ class BackgroundSettingsService {
     return prefs.getString(_backgroundIdPref);
   }
 
-  Future<void> setBackgroundId(String? id) async {
+  Future<void> setBackgroundId(String id) async {
     final prefs = await SharedPreferences.getInstance();
-    if (id == null) {
-      await prefs.remove(_backgroundIdPref);
-    } else {
-      await prefs.setString(_backgroundIdPref, id);
-    }
+    await prefs.setString(_backgroundIdPref, id);
   }
 }

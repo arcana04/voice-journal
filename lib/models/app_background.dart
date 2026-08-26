@@ -1,7 +1,7 @@
 import '../l10n/app_localizations.dart';
 
 /// アプリ全体（録音・日記・アイデア・タスクの4画面）の背景として選べる画像。
-/// [id]はSharedPreferencesへの保存キー。nullは「デフォルト」（各画面固有の背景のまま）を表す。
+/// [id]はSharedPreferencesへの保存キー。デフォルトは[starrySky]。
 enum AppBackground {
   aurora('aurora', 'assets/images/backgrounds/bg_aurora.png'),
   whitehavenBeach('whitehaven_beach', 'assets/images/backgrounds/bg_whitehaven_beach.png'),
@@ -31,11 +31,10 @@ enum AppBackground {
         AppBackground.cat => l10n.backgroundCat,
       };
 
-  static AppBackground? fromId(String? id) {
-    if (id == null) return null;
+  static AppBackground fromId(String? id) {
     for (final b in AppBackground.values) {
       if (b.id == id) return b;
     }
-    return null;
+    return AppBackground.starrySky;
   }
 }

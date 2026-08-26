@@ -84,10 +84,6 @@ flutter:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
   assets:
-    - assets/images/diary_background.png
-    - assets/images/task_background.png
-    - assets/images/home_background.png
-    - assets/images/idea_background.png
     - assets/images/backgrounds/
 
   # An image asset can refer to one or more resolution-specific "variants", see

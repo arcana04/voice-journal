@@ -144,9 +144,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appBackgroundScreenTitle => '背景を選択';
 
   @override
-  String get appBackgroundDefaultLabel => 'デフォルト';
-
-  @override
   String get backgroundAurora => 'オーロラと氷原の小屋';
 
   @override
