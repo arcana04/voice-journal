@@ -23,7 +23,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 7,
+      version: 9,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE entries (
@@ -42,6 +42,7 @@ class DbService {
             due_hint TEXT,
             due_date TEXT,
             reminder_at TEXT,
+            reminder_end_at TEXT,
             done INTEGER NOT NULL DEFAULT 0,
             calendar_event_id TEXT,
             FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
@@ -54,6 +55,9 @@ class DbService {
             category TEXT NOT NULL,
             title TEXT,
             content TEXT NOT NULL,
+            font_family_index INTEGER,
+            text_color INTEGER,
+            font_scale REAL,
             FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
           )
         ''');
@@ -95,6 +99,14 @@ class DbService {
         if (oldVersion < 7) {
           await db.execute('ALTER TABLE tasks ADD COLUMN calendar_event_id TEXT');
         }
+        if (oldVersion < 8) {
+          await db.execute('ALTER TABLE tasks ADD COLUMN reminder_end_at TEXT');
+        }
+        if (oldVersion < 9) {
+          await db.execute('ALTER TABLE notes ADD COLUMN font_family_index INTEGER');
+          await db.execute('ALTER TABLE notes ADD COLUMN text_color INTEGER');
+          await db.execute('ALTER TABLE notes ADD COLUMN font_scale REAL');
+        }
       },
     );
   }
@@ -116,6 +128,7 @@ class DbService {
         'due_hint': task.dueHint,
         'due_date': task.dueDate?.toIso8601String(),
         'reminder_at': task.reminderAt?.toIso8601String(),
+        'reminder_end_at': task.reminderEndAt?.toIso8601String(),
         'done': 0,
       });
       savedTasks.add(TaskItem(
@@ -125,6 +138,7 @@ class DbService {
         dueHint: task.dueHint,
         dueDate: task.dueDate,
         reminderAt: task.reminderAt,
+        reminderEndAt: task.reminderEndAt,
       ));
     }
     final savedNotes = <NoteItem>[];
@@ -134,6 +148,9 @@ class DbService {
         'category': note.category,
         'title': note.title,
         'content': note.content,
+        'font_family_index': note.fontFamilyIndex,
+        'text_color': note.textColorValue,
+        'font_scale': note.fontScale,
       });
       savedNotes.add(NoteItem(
         id: noteId,
@@ -141,6 +158,9 @@ class DbService {
         category: note.category,
         title: note.title,
         content: note.content,
+        fontFamilyIndex: note.fontFamilyIndex,
+        textColorValue: note.textColorValue,
+        fontScale: note.fontScale,
       ));
     }
 
@@ -242,6 +262,27 @@ class DbService {
     );
   }
 
+  /// 日記ノートの文字スタイル（フォント・色・サイズ倍率）だけを更新する。
+  /// [textColorValue]はnullを渡すと「色指定なし（テーマ既定色）」として保存される。
+  Future<void> updateNoteStyle(
+    int noteId, {
+    required int fontFamilyIndex,
+    required int? textColorValue,
+    required double fontScale,
+  }) async {
+    final db = await _database;
+    await db.update(
+      'notes',
+      {
+        'font_family_index': fontFamilyIndex,
+        'text_color': textColorValue,
+        'font_scale': fontScale,
+      },
+      where: 'id = ?',
+      whereArgs: [noteId],
+    );
+  }
+
   Future<void> updateTaskTitle(int taskId, String title) async {
     final db = await _database;
     await db.update(
@@ -254,9 +295,13 @@ class DbService {
 
   Future<void> updateTaskReminder(int taskId, DateTime? reminderAt) async {
     final db = await _database;
+    final values = <String, Object?>{'reminder_at': reminderAt?.toIso8601String()};
+    if (reminderAt == null) {
+      values['reminder_end_at'] = null;
+    }
     await db.update(
       'tasks',
-      {'reminder_at': reminderAt?.toIso8601String()},
+      values,
       where: 'id = ?',
       whereArgs: [taskId],
     );

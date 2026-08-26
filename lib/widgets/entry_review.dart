@@ -16,6 +16,7 @@ class DraftItem {
     this.dueHint,
     this.dueDate,
     this.reminderAt,
+    this.reminderEndAt,
     this.noteCategory = kNoteCategoryIdea,
     this.noteTitle,
   });
@@ -26,6 +27,7 @@ class DraftItem {
   final String? dueHint;
   final DateTime? dueDate;
   final DateTime? reminderAt;
+  final DateTime? reminderEndAt;
   String noteCategory;
   final String? noteTitle;
 }
@@ -93,6 +95,7 @@ class _EntryReviewState extends State<EntryReview> {
             dueHint: i.dueHint,
             dueDate: i.dueDate,
             reminderAt: i.reminderAt,
+            reminderEndAt: i.reminderEndAt,
           ),
         )
         .toList();
@@ -322,6 +325,12 @@ class _CardShell extends StatelessWidget {
       locale: Localizations.localeOf(context).toString(),
     );
     final reminderAt = item.reminderAt;
+    final reminderEndAt = item.reminderEndAt;
+    final reminderLabel = reminderAt == null
+        ? null
+        : reminderEndAt == null
+        ? DateFormat('HH:mm').format(reminderAt)
+        : '${DateFormat('HH:mm').format(reminderAt)}-${DateFormat('HH:mm').format(reminderEndAt)}';
 
     return Container(
       decoration: BoxDecoration(
@@ -392,7 +401,7 @@ class _CardShell extends StatelessWidget {
                           ),
                           const SizedBox(width: 2),
                           Text(
-                            DateFormat('HH:mm').format(reminderAt),
+                            reminderLabel!,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.primary,
                               fontWeight: FontWeight.w600,

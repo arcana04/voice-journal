@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 
@@ -63,6 +64,7 @@ class JournalStore extends ChangeNotifier {
         eventId: task.calendarEventId,
         title: task.title,
         start: task.reminderAt!,
+        end: task.reminderEndAt,
       );
     } catch (e) {
       debugPrint('calendar sync failed: $e');
@@ -203,6 +205,35 @@ class JournalStore extends ChangeNotifier {
     final updatedNotes = entries[index].notes.map((n) {
       if (n.id != note.id) return n;
       return n.copyWith(title: title, clearTitle: title == null, content: content);
+    }).toList();
+    entries[index] = entries[index].copyWith(notes: updatedNotes);
+    notifyListeners();
+  }
+
+  Future<void> updateNoteStyle(
+    JournalEntry entry,
+    NoteItem note, {
+    required int fontFamilyIndex,
+    required Color? textColor,
+    required double fontScale,
+  }) async {
+    if (note.id == null) return;
+    await _db.updateNoteStyle(
+      note.id!,
+      fontFamilyIndex: fontFamilyIndex,
+      textColorValue: textColor?.toARGB32(),
+      fontScale: fontScale,
+    );
+    final index = entries.indexWhere((e) => e.id == entry.id);
+    if (index == -1) return;
+    final updatedNotes = entries[index].notes.map((n) {
+      if (n.id != note.id) return n;
+      return n.copyWith(
+        fontFamilyIndex: fontFamilyIndex,
+        textColorValue: textColor?.toARGB32(),
+        clearTextColor: textColor == null,
+        fontScale: fontScale,
+      );
     }).toList();
     entries[index] = entries[index].copyWith(notes: updatedNotes);
     notifyListeners();

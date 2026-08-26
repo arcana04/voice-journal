@@ -7,6 +7,7 @@ class TaskItem {
   final String? dueHint;
   final DateTime? dueDate;
   final DateTime? reminderAt;
+  final DateTime? reminderEndAt;
   final bool done;
   final String? calendarEventId;
 
@@ -17,6 +18,7 @@ class TaskItem {
     this.dueHint,
     this.dueDate,
     this.reminderAt,
+    this.reminderEndAt,
     this.done = false,
     this.calendarEventId,
   });
@@ -26,6 +28,8 @@ class TaskItem {
     String? title,
     DateTime? reminderAt,
     bool clearReminder = false,
+    DateTime? reminderEndAt,
+    bool clearReminderEndAt = false,
     String? calendarEventId,
     bool clearCalendarEventId = false,
   }) {
@@ -36,6 +40,9 @@ class TaskItem {
       dueHint: dueHint,
       dueDate: dueDate,
       reminderAt: clearReminder ? null : (reminderAt ?? this.reminderAt),
+      reminderEndAt: clearReminder || clearReminderEndAt
+          ? null
+          : (reminderEndAt ?? this.reminderEndAt),
       done: done ?? this.done,
       calendarEventId: clearCalendarEventId
           ? null
@@ -51,6 +58,7 @@ class TaskItem {
       'due_hint': dueHint,
       'due_date': dueDate?.toIso8601String(),
       'reminder_at': reminderAt?.toIso8601String(),
+      'reminder_end_at': reminderEndAt?.toIso8601String(),
       'done': done ? 1 : 0,
       'calendar_event_id': calendarEventId,
     };
@@ -59,6 +67,7 @@ class TaskItem {
   factory TaskItem.fromMap(Map<String, Object?> map) {
     final dueDateStr = map['due_date'] as String?;
     final reminderAtStr = map['reminder_at'] as String?;
+    final reminderEndAtStr = map['reminder_end_at'] as String?;
     return TaskItem(
       id: map['id'] as int?,
       entryId: map['entry_id'] as int?,
@@ -66,6 +75,8 @@ class TaskItem {
       dueHint: map['due_hint'] as String?,
       dueDate: dueDateStr != null ? DateTime.tryParse(dueDateStr) : null,
       reminderAt: reminderAtStr != null ? DateTime.tryParse(reminderAtStr) : null,
+      reminderEndAt:
+          reminderEndAtStr != null ? DateTime.tryParse(reminderEndAtStr) : null,
       done: (map['done'] as int? ?? 0) == 1,
       calendarEventId: map['calendar_event_id'] as String?,
     );
@@ -74,11 +85,14 @@ class TaskItem {
   factory TaskItem.fromJson(Map<String, dynamic> json) {
     final dueDateStr = json['due_date'] as String?;
     final reminderAtStr = json['reminder_at'] as String?;
+    final reminderEndAtStr = json['reminder_end_at'] as String?;
     return TaskItem(
       title: (json['title'] as String? ?? '').trim(),
       dueHint: json['due_hint'] as String?,
       dueDate: dueDateStr != null ? DateTime.tryParse(dueDateStr) : null,
       reminderAt: reminderAtStr != null ? DateTime.tryParse(reminderAtStr) : null,
+      reminderEndAt:
+          reminderEndAtStr != null ? DateTime.tryParse(reminderEndAtStr) : null,
     );
   }
 }
@@ -89,6 +103,9 @@ class NoteItem {
   final String category;
   final String? title;
   final String content;
+  final int? fontFamilyIndex;
+  final int? textColorValue;
+  final double? fontScale;
 
   NoteItem({
     this.id,
@@ -96,15 +113,31 @@ class NoteItem {
     required this.category,
     this.title,
     required this.content,
+    this.fontFamilyIndex,
+    this.textColorValue,
+    this.fontScale,
   });
 
-  NoteItem copyWith({String? title, bool clearTitle = false, String? content}) {
+  NoteItem copyWith({
+    String? title,
+    bool clearTitle = false,
+    String? content,
+    int? fontFamilyIndex,
+    int? textColorValue,
+    bool clearTextColor = false,
+    double? fontScale,
+  }) {
     return NoteItem(
       id: id,
       entryId: entryId,
       category: category,
       title: clearTitle ? null : (title ?? this.title),
       content: content ?? this.content,
+      fontFamilyIndex: fontFamilyIndex ?? this.fontFamilyIndex,
+      textColorValue: clearTextColor
+          ? null
+          : (textColorValue ?? this.textColorValue),
+      fontScale: fontScale ?? this.fontScale,
     );
   }
 
@@ -115,6 +148,9 @@ class NoteItem {
       'category': category,
       'title': title,
       'content': content,
+      'font_family_index': fontFamilyIndex,
+      'text_color': textColorValue,
+      'font_scale': fontScale,
     };
   }
 
@@ -125,6 +161,9 @@ class NoteItem {
       category: map['category'] as String,
       title: map['title'] as String?,
       content: map['content'] as String,
+      fontFamilyIndex: map['font_family_index'] as int?,
+      textColorValue: map['text_color'] as int?,
+      fontScale: (map['font_scale'] as num?)?.toDouble(),
     );
   }
 

@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -10,47 +9,8 @@ import '../l10n/app_localizations.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
 import '../state/text_style_store.dart';
+import '../utils/note_text_style.dart';
 import '../widgets/media_gallery.dart';
-
-class _FontOption {
-  final String Function(AppLocalizations l10n) labelFor;
-  final TextStyle Function(TextStyle base) apply;
-  const _FontOption(this.labelFor, this.apply);
-}
-
-final List<_FontOption> _fontOptions = [
-  _FontOption((l10n) => l10n.fontStandard, (base) => base),
-  _FontOption(
-    (l10n) => l10n.fontMincho,
-    (base) => GoogleFonts.shipporiMincho(textStyle: base),
-  ),
-  _FontOption(
-    (l10n) => l10n.fontHandwriting,
-    (base) => GoogleFonts.kleeOne(textStyle: base),
-  ),
-  _FontOption(
-    (l10n) => l10n.fontPop,
-    (base) => GoogleFonts.hachiMaruPop(textStyle: base),
-  ),
-  _FontOption(
-    (l10n) => l10n.fontMonospace,
-    (base) => GoogleFonts.mPlus1Code(textStyle: base),
-  ),
-];
-
-const List<Color?> _textColorOptions = [
-  null,
-  Colors.black87,
-  Color(0xFF6B6B6B),
-  Colors.redAccent,
-  Colors.deepOrange,
-  Color(0xFFB8860B),
-  Colors.green,
-  Colors.teal,
-  Colors.blue,
-  Colors.purple,
-  Colors.pink,
-];
 
 class _NoteDraft {
   final NoteItem note;
@@ -83,15 +43,6 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
   late int _fontFamilyIndex;
   late Color? _textColor;
 
-  @override
-  void initState() {
-    super.initState();
-    final defaults = context.read<TextStyleStore>();
-    _fontScale = defaults.fontScale;
-    _fontFamilyIndex = defaults.fontFamilyIndex;
-    _textColor = defaults.textColor;
-  }
-
   JournalEntry? _findEntry(JournalStore store) {
     for (final e in store.entries) {
       if (e.id == widget.entryId) return e;
@@ -100,10 +51,25 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
   }
 
   List<_NoteDraft> _ensureDrafts(JournalEntry entry) {
-    return _drafts ??= entry.notes
+    final existing = _drafts;
+    if (existing != null) return existing;
+
+    final feelingNotes = entry.notes
         .where((n) => n.category == kNoteCategoryFeeling)
-        .map((n) => _NoteDraft(n))
         .toList();
+    // 既にスタイルが保存されているノートがあればそれを初期値にし、なければ
+    // アプリ全体のデフォルトスタイルを使う（[[TextStyleStore]]参照）。
+    final styleSource = feelingNotes.isNotEmpty ? feelingNotes.first : null;
+    final defaults = context.read<TextStyleStore>();
+    _fontFamilyIndex = styleSource?.fontFamilyIndex ?? defaults.fontFamilyIndex;
+    _textColor = styleSource?.fontFamilyIndex != null
+        ? (styleSource!.textColorValue != null
+              ? Color(styleSource.textColorValue!)
+              : null)
+        : defaults.textColor;
+    _fontScale = styleSource?.fontScale ?? defaults.fontScale;
+
+    return _drafts = feelingNotes.map((n) => _NoteDraft(n)).toList();
   }
 
   @override
@@ -124,6 +90,13 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
         d.note,
         title: title.isEmpty ? null : title,
         content: content,
+      );
+      await store.updateNoteStyle(
+        entry,
+        d.note,
+        fontFamilyIndex: _fontFamilyIndex,
+        textColor: _textColor,
+        fontScale: _fontScale,
       );
     }
     if (mounted) Navigator.of(context).pop();
@@ -288,7 +261,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
             }
 
             Widget fontOption(int index) {
-              final option = _fontOptions[index];
+              final option = noteFontOptions[index];
               final selected = _fontFamilyIndex == index;
               final label = option.labelFor(AppLocalizations.of(context)!);
               return GestureDetector(
@@ -320,83 +293,83 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
             return SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            AppLocalizations.of(context)!.fontSheetTitle,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.fontSheetTitle,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.star_border),
-                          tooltip: AppLocalizations.of(
-                            context,
-                          )!.setAsDefaultTooltip,
-                          onPressed: () {
-                            context.read<TextStyleStore>().setDefault(
-                              fontFamilyIndex: _fontFamilyIndex,
-                              textColor: _textColor,
-                              fontScale: _fontScale,
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  )!.setAsDefaultSnackbar,
+                          IconButton(
+                            icon: const Icon(Icons.star_border),
+                            tooltip: AppLocalizations.of(context)!
+                                .setAsDefaultTooltip,
+                            onPressed: () {
+                              context.read<TextStyleStore>().setDefault(
+                                fontFamilyIndex: _fontFamilyIndex,
+                                textColor: _textColor,
+                                fontScale: _fontScale,
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    AppLocalizations.of(context)!
+                                        .setAsDefaultSnackbar,
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.check),
-                          tooltip: AppLocalizations.of(context)!.closeTooltip,
-                          onPressed: () => Navigator.of(sheetContext).pop(),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        sizeOption('H1', 1.5),
-                        sizeOption('H2', 1.25),
-                        sizeOption('H3', 1.0),
-                        sizeOption('H4', 0.85),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      height: 40,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          for (final color in _textColorOptions)
-                            colorOption(color),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.check),
+                            tooltip: AppLocalizations.of(context)!.closeTooltip,
+                            onPressed: () => Navigator.of(sheetContext).pop(),
+                          ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: 10,
-                      childAspectRatio: 2.6,
-                      children: [
-                        for (var i = 0; i < _fontOptions.length; i++)
-                          fontOption(i),
-                      ],
-                    ),
-                  ],
+                      Row(
+                        children: [
+                          sizeOption('H1', 1.5),
+                          sizeOption('H2', 1.25),
+                          sizeOption('H3', 1.0),
+                          sizeOption('H4', 0.85),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        height: 40,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: [
+                            for (final color in noteTextColorOptions)
+                              colorOption(color),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      GridView.count(
+                        crossAxisCount: 2,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: 2.6,
+                        children: [
+                          for (var i = 0; i < noteFontOptions.length; i++)
+                            fontOption(i),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -422,9 +395,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
         final drafts = _ensureDrafts(entry);
         final locale = Localizations.localeOf(context).toString();
         final day = DateFormat('d', locale).format(entry.createdAt);
-        final monthYearLabel = DateFormat.yMMMM(
-          locale,
-        ).format(entry.createdAt);
+        final monthYearLabel = DateFormat.yMMMM(locale).format(entry.createdAt);
 
         return Scaffold(
           appBar: AppBar(
@@ -531,7 +502,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
       fontSize: (base.fontSize ?? 16) * _fontScale,
       color: _textColor ?? base.color,
     );
-    return _fontOptions[_fontFamilyIndex].apply(scaled);
+    return noteFontOptions[_fontFamilyIndex].apply(scaled);
   }
 
   Widget _buildNoteBlock(ThemeData theme, _NoteDraft d) {

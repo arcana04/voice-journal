@@ -69,6 +69,22 @@ class DiaryEntryCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (entry.comfortMessage != null)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8, right: 40),
+                          child: Text(
+                            entry.comfortMessage!,
+                            textAlign: TextAlign.right,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontStyle: FontStyle.italic,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -107,28 +123,6 @@ class DiaryEntryCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                if (entry.comfortMessage != null) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer.withValues(
-                        alpha: 0.4,
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      entry.comfortMessage!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontStyle: FontStyle.italic,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ],
                 if (entry.imagePaths.isNotEmpty) ...[
                   const SizedBox(height: 10),
                   _buildMediaPreview(theme),
@@ -215,8 +209,8 @@ class _EmotionBadge extends StatelessWidget {
     return Semantics(
       label: label,
       child: Container(
-        width: 36,
-        height: 36,
+        width: 44,
+        height: 44,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
@@ -229,7 +223,7 @@ class _EmotionBadge extends StatelessWidget {
             ),
           ],
         ),
-        child: Text(emotion.emoji, style: const TextStyle(fontSize: 20)),
+        child: Text(emotion.emoji, style: const TextStyle(fontSize: 26)),
       ),
     );
   }

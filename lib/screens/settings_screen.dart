@@ -99,16 +99,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(8),
                     child: Image.asset(
                       selected.asset,
-                      width: 24,
-                      height: 24,
+                      width: 44,
+                      height: 44,
                       fit: BoxFit.cover,
                     ),
                   ),
                   title: Text(l10n.appBackgroundSettingsTitle),
-                  subtitle: Text(selected.labelFor(l10n)),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(

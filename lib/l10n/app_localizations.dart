@@ -317,7 +317,7 @@ abstract class AppLocalizations {
   /// No description provided for @textComposerDescription.
   ///
   /// In en, this message translates to:
-  /// **'Use this when you can\'t speak. The AI sorts it into a diary entry or task just like a recording.'**
+  /// **'Use this when you can\'t speak. The AI sorts it into a diary entry, task, or idea just like a recording.'**
   String get textComposerDescription;
 
   /// No description provided for @textComposerHint.
@@ -674,6 +674,48 @@ abstract class AppLocalizations {
   /// **'Monospace'**
   String get fontMonospace;
 
+  /// No description provided for @fontGothic.
+  ///
+  /// In en, this message translates to:
+  /// **'Gothic'**
+  String get fontGothic;
+
+  /// No description provided for @fontRoundGothic.
+  ///
+  /// In en, this message translates to:
+  /// **'Rounded'**
+  String get fontRoundGothic;
+
+  /// No description provided for @fontThinMincho.
+  ///
+  /// In en, this message translates to:
+  /// **'Thin Serif'**
+  String get fontThinMincho;
+
+  /// No description provided for @fontBrush.
+  ///
+  /// In en, this message translates to:
+  /// **'Brush'**
+  String get fontBrush;
+
+  /// No description provided for @fontRetro.
+  ///
+  /// In en, this message translates to:
+  /// **'Retro'**
+  String get fontRetro;
+
+  /// No description provided for @fontImpact.
+  ///
+  /// In en, this message translates to:
+  /// **'Impact'**
+  String get fontImpact;
+
+  /// No description provided for @fontCute.
+  ///
+  /// In en, this message translates to:
+  /// **'Cute'**
+  String get fontCute;
+
   /// No description provided for @mediaPickFailed.
   ///
   /// In en, this message translates to:
@@ -776,11 +818,11 @@ abstract class AppLocalizations {
   /// **'This week'**
   String get filterThisWeek;
 
-  /// No description provided for @filterSomeday.
+  /// No description provided for @filterWithinMonth.
   ///
   /// In en, this message translates to:
-  /// **'Someday'**
-  String get filterSomeday;
+  /// **'Within a month'**
+  String get filterWithinMonth;
 
   /// No description provided for @filterCompleted.
   ///

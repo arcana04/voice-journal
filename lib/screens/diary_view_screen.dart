@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
+import '../state/text_style_store.dart';
+import '../utils/note_text_style.dart';
 import '../widgets/edit_icon_button.dart';
 import '../widgets/media_gallery.dart';
 import 'diary_edit_screen.dart';
@@ -64,6 +66,7 @@ class DiaryViewScreen extends StatelessWidget {
         }
 
         final theme = Theme.of(context);
+        final textStyleDefaults = context.watch<TextStyleStore>();
         final locale = Localizations.localeOf(context).toString();
         final day = DateFormat('d', locale).format(entry.createdAt);
         final monthYearLabel = DateFormat.yMMMM(locale).format(entry.createdAt);
@@ -166,12 +169,23 @@ class DiaryViewScreen extends StatelessWidget {
                           if ((note.title ?? '').isNotEmpty)
                             Text(
                               note.title!,
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w700,
+                              style: applyNoteStyle(
+                                theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                note: note,
+                                defaults: textStyleDefaults,
                               ),
                             ),
                           const SizedBox(height: 8),
-                          Text(note.content, style: theme.textTheme.bodyLarge),
+                          Text(
+                            note.content,
+                            style: applyNoteStyle(
+                              theme.textTheme.bodyLarge,
+                              note: note,
+                              defaults: textStyleDefaults,
+                            ),
+                          ),
                         ],
                       ),
                     ),

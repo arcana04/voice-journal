@@ -125,7 +125,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get textComposerDescription =>
-      'Use this when you can\'t speak. The AI sorts it into a diary entry or task just like a recording.';
+      'Use this when you can\'t speak. The AI sorts it into a diary entry, task, or idea just like a recording.';
 
   @override
   String get textComposerHint =>
@@ -321,6 +321,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fontMonospace => 'Monospace';
 
   @override
+  String get fontGothic => 'Gothic';
+
+  @override
+  String get fontRoundGothic => 'Rounded';
+
+  @override
+  String get fontThinMincho => 'Thin Serif';
+
+  @override
+  String get fontBrush => 'Brush';
+
+  @override
+  String get fontRetro => 'Retro';
+
+  @override
+  String get fontImpact => 'Impact';
+
+  @override
+  String get fontCute => 'Cute';
+
+  @override
   String mediaPickFailed(String error) {
     return 'Failed to select photo/video: $error';
   }
@@ -374,7 +395,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterThisWeek => 'This week';
 
   @override
-  String get filterSomeday => 'Someday';
+  String get filterWithinMonth => 'Within a month';
 
   @override
   String get filterCompleted => 'Completed';

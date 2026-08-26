@@ -125,7 +125,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get textComposerDescription =>
-      '話せない時はこちらに入力してください。内容は録音と同じようにAIが日記かタスクかを判断します。';
+      '話せない時はこちらに入力してください。内容は録音と同じようにAIが日記かタスクかアイデアかを判断します。';
 
   @override
   String get textComposerHint => '例: 明日15時に歯医者の予約を入れる';
@@ -315,6 +315,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get fontMonospace => '等幅';
 
   @override
+  String get fontGothic => 'ゴシック';
+
+  @override
+  String get fontRoundGothic => '丸ゴシック';
+
+  @override
+  String get fontThinMincho => '細明朝';
+
+  @override
+  String get fontBrush => '筆文字';
+
+  @override
+  String get fontRetro => 'レトロ';
+
+  @override
+  String get fontImpact => 'インパクト';
+
+  @override
+  String get fontCute => 'ゆるかわ';
+
+  @override
   String mediaPickFailed(String error) {
     return '写真・動画の選択に失敗しました: $error';
   }
@@ -368,7 +389,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get filterThisWeek => '今週';
 
   @override
-  String get filterSomeday => 'いつか';
+  String get filterWithinMonth => '一か月以内';
 
   @override
   String get filterCompleted => '完了済み';
@@ -441,10 +462,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get reminderNotificationChannelDescription => '独り言から作られたToDoの時刻リマインダー';
 
   @override
-  String get knowledgeBaseTitle => '第二の脳';
+  String get knowledgeBaseTitle => '思考、記憶の検索';
 
   @override
-  String get knowledgeBaseDescription => 'これまでの日記・アイデア・タスクをAIが横断的に振り返って答えます。';
+  String get knowledgeBaseDescription => 'これまでの日記・アイデア・タスクをAIが振り返って答えます。';
 
   @override
   String get knowledgeBaseInputHint => '例：先月話してたアプリのアイデアってなんだっけ？';

@@ -125,6 +125,22 @@ class TaskEntryCard extends StatelessWidget {
     );
   }
 
+  String _reminderLabel(TaskItem task, String locale) {
+    final start = task.reminderAt!;
+    final end = task.reminderEndAt;
+    final startDate = DateFormat.MMMd(locale).format(start);
+    final startTime = DateFormat.Hm(locale).format(start);
+    if (end == null) return '$startDate $startTime';
+
+    final sameDay =
+        start.year == end.year && start.month == end.month && start.day == end.day;
+    final endTime = DateFormat.Hm(locale).format(end);
+    if (sameDay) return '$startDate $startTime-$endTime';
+
+    final endDate = DateFormat.MMMd(locale).format(end);
+    return '$startDate $startTime → $endDate $endTime';
+  }
+
   Widget _buildTaskMeta(ThemeData theme, TaskItem task, String locale) {
     final dueLabel = taskDueLabel(task, locale: locale);
     final reminderAt = task.reminderAt;
@@ -153,7 +169,7 @@ class TaskEntryCard extends StatelessWidget {
               ),
               const SizedBox(width: 2),
               Text(
-                '${DateFormat.MMMd(locale).format(reminderAt)} ${DateFormat.Hm(locale).format(reminderAt)}',
+                _reminderLabel(task, locale),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.primary,
                   fontWeight: FontWeight.w600,

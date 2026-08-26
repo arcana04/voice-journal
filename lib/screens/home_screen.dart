@@ -246,6 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
           dueHint: task.dueHint,
           dueDate: task.dueDate,
           reminderAt: task.reminderAt,
+          reminderEndAt: task.reminderEndAt,
         ),
       );
     }
@@ -426,7 +427,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (showComposerFab)
                   Positioned(
                     right: 16,
-                    bottom: 120,
+                    bottom: 24,
                     child: FloatingActionButton(
                       heroTag: 'home_text_composer_fab',
                       tooltip: l10n.textComposeTooltip,

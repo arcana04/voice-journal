@@ -9,14 +9,14 @@ import '../widgets/scrim_text.dart';
 import '../widgets/task_entry_card.dart';
 import 'task_edit_screen.dart';
 
-enum _TaskFilter { all, today, thisWeek, someday, completed }
+enum _TaskFilter { all, today, thisWeek, withinMonth, completed }
 
 extension on _TaskFilter {
   String labelFor(AppLocalizations l10n) => switch (this) {
     _TaskFilter.all => l10n.filterAll,
     _TaskFilter.today => l10n.filterToday,
     _TaskFilter.thisWeek => l10n.filterThisWeek,
-    _TaskFilter.someday => l10n.filterSomeday,
+    _TaskFilter.withinMonth => l10n.filterWithinMonth,
     _TaskFilter.completed => l10n.filterCompleted,
   };
 }
@@ -35,11 +35,18 @@ bool _isThisWeek(DateTime date, DateTime now) {
   return !target.isBefore(startOfWeek) && !target.isAfter(endOfWeek);
 }
 
+bool _isWithinOneMonth(DateTime date, DateTime now) {
+  final today = DateTime(now.year, now.month, now.day);
+  final oneMonthLater = DateTime(now.year, now.month + 1, now.day);
+  final target = DateTime(date.year, date.month, date.day);
+  return !target.isBefore(today) && !target.isAfter(oneMonthLater);
+}
+
 List<TaskItem> _filterTasks(List<TaskItem> tasks, _TaskFilter filter) {
   final now = DateTime.now();
   switch (filter) {
     case _TaskFilter.all:
-      return tasks.where((t) => !t.done).toList();
+      return tasks.toList();
     case _TaskFilter.today:
       return tasks
           .where(
@@ -52,8 +59,15 @@ List<TaskItem> _filterTasks(List<TaskItem> tasks, _TaskFilter filter) {
             (t) => !t.done && t.dueDate != null && _isThisWeek(t.dueDate!, now),
           )
           .toList();
-    case _TaskFilter.someday:
-      return tasks.where((t) => !t.done && t.dueDate == null).toList();
+    case _TaskFilter.withinMonth:
+      return tasks
+          .where(
+            (t) =>
+                !t.done &&
+                t.dueDate != null &&
+                _isWithinOneMonth(t.dueDate!, now),
+          )
+          .toList();
     case _TaskFilter.completed:
       return tasks.where((t) => t.done).toList();
   }

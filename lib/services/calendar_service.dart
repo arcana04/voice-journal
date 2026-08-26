@@ -28,13 +28,14 @@ class CalendarService {
   }
 
   /// [calendarId]に予定を作成・更新する。既存の[eventId]を渡すとその予定を更新する。
+  /// [end]を渡せばその日時を終了時刻に使い、省略時は[start]の1時間後をデフォルトにする。
   /// 成功すればイベントIDを返す。
   Future<String?> upsertEvent({
     required String calendarId,
     String? eventId,
     required String title,
     required DateTime start,
-    Duration duration = const Duration(hours: 1),
+    DateTime? end,
   }) async {
     final location = tz.local;
     final event = Event(
@@ -42,7 +43,10 @@ class CalendarService {
       eventId: eventId,
       title: title,
       start: tz.TZDateTime.from(start, location),
-      end: tz.TZDateTime.from(start.add(duration), location),
+      end: tz.TZDateTime.from(
+        end ?? start.add(const Duration(hours: 1)),
+        location,
+      ),
     );
     final result = await _plugin.createOrUpdateEvent(event);
     return result?.data;

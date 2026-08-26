@@ -159,6 +159,7 @@ tasksに期限らしき表現（「明日」「来週月曜まで」「今月中
 
 【時刻付きリマインダー】
 tasksの中に「15時に」「明日の朝9時」「夜7時に病院」のように"時刻"まで明言されているものがあれば、上記の今日の日付と日本時間を基準に実際の日時を計算し、reminder_at に "YYYY-MM-DDTHH:mm:00"（24時間表記、秒は00固定）の形式で入れてください。日付の指定がなく時刻のみの場合は今日の日付を使い、その時刻がすでに過ぎていれば翌日の日付にしてください。時刻の明言が無い場合（日付や「午前中」「そのうち」のような曖昧な言い回ししか無い場合）は reminder_at は null にしてください。
+さらに「10時から17時まで」「15時〜16時半」のように終了時刻まで明言されている場合は、同じ日付を基準に reminder_end_at にも同じ形式で終了日時を入れてください。終了時刻が翌日にまたがる場合（例:「夜22時から翌朝6時まで」）は日付を1日進めてください。終了時刻の明言が無ければ reminder_end_at は null にしてください。
 
 【労いメッセージ】
 分類の結果、category="感情ログ" のnoteが1件以上ある場合のみ、その内容に寄り添う一言（10〜40文字程度、説教や解決策の押し付けにならない労いの言葉）を comfort_message に入れてください。感情ログが無い場合は comfort_message は null にしてください。
@@ -177,7 +178,7 @@ fatigue（疲労・くたびれ）, love（愛情・愛おしさ）, anxious（�
 {
   "summary": "全体の1行要約",
   "tasks": [
-    {"title": "タスク内容", "due_hint": "期限の元の言い回し（なければnull）", "due_date": "YYYY-MM-DD（推測できなければnull）", "reminder_at": "YYYY-MM-DDTHH:mm:00（時刻の明言が無ければnull）"}
+    {"title": "タスク内容", "due_hint": "期限の元の言い回し（なければnull）", "due_date": "YYYY-MM-DD（推測できなければnull）", "reminder_at": "YYYY-MM-DDTHH:mm:00（時刻の明言が無ければnull）", "reminder_end_at": "YYYY-MM-DDTHH:mm:00（終了時刻の明言が無ければnull）"}
   ],
   "notes": [
     {"category": "アイデア または 感情ログ", "title": "短い見出し", "content": "上記「notesの本文の書き方」に従って一人称でリライトした文章"}
@@ -224,6 +225,7 @@ If a task contains a due-date-like expression ("tomorrow", "by next Monday", "so
 
 [Timed reminders]
 If a task explicitly states a time (e.g. "at 3pm", "tomorrow morning at 9", "7pm at the clinic"), compute the actual date/time relative to today's date and Japan time above, and put it in reminder_at as "YYYY-MM-DDTHH:mm:00" (24-hour time, seconds fixed at 00). If only a time is given with no date, use today's date, and if that time has already passed today, use tomorrow's date instead. If no explicit time is stated (only a date, or a vague phrase like "in the morning" or "sometime"), set reminder_at to null.
+If an end time is also explicitly stated (e.g. "from 10am to 5pm", "3pm to 4:30pm"), put that end date/time in reminder_end_at using the same format and date. If the end time crosses into the next day (e.g. "10pm to 6am"), advance the date by one day. If no end time is stated, set reminder_end_at to null.
 
 [Comforting message]
 Only if there is at least one note with category="感情ログ", write a short, warm one-liner (about 10-25 words) that acknowledges the feeling without lecturing or pushing a solution, and put it in comfort_message. If there is no 感情ログ note, set comfort_message to null.
@@ -242,7 +244,7 @@ Output ONLY the following JSON format, with no extra commentary. Remember: every
 {
   "summary": "one-line overall summary, in English",
   "tasks": [
-    {"title": "task content, in English", "due_hint": "original due-date phrase (or null)", "due_date": "YYYY-MM-DD (or null if it can't be inferred)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (or null if no explicit time)"}
+    {"title": "task content, in English", "due_hint": "original due-date phrase (or null)", "due_date": "YYYY-MM-DD (or null if it can't be inferred)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (or null if no explicit time)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (or null if no explicit end time)"}
   ],
   "notes": [
     {"category": "アイデア or 感情ログ (must stay in Japanese, unchanged)", "title": "short heading, in English", "content": "first-person rewrite per the note style rules above, in English"}
@@ -335,16 +337,19 @@ function normalizeCustomWords(customWords: unknown): CustomWordEntry[] {
     .slice(0, 100);
 }
 
-function buildTranscriptionPrompt(words: CustomWordEntry[]): string | undefined {
+function buildTranscriptionPrompt(words: CustomWordEntry[], locale: Locale): string | undefined {
   const list = words.map((w) => w.word);
-  return list.length > 0 ? list.join("、") : undefined;
+  if (list.length === 0) return undefined;
+  return list.join(locale === "en" ? ", " : "、");
 }
 
-function buildGlossaryContext(words: CustomWordEntry[]): string | undefined {
+function buildGlossaryContext(words: CustomWordEntry[], locale: Locale): string | undefined {
   const withDescription = words.filter((w) => w.description);
   if (withDescription.length === 0) return undefined;
 
-  return withDescription.map((w) => `・${w.word}：${w.description}`).join("\n");
+  return withDescription
+    .map((w) => (locale === "en" ? `- ${w.word}: ${w.description}` : `・${w.word}：${w.description}`))
+    .join("\n");
 }
 
 interface EnhancedAudio {
@@ -433,6 +438,7 @@ interface StructuredResult {
     due_hint: string | null;
     due_date: string | null;
     reminder_at: string | null;
+    reminder_end_at: string | null;
   }[];
   notes: { category: string; title: string | null; content: string }[];
   comfort_message: string | null;
@@ -497,13 +503,24 @@ function toClientResponse(structured: StructuredResult) {
 
   return {
     summary: structured.summary ?? "",
-    tasks: (structured.tasks ?? []).map((task) => ({
-      title: task.title,
-      due_hint: task.due_hint ?? null,
-      due_date: task.due_date && isoDate.test(task.due_date) ? task.due_date : null,
-      reminder_at:
-        task.reminder_at && isoDateTime.test(task.reminder_at) ? task.reminder_at : null,
-    })),
+    tasks: (structured.tasks ?? []).map((task) => {
+      const reminderAt =
+        task.reminder_at && isoDateTime.test(task.reminder_at) ? task.reminder_at : null;
+      const reminderEndAt =
+        reminderAt &&
+        task.reminder_end_at &&
+        isoDateTime.test(task.reminder_end_at) &&
+        task.reminder_end_at > reminderAt
+          ? task.reminder_end_at
+          : null;
+      return {
+        title: task.title,
+        due_hint: task.due_hint ?? null,
+        due_date: task.due_date && isoDate.test(task.due_date) ? task.due_date : null,
+        reminder_at: reminderAt,
+        reminder_end_at: reminderEndAt,
+      };
+    }),
     notes: structured.notes ?? [],
     comfort_message: structured.comfort_message ?? null,
     emotion:
@@ -543,7 +560,7 @@ export const processVoiceMemo = onCall(
       const rawAudioBuffer = Buffer.from(audioBase64, "base64");
       const enhanced = await enhanceAudio(rawAudioBuffer, mimeType ?? "audio/m4a");
       const words = normalizeCustomWords(customWords);
-      const prompt = buildTranscriptionPrompt(words);
+      const prompt = buildTranscriptionPrompt(words, loc);
 
       const transcript = await transcribe(
         apiKey,
@@ -556,7 +573,7 @@ export const processVoiceMemo = onCall(
         throw new HttpsError("invalid-argument", MESSAGES[loc].transcriptionEmpty);
       }
 
-      const glossary = buildGlossaryContext(words);
+      const glossary = buildGlossaryContext(words, loc);
       const structured = await structure(
         apiKey,
         transcript,
