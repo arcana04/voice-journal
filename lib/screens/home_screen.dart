@@ -18,6 +18,7 @@ import '../widgets/icon_button_style.dart';
 import '../widgets/record_button.dart';
 import '../widgets/waveform.dart';
 import 'custom_dictionary_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -163,7 +164,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final summaryLevel = context.read<SettingsStore>().summaryLevel;
-      final entry = await _backend.processTextMemo(text, summaryLevel: summaryLevel);
+      final entry = await _backend.processTextMemo(
+        text,
+        summaryLevel: summaryLevel,
+      );
       if (!mounted) return;
       _applyDraft(entry);
     } catch (e) {
@@ -196,24 +200,28 @@ class _HomeScreenState extends State<HomeScreen> {
     final items = <DraftItem>[];
     for (var i = 0; i < entry.tasks.length; i++) {
       final task = entry.tasks[i];
-      items.add(DraftItem(
-        id: 'task_$i',
-        type: DraftItemType.task,
-        text: task.title,
-        dueHint: task.dueHint,
-        dueDate: task.dueDate,
-        reminderAt: task.reminderAt,
-      ));
+      items.add(
+        DraftItem(
+          id: 'task_$i',
+          type: DraftItemType.task,
+          text: task.title,
+          dueHint: task.dueHint,
+          dueDate: task.dueDate,
+          reminderAt: task.reminderAt,
+        ),
+      );
     }
     for (var i = 0; i < entry.notes.length; i++) {
       final note = entry.notes[i];
-      items.add(DraftItem(
-        id: 'note_$i',
-        type: DraftItemType.diary,
-        text: note.content,
-        noteCategory: note.category,
-        noteTitle: note.title,
-      ));
+      items.add(
+        DraftItem(
+          id: 'note_$i',
+          type: DraftItemType.diary,
+          text: note.content,
+          noteCategory: note.category,
+          noteTitle: note.title,
+        ),
+      );
     }
     return items;
   }
@@ -256,7 +264,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   String _formatDuration(Duration d) {
@@ -279,104 +288,133 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final draftItems = _draftItems;
-    final showComposerFab = draftItems == null && _state == RecordButtonState.idle;
+    final showComposerFab =
+        draftItems == null && _state == RecordButtonState.idle;
     return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            draftItems != null
-                ? EntryReview(
-                    summary: _draftSummary,
-                    initialItems: draftItems,
-                    onSave: _saveDraft,
-                    onDiscard: _discardDraft,
-                  )
-                : Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    _state == RecordButtonState.recording
-                        ? '${_formatDuration(_elapsed)} / ${_formatDuration(kMaxRecordingDuration)}'
-                        : ' ',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 16),
-                  Waveform(active: _state == RecordButtonState.recording),
-                  const SizedBox(height: 48),
-                  RecordButton(state: _state, onTap: _onTap),
-                  const SizedBox(height: 32),
-                  Text(
-                    _statusLabel(),
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  if (_state == RecordButtonState.idle) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      '1回の録音は最大$kMaxRecordingSeconds秒です',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
-                    ),
-                  ],
-                  if (_statusMessage != null) ...[
-                    const SizedBox(height: 12),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Text(
-                        _statusMessage!,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/home_background.png',
+              fit: BoxFit.cover,
+            ),
+          ),
+          SafeArea(
+            child: Stack(
+              children: [
+                draftItems != null
+                    ? EntryReview(
+                        summary: _draftSummary,
+                        initialItems: draftItems,
+                        onSave: _saveDraft,
+                        onDiscard: _discardDraft,
+                      )
+                    : Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _state == RecordButtonState.recording
+                                  ? '${_formatDuration(_elapsed)} / ${_formatDuration(kMaxRecordingDuration)}'
+                                  : ' ',
+                              style: Theme.of(context).textTheme.headlineMedium,
+                            ),
+                            const SizedBox(height: 16),
+                            Waveform(
+                              active: _state == RecordButtonState.recording,
+                            ),
+                            const SizedBox(height: 48),
+                            RecordButton(state: _state, onTap: _onTap),
+                            const SizedBox(height: 32),
+                            Text(
+                              _statusLabel(),
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            if (_state == RecordButtonState.idle) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                '1回の録音は最大$kMaxRecordingSeconds秒です',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .outline,
+                                    ),
+                              ),
+                            ],
+                            if (_statusMessage != null) ...[
+                              const SizedBox(height: 12),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 32,
+                                ),
+                                child: Text(
+                                  _statusMessage!,
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
+                if (showComposerFab)
+                  Positioned(
+                    right: 16,
+                    bottom: 120,
+                    child: FloatingActionButton(
+                      heroTag: 'home_text_composer_fab',
+                      tooltip: 'テキストで入力',
+                      onPressed: _openTextComposer,
+                      child: const Icon(Icons.add),
                     ),
-                  ],
-                ],
-              ),
-            ),
-            if (showComposerFab)
-              Positioned(
-                right: 16,
-                bottom: 120,
-                child: FloatingActionButton(
-                  heroTag: 'home_text_composer_fab',
-                  tooltip: 'テキストで入力',
-                  onPressed: _openTextComposer,
-                  child: const Icon(Icons.add),
+                  ),
+                Positioned(
+                  top: 4,
+                  left: 4,
+                  child: IconButton(
+                    icon: const Icon(Icons.settings_outlined),
+                    tooltip: '設定',
+                    style: pressableIconButtonStyle(context),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                    ),
+                  ),
                 ),
-              ),
-            Positioned(
-              top: 4,
-              right: 4,
-              child: PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
-                style: pressableIconButtonStyle(context),
-                onSelected: (value) {
-                  if (value == 'dictionary') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const CustomDictionaryScreen()),
-                    );
-                  } else if (value == 'summaryLevel') {
-                    showModalBottomSheet<void>(
-                      context: context,
-                      isScrollControlled: true,
-                      builder: (_) => const _SummaryLevelSheet(),
-                    );
-                  }
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(
-                    value: 'dictionary',
-                    child: Text('カスタム辞書'),
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert),
+                    style: pressableIconButtonStyle(context),
+                    onSelected: (value) {
+                      if (value == 'dictionary') {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const CustomDictionaryScreen(),
+                          ),
+                        );
+                      } else if (value == 'summaryLevel') {
+                        showModalBottomSheet<void>(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (_) => const _SummaryLevelSheet(),
+                        );
+                      }
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(value: 'dictionary', child: Text('カスタム辞書')),
+                      PopupMenuItem(
+                        value: 'summaryLevel',
+                        child: Text('AIの要約度'),
+                      ),
+                    ],
                   ),
-                  PopupMenuItem(
-                    value: 'summaryLevel',
-                    child: Text('AIの要約度'),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -421,14 +459,14 @@ class _TextComposerSheetState extends State<_TextComposerSheet> {
         children: [
           Text(
             'テキストで入力',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
             '話せない時はこちらに入力してください。内容は録音と同じようにAIが日記かタスクかを判断します。',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: Theme.of(context).colorScheme.outline),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -478,14 +516,14 @@ class _SummaryLevelSheet extends StatelessWidget {
         children: [
           Text(
             'AIの要約度',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
             '録音・テキストの内容を日記として仕分けるとき、AIがどれくらい短くまとめるかを選べます。タスクの簡潔さには影響しません。',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: Theme.of(context).colorScheme.outline),
           ),
           const SizedBox(height: 20),
           Slider(
@@ -506,11 +544,11 @@ class _SummaryLevelSheet extends StatelessWidget {
                 Text(
                   l.label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: l == level
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.outline,
-                        fontWeight: l == level ? FontWeight.w700 : FontWeight.w400,
-                      ),
+                    color: l == level
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.outline,
+                    fontWeight: l == level ? FontWeight.w700 : FontWeight.w400,
+                  ),
                 ),
             ],
           ),

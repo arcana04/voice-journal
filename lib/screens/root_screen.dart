@@ -6,7 +6,6 @@ import '../state/record_trigger_store.dart';
 import '../widgets/floating_nav_bar.dart';
 import 'diary_screen.dart';
 import 'home_screen.dart';
-import 'settings_screen.dart';
 import 'task_screen.dart';
 
 class RootScreen extends StatefulWidget {
@@ -20,12 +19,7 @@ class _RootScreenState extends State<RootScreen> {
   int _index = 0;
   final DeepLinkService _deepLinks = DeepLinkService();
 
-  static const _screens = [
-    HomeScreen(),
-    DiaryScreen(),
-    TaskScreen(),
-    SettingsScreen(),
-  ];
+  static const _screens = [HomeScreen(), DiaryScreen(), TaskScreen()];
 
   @override
   void initState() {
@@ -54,7 +48,11 @@ class _RootScreenState extends State<RootScreen> {
         selectedIndex: _index,
         onDestinationSelected: (value) => setState(() => _index = value),
         destinations: const [
-          FloatingNavDestination(icon: Icons.mic_none, selectedIcon: Icons.mic, label: '録音'),
+          FloatingNavDestination(
+            icon: Icons.mic_none,
+            selectedIcon: Icons.mic,
+            label: '録音',
+          ),
           FloatingNavDestination(
             icon: Icons.menu_book_outlined,
             selectedIcon: Icons.menu_book,
@@ -64,11 +62,6 @@ class _RootScreenState extends State<RootScreen> {
             icon: Icons.checklist_outlined,
             selectedIcon: Icons.checklist,
             label: 'タスク',
-          ),
-          FloatingNavDestination(
-            icon: Icons.settings_outlined,
-            selectedIcon: Icons.settings,
-            label: '設定',
           ),
         ],
       ),
