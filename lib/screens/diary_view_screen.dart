@@ -21,7 +21,11 @@ class DiaryViewScreen extends StatelessWidget {
     return null;
   }
 
-  Future<void> _confirmDelete(BuildContext context, JournalStore store, JournalEntry entry) async {
+  Future<void> _confirmDelete(
+    BuildContext context,
+    JournalStore store,
+    JournalEntry entry,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -68,7 +72,9 @@ class DiaryViewScreen extends StatelessWidget {
               EditIconButton(
                 size: 24,
                 onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => DiaryEditScreen(entryId: entryId)),
+                  MaterialPageRoute(
+                    builder: (_) => DiaryEditScreen(entryId: entryId),
+                  ),
                 ),
               ),
               const SizedBox(width: 4),
@@ -117,7 +123,9 @@ class DiaryViewScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  for (final note in entry.notes)
+                  for (final note in entry.notes.where(
+                    (n) => n.category == kNoteCategoryFeeling,
+                  ))
                     Padding(
                       padding: const EdgeInsets.only(bottom: 24),
                       child: Column(
@@ -126,8 +134,9 @@ class DiaryViewScreen extends StatelessWidget {
                           if ((note.title ?? '').isNotEmpty)
                             Text(
                               note.title!,
-                              style: theme.textTheme.titleLarge
-                                  ?.copyWith(fontWeight: FontWeight.w700),
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           const SizedBox(height: 8),
                           Text(note.content, style: theme.textTheme.bodyLarge),

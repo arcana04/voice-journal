@@ -45,8 +45,8 @@ class _NoteDraft {
   final TextEditingController contentController;
 
   _NoteDraft(this.note)
-      : titleController = TextEditingController(text: note.title ?? ''),
-        contentController = TextEditingController(text: note.content);
+    : titleController = TextEditingController(text: note.title ?? ''),
+      contentController = TextEditingController(text: note.content);
 
   void dispose() {
     titleController.dispose();
@@ -87,7 +87,10 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
   }
 
   List<_NoteDraft> _ensureDrafts(JournalEntry entry) {
-    return _drafts ??= entry.notes.map((n) => _NoteDraft(n)).toList();
+    return _drafts ??= entry.notes
+        .where((n) => n.category == kNoteCategoryFeeling)
+        .map((n) => _NoteDraft(n))
+        .toList();
   }
 
   @override
@@ -125,7 +128,10 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
       return;
     }
     if (picked.isEmpty) return;
-    await store.addMediaToEntry(entry, picked.map((x) => File(x.path)).toList());
+    await store.addMediaToEntry(
+      entry,
+      picked.map((x) => File(x.path)).toList(),
+    );
   }
 
   Future<void> _openMediaSheet(JournalStore store, JournalEntry entry) async {
@@ -160,7 +166,10 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
               padding: EdgeInsets.fromLTRB(20, 16, 20, 4),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text('背景', style: TextStyle(fontWeight: FontWeight.w700)),
+                child: Text(
+                  '背景',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
             ),
             ListTile(
@@ -200,10 +209,14 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color: selected ? Colors.blue.withValues(alpha: 0.12) : Colors.transparent,
+                      color: selected
+                          ? Colors.blue.withValues(alpha: 0.12)
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: selected ? Colors.blue : Colors.grey.withValues(alpha: 0.4),
+                        color: selected
+                            ? Colors.blue
+                            : Colors.grey.withValues(alpha: 0.4),
                       ),
                     ),
                     alignment: Alignment.center,
@@ -235,12 +248,18 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                       shape: BoxShape.circle,
                       color: color ?? Colors.transparent,
                       border: Border.all(
-                        color: selected ? Colors.blue : Colors.grey.withValues(alpha: 0.4),
+                        color: selected
+                            ? Colors.blue
+                            : Colors.grey.withValues(alpha: 0.4),
                         width: selected ? 2 : 1,
                       ),
                     ),
                     child: color == null
-                        ? Icon(Icons.block, size: 18, color: Colors.grey.withValues(alpha: 0.6))
+                        ? Icon(
+                            Icons.block,
+                            size: 18,
+                            color: Colors.grey.withValues(alpha: 0.6),
+                          )
                         : null,
                   ),
                 ),
@@ -257,10 +276,14 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                    color: selected ? Colors.blue.withValues(alpha: 0.08) : Colors.transparent,
+                    color: selected
+                        ? Colors.blue.withValues(alpha: 0.08)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: selected ? Colors.blue : Colors.grey.withValues(alpha: 0.4),
+                      color: selected
+                          ? Colors.blue
+                          : Colors.grey.withValues(alpha: 0.4),
                     ),
                   ),
                   alignment: Alignment.center,
@@ -284,7 +307,10 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                         const Expanded(
                           child: Text(
                             'フォント',
-                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                            ),
                           ),
                         ),
                         IconButton(
@@ -292,10 +318,10 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                           tooltip: 'この設定をデフォルトにする',
                           onPressed: () {
                             context.read<TextStyleStore>().setDefault(
-                                  fontFamilyIndex: _fontFamilyIndex,
-                                  textColor: _textColor,
-                                  fontScale: _fontScale,
-                                );
+                              fontFamilyIndex: _fontFamilyIndex,
+                              textColor: _textColor,
+                              fontScale: _fontScale,
+                            );
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('デフォルトに設定しました')),
                             );
@@ -322,7 +348,8 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [
-                          for (final color in _textColorOptions) colorOption(color),
+                          for (final color in _textColorOptions)
+                            colorOption(color),
                         ],
                       ),
                     ),
@@ -335,7 +362,8 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                       crossAxisSpacing: 10,
                       childAspectRatio: 2.6,
                       children: [
-                        for (var i = 0; i < _fontOptions.length; i++) fontOption(i),
+                        for (var i = 0; i < _fontOptions.length; i++)
+                          fontOption(i),
                       ],
                     ),
                   ],
@@ -420,8 +448,10 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                     const SizedBox(height: 8),
                     MediaGallery(
                       paths: entry.imagePaths,
-                      onRemove: (index) =>
-                          store.removeMediaFromEntry(entry, entry.imagePaths[index]),
+                      onRemove: (index) => store.removeMediaFromEntry(
+                        entry,
+                        entry.imagePaths[index],
+                      ),
                     ),
                   ],
                 ],
@@ -487,7 +517,9 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
               hintText: '題名',
-              hintStyle: theme.textTheme.titleLarge?.copyWith(color: theme.colorScheme.outline),
+              hintStyle: theme.textTheme.titleLarge?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -501,7 +533,9 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
               hintText: 'ここにもっと書く…',
-              hintStyle: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.outline),
+              hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
             ),
           ),
         ],
@@ -515,7 +549,11 @@ class _ToolbarButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _ToolbarButton({required this.icon, required this.label, required this.onTap});
+  const _ToolbarButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {

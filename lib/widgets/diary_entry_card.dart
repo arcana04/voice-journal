@@ -74,7 +74,9 @@ class DiaryEntryCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            for (final note in entry.notes)
+            for (final note in entry.notes.where(
+              (n) => n.category == kNoteCategoryFeeling,
+            ))
               Padding(
                 padding: const EdgeInsets.only(top: 10),
                 child: Column(

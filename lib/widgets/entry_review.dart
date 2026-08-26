@@ -25,11 +25,22 @@ class DraftItem {
   final String? dueHint;
   final DateTime? dueDate;
   final DateTime? reminderAt;
-  final String noteCategory;
+  String noteCategory;
   final String? noteTitle;
 }
 
-/// 録音結果を「日記」「タスク」の2カテゴリに分けて表示し、テキスト修正と
+/// レビュー画面上でカードをどの列に置くかの3分類。[DraftItem.type]が
+/// タスクかどうか、日記側なら[DraftItem.noteCategory]がアイデアか感情ログかで決まる。
+enum _ReviewBucket { feeling, idea, task }
+
+_ReviewBucket _bucketOf(DraftItem item) {
+  if (item.type == DraftItemType.task) return _ReviewBucket.task;
+  return item.noteCategory == kNoteCategoryIdea
+      ? _ReviewBucket.idea
+      : _ReviewBucket.feeling;
+}
+
+/// 録音結果を「日記」「アイデア」「タスク」の3カテゴリに分けて表示し、テキスト修正と
 /// ドラッグ＆ドロップによるカテゴリの入れ替えができるレビューUI。
 class EntryReview extends StatefulWidget {
   final String summary;
@@ -52,9 +63,20 @@ class EntryReview extends StatefulWidget {
 class _EntryReviewState extends State<EntryReview> {
   late final List<DraftItem> _items = List.of(widget.initialItems);
 
-  void _moveTo(DraftItem item, DraftItemType type) {
-    if (item.type == type) return;
-    setState(() => item.type = type);
+  void _moveTo(DraftItem item, _ReviewBucket bucket) {
+    if (_bucketOf(item) == bucket) return;
+    setState(() {
+      switch (bucket) {
+        case _ReviewBucket.task:
+          item.type = DraftItemType.task;
+        case _ReviewBucket.idea:
+          item.type = DraftItemType.diary;
+          item.noteCategory = kNoteCategoryIdea;
+        case _ReviewBucket.feeling:
+          item.type = DraftItemType.diary;
+          item.noteCategory = kNoteCategoryFeeling;
+      }
+    });
   }
 
   void _removeItem(DraftItem item) {
@@ -64,20 +86,24 @@ class _EntryReviewState extends State<EntryReview> {
   void _save() {
     final tasks = _items
         .where((i) => i.type == DraftItemType.task && i.text.trim().isNotEmpty)
-        .map((i) => TaskItem(
-              title: i.text.trim(),
-              dueHint: i.dueHint,
-              dueDate: i.dueDate,
-              reminderAt: i.reminderAt,
-            ))
+        .map(
+          (i) => TaskItem(
+            title: i.text.trim(),
+            dueHint: i.dueHint,
+            dueDate: i.dueDate,
+            reminderAt: i.reminderAt,
+          ),
+        )
         .toList();
     final notes = _items
         .where((i) => i.type == DraftItemType.diary && i.text.trim().isNotEmpty)
-        .map((i) => NoteItem(
-              category: i.noteCategory,
-              title: i.noteTitle,
-              content: i.text.trim(),
-            ))
+        .map(
+          (i) => NoteItem(
+            category: i.noteCategory,
+            title: i.noteTitle,
+            content: i.text.trim(),
+          ),
+        )
         .toList();
     widget.onSave(tasks, notes);
   }
@@ -85,8 +111,15 @@ class _EntryReviewState extends State<EntryReview> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final diaryItems = _items.where((i) => i.type == DraftItemType.diary).toList();
-    final taskItems = _items.where((i) => i.type == DraftItemType.task).toList();
+    final feelingItems = _items
+        .where((i) => _bucketOf(i) == _ReviewBucket.feeling)
+        .toList();
+    final ideaItems = _items
+        .where((i) => _bucketOf(i) == _ReviewBucket.idea)
+        .toList();
+    final taskItems = _items
+        .where((i) => _bucketOf(i) == _ReviewBucket.task)
+        .toList();
     final hasContent = _items.any((i) => i.text.trim().isNotEmpty);
 
     return Column(
@@ -101,13 +134,17 @@ class _EntryReviewState extends State<EntryReview> {
                 const SizedBox(height: 4),
                 Text(
                   widget.summary,
-                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.outline),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.outline,
+                  ),
                 ),
               ],
               const SizedBox(height: 2),
               Text(
-                '違っていればテキストを直せます。カードをドラッグすると日記⇄タスクを入れ替えられます',
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
+                '違っていればテキストを直せます。カードをドラッグすると日記・アイデア・タスクを入れ替えられます',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.outline,
+                ),
               ),
             ],
           ),
@@ -118,15 +155,23 @@ class _EntryReviewState extends State<EntryReview> {
             children: [
               _buildSection(
                 theme,
-                type: DraftItemType.diary,
+                bucket: _ReviewBucket.feeling,
                 title: '日記',
                 icon: Icons.menu_book_outlined,
-                items: diaryItems,
+                items: feelingItems,
               ),
               const SizedBox(height: 16),
               _buildSection(
                 theme,
-                type: DraftItemType.task,
+                bucket: _ReviewBucket.idea,
+                title: 'アイデア',
+                icon: Icons.lightbulb_outline,
+                items: ideaItems,
+              ),
+              const SizedBox(height: 16),
+              _buildSection(
+                theme,
+                bucket: _ReviewBucket.task,
                 title: 'タスク',
                 icon: Icons.checklist_outlined,
                 items: taskItems,
@@ -160,23 +205,27 @@ class _EntryReviewState extends State<EntryReview> {
 
   Widget _buildSection(
     ThemeData theme, {
-    required DraftItemType type,
+    required _ReviewBucket bucket,
     required String title,
     required IconData icon,
     required List<DraftItem> items,
   }) {
     return DragTarget<DraftItem>(
-      onWillAcceptWithDetails: (details) => details.data.type != type,
-      onAcceptWithDetails: (details) => _moveTo(details.data, type),
+      onWillAcceptWithDetails: (details) => _bucketOf(details.data) != bucket,
+      onAcceptWithDetails: (details) => _moveTo(details.data, bucket),
       builder: (context, candidateData, rejectedData) {
         final isHover = candidateData.isNotEmpty;
         return Container(
           decoration: BoxDecoration(
             color: isHover
                 ? theme.colorScheme.primary.withValues(alpha: 0.08)
-                : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                : theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.3,
+                  ),
             border: Border.all(
-              color: isHover ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
+              color: isHover
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outlineVariant,
               width: isHover ? 2 : 1,
             ),
             borderRadius: BorderRadius.circular(14),
@@ -198,7 +247,9 @@ class _EntryReviewState extends State<EntryReview> {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Text(
                     'ここにカードをドラッグ',
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.outline,
+                    ),
                   ),
                 )
               else
@@ -267,7 +318,12 @@ class _CardShell extends StatelessWidget {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(10),
         boxShadow: dragging
-            ? [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 10)]
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 10,
+                ),
+              ]
             : null,
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
@@ -286,7 +342,10 @@ class _CardShell extends StatelessWidget {
                 dragging
                     ? Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text(item.text, style: theme.textTheme.bodyMedium),
+                        child: Text(
+                          item.text,
+                          style: theme.textTheme.bodyMedium,
+                        ),
                       )
                     : TextFormField(
                         initialValue: item.text,
@@ -309,13 +368,18 @@ class _CardShell extends StatelessWidget {
                         if (dueLabel != null)
                           Text(
                             dueLabel,
-                            style: theme.textTheme.bodySmall
-                                ?.copyWith(color: theme.colorScheme.outline),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.outline,
+                            ),
                           ),
-                        if (dueLabel != null && reminderAt != null) const SizedBox(width: 8),
+                        if (dueLabel != null && reminderAt != null)
+                          const SizedBox(width: 8),
                         if (reminderAt != null) ...[
-                          Icon(Icons.notifications_active_outlined,
-                              size: 13, color: theme.colorScheme.primary),
+                          Icon(
+                            Icons.notifications_active_outlined,
+                            size: 13,
+                            color: theme.colorScheme.primary,
+                          ),
                           const SizedBox(width: 2),
                           Text(
                             DateFormat('HH:mm').format(reminderAt),

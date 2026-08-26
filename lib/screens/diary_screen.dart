@@ -99,7 +99,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
                 final diaryEntries = store.entries
                     .where(
                       (e) =>
-                          e.notes.isNotEmpty &&
+                          e.notes.any(
+                            (n) => n.category == kNoteCategoryFeeling,
+                          ) &&
                           e.createdAt.year == _visibleMonth.year &&
                           e.createdAt.month == _visibleMonth.month,
                     )
