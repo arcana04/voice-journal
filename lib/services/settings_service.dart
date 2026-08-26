@@ -3,18 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/summary_level.dart';
 
 class SettingsService {
-  static const _darkModePref = 'dark_mode';
   static const _summaryLevelPref = 'summary_level';
-
-  Future<bool> getDarkMode() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_darkModePref) ?? false;
-  }
-
-  Future<void> setDarkMode(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_darkModePref, value);
-  }
 
   Future<SummaryLevel> getSummaryLevel() async {
     final prefs = await SharedPreferences.getInstance();

@@ -22,38 +22,27 @@ class VoiceJournalApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TextStyleStore()..load()),
         ChangeNotifierProvider(create: (_) => RecordTriggerStore()),
       ],
-      child: Consumer<SettingsStore>(
-        builder: (context, settings, _) {
-          return MaterialApp(
-            title: 'VoiceJournal',
-            debugShowCheckedModeBanner: false,
-            locale: const Locale('ja'),
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [Locale('ja'), Locale('en')],
-            themeMode: settings.darkMode ? ThemeMode.dark : ThemeMode.light,
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-              scaffoldBackgroundColor: Colors.white,
-              useMaterial3: true,
-              appBarTheme: const AppBarTheme(
-                backgroundColor: Colors.white,
-                surfaceTintColor: Colors.transparent,
-              ),
-            ),
-            darkTheme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.blue,
-                brightness: Brightness.dark,
-              ),
-              useMaterial3: true,
-            ),
-            home: const RootScreen(),
-          );
-        },
+      child: MaterialApp(
+        title: 'VoiceJournal',
+        debugShowCheckedModeBanner: false,
+        locale: const Locale('ja'),
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('ja'), Locale('en')],
+        themeMode: ThemeMode.light,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          scaffoldBackgroundColor: Colors.white,
+          useMaterial3: true,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+          ),
+        ),
+        home: const RootScreen(),
       ),
     );
   }

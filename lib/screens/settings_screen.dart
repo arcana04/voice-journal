@@ -1,11 +1,9 @@
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../models/usage_status.dart';
 import '../services/backend_service.dart';
 import '../services/reminder_service.dart';
-import '../state/settings_store.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -59,7 +57,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsStore>();
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -68,13 +65,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
           children: [
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('ダークモード'),
-              value: settings.darkMode,
-              onChanged: (value) => settings.setDarkMode(value),
-            ),
-            const Divider(height: 32),
             Text('無料枠', style: theme.textTheme.labelLarge),
             const SizedBox(height: 8),
             FutureBuilder<UsageStatus>(
