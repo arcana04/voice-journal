@@ -102,23 +102,14 @@ class _TaskScreenState extends State<TaskScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // task_background.png はイラスト部分が画面上部の約40%で終わり、その下は
-    // 単色の背景になる。絞り込みボタンはちょうどその境目に置く。
-    final contentTop = MediaQuery.of(context).size.height * 0.40;
 
     return Scaffold(
       body: Stack(
         children: [
           Positioned.fill(
-            child: const AppBackgroundImage(
-              fallbackAsset: 'assets/images/task_background.png',
-            ),
+            child: const AppBackgroundImage(),
           ),
-          Positioned(
-            top: contentTop,
-            left: 0,
-            right: 0,
-            bottom: 0,
+          SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

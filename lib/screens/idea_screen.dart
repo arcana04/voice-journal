@@ -27,78 +27,65 @@ class _IdeaScreenState extends State<IdeaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // idea_background.png はイラスト部分が画面上部の約42%で終わり、その下は
-    // 単色の背景になる。カード一覧はちょうどその境目から表示する。
-    final contentTop = MediaQuery.of(context).size.height * 0.42;
-
     return Scaffold(
       body: Stack(
         children: [
           Positioned.fill(
-            child: const AppBackgroundImage(
-              fallbackAsset: 'assets/images/idea_background.png',
-            ),
+            child: const AppBackgroundImage(),
           ),
-          Positioned(
-            top: contentTop,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: SafeArea(
-              top: false,
-              child: Consumer<JournalStore>(
-                builder: (context, store, _) {
-                  if (store.loading && store.entries.isEmpty) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+          SafeArea(
+            child: Consumer<JournalStore>(
+              builder: (context, store, _) {
+                if (store.loading && store.entries.isEmpty) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                  final ideaEntries =
-                      <MapEntry<JournalEntry, List<NoteItem>>>[];
-                  for (final entry in store.entries) {
-                    final ideas = entry.notes
-                        .where((n) => n.category == kNoteCategoryIdea)
-                        .toList();
-                    if (ideas.isNotEmpty) {
-                      ideaEntries.add(MapEntry(entry, ideas));
-                    }
+                final ideaEntries =
+                    <MapEntry<JournalEntry, List<NoteItem>>>[];
+                for (final entry in store.entries) {
+                  final ideas = entry.notes
+                      .where((n) => n.category == kNoteCategoryIdea)
+                      .toList();
+                  if (ideas.isNotEmpty) {
+                    ideaEntries.add(MapEntry(entry, ideas));
                   }
+                }
 
-                  if (ideaEntries.isEmpty) {
-                    return Center(
-                      child: ScrimText(
-                        child: Text(
-                          AppLocalizations.of(context)!.ideasEmpty,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
+                if (ideaEntries.isEmpty) {
+                  return Center(
+                    child: ScrimText(
+                      child: Text(
+                        AppLocalizations.of(context)!.ideasEmpty,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
-                    );
-                  }
-
-                  return RefreshIndicator(
-                    onRefresh: store.load,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(0, 8, 0, 96),
-                      itemCount: ideaEntries.length,
-                      itemBuilder: (context, index) {
-                        final entry = ideaEntries[index].key;
-                        final ideas = ideaEntries[index].value;
-                        return IdeaEntryCard(
-                          entry: entry,
-                          ideas: ideas,
-                          onEdit: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  IdeaEditScreen(entryId: entry.id!),
-                            ),
-                          ),
-                          onDelete: () => store.deleteEntry(entry),
-                        );
-                      },
                     ),
                   );
-                },
-              ),
+                }
+
+                return RefreshIndicator(
+                  onRefresh: store.load,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(0, 8, 0, 96),
+                    itemCount: ideaEntries.length,
+                    itemBuilder: (context, index) {
+                      final entry = ideaEntries[index].key;
+                      final ideas = ideaEntries[index].value;
+                      return IdeaEntryCard(
+                        entry: entry,
+                        ideas: ideas,
+                        onEdit: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                IdeaEditScreen(entryId: entry.id!),
+                          ),
+                        ),
+                        onDelete: () => store.deleteEntry(entry),
+                      );
+                    },
+                  ),
+                );
+              },
             ),
           ),
         ],
