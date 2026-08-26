@@ -17,7 +17,7 @@ const execFileAsync = promisify(execFile);
 
 const openAiApiKey = defineSecret("OPENAI_API_KEY");
 
-const FREE_DAILY_LIMIT = 5;
+const FREE_DAILY_LIMIT = 10;
 
 type SummaryLevel = "preserve" | "standard" | "compact";
 
