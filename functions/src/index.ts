@@ -163,6 +163,11 @@ tasksの中に「15時に」「明日の朝9時」「夜7時に病院」のよ�
 【労いメッセージ】
 分類の結果、category="感情ログ" のnoteが1件以上ある場合のみ、その内容に寄り添う一言（10〜40文字程度、説教や解決策の押し付けにならない労いの言葉）を comfort_message に入れてください。感情ログが無い場合は comfort_message は null にしてください。
 
+【感情タグ】
+comfort_messageと同じ条件（category="感情ログ" のnoteが1件以上ある場合のみ）で、その内容から読み取れる最も中心的な感情をひとつだけ選び、emotion に次のいずれかの英語の識別子（この通りのスペルで、翻訳せずに）を入れてください：
+fatigue（疲労・くたびれ）, love（愛情・愛おしさ）, anxious（焦り・不安）, excited（ワクワク・期待）, joy（喜び・嬉しさ）, sadness（悲しみ・落ち込み）, anger（怒り・苛立ち）, satisfaction（満足・達成感）, neutral（それ以外・判別しづらい穏やかな心情）。
+感情ログが無い場合は emotion は null にしてください。
+
 【noteのタイトル】
 各noteについて、日記の見出しになるような短いタイトル（8〜16文字程度、体言止め推奨）を title に入れてください。例:「花火大会が楽しかった」「新しいカフェのアイデア」。
 
@@ -177,7 +182,8 @@ tasksの中に「15時に」「明日の朝9時」「夜7時に病院」のよ�
   "notes": [
     {"category": "アイデア または 感情ログ", "title": "短い見出し", "content": "上記「notesの本文の書き方」に従って一人称でリライトした文章"}
   ],
-  "comfort_message": "感情ログがある場合のみ短い労いの言葉。なければnull"
+  "comfort_message": "感情ログがある場合のみ短い労いの言葉。なければnull",
+  "emotion": "感情ログがある場合のみ fatigue/love/anxious/excited/joy/sadness/anger/satisfaction/neutral のいずれか。なければnull"
 }`;
 }
 
@@ -222,6 +228,11 @@ If a task explicitly states a time (e.g. "at 3pm", "tomorrow morning at 9", "7pm
 [Comforting message]
 Only if there is at least one note with category="感情ログ", write a short, warm one-liner (about 10-25 words) that acknowledges the feeling without lecturing or pushing a solution, and put it in comfort_message. If there is no 感情ログ note, set comfort_message to null.
 
+[Emotion tag]
+Under the same condition as comfort_message (only if there is at least one note with category="感情ログ"), pick the single most central emotion conveyed by that content and put it in emotion as exactly one of these English identifiers (spelled exactly as shown, never translated):
+fatigue, love, anxious, excited, joy, sadness, anger, satisfaction, neutral (use neutral for anything calm or ambiguous that doesn't clearly fit the others).
+If there is no 感情ログ note, set emotion to null.
+
 [Note title]
 For each note, write a short heading (about 3-6 words) suitable as a diary entry title, and put it in title. Examples: "Fireworks festival was fun", "New café idea".
 
@@ -236,7 +247,8 @@ Output ONLY the following JSON format, with no extra commentary. Remember: every
   "notes": [
     {"category": "アイデア or 感情ログ (must stay in Japanese, unchanged)", "title": "short heading, in English", "content": "first-person rewrite per the note style rules above, in English"}
   ],
-  "comfort_message": "short comforting message in English, only if there is a 感情ログ note, otherwise null"
+  "comfort_message": "short comforting message in English, only if there is a 感情ログ note, otherwise null",
+  "emotion": "one of fatigue/love/anxious/excited/joy/sadness/anger/satisfaction/neutral, only if there is a 感情ログ note, otherwise null"
 }`;
 }
 
@@ -424,7 +436,20 @@ interface StructuredResult {
   }[];
   notes: { category: string; title: string | null; content: string }[];
   comfort_message: string | null;
+  emotion: string | null;
 }
+
+const VALID_EMOTIONS = new Set([
+  "fatigue",
+  "love",
+  "anxious",
+  "excited",
+  "joy",
+  "sadness",
+  "anger",
+  "satisfaction",
+  "neutral",
+]);
 
 async function structure(
   apiKey: string,
@@ -481,6 +506,10 @@ function toClientResponse(structured: StructuredResult) {
     })),
     notes: structured.notes ?? [],
     comfort_message: structured.comfort_message ?? null,
+    emotion:
+      structured.emotion && VALID_EMOTIONS.has(structured.emotion)
+        ? structured.emotion
+        : null,
   };
 }
 
@@ -544,6 +573,246 @@ export const processVoiceMemo = onCall(
       const message = err instanceof Error ? err.message : String(err);
       // NOTE: コード"internal"/"unknown"はクライアントにメッセージが届かず"INTERNAL"に
       // 潰されるため、デバッグ中は詳細が見える"unavailable"を使う。
+      throw new HttpsError("unavailable", MESSAGES[loc].unexpectedError(message));
+    }
+  }
+);
+
+function buildKnowledgeBaseSystemPrompt(locale: Locale): string {
+  if (locale === "en") {
+    return `You are an AI assistant that answers the user's questions by referencing their own past voice memos and journal entries.
+
+You will be given a list of the user's past diary entries, ideas, and tasks below, each with its date.
+Answer the user's question in English, using ONLY the information in that list as your source.
+- If you find relevant entries, mention which date(s) they're from.
+- If nothing relevant is found, honestly say so instead of guessing or making something up.
+- If asked for a trend or pattern, back it up with concrete counts or frequency from the entries.
+- If asked to compile a list, present it as a concise bullet list.
+Keep your answer concise and conversational, not a wall of text.`;
+  }
+
+  return `あなたはユーザー本人が過去に記録した音声メモ・日記を横断的に参照して、質問に答えるAIアシスタントです。
+
+以下に、ユーザーが過去に記録した日記・アイデア・タスクの一覧を日付つきで渡します。
+これらの内容だけを根拠に、ユーザーの質問に日本語で答えてください。
+- 該当する記録があれば、いつの記録か（日付）に触れてください。
+- 該当する記録が見当たらない場合は、推測で答えを作らず、正直に見つからなかったと伝えてください。
+- 傾向や頻度を尋ねられた場合は、件数など具体的な根拠を示してください。
+- リスト化を求められた場合は、簡潔な箇条書きでまとめてください。
+簡潔で会話的な答え方をしてください。長文の説明文にはしないでください。`;
+}
+
+/**
+ * 過去の記録を丸ごとプロンプトに詰め込んで回答させるMVP実装。
+ * メモ量が増えてコンテキストに収まらなくなったら、埋め込み検索で関連する
+ * 記録だけを絞り込んで渡す方式に置き換える想定。
+ */
+async function answerKnowledgeBaseQuestion(
+  apiKey: string,
+  question: string,
+  context: string,
+  locale: Locale
+): Promise<string> {
+  const systemPrompt = buildKnowledgeBaseSystemPrompt(locale);
+  const userContent =
+    locale === "en"
+      ? `[Past entries]\n${context || "(none)"}\n\n[Question]\n${question}`
+      : `【過去の記録】\n${context || "（記録がありません）"}\n\n【質問】\n${question}`;
+
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userContent },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new HttpsError("unavailable", MESSAGES[locale].analysisFailed(body));
+  }
+
+  const data = (await response.json()) as {
+    choices: { message: { content: string } }[];
+  };
+  return data.choices[0].message.content.trim();
+}
+
+interface AskKnowledgeBaseRequest {
+  question: string;
+  context?: string;
+  locale?: string;
+}
+
+// NOTE: 有料プラン限定にする予定だが、課金基盤（RevenueCat等）が未実装のため
+// 現状は認証済みユーザーなら誰でも呼び出せる。課金基盤が入り次第ゲートを追加する。
+export const askKnowledgeBase = onCall(
+  { secrets: [openAiApiKey], timeoutSeconds: 60, memory: "256MiB" },
+  async (request) => {
+    const { question, context, locale } = (request.data ?? {}) as AskKnowledgeBaseRequest;
+    const loc = normalizeLocale(locale);
+
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", MESSAGES[loc].authRequired);
+    }
+    if (!question || !question.trim()) {
+      throw new HttpsError("invalid-argument", MESSAGES[loc].noText);
+    }
+
+    try {
+      const apiKey = openAiApiKey.value();
+      const answer = await answerKnowledgeBaseQuestion(
+        apiKey,
+        question.trim(),
+        (context ?? "").trim(),
+        loc
+      );
+      return { answer };
+    } catch (err) {
+      if (err instanceof HttpsError) {
+        throw err;
+      }
+      logger.error("askKnowledgeBase unexpected error", err);
+      const message = err instanceof Error ? err.message : String(err);
+      throw new HttpsError("unavailable", MESSAGES[loc].unexpectedError(message));
+    }
+  }
+);
+
+function buildWeeklyReportSystemPrompt(locale: Locale): string {
+  if (locale === "en") {
+    return `You are an AI assistant that reviews a user's own voice-memo journal entries from the past week and writes a short "weekly brain report" summarizing their emotional trends and thinking patterns.
+
+You will be given the week's diary entries, ideas, and tasks below, each with its date. Analyze ONLY this content and respond with a JSON object in this exact shape:
+
+{
+  "emotion_narrative": "1-2 sentences describing the emotional trend across the week (e.g. which day had the most of a particular feeling, whether it improved or worsened toward the weekend). Write it in a warm, encouraging tone, in English. If there isn't enough emotional content to say anything meaningful, say so briefly instead of inventing a trend.",
+  "top_keywords": [ up to 3 objects like {"keyword": "short theme name", "count": approximate number of times it came up} ], ordered by how often they came up. Empty array if nothing recurring.
+  "shining_ideas": [ up to 2 objects like {"title": "short idea title", "reason": "1 short sentence on why this idea stands out"} ] — pick from the "Idea" entries only, the ones with the most potential or spark. Empty array if there are no ideas this week.
+  "advice": "One short, concrete, actionable tip for the upcoming week based on the patterns you noticed (e.g. a day of the week that tends to be busy). Keep it under 2 sentences, warm and non-preachy, in English."
+}
+
+Output ONLY the JSON object, no extra commentary.`;
+  }
+
+  return `あなたはユーザー本人が1週間分記録した音声メモ（日記・アイデア・タスク）を振り返り、「週刊脳内レポート」として感情の傾向や思考パターンを短くまとめるAIアシスタントです。
+
+以下に今週の日記・アイデア・タスクの一覧を日付つきで渡します。この内容だけを根拠に分析し、必ず以下の形のJSONオブジェクトで出力してください：
+
+{
+  "emotion_narrative": "今週の感情の傾向を1〜2文で。例えば特定の感情がどの曜日に集中していたか、週末にかけて改善/悪化したかなど。温かく励ますようなトーンで日本語で書いてください。感情に関する記録が少なすぎて有意な傾向が言えない場合は、無理に傾向を作らず正直にそう書いてください。",
+  "top_keywords": [ 最大3件、{"keyword": "短いテーマ名", "count": 言及されたおおよその回数} という形のオブジェクト。よく出てきた順。繰り返し出てきたテーマが無ければ空配列。 ],
+  "shining_ideas": [ 最大2件、{"title": "アイデアの短いタイトル", "reason": "なぜこのアイデアが光っているかの短い理由（1文）"} という形のオブジェクト。「アイデア」カテゴリのnoteの中から、特にポテンシャルや閃きを感じるものを選ぶこと。今週アイデアが無ければ空配列。 ],
+  "advice": "気づいたパターンを踏まえた、来週に向けた短く具体的なワンポイントアドバイス。2文以内、説教くさくなく温かいトーンで、日本語で。"
+}
+
+JSONオブジェクトのみを出力し、余計な説明文は含めないでください。`;
+}
+
+interface WeeklyReportInsightsResult {
+  emotion_narrative: string;
+  top_keywords: { keyword: string; count: number }[];
+  shining_ideas: { title: string; reason: string }[];
+  advice: string;
+}
+
+/**
+ * 過去の記録を丸ごとプロンプトに詰め込んで分析させるMVP実装。askKnowledgeBaseと同様、
+ * メモ量が増えてコンテキストに収まらなくなったら埋め込み検索方式への置き換えを検討する。
+ */
+async function generateWeeklyReportInsights(
+  apiKey: string,
+  context: string,
+  locale: Locale
+): Promise<WeeklyReportInsightsResult> {
+  const systemPrompt = buildWeeklyReportSystemPrompt(locale);
+  const userContent =
+    locale === "en"
+      ? `[This week's entries]\n${context || "(none)"}`
+      : `【今週の記録】\n${context || "（記録がありません）"}`;
+
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userContent },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new HttpsError("unavailable", MESSAGES[locale].analysisFailed(body));
+  }
+
+  const data = (await response.json()) as {
+    choices: { message: { content: string } }[];
+  };
+  return JSON.parse(data.choices[0].message.content) as WeeklyReportInsightsResult;
+}
+
+function toWeeklyReportResponse(result: WeeklyReportInsightsResult) {
+  return {
+    emotion_narrative: result.emotion_narrative ?? "",
+    top_keywords: (result.top_keywords ?? []).slice(0, 3).map((k) => ({
+      keyword: k.keyword ?? "",
+      count: typeof k.count === "number" ? k.count : 0,
+    })),
+    shining_ideas: (result.shining_ideas ?? []).slice(0, 2).map((i) => ({
+      title: i.title ?? "",
+      reason: i.reason ?? "",
+    })),
+    advice: result.advice ?? "",
+  };
+}
+
+interface GenerateWeeklyReportRequest {
+  context?: string;
+  locale?: string;
+}
+
+// NOTE: 有料プラン限定にする予定だが、課金基盤（RevenueCat等）が未実装のため
+// 現状は認証済みユーザーなら誰でも呼び出せる。課金基盤が入り次第ゲートを追加する。
+export const generateWeeklyReport = onCall(
+  { secrets: [openAiApiKey], timeoutSeconds: 60, memory: "256MiB" },
+  async (request) => {
+    const { context, locale } = (request.data ?? {}) as GenerateWeeklyReportRequest;
+    const loc = normalizeLocale(locale);
+
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", MESSAGES[loc].authRequired);
+    }
+
+    try {
+      const apiKey = openAiApiKey.value();
+      const result = await generateWeeklyReportInsights(
+        apiKey,
+        (context ?? "").trim(),
+        loc
+      );
+      return toWeeklyReportResponse(result);
+    } catch (err) {
+      if (err instanceof HttpsError) {
+        throw err;
+      }
+      logger.error("generateWeeklyReport unexpected error", err);
+      const message = err instanceof Error ? err.message : String(err);
       throw new HttpsError("unavailable", MESSAGES[loc].unexpectedError(message));
     }
   }

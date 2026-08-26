@@ -7,8 +7,11 @@ import '../models/usage_status.dart';
 import '../services/backend_service.dart';
 import '../services/reminder_service.dart';
 import '../state/background_store.dart';
+import '../state/calendar_store.dart';
 import '../state/settings_store.dart';
 import 'background_select_screen.dart';
+import 'integration_select_screen.dart';
+import 'weekly_report_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -114,6 +117,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 );
               },
+            ),
+            const Divider(height: 32),
+            Text(
+              l10n.integrationsSettingsTitle,
+              style: theme.textTheme.labelLarge,
+            ),
+            const SizedBox(height: 8),
+            Consumer<CalendarStore>(
+              builder: (context, calendarStore, _) {
+                final name = calendarStore.selectedCalendarName;
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.event_outlined),
+                  title: Text(l10n.integrationsSettingsTitle),
+                  subtitle: Text(
+                    calendarStore.selectedCalendarId == null
+                        ? l10n.integrationsOff
+                        : (name ?? l10n.integrationsOff),
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const IntegrationSelectScreen(),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const Divider(height: 32),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.insights_outlined),
+              title: Text(l10n.weeklyReportSettingsTitle),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const WeeklyReportScreen()),
+              ),
             ),
             const Divider(height: 32),
             Text(l10n.freeTierSectionTitle, style: theme.textTheme.labelLarge),

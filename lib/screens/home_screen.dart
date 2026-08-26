@@ -3,9 +3,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:record/record.dart' show Amplitude;
 
 import '../config/recording_limits.dart';
 import '../l10n/app_localizations.dart';
+import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
 import '../models/summary_level.dart';
 import '../services/backend_service.dart';
@@ -36,11 +38,14 @@ class _HomeScreenState extends State<HomeScreen> {
   RecordButtonState _state = RecordButtonState.idle;
   Duration _elapsed = Duration.zero;
   Timer? _timer;
+  StreamSubscription<Amplitude>? _amplitudeSub;
+  DateTime? _lastSoundAt;
   String? _statusMessage;
 
   String _draftSummary = '';
   DateTime? _draftCreatedAt;
   String? _draftComfortMessage;
+  EmotionTag? _draftEmotion;
   List<DraftItem>? _draftItems;
 
   RecordTriggerStore? _recordTrigger;
@@ -62,6 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _recordTrigger?.removeListener(_onRecordTriggered);
     _timer?.cancel();
+    _amplitudeSub?.cancel();
     _recorder.dispose();
     super.dispose();
   }
@@ -102,10 +108,24 @@ class _HomeScreenState extends State<HomeScreen> {
       _elapsed = Duration.zero;
       _statusMessage = null;
     });
+    _lastSoundAt = DateTime.now();
+    _amplitudeSub = _recorder
+        .onAmplitudeChanged(const Duration(milliseconds: 300))
+        .listen((amplitude) {
+      if (amplitude.current > kSilenceThresholdDb) {
+        _lastSoundAt = DateTime.now();
+      }
+    });
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       final next = _elapsed + const Duration(seconds: 1);
       if (next >= kMaxRecordingDuration) {
         setState(() => _elapsed = kMaxRecordingDuration);
+        _stopAndProcess();
+        return;
+      }
+      if (_lastSoundAt != null &&
+          DateTime.now().difference(_lastSoundAt!) >=
+              kSilenceAutoStopDuration) {
         _stopAndProcess();
         return;
       }
@@ -115,6 +135,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _stopAndProcess() async {
     _timer?.cancel();
+    _amplitudeSub?.cancel();
+    _amplitudeSub = null;
     String? path;
     try {
       path = await _recorder.stop();
@@ -197,6 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _draftSummary = entry.summary;
       _draftCreatedAt = entry.createdAt;
       _draftComfortMessage = entry.comfortMessage;
+      _draftEmotion = entry.emotion;
       _draftItems = _buildDraftItems(entry);
     });
   }
@@ -248,6 +271,7 @@ class _HomeScreenState extends State<HomeScreen> {
       tasks: tasks,
       notes: notes,
       comfortMessage: _draftComfortMessage,
+      emotion: _draftEmotion,
     );
     setState(() => _draftItems = null);
     await context.read<JournalStore>().addEntry(entry);

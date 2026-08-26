@@ -54,6 +54,7 @@ dependencies:
   app_settings: ^5.1.1
   google_fonts: ^8.2.1
   app_links: ^7.2.1
+  device_calendar: ^4.3.3
 
 dev_dependencies:
   flutter_test:

@@ -8,6 +8,7 @@ import '../widgets/floating_nav_bar.dart';
 import 'diary_screen.dart';
 import 'home_screen.dart';
 import 'idea_screen.dart';
+import 'knowledge_base_screen.dart';
 import 'task_screen.dart';
 
 class RootScreen extends StatefulWidget {
@@ -26,6 +27,7 @@ class _RootScreenState extends State<RootScreen> {
     DiaryScreen(),
     IdeaScreen(),
     TaskScreen(),
+    KnowledgeBaseScreen(),
   ];
 
   @override
@@ -75,6 +77,11 @@ class _RootScreenState extends State<RootScreen> {
             icon: Icons.checklist_outlined,
             selectedIcon: Icons.checklist,
             label: l10n.navTask,
+          ),
+          FloatingNavDestination(
+            icon: Icons.psychology_outlined,
+            selectedIcon: Icons.psychology,
+            label: l10n.navKnowledgeBase,
           ),
         ],
       ),

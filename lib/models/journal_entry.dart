@@ -1,3 +1,5 @@
+import 'emotion_tag.dart';
+
 class TaskItem {
   final int? id;
   final int? entryId;
@@ -6,6 +8,7 @@ class TaskItem {
   final DateTime? dueDate;
   final DateTime? reminderAt;
   final bool done;
+  final String? calendarEventId;
 
   TaskItem({
     this.id,
@@ -15,6 +18,7 @@ class TaskItem {
     this.dueDate,
     this.reminderAt,
     this.done = false,
+    this.calendarEventId,
   });
 
   TaskItem copyWith({
@@ -22,6 +26,8 @@ class TaskItem {
     String? title,
     DateTime? reminderAt,
     bool clearReminder = false,
+    String? calendarEventId,
+    bool clearCalendarEventId = false,
   }) {
     return TaskItem(
       id: id,
@@ -31,6 +37,9 @@ class TaskItem {
       dueDate: dueDate,
       reminderAt: clearReminder ? null : (reminderAt ?? this.reminderAt),
       done: done ?? this.done,
+      calendarEventId: clearCalendarEventId
+          ? null
+          : (calendarEventId ?? this.calendarEventId),
     );
   }
 
@@ -43,6 +52,7 @@ class TaskItem {
       'due_date': dueDate?.toIso8601String(),
       'reminder_at': reminderAt?.toIso8601String(),
       'done': done ? 1 : 0,
+      'calendar_event_id': calendarEventId,
     };
   }
 
@@ -57,6 +67,7 @@ class TaskItem {
       dueDate: dueDateStr != null ? DateTime.tryParse(dueDateStr) : null,
       reminderAt: reminderAtStr != null ? DateTime.tryParse(reminderAtStr) : null,
       done: (map['done'] as int? ?? 0) == 1,
+      calendarEventId: map['calendar_event_id'] as String?,
     );
   }
 
@@ -140,6 +151,7 @@ class JournalEntry {
   final List<TaskItem> tasks;
   final List<NoteItem> notes;
   final String? comfortMessage;
+  final EmotionTag? emotion;
   final List<String> imagePaths;
 
   JournalEntry({
@@ -149,6 +161,7 @@ class JournalEntry {
     required this.tasks,
     required this.notes,
     this.comfortMessage,
+    this.emotion,
     this.imagePaths = const [],
   });
 
@@ -164,6 +177,7 @@ class JournalEntry {
       tasks: tasks ?? this.tasks,
       notes: notes ?? this.notes,
       comfortMessage: comfortMessage,
+      emotion: emotion,
       imagePaths: imagePaths ?? this.imagePaths,
     );
   }

@@ -113,6 +113,16 @@ class DiaryViewScreen extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (entry.emotion != null) ...[
+                        const Spacer(),
+                        Text(
+                          entry.emotion!.emoji,
+                          style: const TextStyle(fontSize: 28),
+                          semanticsLabel: entry.emotion!.labelFor(
+                            AppLocalizations.of(context)!,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -124,6 +134,26 @@ class DiaryViewScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
+                  if (entry.comfortMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer.withValues(
+                          alpha: 0.4,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        entry.comfortMessage!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontStyle: FontStyle.italic,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   for (final note in entry.notes.where(
                     (n) => n.category == kNoteCategoryFeeling,

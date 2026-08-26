@@ -22,6 +22,36 @@ class AppLocalizationsJa extends AppLocalizations {
   String get navTask => 'タスク';
 
   @override
+  String get navKnowledgeBase => '相談';
+
+  @override
+  String get emotionFatigue => '疲労';
+
+  @override
+  String get emotionLove => '愛情';
+
+  @override
+  String get emotionAnxious => '焦り';
+
+  @override
+  String get emotionExcited => 'ワクワク';
+
+  @override
+  String get emotionJoy => '喜び';
+
+  @override
+  String get emotionSadness => '悲しみ';
+
+  @override
+  String get emotionAnger => '怒り';
+
+  @override
+  String get emotionSatisfaction => '満足';
+
+  @override
+  String get emotionNeutral => 'ふつう';
+
+  @override
   String get confirmDeleteTitle => '削除しますか？';
 
   @override
@@ -136,6 +166,30 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get darkModeTitle => 'ダークモード';
+
+  @override
+  String get integrationsSettingsTitle => '連携';
+
+  @override
+  String get integrationsScreenTitle => '連携';
+
+  @override
+  String get integrationsDescription =>
+      '端末にすでに登録されているカレンダー（iOS標準カレンダーや、設定アプリで追加したGoogleアカウントなど）から連携先を選べます。ONにすると、日時が確定したタスクが自動でそのカレンダーに予定として登録されます。';
+
+  @override
+  String get integrationsOff => '連携しない';
+
+  @override
+  String get integrationsPermissionDenied =>
+      'カレンダーへのアクセスが許可されていません。設定アプリから許可できます。';
+
+  @override
+  String get integrationsNoCalendars =>
+      '書き込み可能なカレンダーが端末に見つかりませんでした。設定アプリでGoogleアカウントなどのカレンダーを追加してから、再読み込みしてください。';
+
+  @override
+  String get integrationsRefresh => '再読み込み';
 
   @override
   String get appBackgroundSettingsTitle => '背景';
@@ -385,4 +439,77 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get reminderNotificationChannelDescription => '独り言から作られたToDoの時刻リマインダー';
+
+  @override
+  String get knowledgeBaseTitle => '第二の脳';
+
+  @override
+  String get knowledgeBaseDescription => 'これまでの日記・アイデア・タスクをAIが横断的に振り返って答えます。';
+
+  @override
+  String get knowledgeBaseInputHint => '例：先月話してたアプリのアイデアってなんだっけ？';
+
+  @override
+  String get knowledgeBaseSend => '送信';
+
+  @override
+  String get knowledgeBaseThinking => '過去の記録を振り返っています…';
+
+  @override
+  String get knowledgeBaseEmpty => 'まだ記録がありません。録音してからまた聞いてみてください。';
+
+  @override
+  String get knowledgeBaseErrorTitle => '回答の取得に失敗しました';
+
+  @override
+  String get weeklyReportSettingsTitle => '週刊レポート';
+
+  @override
+  String get weeklyReportTitle => '週刊脳内レポート';
+
+  @override
+  String get weeklyReportRetry => '再試行';
+
+  @override
+  String get weeklyReportLoadingInsights => 'AIが今週を振り返っています…';
+
+  @override
+  String get weeklyReportErrorTitle => 'レポートの取得に失敗しました';
+
+  @override
+  String get weeklyReportEmotionSectionTitle => '感情の傾向';
+
+  @override
+  String get weeklyReportNoEmotionData => '今週はまだ感情の記録がありません';
+
+  @override
+  String get weeklyReportKeywordsSectionTitle => '今週のキーワード';
+
+  @override
+  String get weeklyReportNoKeywords => '目立ったキーワードはありませんでした';
+
+  @override
+  String get weeklyReportIdeasSectionTitle => '輝いていたアイデア';
+
+  @override
+  String get weeklyReportNoIdeas => '今週はまだアイデアの記録がありません';
+
+  @override
+  String get weeklyReportAchievementSectionTitle => '今週の達成';
+
+  @override
+  String weeklyReportTasksCompleted(int count) {
+    return '完了したタスク $count件';
+  }
+
+  @override
+  String weeklyReportDiaryCount(int count) {
+    return '書いた日記 $count件';
+  }
+
+  @override
+  String get weeklyReportEncouragement => '今週もよく頑張りました！';
+
+  @override
+  String get weeklyReportAdviceSectionTitle => '来週へのアドバイス';
 }

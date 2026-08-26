@@ -22,6 +22,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navTask => 'Task';
 
   @override
+  String get navKnowledgeBase => 'Ask';
+
+  @override
+  String get emotionFatigue => 'Fatigue';
+
+  @override
+  String get emotionLove => 'Love';
+
+  @override
+  String get emotionAnxious => 'Anxious';
+
+  @override
+  String get emotionExcited => 'Excited';
+
+  @override
+  String get emotionJoy => 'Joy';
+
+  @override
+  String get emotionSadness => 'Sadness';
+
+  @override
+  String get emotionAnger => 'Anger';
+
+  @override
+  String get emotionSatisfaction => 'Satisfaction';
+
+  @override
+  String get emotionNeutral => 'Neutral';
+
+  @override
   String get confirmDeleteTitle => 'Delete this?';
 
   @override
@@ -140,6 +170,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get darkModeTitle => 'Dark mode';
+
+  @override
+  String get integrationsSettingsTitle => 'Integrations';
+
+  @override
+  String get integrationsScreenTitle => 'Integrations';
+
+  @override
+  String get integrationsDescription =>
+      'Choose a calendar already set up on this device (like iOS Calendar or a Google account added in system settings). Once turned on, any task with a specific date and time will automatically be added there as an event.';
+
+  @override
+  String get integrationsOff => 'Off';
+
+  @override
+  String get integrationsPermissionDenied =>
+      'Calendar access wasn\'t granted. You can allow it from the system Settings app.';
+
+  @override
+  String get integrationsNoCalendars =>
+      'No writable calendars were found on this device. Add a calendar (like a Google account) in the system Settings app, then refresh.';
+
+  @override
+  String get integrationsRefresh => 'Refresh';
 
   @override
   String get appBackgroundSettingsTitle => 'Background';
@@ -392,4 +446,80 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get reminderNotificationChannelDescription =>
       'Time-based reminders for to-dos created from your voice notes';
+
+  @override
+  String get knowledgeBaseTitle => 'Second Brain';
+
+  @override
+  String get knowledgeBaseDescription =>
+      'AI looks back across all your diary entries, ideas, and tasks to answer you.';
+
+  @override
+  String get knowledgeBaseInputHint =>
+      'e.g. What was that app idea I mentioned last month?';
+
+  @override
+  String get knowledgeBaseSend => 'Send';
+
+  @override
+  String get knowledgeBaseThinking => 'Looking back through your past entries…';
+
+  @override
+  String get knowledgeBaseEmpty =>
+      'There\'s nothing recorded yet. Record something, then ask again.';
+
+  @override
+  String get knowledgeBaseErrorTitle => 'Couldn\'t get an answer';
+
+  @override
+  String get weeklyReportSettingsTitle => 'Weekly report';
+
+  @override
+  String get weeklyReportTitle => 'Weekly Brain Report';
+
+  @override
+  String get weeklyReportRetry => 'Retry';
+
+  @override
+  String get weeklyReportLoadingInsights => 'AI is reflecting on your week…';
+
+  @override
+  String get weeklyReportErrorTitle => 'Couldn\'t load the report';
+
+  @override
+  String get weeklyReportEmotionSectionTitle => 'Emotional trends';
+
+  @override
+  String get weeklyReportNoEmotionData => 'No emotional entries yet this week';
+
+  @override
+  String get weeklyReportKeywordsSectionTitle => 'This week\'s keywords';
+
+  @override
+  String get weeklyReportNoKeywords => 'No standout keywords this week';
+
+  @override
+  String get weeklyReportIdeasSectionTitle => 'Ideas that shined';
+
+  @override
+  String get weeklyReportNoIdeas => 'No ideas recorded yet this week';
+
+  @override
+  String get weeklyReportAchievementSectionTitle => 'This week\'s wins';
+
+  @override
+  String weeklyReportTasksCompleted(int count) {
+    return '$count tasks completed';
+  }
+
+  @override
+  String weeklyReportDiaryCount(int count) {
+    return '$count diary entries';
+  }
+
+  @override
+  String get weeklyReportEncouragement => 'You did great this week!';
+
+  @override
+  String get weeklyReportAdviceSectionTitle => 'Advice for next week';
 }

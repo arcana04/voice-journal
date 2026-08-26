@@ -122,6 +122,66 @@ abstract class AppLocalizations {
   /// **'Task'**
   String get navTask;
 
+  /// No description provided for @navKnowledgeBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask'**
+  String get navKnowledgeBase;
+
+  /// No description provided for @emotionFatigue.
+  ///
+  /// In en, this message translates to:
+  /// **'Fatigue'**
+  String get emotionFatigue;
+
+  /// No description provided for @emotionLove.
+  ///
+  /// In en, this message translates to:
+  /// **'Love'**
+  String get emotionLove;
+
+  /// No description provided for @emotionAnxious.
+  ///
+  /// In en, this message translates to:
+  /// **'Anxious'**
+  String get emotionAnxious;
+
+  /// No description provided for @emotionExcited.
+  ///
+  /// In en, this message translates to:
+  /// **'Excited'**
+  String get emotionExcited;
+
+  /// No description provided for @emotionJoy.
+  ///
+  /// In en, this message translates to:
+  /// **'Joy'**
+  String get emotionJoy;
+
+  /// No description provided for @emotionSadness.
+  ///
+  /// In en, this message translates to:
+  /// **'Sadness'**
+  String get emotionSadness;
+
+  /// No description provided for @emotionAnger.
+  ///
+  /// In en, this message translates to:
+  /// **'Anger'**
+  String get emotionAnger;
+
+  /// No description provided for @emotionSatisfaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Satisfaction'**
+  String get emotionSatisfaction;
+
+  /// No description provided for @emotionNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'Neutral'**
+  String get emotionNeutral;
+
   /// No description provided for @confirmDeleteTitle.
   ///
   /// In en, this message translates to:
@@ -337,6 +397,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dark mode'**
   String get darkModeTitle;
+
+  /// No description provided for @integrationsSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrations'**
+  String get integrationsSettingsTitle;
+
+  /// No description provided for @integrationsScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrations'**
+  String get integrationsScreenTitle;
+
+  /// No description provided for @integrationsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a calendar already set up on this device (like iOS Calendar or a Google account added in system settings). Once turned on, any task with a specific date and time will automatically be added there as an event.'**
+  String get integrationsDescription;
+
+  /// No description provided for @integrationsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get integrationsOff;
+
+  /// No description provided for @integrationsPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar access wasn\'t granted. You can allow it from the system Settings app.'**
+  String get integrationsPermissionDenied;
+
+  /// No description provided for @integrationsNoCalendars.
+  ///
+  /// In en, this message translates to:
+  /// **'No writable calendars were found on this device. Add a calendar (like a Google account) in the system Settings app, then refresh.'**
+  String get integrationsNoCalendars;
+
+  /// No description provided for @integrationsRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get integrationsRefresh;
 
   /// No description provided for @appBackgroundSettingsTitle.
   ///
@@ -817,6 +919,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Time-based reminders for to-dos created from your voice notes'**
   String get reminderNotificationChannelDescription;
+
+  /// No description provided for @knowledgeBaseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Second Brain'**
+  String get knowledgeBaseTitle;
+
+  /// No description provided for @knowledgeBaseDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'AI looks back across all your diary entries, ideas, and tasks to answer you.'**
+  String get knowledgeBaseDescription;
+
+  /// No description provided for @knowledgeBaseInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. What was that app idea I mentioned last month?'**
+  String get knowledgeBaseInputHint;
+
+  /// No description provided for @knowledgeBaseSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get knowledgeBaseSend;
+
+  /// No description provided for @knowledgeBaseThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking back through your past entries…'**
+  String get knowledgeBaseThinking;
+
+  /// No description provided for @knowledgeBaseEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s nothing recorded yet. Record something, then ask again.'**
+  String get knowledgeBaseEmpty;
+
+  /// No description provided for @knowledgeBaseErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t get an answer'**
+  String get knowledgeBaseErrorTitle;
+
+  /// No description provided for @weeklyReportSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly report'**
+  String get weeklyReportSettingsTitle;
+
+  /// No description provided for @weeklyReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Brain Report'**
+  String get weeklyReportTitle;
+
+  /// No description provided for @weeklyReportRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get weeklyReportRetry;
+
+  /// No description provided for @weeklyReportLoadingInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is reflecting on your week…'**
+  String get weeklyReportLoadingInsights;
+
+  /// No description provided for @weeklyReportErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the report'**
+  String get weeklyReportErrorTitle;
+
+  /// No description provided for @weeklyReportEmotionSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Emotional trends'**
+  String get weeklyReportEmotionSectionTitle;
+
+  /// No description provided for @weeklyReportNoEmotionData.
+  ///
+  /// In en, this message translates to:
+  /// **'No emotional entries yet this week'**
+  String get weeklyReportNoEmotionData;
+
+  /// No description provided for @weeklyReportKeywordsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This week\'s keywords'**
+  String get weeklyReportKeywordsSectionTitle;
+
+  /// No description provided for @weeklyReportNoKeywords.
+  ///
+  /// In en, this message translates to:
+  /// **'No standout keywords this week'**
+  String get weeklyReportNoKeywords;
+
+  /// No description provided for @weeklyReportIdeasSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ideas that shined'**
+  String get weeklyReportIdeasSectionTitle;
+
+  /// No description provided for @weeklyReportNoIdeas.
+  ///
+  /// In en, this message translates to:
+  /// **'No ideas recorded yet this week'**
+  String get weeklyReportNoIdeas;
+
+  /// No description provided for @weeklyReportAchievementSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This week\'s wins'**
+  String get weeklyReportAchievementSectionTitle;
+
+  /// No description provided for @weeklyReportTasksCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tasks completed'**
+  String weeklyReportTasksCompleted(int count);
+
+  /// No description provided for @weeklyReportDiaryCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} diary entries'**
+  String weeklyReportDiaryCount(int count);
+
+  /// No description provided for @weeklyReportEncouragement.
+  ///
+  /// In en, this message translates to:
+  /// **'You did great this week!'**
+  String get weeklyReportEncouragement;
+
+  /// No description provided for @weeklyReportAdviceSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Advice for next week'**
+  String get weeklyReportAdviceSectionTitle;
 }
 
 class _AppLocalizationsDelegate

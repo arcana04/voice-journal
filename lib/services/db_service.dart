@@ -1,6 +1,7 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
 
 class DbService {
@@ -22,14 +23,15 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 5,
+      version: 7,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE entries (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             created_at TEXT NOT NULL,
             summary TEXT NOT NULL,
-            comfort_message TEXT
+            comfort_message TEXT,
+            emotion TEXT
           )
         ''');
         await db.execute('''
@@ -41,6 +43,7 @@ class DbService {
             due_date TEXT,
             reminder_at TEXT,
             done INTEGER NOT NULL DEFAULT 0,
+            calendar_event_id TEXT,
             FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
           )
         ''');
@@ -86,6 +89,12 @@ class DbService {
         if (oldVersion < 5) {
           await db.execute('ALTER TABLE notes ADD COLUMN title TEXT');
         }
+        if (oldVersion < 6) {
+          await db.execute('ALTER TABLE entries ADD COLUMN emotion TEXT');
+        }
+        if (oldVersion < 7) {
+          await db.execute('ALTER TABLE tasks ADD COLUMN calendar_event_id TEXT');
+        }
       },
     );
   }
@@ -96,6 +105,7 @@ class DbService {
       'created_at': entry.createdAt.toIso8601String(),
       'summary': entry.summary,
       'comfort_message': entry.comfortMessage,
+      'emotion': entry.emotion?.id,
     });
 
     final savedTasks = <TaskItem>[];
@@ -141,6 +151,7 @@ class DbService {
       tasks: savedTasks,
       notes: savedNotes,
       comfortMessage: entry.comfortMessage,
+      emotion: entry.emotion,
     );
   }
 
@@ -175,6 +186,7 @@ class DbService {
         tasks: taskRows.map(TaskItem.fromMap).toList(),
         notes: noteRows.map(NoteItem.fromMap).toList(),
         comfortMessage: row['comfort_message'] as String?,
+        emotion: EmotionTag.fromId(row['emotion'] as String?),
         imagePaths: imageRows.map((r) => r['path'] as String).toList(),
       ));
     }
@@ -245,6 +257,16 @@ class DbService {
     await db.update(
       'tasks',
       {'reminder_at': reminderAt?.toIso8601String()},
+      where: 'id = ?',
+      whereArgs: [taskId],
+    );
+  }
+
+  Future<void> updateTaskCalendarEventId(int taskId, String? eventId) async {
+    final db = await _database;
+    await db.update(
+      'tasks',
+      {'calendar_event_id': eventId},
       where: 'id = ?',
       whereArgs: [taskId],
     );

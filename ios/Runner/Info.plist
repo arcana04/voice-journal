@@ -41,6 +41,10 @@
 	<string>ボイスメモを録音してタスクや日記に整理するためにマイクを使用します。</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>日記に写真を追加するために写真ライブラリを使用します。</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>連携をONにしたカレンダーに、日時付きのタスクを予定として登録するために使用します。</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>連携をONにしたカレンダーに、日時付きのタスクを予定として登録するために使用します。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

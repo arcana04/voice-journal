@@ -5,6 +5,17 @@
   "navDiary": "Diary",
   "navIdea": "Idea",
   "navTask": "Task",
+  "navKnowledgeBase": "Ask",
+
+  "emotionFatigue": "Fatigue",
+  "emotionLove": "Love",
+  "emotionAnxious": "Anxious",
+  "emotionExcited": "Excited",
+  "emotionJoy": "Joy",
+  "emotionSadness": "Sadness",
+  "emotionAnger": "Anger",
+  "emotionSatisfaction": "Satisfaction",
+  "emotionNeutral": "Neutral",
 
   "confirmDeleteTitle": "Delete this?",
   "confirmDeleteMessage": "Deleting this entry can't be undone.",
@@ -55,6 +66,13 @@
   "settingsTitle": "Settings",
   "displaySectionTitle": "Display",
   "darkModeTitle": "Dark mode",
+  "integrationsSettingsTitle": "Integrations",
+  "integrationsScreenTitle": "Integrations",
+  "integrationsDescription": "Choose a calendar already set up on this device (like iOS Calendar or a Google account added in system settings). Once turned on, any task with a specific date and time will automatically be added there as an event.",
+  "integrationsOff": "Off",
+  "integrationsPermissionDenied": "Calendar access wasn't granted. You can allow it from the system Settings app.",
+  "integrationsNoCalendars": "No writable calendars were found on this device. Add a calendar (like a Google account) in the system Settings app, then refresh.",
+  "integrationsRefresh": "Refresh",
   "appBackgroundSettingsTitle": "Background",
   "appBackgroundScreenTitle": "Choose a background",
   "backgroundAurora": "Aurora & Ice Hut",
@@ -153,5 +171,36 @@
 
   "reminderNotificationTitle": "Reminder",
   "reminderNotificationChannelName": "To-do reminders",
-  "reminderNotificationChannelDescription": "Time-based reminders for to-dos created from your voice notes"
+  "reminderNotificationChannelDescription": "Time-based reminders for to-dos created from your voice notes",
+
+  "knowledgeBaseTitle": "Second Brain",
+  "knowledgeBaseDescription": "AI looks back across all your diary entries, ideas, and tasks to answer you.",
+  "knowledgeBaseInputHint": "e.g. What was that app idea I mentioned last month?",
+  "knowledgeBaseSend": "Send",
+  "knowledgeBaseThinking": "Looking back through your past entries…",
+  "knowledgeBaseEmpty": "There's nothing recorded yet. Record something, then ask again.",
+  "knowledgeBaseErrorTitle": "Couldn't get an answer",
+
+  "weeklyReportSettingsTitle": "Weekly report",
+  "weeklyReportTitle": "Weekly Brain Report",
+  "weeklyReportRetry": "Retry",
+  "weeklyReportLoadingInsights": "AI is reflecting on your week…",
+  "weeklyReportErrorTitle": "Couldn't load the report",
+  "weeklyReportEmotionSectionTitle": "Emotional trends",
+  "weeklyReportNoEmotionData": "No emotional entries yet this week",
+  "weeklyReportKeywordsSectionTitle": "This week's keywords",
+  "weeklyReportNoKeywords": "No standout keywords this week",
+  "weeklyReportIdeasSectionTitle": "Ideas that shined",
+  "weeklyReportNoIdeas": "No ideas recorded yet this week",
+  "weeklyReportAchievementSectionTitle": "This week's wins",
+  "weeklyReportTasksCompleted": "{count} tasks completed",
+  "@weeklyReportTasksCompleted": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "weeklyReportDiaryCount": "{count} diary entries",
+  "@weeklyReportDiaryCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "weeklyReportEncouragement": "You did great this week!",
+  "weeklyReportAdviceSectionTitle": "Advice for next week"
 }

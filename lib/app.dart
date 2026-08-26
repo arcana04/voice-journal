@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/root_screen.dart';
 import 'state/background_store.dart';
+import 'state/calendar_store.dart';
 import 'state/custom_words_store.dart';
 import 'state/journal_store.dart';
 import 'state/record_trigger_store.dart';
@@ -19,6 +20,7 @@ class VoiceJournalApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => SettingsStore()..load()),
         ChangeNotifierProvider(create: (_) => BackgroundStore()..load()),
+        ChangeNotifierProvider(create: (_) => CalendarStore()..load()),
         ChangeNotifierProvider(create: (_) => JournalStore()..load()),
         ChangeNotifierProvider(create: (_) => CustomWordsStore()..load()),
         ChangeNotifierProvider(create: (_) => TextStyleStore()..load()),
