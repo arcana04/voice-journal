@@ -11,11 +11,7 @@ class DiaryEntryCard extends StatelessWidget {
   final JournalEntry entry;
   final VoidCallback onTap;
 
-  const DiaryEntryCard({
-    super.key,
-    required this.entry,
-    required this.onTap,
-  });
+  const DiaryEntryCard({super.key, required this.entry, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -29,9 +25,18 @@ class DiaryEntryCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withValues(alpha: 0.06),
+          color: theme.colorScheme.surface.withValues(alpha: 0.92),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.12)),
+          border: Border.all(
+            color: theme.colorScheme.primary.withValues(alpha: 0.12),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -78,7 +83,9 @@ class DiaryEntryCard extends StatelessWidget {
                     if ((note.title ?? '').isNotEmpty)
                       Text(
                         note.title!,
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     const SizedBox(height: 2),
                     Text(
@@ -125,7 +132,11 @@ class DiaryEntryCard extends StatelessWidget {
                     isVideoPath(shown[i])
                         ? const ColoredBox(
                             color: Colors.black87,
-                            child: Icon(Icons.play_circle_fill, color: Colors.white, size: 26),
+                            child: Icon(
+                              Icons.play_circle_fill,
+                              color: Colors.white,
+                              size: 26,
+                            ),
                           )
                         : Image.file(File(shown[i]), fit: BoxFit.cover),
                     if (i == shown.length - 1 && remaining > 0)

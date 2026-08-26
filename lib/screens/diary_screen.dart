@@ -17,7 +17,10 @@ class DiaryScreen extends StatefulWidget {
 class _DiaryScreenState extends State<DiaryScreen> {
   final Map<int, GlobalKey> _itemKeys = {};
 
-  late DateTime _visibleMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  late DateTime _visibleMonth = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+  );
   DateTime? _pendingScrollDate;
 
   @override
@@ -28,7 +31,8 @@ class _DiaryScreenState extends State<DiaryScreen> {
     });
   }
 
-  GlobalKey _keyFor(int entryId) => _itemKeys.putIfAbsent(entryId, () => GlobalKey());
+  GlobalKey _keyFor(int entryId) =>
+      _itemKeys.putIfAbsent(entryId, () => GlobalKey());
 
   bool _isSameDate(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
@@ -80,6 +84,12 @@ class _DiaryScreenState extends State<DiaryScreen> {
     return Scaffold(
       body: Stack(
         children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/diary_background.png',
+              fit: BoxFit.cover,
+            ),
+          ),
           SafeArea(
             child: Consumer<JournalStore>(
               builder: (context, store, _) {
@@ -87,10 +97,12 @@ class _DiaryScreenState extends State<DiaryScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 final diaryEntries = store.entries
-                    .where((e) =>
-                        e.notes.isNotEmpty &&
-                        e.createdAt.year == _visibleMonth.year &&
-                        e.createdAt.month == _visibleMonth.month)
+                    .where(
+                      (e) =>
+                          e.notes.isNotEmpty &&
+                          e.createdAt.year == _visibleMonth.year &&
+                          e.createdAt.month == _visibleMonth.month,
+                    )
                     .toList();
 
                 _scheduleScrollIfNeeded(diaryEntries);
@@ -102,9 +114,8 @@ class _DiaryScreenState extends State<DiaryScreen> {
                       padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
                       child: Text(
                         DateFormat('yyyy年M月').format(_visibleMonth),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                     ),
                     Expanded(
@@ -128,8 +139,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
                                         entry: entry,
                                         onTap: () => Navigator.of(context).push(
                                           MaterialPageRoute(
-                                            builder: (_) =>
-                                                DiaryViewScreen(entryId: entry.id!),
+                                            builder: (_) => DiaryViewScreen(
+                                              entryId: entry.id!,
+                                            ),
                                           ),
                                         ),
                                       ),

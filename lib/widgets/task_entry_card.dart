@@ -13,12 +13,17 @@ class TaskEntryCard extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
+  /// 表示するタスクの絞り込み結果。未指定なら[entry.tasks]をそのまま表示する
+  /// （タスク画面の絞り込みボタンで、該当するタスクだけをカード内に表示するため）。
+  final List<TaskItem>? visibleTasks;
+
   const TaskEntryCard({
     super.key,
     required this.entry,
     required this.onToggleTask,
     required this.onEdit,
     required this.onDelete,
+    this.visibleTasks,
   });
 
   Future<void> _confirmDelete(BuildContext context) async {
@@ -46,6 +51,7 @@ class TaskEntryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final timeLabel = DateFormat('M月d日 HH:mm').format(entry.createdAt);
+    final tasks = visibleTasks ?? entry.tasks;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -73,7 +79,7 @@ class TaskEntryCard extends StatelessWidget {
                 ),
               ],
             ),
-            ...entry.tasks.map(
+            ...tasks.map(
               (task) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 2),
                 child: Row(
@@ -127,15 +133,20 @@ class TaskEntryCard extends StatelessWidget {
         if (dueLabel != null)
           Text(
             dueLabel,
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.outline,
+            ),
           ),
         if (dueLabel != null && reminderAt != null) const SizedBox(width: 8),
         if (reminderAt != null)
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.notifications_active_outlined,
-                  size: 14, color: theme.colorScheme.primary),
+              Icon(
+                Icons.notifications_active_outlined,
+                size: 14,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: 2),
               Text(
                 DateFormat('M月d日 HH:mm').format(reminderAt),
