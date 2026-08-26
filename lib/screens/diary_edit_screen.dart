@@ -6,23 +6,36 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
 import '../state/text_style_store.dart';
 import '../widgets/media_gallery.dart';
 
 class _FontOption {
-  final String label;
+  final String Function(AppLocalizations l10n) labelFor;
   final TextStyle Function(TextStyle base) apply;
-  const _FontOption(this.label, this.apply);
+  const _FontOption(this.labelFor, this.apply);
 }
 
 final List<_FontOption> _fontOptions = [
-  _FontOption('標準', (base) => base),
-  _FontOption('明朝', (base) => GoogleFonts.shipporiMincho(textStyle: base)),
-  _FontOption('手書き風', (base) => GoogleFonts.kleeOne(textStyle: base)),
-  _FontOption('ポップ', (base) => GoogleFonts.hachiMaruPop(textStyle: base)),
-  _FontOption('等幅', (base) => GoogleFonts.mPlus1Code(textStyle: base)),
+  _FontOption((l10n) => l10n.fontStandard, (base) => base),
+  _FontOption(
+    (l10n) => l10n.fontMincho,
+    (base) => GoogleFonts.shipporiMincho(textStyle: base),
+  ),
+  _FontOption(
+    (l10n) => l10n.fontHandwriting,
+    (base) => GoogleFonts.kleeOne(textStyle: base),
+  ),
+  _FontOption(
+    (l10n) => l10n.fontPop,
+    (base) => GoogleFonts.hachiMaruPop(textStyle: base),
+  ),
+  _FontOption(
+    (l10n) => l10n.fontMonospace,
+    (base) => GoogleFonts.mPlus1Code(textStyle: base),
+  ),
 ];
 
 const List<Color?> _textColorOptions = [
@@ -123,8 +136,11 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
       picked = await picker.pickMultipleMedia(imageQuality: 85);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('写真・動画の選択に失敗しました: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.mediaPickFailed('$e')),
+        ),
+      );
       return;
     }
     if (picked.isEmpty) return;
@@ -135,6 +151,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
   }
 
   Future<void> _openMediaSheet(JournalStore store, JournalEntry entry) async {
+    final l10n = AppLocalizations.of(context)!;
     await showModalBottomSheet<void>(
       context: context,
       builder: (sheetContext) => SafeArea(
@@ -143,7 +160,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('写真・動画をライブラリから選択'),
+              title: Text(l10n.pickFromLibrary),
               onTap: () {
                 Navigator.of(sheetContext).pop();
                 _pickMedia(store, entry);
@@ -156,32 +173,36 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
   }
 
   void _openBackgroundSheet() {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet<void>(
       context: context,
       builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 16, 20, 4),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  '背景',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                  l10n.backgroundSheetTitle,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
             ),
             ListTile(
               leading: const Icon(Icons.check_circle, color: Colors.blue),
-              title: const Text('なし'),
+              title: Text(l10n.backgroundNone),
               onTap: () => Navigator.of(sheetContext).pop(),
             ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 0, 20, 16),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text('準備中です', style: TextStyle(color: Colors.grey)),
+                child: Text(
+                  l10n.comingSoon,
+                  style: const TextStyle(color: Colors.grey),
+                ),
               ),
             ),
           ],
@@ -269,6 +290,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
             Widget fontOption(int index) {
               final option = _fontOptions[index];
               final selected = _fontFamilyIndex == index;
+              final label = option.labelFor(AppLocalizations.of(context)!);
               return GestureDetector(
                 onTap: () {
                   setState(() => _fontFamilyIndex = index);
@@ -288,7 +310,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    option.label,
+                    label,
                     style: option.apply(const TextStyle(fontSize: 15)),
                   ),
                 ),
@@ -304,10 +326,10 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                   children: [
                     Row(
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'フォント',
-                            style: TextStyle(
+                            AppLocalizations.of(context)!.fontSheetTitle,
+                            style: const TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 16,
                             ),
@@ -315,7 +337,9 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                         ),
                         IconButton(
                           icon: const Icon(Icons.star_border),
-                          tooltip: 'この設定をデフォルトにする',
+                          tooltip: AppLocalizations.of(
+                            context,
+                          )!.setAsDefaultTooltip,
                           onPressed: () {
                             context.read<TextStyleStore>().setDefault(
                               fontFamilyIndex: _fontFamilyIndex,
@@ -323,13 +347,19 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                               fontScale: _fontScale,
                             );
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('デフォルトに設定しました')),
+                              SnackBar(
+                                content: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.setAsDefaultSnackbar,
+                                ),
+                              ),
                             );
                           },
                         ),
                         IconButton(
                           icon: const Icon(Icons.check),
-                          tooltip: '閉じる',
+                          tooltip: AppLocalizations.of(context)!.closeTooltip,
                           onPressed: () => Navigator.of(sheetContext).pop(),
                         ),
                       ],
@@ -390,16 +420,18 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
 
         final theme = Theme.of(context);
         final drafts = _ensureDrafts(entry);
-        final day = DateFormat('d').format(entry.createdAt);
-        final monthLabel = DateFormat('M月').format(entry.createdAt);
-        final yearLabel = DateFormat('yyyy').format(entry.createdAt);
+        final locale = Localizations.localeOf(context).toString();
+        final day = DateFormat('d', locale).format(entry.createdAt);
+        final monthYearLabel = DateFormat.yMMMM(
+          locale,
+        ).format(entry.createdAt);
 
         return Scaffold(
           appBar: AppBar(
             actions: [
               TextButton(
                 onPressed: () => _save(store, entry),
-                child: const Text('保存'),
+                child: Text(AppLocalizations.of(context)!.save),
               ),
             ],
           ),
@@ -425,7 +457,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 4),
                         child: Text(
-                          '$monthLabel $yearLabel',
+                          monthYearLabel,
                           style: theme.textTheme.labelLarge?.copyWith(
                             color: theme.colorScheme.primary,
                           ),
@@ -464,6 +496,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
   }
 
   Widget _buildBottomToolbar(JournalStore store, JournalEntry entry) {
+    final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       top: false,
       child: Padding(
@@ -473,17 +506,17 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
           children: [
             _ToolbarButton(
               icon: Icons.add_photo_alternate_outlined,
-              label: '画像・動画',
+              label: l10n.toolbarMedia,
               onTap: () => _openMediaSheet(store, entry),
             ),
             _ToolbarButton(
               icon: Icons.wallpaper_outlined,
-              label: '背景',
+              label: l10n.toolbarBackground,
               onTap: _openBackgroundSheet,
             ),
             _ToolbarButton(
               icon: Icons.text_fields,
-              label: 'テキスト',
+              label: l10n.toolbarText,
               onTap: _openTextStyleSheet,
             ),
           ],
@@ -502,6 +535,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
   }
 
   Widget _buildNoteBlock(ThemeData theme, _NoteDraft d) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Column(
@@ -516,7 +550,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
               isDense: true,
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
-              hintText: '題名',
+              hintText: l10n.titleHint,
               hintStyle: theme.textTheme.titleLarge?.copyWith(
                 color: theme.colorScheme.outline,
               ),
@@ -532,7 +566,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
               isDense: true,
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
-              hintText: 'ここにもっと書く…',
+              hintText: l10n.bodyHint,
               hintStyle: theme.textTheme.bodyLarge?.copyWith(
                 color: theme.colorScheme.outline,
               ),

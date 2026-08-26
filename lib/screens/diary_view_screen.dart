@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
 import '../widgets/edit_icon_button.dart';
@@ -26,19 +27,20 @@ class DiaryViewScreen extends StatelessWidget {
     JournalStore store,
     JournalEntry entry,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('削除しますか？'),
-        content: const Text('この記録を削除すると元に戻せません。'),
+        title: Text(l10n.confirmDeleteTitle),
+        content: Text(l10n.confirmDeleteMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('キャンセル'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('削除'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -62,9 +64,9 @@ class DiaryViewScreen extends StatelessWidget {
         }
 
         final theme = Theme.of(context);
-        final day = DateFormat('d').format(entry.createdAt);
-        final monthLabel = DateFormat('M月').format(entry.createdAt);
-        final yearLabel = DateFormat('yyyy').format(entry.createdAt);
+        final locale = Localizations.localeOf(context).toString();
+        final day = DateFormat('d', locale).format(entry.createdAt);
+        final monthYearLabel = DateFormat.yMMMM(locale).format(entry.createdAt);
 
         return Scaffold(
           appBar: AppBar(
@@ -105,7 +107,7 @@ class DiaryViewScreen extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 4),
                         child: Text(
-                          '$monthLabel $yearLabel',
+                          monthYearLabel,
                           style: theme.textTheme.labelLarge?.copyWith(
                             color: theme.colorScheme.primary,
                           ),

@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
 
-const _weekdayKanji = ['月', '火', '水', '木', '金', '土', '日'];
-
-String _dateLabel(DateTime date) =>
-    '${DateFormat('M月d日').format(date)}(${_weekdayKanji[date.weekday - 1]})';
+String _dateLabel(DateTime date, String locale) =>
+    '${DateFormat.MMMd(locale).format(date)}(${DateFormat.E(locale).format(date)})';
 
 class _TaskDraft {
   final TaskItem task;
@@ -145,7 +144,7 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
             actions: [
               TextButton(
                 onPressed: () => _save(store, entry),
-                child: const Text('保存'),
+                child: Text(AppLocalizations.of(context)!.save),
               ),
             ],
           ),
@@ -162,6 +161,8 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
 
   Widget _buildTaskBlock(BuildContext context, _TaskDraft draft) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     final reminderAt = draft.reminderAt;
 
     return Container(
@@ -178,15 +179,15 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
           TextField(
             controller: draft.titleController,
             style: theme.textTheme.titleMedium,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               isDense: true,
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
-              hintText: 'タスク内容',
+              hintText: l10n.taskContentHint,
             ),
           ),
           const SizedBox(height: 12),
-          Text('リマインダー', style: theme.textTheme.labelSmall?.copyWith(
+          Text(l10n.reminderLabel, style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.outline,
               )),
           const SizedBox(height: 6),
@@ -199,7 +200,7 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
                 OutlinedButton.icon(
                   onPressed: () => _pickReminderDate(draft),
                   icon: const Icon(Icons.event_outlined, size: 16),
-                  label: Text(_dateLabel(reminderAt)),
+                  label: Text(_dateLabel(reminderAt, locale)),
                 ),
                 OutlinedButton.icon(
                   onPressed: () => _pickReminderTime(draft),
@@ -209,7 +210,7 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
                 IconButton(
                   onPressed: () => _clearReminder(draft),
                   icon: const Icon(Icons.close),
-                  tooltip: 'リマインダーを解除',
+                  tooltip: l10n.removeReminderTooltip,
                   visualDensity: VisualDensity.compact,
                 ),
               ],
@@ -218,7 +219,7 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
             OutlinedButton.icon(
               onPressed: () => _addReminder(draft),
               icon: const Icon(Icons.add_alarm_outlined, size: 16),
-              label: const Text('リマインダーを追加'),
+              label: Text(l10n.addReminder),
             ),
         ],
       ),

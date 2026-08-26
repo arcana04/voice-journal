@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/journal_entry.dart';
 import '../utils/task_format.dart';
 
@@ -111,6 +112,7 @@ class _EntryReviewState extends State<EntryReview> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final feelingItems = _items
         .where((i) => _bucketOf(i) == _ReviewBucket.feeling)
         .toList();
@@ -129,7 +131,7 @@ class _EntryReviewState extends State<EntryReview> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('内容を確認', style: theme.textTheme.titleMedium),
+              Text(l10n.reviewTitle, style: theme.textTheme.titleMedium),
               if (widget.summary.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(
@@ -141,7 +143,7 @@ class _EntryReviewState extends State<EntryReview> {
               ],
               const SizedBox(height: 2),
               Text(
-                '違っていればテキストを直せます。カードをドラッグすると日記・アイデア・タスクを入れ替えられます',
+                l10n.reviewDescription,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.outline,
                 ),
@@ -156,25 +158,28 @@ class _EntryReviewState extends State<EntryReview> {
               _buildSection(
                 theme,
                 bucket: _ReviewBucket.feeling,
-                title: '日記',
+                title: l10n.sectionDiary,
                 icon: Icons.menu_book_outlined,
                 items: feelingItems,
+                l10n: l10n,
               ),
               const SizedBox(height: 16),
               _buildSection(
                 theme,
                 bucket: _ReviewBucket.idea,
-                title: 'アイデア',
+                title: l10n.sectionIdea,
                 icon: Icons.lightbulb_outline,
                 items: ideaItems,
+                l10n: l10n,
               ),
               const SizedBox(height: 16),
               _buildSection(
                 theme,
                 bucket: _ReviewBucket.task,
-                title: 'タスク',
+                title: l10n.sectionTask,
                 icon: Icons.checklist_outlined,
                 items: taskItems,
+                l10n: l10n,
               ),
             ],
           ),
@@ -186,14 +191,14 @@ class _EntryReviewState extends State<EntryReview> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: widget.onDiscard,
-                  child: const Text('破棄'),
+                  child: Text(l10n.discard),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
                   onPressed: hasContent ? _save : null,
-                  child: const Text('保存'),
+                  child: Text(l10n.save),
                 ),
               ),
             ],
@@ -209,6 +214,7 @@ class _EntryReviewState extends State<EntryReview> {
     required String title,
     required IconData icon,
     required List<DraftItem> items,
+    required AppLocalizations l10n,
   }) {
     return DragTarget<DraftItem>(
       onWillAcceptWithDetails: (details) => _bucketOf(details.data) != bucket,
@@ -246,7 +252,7 @@ class _EntryReviewState extends State<EntryReview> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Text(
-                    'ここにカードをドラッグ',
+                    l10n.dragCardHere,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.outline,
                     ),
@@ -310,7 +316,11 @@ class _CardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dueLabel = dueLabelFor(dueDate: item.dueDate, dueHint: item.dueHint);
+    final dueLabel = dueLabelFor(
+      dueDate: item.dueDate,
+      dueHint: item.dueHint,
+      locale: Localizations.localeOf(context).toString(),
+    );
     final reminderAt = item.reminderAt;
 
     return Container(

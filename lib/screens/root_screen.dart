@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/deep_link_service.dart';
 import '../state/record_trigger_store.dart';
 import '../widgets/floating_nav_bar.dart';
@@ -47,32 +48,33 @@ class _RootScreenState extends State<RootScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       extendBody: true,
       body: IndexedStack(index: _index, children: _screens),
       bottomNavigationBar: FloatingNavBar(
         selectedIndex: _index,
         onDestinationSelected: (value) => setState(() => _index = value),
-        destinations: const [
+        destinations: [
           FloatingNavDestination(
             icon: Icons.mic_none,
             selectedIcon: Icons.mic,
-            label: '録音',
+            label: l10n.navRecord,
           ),
           FloatingNavDestination(
             icon: Icons.menu_book_outlined,
             selectedIcon: Icons.menu_book,
-            label: '日記',
+            label: l10n.navDiary,
           ),
           FloatingNavDestination(
             icon: Icons.lightbulb_outline,
             selectedIcon: Icons.lightbulb,
-            label: 'アイデア',
+            label: l10n.navIdea,
           ),
           FloatingNavDestination(
             icon: Icons.checklist_outlined,
             selectedIcon: Icons.checklist,
-            label: 'タスク',
+            label: l10n.navTask,
           ),
         ],
       ),

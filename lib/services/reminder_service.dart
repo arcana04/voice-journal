@@ -2,6 +2,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../l10n/l10n_utils.dart';
+
 /// 時刻付きのToDoに対するローカル通知（リマインダー）を管理する。
 ///
 /// タスクの reminder_at はサーバー側でJST（Asia/Tokyo）として計算されるため、
@@ -53,20 +55,21 @@ class ReminderService {
     );
     if (scheduled.isBefore(tz.TZDateTime.now(tz.local))) return;
 
+    final l10n = currentLocalizations();
     await _plugin.zonedSchedule(
       taskId,
-      'リマインダー',
+      l10n.reminderNotificationTitle,
       title,
       scheduled,
-      const NotificationDetails(
+      NotificationDetails(
         android: AndroidNotificationDetails(
           'task_reminders',
-          'ToDoリマインダー',
-          channelDescription: '独り言から作られたToDoの時刻リマインダー',
+          l10n.reminderNotificationChannelName,
+          channelDescription: l10n.reminderNotificationChannelDescription,
           importance: Importance.high,
           priority: Priority.high,
         ),
-        iOS: DarwinNotificationDetails(),
+        iOS: const DarwinNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:

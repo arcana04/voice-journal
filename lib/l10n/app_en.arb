@@ -1,0 +1,158 @@
+{
+  "@@locale": "en",
+
+  "navRecord": "Record",
+  "navDiary": "Diary",
+  "navIdea": "Idea",
+  "navTask": "Task",
+
+  "confirmDeleteTitle": "Delete this?",
+  "confirmDeleteMessage": "Deleting this entry can't be undone.",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "save": "Save",
+
+  "editTooltip": "Edit",
+
+  "micPermissionDenied": "Microphone access is not allowed",
+  "recordingStopFailedTitle": "Failed to stop recording",
+  "recordingErrorTitle": "Recording error",
+  "recordingSaveFailed": "Failed to save the recording",
+  "processingErrorTitle": "An error occurred while processing",
+  "statusError": "Error: {message}",
+  "@statusError": {
+    "placeholders": { "message": { "type": "String" } }
+  },
+  "statusOrganized": "Organized: {summary}",
+  "@statusOrganized": {
+    "placeholders": { "summary": { "type": "String" } }
+  },
+  "statusTapToRecord": "Tap to start recording",
+  "statusRecording": "Recording… tap again to stop",
+  "statusProcessing": "AI is analyzing…",
+  "maxRecordingSeconds": "Each recording can be up to {seconds} seconds",
+  "@maxRecordingSeconds": {
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "textComposeTooltip": "Enter as text",
+  "settingsTooltip": "Settings",
+  "menuCustomDictionary": "Custom dictionary",
+  "menuSummaryLevel": "AI summarization level",
+  "textComposerTitle": "Enter as text",
+  "textComposerDescription": "Use this when you can't speak. The AI sorts it into a diary entry or task just like a recording.",
+  "textComposerHint": "e.g. Book a dentist appointment tomorrow at 3pm",
+  "textComposerSubmit": "Let AI analyze it",
+  "summaryLevelSheetTitle": "AI summarization level",
+  "summaryLevelSheetDescription": "Choose how much the AI shortens diary content from recordings or text. This doesn't affect how concise tasks are.",
+
+  "summaryLevelPreserveLabel": "Preserve",
+  "summaryLevelStandardLabel": "Standard",
+  "summaryLevelCompactLabel": "Compact",
+  "summaryLevelPreserveDescription": "Keeps feelings, phrasing, and names exactly as spoken, without summarizing.",
+  "summaryLevelStandardDescription": "Tidies up redundant repetition while keeping a natural diary length.",
+  "summaryLevelCompactDescription": "Condenses everything down to just the core in 1-2 sentences.",
+
+  "settingsTitle": "Settings",
+  "displaySectionTitle": "Display",
+  "darkModeTitle": "Dark mode",
+  "appBackgroundSettingsTitle": "Background",
+  "appBackgroundScreenTitle": "Choose a background",
+  "appBackgroundDefaultLabel": "Default",
+  "backgroundAurora": "Aurora & Ice Hut",
+  "backgroundWhitehavenBeach": "Whitehaven Beach",
+  "backgroundFlowerPark": "Flower Park",
+  "backgroundStarrySky": "Starry Sky",
+  "backgroundBalloon": "Hot Air Balloon",
+  "backgroundSavanna": "Savanna",
+  "backgroundDesert": "Desert",
+  "backgroundDeepSea": "Deep Sea",
+  "backgroundAmazon": "Amazon Rainforest",
+  "backgroundCat": "Cat",
+  "freeTierSectionTitle": "Free tier",
+  "freeTierFetchFailed": "Couldn't load usage status",
+  "freeTierUsage": "Recordings today: {used} / {limit}",
+  "@freeTierUsage": {
+    "placeholders": { "used": { "type": "int" }, "limit": { "type": "int" } }
+  },
+  "freeTierRemaining": "{remaining} left today (resets daily, Japan time)",
+  "@freeTierRemaining": {
+    "placeholders": { "remaining": { "type": "int" } }
+  },
+  "notificationSectionTitle": "Notifications",
+  "reminderNotificationsTitle": "Reminder notifications",
+  "notificationCheckingStatus": "Checking…",
+  "notificationGranted": "Allowed",
+  "notificationDenied": "Not allowed (reminders won't be delivered)",
+  "allow": "Allow",
+  "notificationPermissionDialogTitle": "Notifications aren't allowed",
+  "notificationPermissionDialogMessage": "Allow notifications to receive reminders. You can change this in the Settings app.",
+  "openSettings": "Open settings",
+
+  "customDictionaryTitle": "Custom dictionary",
+  "customDictionaryDescription": "Register names of friends, groups, or technical terms so they're prioritized during voice recognition. Adding a note also helps the AI catch and fix misspellings.",
+  "wordLabel": "Word",
+  "wordHint": "e.g. Taro Yamada",
+  "descriptionLabelOptional": "Description (optional)",
+  "descriptionHint": "e.g. A friend from university",
+  "add": "Add",
+  "customDictionaryEmpty": "No words registered yet",
+
+  "diaryMonthEmpty": "No diary entries this month",
+
+  "fontStandard": "Standard",
+  "fontMincho": "Serif",
+  "fontHandwriting": "Handwritten",
+  "fontPop": "Pop",
+  "fontMonospace": "Monospace",
+  "mediaPickFailed": "Failed to select photo/video: {error}",
+  "@mediaPickFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "pickFromLibrary": "Choose photo/video from library",
+  "backgroundSheetTitle": "Background",
+  "backgroundNone": "None",
+  "comingSoon": "Coming soon",
+  "fontSheetTitle": "Font",
+  "setAsDefaultTooltip": "Set as default",
+  "setAsDefaultSnackbar": "Set as default",
+  "closeTooltip": "Close",
+  "toolbarMedia": "Photo/Video",
+  "toolbarBackground": "Background",
+  "toolbarText": "Text",
+  "titleHint": "Title",
+  "bodyHint": "Write more here…",
+
+  "filterAll": "All",
+  "filterToday": "Today",
+  "filterThisWeek": "This week",
+  "filterSomeday": "Someday",
+  "filterCompleted": "Completed",
+  "tasksEmpty": "No tasks yet\nTry saying \"I need to…\"",
+  "tasksFilterEmpty": "No tasks match this filter",
+
+  "reminderLabel": "Reminder",
+  "removeReminderTooltip": "Remove reminder",
+  "addReminder": "Add reminder",
+  "taskContentHint": "Task content",
+
+  "ideasEmpty": "No ideas yet\nTry saying what comes to mind",
+
+  "editIdeaTitle": "Edit idea",
+  "ideaTitleHint": "Heading (optional)",
+  "ideaContentHint": "Idea content",
+
+  "reviewTitle": "Review content",
+  "reviewDescription": "Edit the text if it's off. Drag a card to move it between diary, idea, and task.",
+  "sectionDiary": "Diary",
+  "sectionIdea": "Idea",
+  "sectionTask": "Task",
+  "discard": "Discard",
+  "dragCardHere": "Drag a card here",
+
+  "genericProcessingError": "An error occurred while processing",
+  "usageFetchError": "Failed to load usage status",
+
+  "reminderNotificationTitle": "Reminder",
+  "reminderNotificationChannelName": "To-do reminders",
+  "reminderNotificationChannelDescription": "Time-based reminders for to-dos created from your voice notes"
+}

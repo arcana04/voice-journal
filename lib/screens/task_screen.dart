@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
+import '../widgets/app_background_image.dart';
 import '../widgets/scrim_text.dart';
 import '../widgets/task_entry_card.dart';
 import 'task_edit_screen.dart';
@@ -10,12 +12,12 @@ import 'task_edit_screen.dart';
 enum _TaskFilter { all, today, thisWeek, someday, completed }
 
 extension on _TaskFilter {
-  String get label => switch (this) {
-    _TaskFilter.all => 'すべて',
-    _TaskFilter.today => '今日',
-    _TaskFilter.thisWeek => '今週',
-    _TaskFilter.someday => 'いつか',
-    _TaskFilter.completed => '完了済み',
+  String labelFor(AppLocalizations l10n) => switch (this) {
+    _TaskFilter.all => l10n.filterAll,
+    _TaskFilter.today => l10n.filterToday,
+    _TaskFilter.thisWeek => l10n.filterThisWeek,
+    _TaskFilter.someday => l10n.filterSomeday,
+    _TaskFilter.completed => l10n.filterCompleted,
   };
 }
 
@@ -76,6 +78,7 @@ class _TaskScreenState extends State<TaskScreen> {
   }
 
   Widget _buildFilterRow(ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: SingleChildScrollView(
@@ -84,7 +87,7 @@ class _TaskScreenState extends State<TaskScreen> {
           children: [
             for (final filter in _TaskFilter.values) ...[
               _FilterChip(
-                label: filter.label,
+                label: filter.labelFor(l10n),
                 selected: _filter == filter,
                 onTap: () => setState(() => _filter = filter),
               ),
@@ -107,9 +110,8 @@ class _TaskScreenState extends State<TaskScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              'assets/images/task_background.png',
-              fit: BoxFit.cover,
+            child: const AppBackgroundImage(
+              fallbackAsset: 'assets/images/task_background.png',
             ),
           ),
           Positioned(
@@ -144,7 +146,7 @@ class _TaskScreenState extends State<TaskScreen> {
                           ? Center(
                               child: ScrimText(
                                 child: Text(
-                                  'まだタスクがありません\n「〜する」と話してみましょう',
+                                  AppLocalizations.of(context)!.tasksEmpty,
                                   textAlign: TextAlign.center,
                                   style: theme.textTheme.bodyMedium,
                                 ),
@@ -154,7 +156,9 @@ class _TaskScreenState extends State<TaskScreen> {
                           ? Center(
                               child: ScrimText(
                                 child: Text(
-                                  'この絞り込みに該当するタスクはありません',
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.tasksFilterEmpty,
                                   textAlign: TextAlign.center,
                                   style: theme.textTheme.bodyMedium,
                                 ),

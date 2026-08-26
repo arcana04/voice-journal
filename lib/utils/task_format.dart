@@ -2,14 +2,17 @@ import 'package:intl/intl.dart';
 
 import '../models/journal_entry.dart';
 
-const _weekdayKanji = ['月', '火', '水', '木', '金', '土', '日'];
-
-/// 期限表示用ラベル（例: "8月25日(火)"）。期限が推測できなければ
-/// 元の言い回し（dueHint）、それも無ければ null。
-String? dueLabelFor({DateTime? dueDate, String? dueHint}) {
+/// 期限表示用ラベル（例: 日本語なら"8月25日(火)"、英語なら"Aug 25 (Tue)"）。
+/// 期限が推測できなければ元の言い回し（dueHint）、それも無ければ null。
+String? dueLabelFor({
+  DateTime? dueDate,
+  String? dueHint,
+  required String locale,
+}) {
   if (dueDate != null) {
-    final weekday = _weekdayKanji[dueDate.weekday - 1];
-    return '${DateFormat('M月d日').format(dueDate)}($weekday)';
+    final datePart = DateFormat.MMMd(locale).format(dueDate);
+    final weekdayPart = DateFormat.E(locale).format(dueDate);
+    return '$datePart($weekdayPart)';
   }
   if (dueHint != null && dueHint.isNotEmpty) {
     return dueHint;
@@ -18,5 +21,8 @@ String? dueLabelFor({DateTime? dueDate, String? dueHint}) {
 }
 
 /// タスクの期限表示用ラベル。[dueLabelFor] の [TaskItem] 版。
-String? taskDueLabel(TaskItem task) =>
-    dueLabelFor(dueDate: task.dueDate, dueHint: task.dueHint);
+String? taskDueLabel(TaskItem task, {required String locale}) => dueLabelFor(
+      dueDate: task.dueDate,
+      dueHint: task.dueHint,
+      locale: locale,
+    );

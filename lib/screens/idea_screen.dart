@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
+import '../widgets/app_background_image.dart';
 import '../widgets/idea_entry_card.dart';
 import '../widgets/scrim_text.dart';
 import 'idea_edit_screen.dart';
@@ -33,9 +35,8 @@ class _IdeaScreenState extends State<IdeaScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              'assets/images/idea_background.png',
-              fit: BoxFit.cover,
+            child: const AppBackgroundImage(
+              fallbackAsset: 'assets/images/idea_background.png',
             ),
           ),
           Positioned(
@@ -66,7 +67,7 @@ class _IdeaScreenState extends State<IdeaScreen> {
                     return Center(
                       child: ScrimText(
                         child: Text(
-                          'まだアイデアがありません\n思いついたことを話してみましょう',
+                          AppLocalizations.of(context)!.ideasEmpty,
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),

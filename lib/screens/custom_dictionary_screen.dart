@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../state/custom_words_store.dart';
 
 /// 友達の名前・専門用語などを登録しておくと、録音時にWhisperへヒントとして
@@ -37,15 +38,16 @@ class _CustomDictionaryScreenState extends State<CustomDictionaryScreen> {
   @override
   Widget build(BuildContext context) {
     final words = context.watch<CustomWordsStore>().words;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('カスタム辞書')),
+      appBar: AppBar(title: Text(l10n.customDictionaryTitle)),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
             child: Text(
-              '友達の名前、ゼミ名、専門用語などを登録しておくと、録音時の音声認識で優先的に候補に使われます。説明を添えると、AIが表記の間違いを見つけて直す際のヒントにもなります。',
+              l10n.customDictionaryDescription,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.outline,
                   ),
@@ -58,10 +60,10 @@ class _CustomDictionaryScreenState extends State<CustomDictionaryScreen> {
                 TextField(
                   controller: _wordController,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: '単語',
-                    hintText: '例: 山田太郎',
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    labelText: l10n.wordLabel,
+                    hintText: l10n.wordHint,
                     isDense: true,
                   ),
                 ),
@@ -73,10 +75,10 @@ class _CustomDictionaryScreenState extends State<CustomDictionaryScreen> {
                       child: TextField(
                         controller: _descriptionController,
                         textInputAction: TextInputAction.done,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: '説明（任意）',
-                          hintText: '例: 大学の友人',
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(),
+                          labelText: l10n.descriptionLabelOptional,
+                          hintText: l10n.descriptionHint,
                           isDense: true,
                         ),
                         onSubmitted: (_) => _addWord(),
@@ -85,7 +87,7 @@ class _CustomDictionaryScreenState extends State<CustomDictionaryScreen> {
                     const SizedBox(width: 8),
                     FilledButton(
                       onPressed: _addWord,
-                      child: const Text('追加'),
+                      child: Text(l10n.add),
                     ),
                   ],
                 ),
@@ -98,7 +100,7 @@ class _CustomDictionaryScreenState extends State<CustomDictionaryScreen> {
             child: words.isEmpty
                 ? Center(
                     child: Text(
-                      '登録された単語はまだありません',
+                      l10n.customDictionaryEmpty,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Theme.of(context).colorScheme.outline,
                           ),
@@ -114,7 +116,7 @@ class _CustomDictionaryScreenState extends State<CustomDictionaryScreen> {
                         subtitle: word.description != null ? Text(word.description!) : null,
                         trailing: IconButton(
                           icon: const Icon(Icons.close),
-                          tooltip: '削除',
+                          tooltip: l10n.delete,
                           onPressed: () =>
                               context.read<CustomWordsStore>().removeWord(word),
                         ),

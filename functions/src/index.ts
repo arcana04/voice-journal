@@ -28,6 +28,53 @@ function normalizeSummaryLevel(value: unknown): SummaryLevel {
   return "preserve";
 }
 
+/** クライアント（Flutterアプリ）の表示言語。UIの多言語対応に合わせてサーバー側の
+ * 音声認識言語・AIプロンプト・エラーメッセージを切り替えるために使う。 */
+type Locale = "ja" | "en";
+
+function normalizeLocale(value: unknown): Locale {
+  return value === "en" ? "en" : "ja";
+}
+
+/** ユーザー向けエラーメッセージ。localeごとに文面を分ける。 */
+const MESSAGES: Record<
+  Locale,
+  {
+    authRequired: string;
+    noAudio: string;
+    noText: string;
+    transcriptionEmpty: string;
+    quotaExceeded: (limit: number) => string;
+    transcriptionFailed: (body: string) => string;
+    analysisFailed: (body: string) => string;
+    unexpectedError: (message: string) => string;
+  }
+> = {
+  ja: {
+    authRequired: "認証が必要です。",
+    noAudio: "音声データがありません。",
+    noText: "テキストがありません。",
+    transcriptionEmpty: "音声を認識できませんでした。",
+    quotaExceeded: (limit) =>
+      `本日の無料利用回数（${limit}回）の上限に達しました。また明日お試しください。`,
+    transcriptionFailed: (body) => `文字起こしに失敗しました: ${body}`,
+    analysisFailed: (body) => `AI解析に失敗しました: ${body}`,
+    unexpectedError: (message) => `処理中に予期しないエラーが発生しました: ${message}`,
+  },
+  en: {
+    authRequired: "Authentication is required.",
+    noAudio: "No audio data was provided.",
+    noText: "No text was provided.",
+    transcriptionEmpty: "Couldn't recognize any speech in the recording.",
+    quotaExceeded: (limit) =>
+      `You've reached today's free limit of ${limit} recordings. Please try again tomorrow.`,
+    transcriptionFailed: (body) => `Transcription failed: ${body}`,
+    analysisFailed: (body) => `AI analysis failed: ${body}`,
+    unexpectedError: (message) =>
+      `An unexpected error occurred while processing: ${message}`,
+  },
+};
+
 function buildNotesStyleSection(level: SummaryLevel): string {
   switch (level) {
     case "compact":
@@ -50,6 +97,31 @@ tasksとは違い、notesは要約・圧縮しないでください。
 - 取り除いてよいのは言い淀み（「えっと」「あー」など）と同じ内容の重複表現だけです。それ以外は発言の内容・順序・粒度を保ったまま、読みやすい文章に整える（整文する）程度にとどめてください。
 - 客観的な三人称の説明文にはせず、話者自身の一人称視点（「〜と感じた」「〜だった」「〜かもしれない」など）で、自然な日記の文体にリライトしてください。
 - 感情が高ぶった場面や驚き・嬉しさなどは、不自然にならない範囲で「！」も使い、実際に喋っていたときの自然なトーンを残してください。`;
+  }
+}
+
+function buildNotesStyleSectionEn(level: SummaryLevel): string {
+  switch (level) {
+    case "compact":
+      return `[How to write the note body ("content"): very compact]
+Just like tasks, boil this down to only the essentials.
+- You may cut not just filler and repeated phrases, but also minor descriptions and redundant explanations.
+- Aim for about 1-2 sentences per note, covering only the core event, idea, or feeling.
+- Keep the first-person point of view ("I felt...", "It was...").`;
+    case "standard":
+      return `[How to write the note body ("content"): standard]
+Don't shorten it as much as a task, but keep a natural diary-entry length while tidying up redundant repetition or tangents.
+- Keep emotional cues, names, and memorable phrasing where you can. You don't need to transcribe verbatim — light editing for readability is fine.
+- Write in the speaker's own first-person voice ("I felt...", "It was...."), not an objective third-person description.
+- Where the emotion is high, it's fine to use "!" if it doesn't feel forced.`;
+    case "preserve":
+    default:
+      return `[How to write the note body ("content"): preserve original]
+Unlike tasks, do not summarize or compress notes.
+- Keep the speaker's raw emotion, distinctive phrasing, scene description, and specific names as intact as possible. Do not reduce it to a short summary of just the key points.
+- The only things you may remove are filler words (like "um", "uh") and exact repeated phrases. Otherwise, keep the content, order, and level of detail, only lightly tidying the prose for readability.
+- Rewrite it in the speaker's own first-person voice ("I felt...", "It was...", "Maybe I..."), not an objective third-person account.
+- Where there's excitement, surprise, or joy, it's fine to use "!" to keep the natural tone of how it was actually said.`;
   }
 }
 
@@ -109,6 +181,65 @@ tasksの中に「15時に」「明日の朝9時」「夜7時に病院」のよ�
 }`;
 }
 
+function buildSystemPromptEn(
+  today: string,
+  weekday: string,
+  summaryLevel: SummaryLevel,
+  glossary?: string
+): string {
+  const glossarySection = glossary
+    ? `\n\n[Spelling of names and terms]\nThe input text is a speech-to-text transcript, so the following names/terms may appear misspelled. If context makes it clear the speaker meant one of them, correct the spelling before processing.\n${glossary}`
+    : "";
+
+  return `You are an AI assistant that analyzes everyday spoken English conversation/monologue and converts it into structured data.${glossarySection}
+
+[Output language — read this first]
+The speaker is speaking English, and every text field you write (summary, task title, due_hint, note title, note content, comfort_message) MUST be written in English. Do NOT translate anything into Japanese. The ONLY exception is the note "category" field itself, which is a fixed internal label and must always be the literal Japanese text アイデア or 感情ログ exactly as shown, never translated, never romanized, never written in English — every other field stays in English.
+
+[Nature of the input text]
+The input text is a speech-to-text transcript, so it will contain filler words ("um", "uh"), hedged/trailing phrasing ("...I guess", "...or something"), tangents, and dropped subjects.
+
+[Today's date]
+${today} (${weekday}, Japan time). Interpret any relative due-date expressions against this date.
+
+[Classification rules (3 categories)]
+1. Remove filler words ("um", "uh", etc.) and exact repeated phrases.
+2. For tasks, infer the missing subject/timing from context and summarize into a concise action.
+3. Classify each utterance into exactly one of these three categories:
+   - [tasks (to-do)]: a "confirmed action" — something the speaker says they will do or need to do.
+   - [notes category="アイデア"]: an unconfirmed idea, question, thought, or something to consider.
+   - [notes category="感情ログ"]: a feeling, mood, complaint, or reflection on something that happened, with no associated action.
+4. If the speaker jumps between topics, split them into separate entries classified appropriately.
+
+${buildNotesStyleSectionEn(summaryLevel)}
+
+[Automatic due-date inference]
+If a task contains a due-date-like expression ("tomorrow", "by next Monday", "sometime this month", etc.), compute the actual date (YYYY-MM-DD) relative to today's date above and put it in due_date. If the date can't be determined uniquely, or there's no due-date mention at all, set due_date to null. Put a short version of the original phrase in due_hint.
+
+[Timed reminders]
+If a task explicitly states a time (e.g. "at 3pm", "tomorrow morning at 9", "7pm at the clinic"), compute the actual date/time relative to today's date and Japan time above, and put it in reminder_at as "YYYY-MM-DDTHH:mm:00" (24-hour time, seconds fixed at 00). If only a time is given with no date, use today's date, and if that time has already passed today, use tomorrow's date instead. If no explicit time is stated (only a date, or a vague phrase like "in the morning" or "sometime"), set reminder_at to null.
+
+[Comforting message]
+Only if there is at least one note with category="感情ログ", write a short, warm one-liner (about 10-25 words) that acknowledges the feeling without lecturing or pushing a solution, and put it in comfort_message. If there is no 感情ログ note, set comfort_message to null.
+
+[Note title]
+For each note, write a short heading (about 3-6 words) suitable as a diary entry title, and put it in title. Examples: "Fireworks festival was fun", "New café idea".
+
+[Output format]
+Output ONLY the following JSON format, with no extra commentary. Remember: every field is in English except "category", which is always the fixed Japanese label アイデア or 感情ログ:
+
+{
+  "summary": "one-line overall summary, in English",
+  "tasks": [
+    {"title": "task content, in English", "due_hint": "original due-date phrase (or null)", "due_date": "YYYY-MM-DD (or null if it can't be inferred)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (or null if no explicit time)"}
+  ],
+  "notes": [
+    {"category": "アイデア or 感情ログ (must stay in Japanese, unchanged)", "title": "short heading, in English", "content": "first-person rewrite per the note style rules above, in English"}
+  ],
+  "comfort_message": "short comforting message in English, only if there is a 感情ログ note, otherwise null"
+}`;
+}
+
 function jstDateString(date: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Tokyo",
@@ -118,14 +249,14 @@ function jstDateString(date: Date = new Date()): string {
   }).format(date);
 }
 
-function jstWeekdayString(date: Date = new Date()): string {
-  return new Intl.DateTimeFormat("ja-JP", {
+function jstWeekdayString(locale: Locale, date: Date = new Date()): string {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ja-JP", {
     timeZone: "Asia/Tokyo",
     weekday: "short",
   }).format(date);
 }
 
-async function consumeDailyQuota(uid: string): Promise<void> {
+async function consumeDailyQuota(uid: string, locale: Locale): Promise<void> {
   const db = getFirestore();
   const usageRef = db.collection("usage").doc(`${uid}_${jstDateString()}`);
 
@@ -136,7 +267,7 @@ async function consumeDailyQuota(uid: string): Promise<void> {
     if (count >= FREE_DAILY_LIMIT) {
       throw new HttpsError(
         "resource-exhausted",
-        `本日の無料利用回数（${FREE_DAILY_LIMIT}回）の上限に達しました。また明日お試しください。`
+        MESSAGES[locale].quotaExceeded(FREE_DAILY_LIMIT)
       );
     }
 
@@ -253,6 +384,7 @@ async function transcribe(
   apiKey: string,
   audioBuffer: Buffer,
   mimeType: string,
+  locale: Locale,
   prompt?: string
 ): Promise<string> {
   const form = new FormData();
@@ -262,7 +394,7 @@ async function transcribe(
     transcriptionFilename(mimeType)
   );
   form.append("model", "whisper-1");
-  form.append("language", "ja");
+  form.append("language", locale);
   if (prompt) {
     form.append("prompt", prompt);
   }
@@ -275,7 +407,7 @@ async function transcribe(
 
   if (!response.ok) {
     const body = await response.text();
-    throw new HttpsError("unavailable", `文字起こしに失敗しました: ${body}`);
+    throw new HttpsError("unavailable", MESSAGES[locale].transcriptionFailed(body));
   }
 
   const data = (await response.json()) as { text: string };
@@ -298,15 +430,14 @@ async function structure(
   apiKey: string,
   transcript: string,
   summaryLevel: SummaryLevel,
+  locale: Locale,
   glossary?: string
 ): Promise<StructuredResult> {
   const now = new Date();
-  const systemPrompt = buildSystemPrompt(
-    jstDateString(now),
-    jstWeekdayString(now),
-    summaryLevel,
-    glossary
-  );
+  const systemPrompt =
+    locale === "en"
+      ? buildSystemPromptEn(jstDateString(now), jstWeekdayString(locale, now), summaryLevel, glossary)
+      : buildSystemPrompt(jstDateString(now), jstWeekdayString(locale, now), summaryLevel, glossary);
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -326,7 +457,7 @@ async function structure(
 
   if (!response.ok) {
     const body = await response.text();
-    throw new HttpsError("unavailable", `AI解析に失敗しました: ${body}`);
+    throw new HttpsError("unavailable", MESSAGES[locale].analysisFailed(body));
   }
 
   const data = (await response.json()) as {
@@ -358,24 +489,26 @@ interface ProcessVoiceMemoRequest {
   mimeType?: string;
   customWords?: (string | CustomWordEntry)[];
   summaryLevel?: string;
+  locale?: string;
 }
 
 export const processVoiceMemo = onCall(
   { secrets: [openAiApiKey], timeoutSeconds: 120, memory: "1GiB" },
   async (request) => {
+    const { audioBase64, mimeType, customWords, summaryLevel, locale } =
+      (request.data ?? {}) as ProcessVoiceMemoRequest;
+    const loc = normalizeLocale(locale);
+
     const uid = request.auth?.uid;
     if (!uid) {
-      throw new HttpsError("unauthenticated", "認証が必要です。");
+      throw new HttpsError("unauthenticated", MESSAGES[loc].authRequired);
     }
-
-    const { audioBase64, mimeType, customWords, summaryLevel } =
-      (request.data ?? {}) as ProcessVoiceMemoRequest;
     if (!audioBase64) {
-      throw new HttpsError("invalid-argument", "音声データがありません。");
+      throw new HttpsError("invalid-argument", MESSAGES[loc].noAudio);
     }
 
     try {
-      await consumeDailyQuota(uid);
+      await consumeDailyQuota(uid, loc);
 
       const apiKey = openAiApiKey.value();
       const rawAudioBuffer = Buffer.from(audioBase64, "base64");
@@ -383,9 +516,15 @@ export const processVoiceMemo = onCall(
       const words = normalizeCustomWords(customWords);
       const prompt = buildTranscriptionPrompt(words);
 
-      const transcript = await transcribe(apiKey, enhanced.buffer, enhanced.mimeType, prompt);
+      const transcript = await transcribe(
+        apiKey,
+        enhanced.buffer,
+        enhanced.mimeType,
+        loc,
+        prompt
+      );
       if (!transcript.trim()) {
-        throw new HttpsError("invalid-argument", "音声を認識できませんでした。");
+        throw new HttpsError("invalid-argument", MESSAGES[loc].transcriptionEmpty);
       }
 
       const glossary = buildGlossaryContext(words);
@@ -393,6 +532,7 @@ export const processVoiceMemo = onCall(
         apiKey,
         transcript,
         normalizeSummaryLevel(summaryLevel),
+        loc,
         glossary
       );
       return toClientResponse(structured);
@@ -404,7 +544,7 @@ export const processVoiceMemo = onCall(
       const message = err instanceof Error ? err.message : String(err);
       // NOTE: コード"internal"/"unknown"はクライアントにメッセージが届かず"INTERNAL"に
       // 潰されるため、デバッグ中は詳細が見える"unavailable"を使う。
-      throw new HttpsError("unavailable", `処理中に予期しないエラーが発生しました: ${message}`);
+      throw new HttpsError("unavailable", MESSAGES[loc].unexpectedError(message));
     }
   }
 );
@@ -412,29 +552,32 @@ export const processVoiceMemo = onCall(
 interface ProcessTextMemoRequest {
   text: string;
   summaryLevel?: string;
+  locale?: string;
 }
 
 export const processTextMemo = onCall(
   { secrets: [openAiApiKey], timeoutSeconds: 60, memory: "256MiB" },
   async (request) => {
+    const { text, summaryLevel, locale } = (request.data ?? {}) as ProcessTextMemoRequest;
+    const loc = normalizeLocale(locale);
+
     const uid = request.auth?.uid;
     if (!uid) {
-      throw new HttpsError("unauthenticated", "認証が必要です。");
+      throw new HttpsError("unauthenticated", MESSAGES[loc].authRequired);
     }
-
-    const { text, summaryLevel } = (request.data ?? {}) as ProcessTextMemoRequest;
     if (!text || !text.trim()) {
-      throw new HttpsError("invalid-argument", "テキストがありません。");
+      throw new HttpsError("invalid-argument", MESSAGES[loc].noText);
     }
 
     try {
-      await consumeDailyQuota(uid);
+      await consumeDailyQuota(uid, loc);
 
       const apiKey = openAiApiKey.value();
       const structured = await structure(
         apiKey,
         text.trim(),
-        normalizeSummaryLevel(summaryLevel)
+        normalizeSummaryLevel(summaryLevel),
+        loc
       );
       return toClientResponse(structured);
     } catch (err) {
@@ -443,7 +586,7 @@ export const processTextMemo = onCall(
       }
       logger.error("processTextMemo unexpected error", err);
       const message = err instanceof Error ? err.message : String(err);
-      throw new HttpsError("unavailable", `処理中に予期しないエラーが発生しました: ${message}`);
+      throw new HttpsError("unavailable", MESSAGES[loc].unexpectedError(message));
     }
   }
 );

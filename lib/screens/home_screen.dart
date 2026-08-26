@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../config/recording_limits.dart';
+import '../l10n/app_localizations.dart';
 import '../models/journal_entry.dart';
 import '../models/summary_level.dart';
 import '../services/backend_service.dart';
@@ -13,6 +14,7 @@ import '../state/custom_words_store.dart';
 import '../state/journal_store.dart';
 import '../state/record_trigger_store.dart';
 import '../state/settings_store.dart';
+import '../widgets/app_background_image.dart';
 import '../widgets/entry_review.dart';
 import '../widgets/icon_button_style.dart';
 import '../widgets/record_button.dart';
@@ -90,7 +92,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _startRecording() async {
     final hasPermission = await _recorder.hasPermission();
     if (!hasPermission) {
-      _showMessage('マイクの使用が許可されていません');
+      if (!mounted) return;
+      _showMessage(AppLocalizations.of(context)!.micPermissionDenied);
       return;
     }
     await _recorder.start();
@@ -118,14 +121,21 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _state = RecordButtonState.idle);
-      _showResultDialog('録音の停止に失敗しました', '$e');
+      _showResultDialog(
+        AppLocalizations.of(context)!.recordingStopFailedTitle,
+        '$e',
+      );
       return;
     }
     setState(() => _state = RecordButtonState.processing);
 
     if (path == null) {
+      if (!mounted) return;
       setState(() => _state = RecordButtonState.idle);
-      _showResultDialog('録音エラー', '録音の保存に失敗しました');
+      _showResultDialog(
+        AppLocalizations.of(context)!.recordingErrorTitle,
+        AppLocalizations.of(context)!.recordingSaveFailed,
+      );
       return;
     }
 
@@ -138,6 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
         File(path),
         customWords: customWords,
         summaryLevel: summaryLevel,
+        locale: Localizations.localeOf(context).languageCode,
       );
       if (!mounted) return;
       _applyDraft(entry);
@@ -165,9 +176,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final summaryLevel = context.read<SettingsStore>().summaryLevel;
+      final locale = Localizations.localeOf(context).languageCode;
       final entry = await _backend.processTextMemo(
         text,
         summaryLevel: summaryLevel,
+        locale: locale,
       );
       if (!mounted) return;
       _applyDraft(entry);
@@ -189,12 +202,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleProcessingError(Object e) {
+    final l10n = AppLocalizations.of(context)!;
     final message = e is BackendServiceException ? e.message : '$e';
     setState(() {
       _state = RecordButtonState.idle;
-      _statusMessage = 'エラー: $message';
+      _statusMessage = l10n.statusError(message);
     });
-    _showResultDialog('処理中にエラーが発生しました', message);
+    _showResultDialog(l10n.processingErrorTitle, message);
   }
 
   List<DraftItem> _buildDraftItems(JournalEntry entry) {
@@ -238,7 +252,11 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _draftItems = null);
     await context.read<JournalStore>().addEntry(entry);
     if (!mounted) return;
-    setState(() => _statusMessage = '整理しました：${entry.summary}');
+    setState(
+      () => _statusMessage = AppLocalizations.of(
+        context,
+      )!.statusOrganized(entry.summary),
+    );
   }
 
   void _discardDraft() {
@@ -275,14 +293,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return '$minutes:$seconds';
   }
 
-  String _statusLabel() {
+  String _statusLabel(AppLocalizations l10n) {
     switch (_state) {
       case RecordButtonState.idle:
-        return 'タップして録音開始';
+        return l10n.statusTapToRecord;
       case RecordButtonState.recording:
-        return '録音中… もう一度タップで停止';
+        return l10n.statusRecording;
       case RecordButtonState.processing:
-        return 'AIが解析中です…';
+        return l10n.statusProcessing;
     }
   }
 
@@ -291,13 +309,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final draftItems = _draftItems;
     final showComposerFab =
         draftItems == null && _state == RecordButtonState.idle;
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              'assets/images/home_background.png',
-              fit: BoxFit.cover,
+            child: const AppBackgroundImage(
+              fallbackAsset: 'assets/images/home_background.png',
             ),
           ),
           SafeArea(
@@ -344,7 +362,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    _statusLabel(),
+                                    _statusLabel(l10n),
                                     textAlign: TextAlign.center,
                                     style: Theme.of(context)
                                         .textTheme
@@ -353,7 +371,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   if (_state == RecordButtonState.idle) ...[
                                     const SizedBox(height: 4),
                                     Text(
-                                      '1回の録音は最大$kMaxRecordingSeconds秒です',
+                                      l10n.maxRecordingSeconds(
+                                        kMaxRecordingSeconds,
+                                      ),
                                       textAlign: TextAlign.center,
                                       style: Theme.of(context)
                                           .textTheme
@@ -387,7 +407,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     bottom: 120,
                     child: FloatingActionButton(
                       heroTag: 'home_text_composer_fab',
-                      tooltip: 'テキストで入力',
+                      tooltip: l10n.textComposeTooltip,
                       onPressed: _openTextComposer,
                       child: const Icon(Icons.add),
                     ),
@@ -397,7 +417,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   left: 4,
                   child: IconButton(
                     icon: const Icon(Icons.settings_outlined),
-                    tooltip: '設定',
+                    tooltip: l10n.settingsTooltip,
                     style: pressableIconButtonStyle(context),
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const SettingsScreen()),
@@ -425,11 +445,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       }
                     },
-                    itemBuilder: (context) => const [
-                      PopupMenuItem(value: 'dictionary', child: Text('カスタム辞書')),
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'dictionary',
+                        child: Text(l10n.menuCustomDictionary),
+                      ),
                       PopupMenuItem(
                         value: 'summaryLevel',
-                        child: Text('AIの要約度'),
+                        child: Text(l10n.menuSummaryLevel),
                       ),
                     ],
                   ),
@@ -469,6 +492,7 @@ class _TextComposerSheetState extends State<_TextComposerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: EdgeInsets.only(
         left: 20,
@@ -481,13 +505,13 @@ class _TextComposerSheetState extends State<_TextComposerSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'テキストで入力',
+            l10n.textComposerTitle,
             style: Theme.of(context).textTheme.titleMedium
                 ?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
-            '話せない時はこちらに入力してください。内容は録音と同じようにAIが日記かタスクかを判断します。',
+            l10n.textComposerDescription,
             style: Theme.of(context).textTheme.bodySmall
                 ?.copyWith(color: Theme.of(context).colorScheme.outline),
           ),
@@ -498,9 +522,9 @@ class _TextComposerSheetState extends State<_TextComposerSheet> {
             minLines: 3,
             maxLines: 8,
             textInputAction: TextInputAction.newline,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: '例: 明日15時に歯医者の予約を入れる',
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              hintText: l10n.textComposerHint,
             ),
           ),
           const SizedBox(height: 16),
@@ -508,7 +532,7 @@ class _TextComposerSheetState extends State<_TextComposerSheet> {
             width: double.infinity,
             child: FilledButton(
               onPressed: _submit,
-              child: const Text('AIに解析してもらう'),
+              child: Text(l10n.textComposerSubmit),
             ),
           ),
         ],
@@ -525,6 +549,7 @@ class _SummaryLevelSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final level = context.watch<SettingsStore>().summaryLevel;
     final index = SummaryLevel.values.indexOf(level);
+    final l10n = AppLocalizations.of(context)!;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -538,13 +563,13 @@ class _SummaryLevelSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'AIの要約度',
+            l10n.summaryLevelSheetTitle,
             style: Theme.of(context).textTheme.titleMedium
                 ?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
-            '録音・テキストの内容を日記として仕分けるとき、AIがどれくらい短くまとめるかを選べます。タスクの簡潔さには影響しません。',
+            l10n.summaryLevelSheetDescription,
             style: Theme.of(context).textTheme.bodySmall
                 ?.copyWith(color: Theme.of(context).colorScheme.outline),
           ),
@@ -554,7 +579,7 @@ class _SummaryLevelSheet extends StatelessWidget {
             min: 0,
             max: (SummaryLevel.values.length - 1).toDouble(),
             divisions: SummaryLevel.values.length - 1,
-            label: level.label,
+            label: level.labelFor(l10n),
             onChanged: (value) {
               final newLevel = SummaryLevel.values[value.round()];
               context.read<SettingsStore>().setSummaryLevel(newLevel);
@@ -565,7 +590,7 @@ class _SummaryLevelSheet extends StatelessWidget {
             children: [
               for (final l in SummaryLevel.values)
                 Text(
-                  l.label,
+                  l.labelFor(l10n),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: l == level
                         ? Theme.of(context).colorScheme.primary
@@ -577,7 +602,7 @@ class _SummaryLevelSheet extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            level.description,
+            level.descriptionFor(l10n),
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],

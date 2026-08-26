@@ -16,8 +16,9 @@ class DiaryEntryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final day = DateFormat('d').format(entry.createdAt);
-    final monthLabel = DateFormat('M月').format(entry.createdAt);
+    final locale = Localizations.localeOf(context).toString();
+    final day = DateFormat('d', locale).format(entry.createdAt);
+    final monthLabel = DateFormat.MMM(locale).format(entry.createdAt);
 
     return InkWell(
       onTap: onTap,

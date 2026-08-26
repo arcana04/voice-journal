@@ -1,9 +1,14 @@
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/usage_status.dart';
 import '../services/backend_service.dart';
 import '../services/reminder_service.dart';
+import '../state/background_store.dart';
+import '../state/settings_store.dart';
+import 'background_select_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -27,19 +32,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _requestNotificationPermission() async {
     final granted = await _reminders.requestNotificationPermission();
     if (!granted && mounted) {
+      final l10n = AppLocalizations.of(context)!;
       final open = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('通知が許可されていません'),
-          content: const Text('リマインダーを届けるには通知を許可してください。設定アプリから変更できます。'),
+          title: Text(l10n.notificationPermissionDialogTitle),
+          content: Text(l10n.notificationPermissionDialogMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('キャンセル'),
+              child: Text(l10n.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('設定を開く'),
+              child: Text(l10n.openSettings),
             ),
           ],
         ),
@@ -58,14 +64,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('設定')),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
           children: [
-            Text('無料枠', style: theme.textTheme.labelLarge),
+            Text(l10n.displaySectionTitle, style: theme.textTheme.labelLarge),
+            const SizedBox(height: 8),
+            Consumer<SettingsStore>(
+              builder: (context, settings, _) {
+                return SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  secondary: Icon(
+                    settings.darkMode
+                        ? Icons.dark_mode_outlined
+                        : Icons.light_mode_outlined,
+                  ),
+                  title: Text(l10n.darkModeTitle),
+                  value: settings.darkMode,
+                  onChanged: (value) =>
+                      context.read<SettingsStore>().setDarkMode(value),
+                );
+              },
+            ),
+            Consumer<BackgroundStore>(
+              builder: (context, backgroundStore, _) {
+                final selected = backgroundStore.selected;
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: selected == null
+                      ? const Icon(Icons.wallpaper_outlined)
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Image.asset(
+                            selected.asset,
+                            width: 24,
+                            height: 24,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                  title: Text(l10n.appBackgroundSettingsTitle),
+                  subtitle: Text(
+                    selected?.labelFor(l10n) ?? l10n.appBackgroundDefaultLabel,
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const BackgroundSelectScreen(),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const Divider(height: 32),
+            Text(l10n.freeTierSectionTitle, style: theme.textTheme.labelLarge),
             const SizedBox(height: 8),
             FutureBuilder<UsageStatus>(
               future: _usageFuture,
@@ -80,7 +135,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   return ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.error_outline),
-                    title: const Text('利用状況を取得できませんでした'),
+                    title: Text(l10n.freeTierFetchFailed),
                     trailing: IconButton(
                       icon: const Icon(Icons.refresh),
                       onPressed: _refreshUsage,
@@ -91,8 +146,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.mic_none),
-                  title: Text('本日の録音回数: ${usage.used} / ${usage.limit}回'),
-                  subtitle: Text('残り${usage.remaining}回（日本時間の日付で毎日リセット）'),
+                  title: Text(l10n.freeTierUsage(usage.used, usage.limit)),
+                  subtitle: Text(l10n.freeTierRemaining(usage.remaining)),
                   trailing: IconButton(
                     icon: const Icon(Icons.refresh),
                     onPressed: _refreshUsage,
@@ -101,7 +156,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             const Divider(height: 32),
-            Text('通知', style: theme.textTheme.labelLarge),
+            Text(
+              l10n.notificationSectionTitle,
+              style: theme.textTheme.labelLarge,
+            ),
             const SizedBox(height: 8),
             FutureBuilder<bool>(
               future: _notificationFuture,
@@ -116,19 +174,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ? Icons.notifications_active_outlined
                         : Icons.notifications_off_outlined,
                   ),
-                  title: const Text('リマインダー通知'),
+                  title: Text(l10n.reminderNotificationsTitle),
                   subtitle: Text(
                     loading
-                        ? '確認中…'
+                        ? l10n.notificationCheckingStatus
                         : granted
-                        ? '許可されています'
-                        : '許可されていません（リマインダーが届きません）',
+                        ? l10n.notificationGranted
+                        : l10n.notificationDenied,
                   ),
                   trailing: loading || granted
                       ? null
                       : TextButton(
                           onPressed: _requestNotificationPermission,
-                          child: const Text('許可する'),
+                          child: Text(l10n.allow),
                         ),
                 );
               },

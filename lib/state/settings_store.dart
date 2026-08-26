@@ -7,11 +7,13 @@ class SettingsStore extends ChangeNotifier {
   final SettingsService _service = SettingsService();
 
   SummaryLevel summaryLevel = SummaryLevel.preserve;
+  bool darkMode = true;
   bool _loaded = false;
   bool get loaded => _loaded;
 
   Future<void> load() async {
     summaryLevel = await _service.getSummaryLevel();
+    darkMode = await _service.getDarkMode();
     _loaded = true;
     notifyListeners();
   }
@@ -19,6 +21,12 @@ class SettingsStore extends ChangeNotifier {
   Future<void> setSummaryLevel(SummaryLevel value) async {
     summaryLevel = value;
     await _service.setSummaryLevel(value);
+    notifyListeners();
+  }
+
+  Future<void> setDarkMode(bool value) async {
+    darkMode = value;
+    await _service.setDarkMode(value);
     notifyListeners();
   }
 }

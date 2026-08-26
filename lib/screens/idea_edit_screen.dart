@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
 
@@ -83,13 +84,14 @@ class _IdeaEditScreenState extends State<IdeaEditScreen> {
 
         final drafts = _ensureDrafts(entry);
 
+        final l10n = AppLocalizations.of(context)!;
         return Scaffold(
           appBar: AppBar(
-            title: const Text('アイデアを編集'),
+            title: Text(l10n.editIdeaTitle),
             actions: [
               TextButton(
                 onPressed: () => _save(store, entry),
-                child: const Text('保存'),
+                child: Text(l10n.save),
               ),
             ],
           ),
@@ -106,6 +108,7 @@ class _IdeaEditScreenState extends State<IdeaEditScreen> {
 
   Widget _buildIdeaBlock(BuildContext context, _IdeaDraft draft) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -123,11 +126,11 @@ class _IdeaEditScreenState extends State<IdeaEditScreen> {
           TextField(
             controller: draft.titleController,
             style: theme.textTheme.titleMedium,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               isDense: true,
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
-              hintText: '見出し（任意）',
+              hintText: l10n.ideaTitleHint,
             ),
           ),
           const SizedBox(height: 8),
@@ -136,11 +139,11 @@ class _IdeaEditScreenState extends State<IdeaEditScreen> {
             minLines: 2,
             maxLines: 8,
             style: theme.textTheme.bodyMedium,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               isDense: true,
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
-              hintText: 'アイデアの内容',
+              hintText: l10n.ideaContentHint,
             ),
           ),
         ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/journal_entry.dart';
 import '../utils/task_format.dart';
 import 'edit_icon_button.dart';
@@ -27,19 +28,20 @@ class TaskEntryCard extends StatelessWidget {
   });
 
   Future<void> _confirmDelete(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('削除しますか？'),
-        content: const Text('この記録を削除すると元に戻せません。'),
+        title: Text(l10n.confirmDeleteTitle),
+        content: Text(l10n.confirmDeleteMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('キャンセル'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('削除'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -50,7 +52,9 @@ class TaskEntryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final timeLabel = DateFormat('M月d日 HH:mm').format(entry.createdAt);
+    final locale = Localizations.localeOf(context).toString();
+    final timeLabel =
+        '${DateFormat.MMMd(locale).format(entry.createdAt)} ${DateFormat.Hm(locale).format(entry.createdAt)}';
     final tasks = visibleTasks ?? entry.tasks;
 
     return Card(
@@ -106,7 +110,7 @@ class TaskEntryCard extends StatelessWidget {
                                   : theme.textTheme.bodyMedium,
                             ),
                             const SizedBox(height: 2),
-                            _buildTaskMeta(theme, task),
+                            _buildTaskMeta(theme, task, locale),
                           ],
                         ),
                       ),
@@ -121,8 +125,8 @@ class TaskEntryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTaskMeta(ThemeData theme, TaskItem task) {
-    final dueLabel = taskDueLabel(task);
+  Widget _buildTaskMeta(ThemeData theme, TaskItem task, String locale) {
+    final dueLabel = taskDueLabel(task, locale: locale);
     final reminderAt = task.reminderAt;
 
     if (dueLabel == null && reminderAt == null) return const SizedBox.shrink();
@@ -149,7 +153,7 @@ class TaskEntryCard extends StatelessWidget {
               ),
               const SizedBox(width: 2),
               Text(
-                DateFormat('M月d日 HH:mm').format(reminderAt),
+                '${DateFormat.MMMd(locale).format(reminderAt)} ${DateFormat.Hm(locale).format(reminderAt)}',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.primary,
                   fontWeight: FontWeight.w600,

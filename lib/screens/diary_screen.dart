@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
+import '../widgets/app_background_image.dart';
 import '../widgets/diary_entry_card.dart';
 import '../widgets/scrim_text.dart';
 import 'diary_view_screen.dart';
@@ -86,9 +88,8 @@ class _DiaryScreenState extends State<DiaryScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              'assets/images/diary_background.png',
-              fit: BoxFit.cover,
+            child: const AppBackgroundImage(
+              fallbackAsset: 'assets/images/diary_background.png',
             ),
           ),
           SafeArea(
@@ -121,7 +122,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
                           vertical: 8,
                         ),
                         child: Text(
-                          DateFormat('yyyy年M月').format(_visibleMonth),
+                          DateFormat.yMMMM(
+                            Localizations.localeOf(context).toString(),
+                          ).format(_visibleMonth),
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
@@ -132,7 +135,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
                           ? Center(
                               child: ScrimText(
                                 child: Text(
-                                  'この月の日記・感想はありません',
+                                  AppLocalizations.of(context)!.diaryMonthEmpty,
                                   textAlign: TextAlign.center,
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),

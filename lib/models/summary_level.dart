@@ -1,3 +1,5 @@
+import '../l10n/app_localizations.dart';
+
 /// 録音・テキスト入力をAIが日記（notes）に整形する際の要約度。
 /// tasksの簡潔さには影響せず、notesのリライトの強さだけを変える。
 enum SummaryLevel {
@@ -18,16 +20,16 @@ extension SummaryLevelX on SummaryLevel {
         SummaryLevel.compact => 'compact',
       };
 
-  String get label => switch (this) {
-        SummaryLevel.preserve => '原型重視',
-        SummaryLevel.standard => '標準',
-        SummaryLevel.compact => '超コンパクト',
+  String labelFor(AppLocalizations l10n) => switch (this) {
+        SummaryLevel.preserve => l10n.summaryLevelPreserveLabel,
+        SummaryLevel.standard => l10n.summaryLevelStandardLabel,
+        SummaryLevel.compact => l10n.summaryLevelCompactLabel,
       };
 
-  String get description => switch (this) {
-        SummaryLevel.preserve => '要約・圧縮せず、感情や言い回し、固有名詞をそのまま残します',
-        SummaryLevel.standard => '冗長な繰り返しだけ整理し、日記らしい自然な長さを保ちます',
-        SummaryLevel.compact => '核心だけを1〜2文程度にぎゅっと短くまとめます',
+  String descriptionFor(AppLocalizations l10n) => switch (this) {
+        SummaryLevel.preserve => l10n.summaryLevelPreserveDescription,
+        SummaryLevel.standard => l10n.summaryLevelStandardDescription,
+        SummaryLevel.compact => l10n.summaryLevelCompactDescription,
       };
 
   static SummaryLevel fromWireValue(String? value) {

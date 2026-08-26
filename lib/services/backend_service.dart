@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cloud_functions/cloud_functions.dart';
 
+import '../l10n/l10n_utils.dart';
 import '../models/custom_word.dart';
 import '../models/journal_entry.dart';
 import '../models/summary_level.dart';
@@ -24,6 +25,7 @@ class BackendService {
     File audioFile, {
     List<CustomWord> customWords = const [],
     SummaryLevel summaryLevel = SummaryLevel.preserve,
+    required String locale,
   }) async {
     await _auth.ensureSignedIn();
 
@@ -38,16 +40,18 @@ class BackendService {
         'mimeType': 'audio/m4a',
         'customWords': customWords.map((w) => w.toJson()).toList(),
         'summaryLevel': summaryLevel.wireValue,
+        'locale': locale,
       });
       return _entryFromResponse(result.data);
     } on FirebaseFunctionsException catch (e) {
-      throw BackendServiceException(e.message ?? '処理中にエラーが発生しました');
+      throw BackendServiceException(e.message ?? currentLocalizations().genericProcessingError);
     }
   }
 
   Future<JournalEntry> processTextMemo(
     String text, {
     SummaryLevel summaryLevel = SummaryLevel.preserve,
+    required String locale,
   }) async {
     await _auth.ensureSignedIn();
 
@@ -57,10 +61,11 @@ class BackendService {
       final result = await callable.call<Map<String, dynamic>>({
         'text': text,
         'summaryLevel': summaryLevel.wireValue,
+        'locale': locale,
       });
       return _entryFromResponse(result.data);
     } on FirebaseFunctionsException catch (e) {
-      throw BackendServiceException(e.message ?? '処理中にエラーが発生しました');
+      throw BackendServiceException(e.message ?? currentLocalizations().genericProcessingError);
     }
   }
 
@@ -99,7 +104,7 @@ class BackendService {
         limit: (data['limit'] as num?)?.toInt() ?? 0,
       );
     } on FirebaseFunctionsException catch (e) {
-      throw BackendServiceException(e.message ?? '利用状況の取得に失敗しました');
+      throw BackendServiceException(e.message ?? currentLocalizations().usageFetchError);
     }
   }
 }
