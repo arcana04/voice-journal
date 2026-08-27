@@ -69,22 +69,6 @@ class DiaryEntryCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (entry.comfortMessage != null)
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 8, right: 40),
-                          child: Text(
-                            entry.comfortMessage!,
-                            textAlign: TextAlign.right,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontStyle: FontStyle.italic,
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -131,8 +115,8 @@ class DiaryEntryCard extends StatelessWidget {
             ),
             if (entry.emotion != null)
               Positioned(
-                top: -8,
-                right: -8,
+                top: -14,
+                right: -14,
                 child: _EmotionBadge(
                   emotion: entry.emotion!,
                   label: entry.emotion!.labelFor(AppLocalizations.of(context)!),
@@ -209,8 +193,8 @@ class _EmotionBadge extends StatelessWidget {
     return Semantics(
       label: label,
       child: Container(
-        width: 44,
-        height: 44,
+        width: 56,
+        height: 56,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
@@ -223,7 +207,7 @@ class _EmotionBadge extends StatelessWidget {
             ),
           ],
         ),
-        child: Text(emotion.emoji, style: const TextStyle(fontSize: 26)),
+        child: Text(emotion.emoji, style: const TextStyle(fontSize: 34)),
       ),
     );
   }

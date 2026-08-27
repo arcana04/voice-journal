@@ -571,6 +571,57 @@ class AppLocalizationsJa extends AppLocalizations {
   String get comingSoon => '準備中です';
 
   @override
+  String get diaryBgChihuahua => 'チワワ';
+
+  @override
+  String get diaryBgFruit => 'フルーツ';
+
+  @override
+  String get diaryBgMintPlant => 'ミントの観葉植物';
+
+  @override
+  String get diaryBgCoffee => 'コーヒー';
+
+  @override
+  String get diaryBgCake => 'ケーキ';
+
+  @override
+  String get diaryBgPicnic => 'ピクニック';
+
+  @override
+  String get diaryBgShoppingNight => '夜のショッピング';
+
+  @override
+  String get diaryBgHeartBalloon => 'ハート風船';
+
+  @override
+  String get diaryBgDrive => 'ドライブ';
+
+  @override
+  String get diaryBgSakuraStation => '桜の駅';
+
+  @override
+  String get diaryBgAutumnLeaves => '秋の紅葉';
+
+  @override
+  String get diaryBgStudyDesk => '勉強机';
+
+  @override
+  String get diaryBgHome => '家の中';
+
+  @override
+  String get diaryBgParkDay => '昼の公園';
+
+  @override
+  String get diaryBgNightSky => '夜空';
+
+  @override
+  String get diaryBgSadBoy => '落ち込んでいる少年';
+
+  @override
+  String get diaryBgBeachGirl => '海辺の少女';
+
+  @override
   String get fontSheetTitle => 'フォント';
 
   @override
@@ -619,7 +670,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tasksFilterEmpty => 'この絞り込みに該当するタスクはありません';
 
   @override
-  String get reminderLabel => 'リマインダー';
+  String get reminderLabel => 'リマインダー通知';
 
   @override
   String get removeReminderTooltip => 'リマインダーを解除';
@@ -632,6 +683,21 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get allDayLabel => '終日';
+
+  @override
+  String get taskScheduleLabel => '開始・終了時間';
+
+  @override
+  String get addStartTime => '開始時間を設定';
+
+  @override
+  String get removeStartTimeTooltip => '開始時間を解除';
+
+  @override
+  String get addEndTime => '終了時間を追加';
+
+  @override
+  String get removeEndTimeTooltip => '終了時間を解除';
 
   @override
   String get recurringTaskFabTooltip => '繰り返しタスクを追加';

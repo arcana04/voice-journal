@@ -6,11 +6,17 @@ class TaskItem {
   final String title;
   final String? dueHint;
   final DateTime? dueDate;
+  /// カレンダー同期される予定の開始日時。[reminderEndAt]と対で「開始・終了時間」を表す。
   final DateTime? reminderAt;
+  /// カレンダー同期される予定の終了日時（任意）。
   final DateTime? reminderEndAt;
   final bool done;
   final String? calendarEventId;
   final bool isAllDay;
+  /// 端末に届くプッシュ通知の発火時刻。[reminderAt]/[reminderEndAt]（カレンダー用の
+  /// 開始・終了時間）とは完全に独立しており、どちらかを変更してももう片方には
+  /// 影響しない。
+  final DateTime? notifyAt;
 
   TaskItem({
     this.id,
@@ -23,6 +29,7 @@ class TaskItem {
     this.done = false,
     this.calendarEventId,
     this.isAllDay = false,
+    this.notifyAt,
   });
 
   TaskItem copyWith({
@@ -35,6 +42,8 @@ class TaskItem {
     String? calendarEventId,
     bool clearCalendarEventId = false,
     bool? isAllDay,
+    DateTime? notifyAt,
+    bool clearNotify = false,
   }) {
     return TaskItem(
       id: id,
@@ -51,6 +60,7 @@ class TaskItem {
           ? null
           : (calendarEventId ?? this.calendarEventId),
       isAllDay: clearReminder ? false : (isAllDay ?? this.isAllDay),
+      notifyAt: clearNotify ? null : (notifyAt ?? this.notifyAt),
     );
   }
 
@@ -66,6 +76,7 @@ class TaskItem {
       'done': done ? 1 : 0,
       'calendar_event_id': calendarEventId,
       'is_all_day': isAllDay ? 1 : 0,
+      'notify_at': notifyAt?.toIso8601String(),
     };
   }
 
@@ -73,6 +84,7 @@ class TaskItem {
     final dueDateStr = map['due_date'] as String?;
     final reminderAtStr = map['reminder_at'] as String?;
     final reminderEndAtStr = map['reminder_end_at'] as String?;
+    final notifyAtStr = map['notify_at'] as String?;
     return TaskItem(
       id: map['id'] as int?,
       entryId: map['entry_id'] as int?,
@@ -85,6 +97,7 @@ class TaskItem {
       done: (map['done'] as int? ?? 0) == 1,
       calendarEventId: map['calendar_event_id'] as String?,
       isAllDay: (map['is_all_day'] as int? ?? 0) == 1,
+      notifyAt: notifyAtStr != null ? DateTime.tryParse(notifyAtStr) : null,
     );
   }
 
@@ -92,13 +105,17 @@ class TaskItem {
     final dueDateStr = json['due_date'] as String?;
     final reminderAtStr = json['reminder_at'] as String?;
     final reminderEndAtStr = json['reminder_end_at'] as String?;
+    final reminderAt = reminderAtStr != null ? DateTime.tryParse(reminderAtStr) : null;
     return TaskItem(
       title: (json['title'] as String? ?? '').trim(),
       dueHint: json['due_hint'] as String?,
       dueDate: dueDateStr != null ? DateTime.tryParse(dueDateStr) : null,
-      reminderAt: reminderAtStr != null ? DateTime.tryParse(reminderAtStr) : null,
+      reminderAt: reminderAt,
       reminderEndAt:
           reminderEndAtStr != null ? DateTime.tryParse(reminderEndAtStr) : null,
+      // AIが時刻を抽出した直後は、通知時刻も開始時刻と同じにしておく（後から
+      // TaskEditScreenで両者を独立に変更できる）。
+      notifyAt: reminderAt,
     );
   }
 }
@@ -112,6 +129,8 @@ class NoteItem {
   final int? fontFamilyIndex;
   final int? textColorValue;
   final double? fontScale;
+  /// [DiaryBackground.id]。未設定（背景なし）ならnull。
+  final String? backgroundId;
 
   NoteItem({
     this.id,
@@ -122,6 +141,7 @@ class NoteItem {
     this.fontFamilyIndex,
     this.textColorValue,
     this.fontScale,
+    this.backgroundId,
   });
 
   NoteItem copyWith({
@@ -132,6 +152,8 @@ class NoteItem {
     int? textColorValue,
     bool clearTextColor = false,
     double? fontScale,
+    String? backgroundId,
+    bool clearBackground = false,
   }) {
     return NoteItem(
       id: id,
@@ -144,6 +166,9 @@ class NoteItem {
           ? null
           : (textColorValue ?? this.textColorValue),
       fontScale: fontScale ?? this.fontScale,
+      backgroundId: clearBackground
+          ? null
+          : (backgroundId ?? this.backgroundId),
     );
   }
 
@@ -157,6 +182,7 @@ class NoteItem {
       'font_family_index': fontFamilyIndex,
       'text_color': textColorValue,
       'font_scale': fontScale,
+      'background_id': backgroundId,
     };
   }
 
@@ -170,6 +196,7 @@ class NoteItem {
       fontFamilyIndex: map['font_family_index'] as int?,
       textColorValue: map['text_color'] as int?,
       fontScale: (map['font_scale'] as num?)?.toDouble(),
+      backgroundId: map['background_id'] as String?,
     );
   }
 

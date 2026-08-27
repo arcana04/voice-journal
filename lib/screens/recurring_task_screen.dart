@@ -128,6 +128,7 @@ class _RecurringTaskScreenState extends State<RecurringTaskScreen> {
         dueDate: date,
         reminderAt: start,
         reminderEndAt: end,
+        notifyAt: start,
       );
     }
     return TaskItem(

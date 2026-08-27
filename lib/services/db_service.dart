@@ -38,7 +38,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 11,
+      version: 13,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE entries (
@@ -65,6 +65,7 @@ class DbService {
             done INTEGER NOT NULL DEFAULT 0,
             calendar_event_id TEXT,
             is_all_day INTEGER NOT NULL DEFAULT 0,
+            notify_at TEXT,
             FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
           )
         ''');
@@ -78,6 +79,7 @@ class DbService {
             font_family_index INTEGER,
             text_color INTEGER,
             font_scale REAL,
+            background_id TEXT,
             FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
           )
         ''');
@@ -149,6 +151,16 @@ class DbService {
           }
           await batch.commit(noResult: true);
         }
+        if (oldVersion < 12) {
+          await db.execute('ALTER TABLE notes ADD COLUMN background_id TEXT');
+        }
+        if (oldVersion < 13) {
+          // 「通知時刻」を「開始・終了時間（カレンダー用）」から独立させる。既存タスクは
+          // 従来どおり開始時刻に通知していたはずなので、その値をそのまま引き継ぐ
+          // （以後はTaskEditScreenで両者を別々に変更できる）。
+          await db.execute('ALTER TABLE tasks ADD COLUMN notify_at TEXT');
+          await db.execute('UPDATE tasks SET notify_at = reminder_at');
+        }
       },
     );
   }
@@ -175,6 +187,7 @@ class DbService {
         'reminder_end_at': task.reminderEndAt?.toIso8601String(),
         'done': 0,
         'is_all_day': task.isAllDay ? 1 : 0,
+        'notify_at': task.notifyAt?.toIso8601String(),
       });
       savedTasks.add(TaskItem(
         id: taskId,
@@ -185,6 +198,7 @@ class DbService {
         reminderAt: task.reminderAt,
         reminderEndAt: task.reminderEndAt,
         isAllDay: task.isAllDay,
+        notifyAt: task.notifyAt,
       ));
     }
     final savedNotes = <NoteItem>[];
@@ -197,6 +211,7 @@ class DbService {
         'font_family_index': note.fontFamilyIndex,
         'text_color': note.textColorValue,
         'font_scale': note.fontScale,
+        'background_id': note.backgroundId,
       });
       savedNotes.add(NoteItem(
         id: noteId,
@@ -207,6 +222,7 @@ class DbService {
         fontFamilyIndex: note.fontFamilyIndex,
         textColorValue: note.textColorValue,
         fontScale: note.fontScale,
+        backgroundId: note.backgroundId,
       ));
     }
 
@@ -310,13 +326,14 @@ class DbService {
     );
   }
 
-  /// 日記ノートの文字スタイル（フォント・色・サイズ倍率）だけを更新する。
-  /// [textColorValue]はnullを渡すと「色指定なし（テーマ既定色）」として保存される。
+  /// 日記ノートの文字スタイル（フォント・色・サイズ倍率）と背景イラストを更新する。
+  /// [textColorValue]/[backgroundId]はnullを渡すと「指定なし」として保存される。
   Future<void> updateNoteStyle(
     int noteId, {
     required int fontFamilyIndex,
     required int? textColorValue,
     required double fontScale,
+    required String? backgroundId,
   }) async {
     final db = await _database;
     await db.update(
@@ -325,6 +342,7 @@ class DbService {
         'font_family_index': fontFamilyIndex,
         'text_color': textColorValue,
         'font_scale': fontScale,
+        'background_id': backgroundId,
       },
       where: 'id = ?',
       whereArgs: [noteId],
@@ -341,22 +359,39 @@ class DbService {
     );
   }
 
-  Future<void> updateTaskReminder(
+  /// タスクの「開始・終了時間」（カレンダー同期用）を更新する。プッシュ通知の
+  /// 発火時刻（[updateTaskNotifyAt]）には一切影響しない。
+  Future<void> updateTaskSchedule(
     int taskId,
-    DateTime? reminderAt, {
+    DateTime? startAt, {
+    DateTime? endAt,
     bool isAllDay = false,
   }) async {
     final db = await _database;
     final values = <String, Object?>{
-      'reminder_at': reminderAt?.toIso8601String(),
-      'is_all_day': (reminderAt != null && isAllDay) ? 1 : 0,
+      'reminder_at': startAt?.toIso8601String(),
+      'is_all_day': (startAt != null && isAllDay) ? 1 : 0,
     };
-    if (reminderAt == null || isAllDay) {
+    if (startAt == null || isAllDay) {
       values['reminder_end_at'] = null;
+    } else {
+      values['reminder_end_at'] = endAt?.toIso8601String();
     }
     await db.update(
       'tasks',
       values,
+      where: 'id = ?',
+      whereArgs: [taskId],
+    );
+  }
+
+  /// タスクのプッシュ通知の発火時刻を更新する。「開始・終了時間」（カレンダー同期用、
+  /// [updateTaskSchedule]）には一切影響しない。
+  Future<void> updateTaskNotifyAt(int taskId, DateTime? notifyAt) async {
+    final db = await _database;
+    await db.update(
+      'tasks',
+      {'notify_at': notifyAt?.toIso8601String()},
       where: 'id = ?',
       whereArgs: [taskId],
     );

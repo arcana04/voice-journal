@@ -96,6 +96,8 @@ class _EntryReviewState extends State<EntryReview> {
             dueDate: i.dueDate,
             reminderAt: i.reminderAt,
             reminderEndAt: i.reminderEndAt,
+            // 通知時刻も開始時刻に合わせておく（後からTaskEditScreenで独立に変更可能）。
+            notifyAt: i.reminderAt,
           ),
         )
         .toList();

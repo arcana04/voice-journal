@@ -7,6 +7,7 @@ import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
 import '../state/text_style_store.dart';
 import '../utils/note_text_style.dart';
+import '../widgets/diary_note_background.dart';
 import '../widgets/edit_icon_button.dart';
 import '../widgets/media_gallery.dart';
 import 'diary_edit_screen.dart';
@@ -120,7 +121,7 @@ class DiaryViewScreen extends StatelessWidget {
                         const Spacer(),
                         Text(
                           entry.emotion!.emoji,
-                          style: const TextStyle(fontSize: 28),
+                          style: const TextStyle(fontSize: 40),
                           semanticsLabel: entry.emotion!.labelFor(
                             AppLocalizations.of(context)!,
                           ),
@@ -137,56 +138,39 @@ class DiaryViewScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  if (entry.comfortMessage != null) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer.withValues(
-                          alpha: 0.4,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        entry.comfortMessage!,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontStyle: FontStyle.italic,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ],
                   const SizedBox(height: 20),
                   for (final note in entry.notes.where(
                     (n) => n.category == kNoteCategoryFeeling,
                   ))
                     Padding(
                       padding: const EdgeInsets.only(bottom: 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if ((note.title ?? '').isNotEmpty)
-                            Text(
-                              note.title!,
-                              style: applyNoteStyle(
-                                theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w700,
+                      child: DiaryNoteBackground(
+                        backgroundId: note.backgroundId,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if ((note.title ?? '').isNotEmpty)
+                              Text(
+                                note.title!,
+                                style: applyNoteStyle(
+                                  theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  note: note,
+                                  defaults: textStyleDefaults,
                                 ),
+                              ),
+                            const SizedBox(height: 8),
+                            Text(
+                              note.content,
+                              style: applyNoteStyle(
+                                theme.textTheme.bodyLarge,
                                 note: note,
                                 defaults: textStyleDefaults,
                               ),
                             ),
-                          const SizedBox(height: 8),
-                          Text(
-                            note.content,
-                            style: applyNoteStyle(
-                              theme.textTheme.bodyLarge,
-                              note: note,
-                              defaults: textStyleDefaults,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   if (entry.imagePaths.isNotEmpty) ...[

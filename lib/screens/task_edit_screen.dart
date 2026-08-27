@@ -12,18 +12,27 @@ String _dateLabel(DateTime date, String locale) =>
 class _TaskDraft {
   final TaskItem task;
   final TextEditingController titleController;
-  DateTime? reminderAt;
+  /// カレンダーに同期される開始・終了時間（[JournalStore.updateTaskSchedule]）。
+  DateTime? startAt;
+  DateTime? endAt;
   bool isAllDay;
+  /// プッシュ通知の発火時刻。開始・終了時間とは完全に独立
+  /// （[JournalStore.updateTaskNotifyAt]）。
+  DateTime? notifyAt;
 
   _TaskDraft(this.task)
       : titleController = TextEditingController(text: task.title),
-        reminderAt = task.reminderAt,
-        isAllDay = task.isAllDay;
+        startAt = task.reminderAt,
+        endAt = task.reminderEndAt,
+        isAllDay = task.isAllDay,
+        notifyAt = task.notifyAt;
 
   void dispose() => titleController.dispose();
 }
 
-/// タスクの編集画面。タイトルと、リマインダーの日付・時刻を変更できる。
+/// タスクの編集画面。タイトル、カレンダー同期用の開始・終了時間、プッシュ通知の
+/// リマインダー時刻を変更できる。開始・終了時間とリマインダー時刻は完全に独立して
+/// おり、一方を変更してももう一方（およびカレンダー予定/通知）には影響しない。
 class TaskEditScreen extends StatefulWidget {
   final int entryId;
 
@@ -55,8 +64,10 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     super.dispose();
   }
 
-  Future<void> _pickReminderDate(_TaskDraft draft) async {
-    final base = draft.reminderAt ?? DateTime.now();
+  // --- 開始・終了時間（カレンダー同期用） ---
+
+  Future<void> _pickStartDate(_TaskDraft draft) async {
+    final base = draft.startAt ?? DateTime.now();
     final picked = await showDatePicker(
       context: context,
       initialDate: base,
@@ -65,35 +76,37 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     );
     if (picked == null) return;
     setState(() {
-      draft.reminderAt = DateTime(
+      draft.startAt = DateTime(
         picked.year,
         picked.month,
         picked.day,
         base.hour,
         base.minute,
       );
+      _keepEndAfterStart(draft);
     });
   }
 
-  Future<void> _pickReminderTime(_TaskDraft draft) async {
-    final base = draft.reminderAt ?? DateTime.now();
+  Future<void> _pickStartTime(_TaskDraft draft) async {
+    final base = draft.startAt ?? DateTime.now();
     final picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(base),
     );
     if (picked == null) return;
     setState(() {
-      draft.reminderAt = DateTime(
+      draft.startAt = DateTime(
         base.year,
         base.month,
         base.day,
         picked.hour,
         picked.minute,
       );
+      _keepEndAfterStart(draft);
     });
   }
 
-  Future<void> _addReminder(_TaskDraft draft) async {
+  Future<void> _addStart(_TaskDraft draft) async {
     final now = DateTime.now();
     final date = await showDatePicker(
       context: context,
@@ -106,22 +119,150 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     final time = await showTimePicker(context: context, initialTime: TimeOfDay.now());
     if (time == null) return;
     setState(() {
-      draft.reminderAt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      draft.startAt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
     });
   }
 
-  void _clearReminder(_TaskDraft draft) {
-    setState(() => draft.reminderAt = null);
+  void _clearStart(_TaskDraft draft) {
+    setState(() {
+      draft.startAt = null;
+      draft.endAt = null;
+      draft.isAllDay = false;
+    });
   }
 
   void _setAllDay(_TaskDraft draft, bool value) {
     setState(() {
       draft.isAllDay = value;
-      final at = draft.reminderAt;
-      if (value && at != null) {
-        draft.reminderAt = DateTime(at.year, at.month, at.day);
+      final at = draft.startAt;
+      if (value) {
+        draft.endAt = null;
+        if (at != null) {
+          draft.startAt = DateTime(at.year, at.month, at.day);
+        }
       }
     });
+  }
+
+  // 開始日時を変更したとき、終了日時がそれより前になっていたら消す
+  // （意味のない範囲が残らないようにする）。
+  void _keepEndAfterStart(_TaskDraft draft) {
+    final start = draft.startAt;
+    final end = draft.endAt;
+    if (start != null && end != null && end.isBefore(start)) {
+      draft.endAt = null;
+    }
+  }
+
+  Future<void> _addEndTime(_TaskDraft draft) async {
+    final base = draft.startAt ?? DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: base,
+      firstDate: draft.startAt ?? DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (date == null) return;
+    if (!mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(base),
+    );
+    if (time == null) return;
+    setState(() {
+      draft.endAt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    });
+  }
+
+  Future<void> _pickEndDate(_TaskDraft draft) async {
+    final base = draft.endAt ?? draft.startAt ?? DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: base,
+      firstDate: draft.startAt ?? DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null) return;
+    setState(() {
+      draft.endAt = DateTime(picked.year, picked.month, picked.day, base.hour, base.minute);
+    });
+  }
+
+  Future<void> _pickEndTime(_TaskDraft draft) async {
+    final base = draft.endAt ?? draft.startAt ?? DateTime.now();
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(base),
+    );
+    if (picked == null) return;
+    setState(() {
+      draft.endAt = DateTime(base.year, base.month, base.day, picked.hour, picked.minute);
+    });
+  }
+
+  void _clearEndTime(_TaskDraft draft) {
+    setState(() => draft.endAt = null);
+  }
+
+  // --- リマインダー通知（開始・終了時間とは独立） ---
+
+  Future<void> _pickNotifyDate(_TaskDraft draft) async {
+    final base = draft.notifyAt ?? DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: base,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null) return;
+    setState(() {
+      draft.notifyAt = DateTime(
+        picked.year,
+        picked.month,
+        picked.day,
+        base.hour,
+        base.minute,
+      );
+    });
+  }
+
+  Future<void> _pickNotifyTime(_TaskDraft draft) async {
+    final base = draft.notifyAt ?? DateTime.now();
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(base),
+    );
+    if (picked == null) return;
+    setState(() {
+      draft.notifyAt = DateTime(
+        base.year,
+        base.month,
+        base.day,
+        picked.hour,
+        picked.minute,
+      );
+    });
+  }
+
+  Future<void> _addNotify(_TaskDraft draft) async {
+    final now = DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (date == null) return;
+    if (!mounted) return;
+    final time = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+    if (time == null) return;
+    setState(() {
+      draft.notifyAt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    });
+  }
+
+  void _clearNotify(_TaskDraft draft) {
+    setState(() => draft.notifyAt = null);
   }
 
   Future<void> _save(JournalStore store, JournalEntry entry) async {
@@ -130,13 +271,19 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
       if (title.isNotEmpty && title != d.task.title) {
         await store.updateTaskTitle(entry, d.task, title);
       }
-      if (d.reminderAt != d.task.reminderAt || d.isAllDay != d.task.isAllDay) {
-        await store.updateTaskReminder(
+      if (d.startAt != d.task.reminderAt ||
+          d.endAt != d.task.reminderEndAt ||
+          d.isAllDay != d.task.isAllDay) {
+        await store.updateTaskSchedule(
           entry,
           d.task,
-          d.reminderAt,
+          startAt: d.startAt,
+          endAt: d.endAt,
           isAllDay: d.isAllDay,
         );
+      }
+      if (d.notifyAt != d.task.notifyAt) {
+        await store.updateTaskNotifyAt(entry, d.task, d.notifyAt);
       }
     }
     if (mounted) Navigator.of(context).pop();
@@ -180,7 +327,6 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
-    final reminderAt = draft.reminderAt;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -203,50 +349,138 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
               hintText: l10n.taskContentHint,
             ),
           ),
-          const SizedBox(height: 12),
-          Text(l10n.reminderLabel, style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.outline,
-              )),
+          const SizedBox(height: 16),
+          _buildLabel(theme, l10n.taskScheduleLabel),
           const SizedBox(height: 6),
-          if (reminderAt != null)
+          _buildScheduleSection(draft, locale, l10n),
+          const SizedBox(height: 16),
+          _buildLabel(theme, l10n.reminderLabel),
+          const SizedBox(height: 6),
+          _buildNotifySection(draft, locale, l10n),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLabel(ThemeData theme, String text) {
+    return Text(
+      text,
+      style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.outline),
+    );
+  }
+
+  Widget _buildScheduleSection(_TaskDraft draft, String locale, AppLocalizations l10n) {
+    final startAt = draft.startAt;
+    if (startAt == null) {
+      return OutlinedButton.icon(
+        onPressed: () => _addStart(draft),
+        icon: const Icon(Icons.event_outlined, size: 16),
+        label: Text(l10n.addStartTime),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => _pickStartDate(draft),
+              icon: const Icon(Icons.event_outlined, size: 16),
+              label: Text(_dateLabel(startAt, locale)),
+            ),
+            if (!draft.isAllDay)
+              OutlinedButton.icon(
+                onPressed: () => _pickStartTime(draft),
+                icon: const Icon(Icons.schedule_outlined, size: 16),
+                label: Text(DateFormat('HH:mm').format(startAt)),
+              ),
+            FilterChip(
+              label: Text(l10n.allDayLabel),
+              selected: draft.isAllDay,
+              onSelected: (value) => _setAllDay(draft, value),
+              visualDensity: VisualDensity.compact,
+            ),
+            IconButton(
+              onPressed: () => _clearStart(draft),
+              icon: const Icon(Icons.close),
+              tooltip: l10n.removeStartTimeTooltip,
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
+        ),
+        if (!draft.isAllDay) ...[
+          const SizedBox(height: 8),
+          if (draft.endAt == null)
+            OutlinedButton.icon(
+              onPressed: () => _addEndTime(draft),
+              icon: const Icon(Icons.event_outlined, size: 16),
+              label: Text(l10n.addEndTime),
+            )
+          else
             Wrap(
               spacing: 8,
               runSpacing: 8,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 OutlinedButton.icon(
-                  onPressed: () => _pickReminderDate(draft),
+                  onPressed: () => _pickEndDate(draft),
                   icon: const Icon(Icons.event_outlined, size: 16),
-                  label: Text(_dateLabel(reminderAt, locale)),
+                  label: Text(_dateLabel(draft.endAt!, locale)),
                 ),
-                if (!draft.isAllDay)
-                  OutlinedButton.icon(
-                    onPressed: () => _pickReminderTime(draft),
-                    icon: const Icon(Icons.schedule_outlined, size: 16),
-                    label: Text(DateFormat('HH:mm').format(reminderAt)),
-                  ),
-                FilterChip(
-                  label: Text(l10n.allDayLabel),
-                  selected: draft.isAllDay,
-                  onSelected: (value) => _setAllDay(draft, value),
-                  visualDensity: VisualDensity.compact,
+                OutlinedButton.icon(
+                  onPressed: () => _pickEndTime(draft),
+                  icon: const Icon(Icons.schedule_outlined, size: 16),
+                  label: Text(DateFormat('HH:mm').format(draft.endAt!)),
                 ),
                 IconButton(
-                  onPressed: () => _clearReminder(draft),
+                  onPressed: () => _clearEndTime(draft),
                   icon: const Icon(Icons.close),
-                  tooltip: l10n.removeReminderTooltip,
+                  tooltip: l10n.removeEndTimeTooltip,
                   visualDensity: VisualDensity.compact,
                 ),
               ],
-            )
-          else
-            OutlinedButton.icon(
-              onPressed: () => _addReminder(draft),
-              icon: const Icon(Icons.add_alarm_outlined, size: 16),
-              label: Text(l10n.addReminder),
             ),
         ],
-      ),
+      ],
+    );
+  }
+
+  Widget _buildNotifySection(_TaskDraft draft, String locale, AppLocalizations l10n) {
+    final notifyAt = draft.notifyAt;
+    if (notifyAt == null) {
+      return OutlinedButton.icon(
+        onPressed: () => _addNotify(draft),
+        icon: const Icon(Icons.add_alarm_outlined, size: 16),
+        label: Text(l10n.addReminder),
+      );
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        OutlinedButton.icon(
+          onPressed: () => _pickNotifyDate(draft),
+          icon: const Icon(Icons.event_outlined, size: 16),
+          label: Text(_dateLabel(notifyAt, locale)),
+        ),
+        OutlinedButton.icon(
+          onPressed: () => _pickNotifyTime(draft),
+          icon: const Icon(Icons.schedule_outlined, size: 16),
+          label: Text(DateFormat('HH:mm').format(notifyAt)),
+        ),
+        IconButton(
+          onPressed: () => _clearNotify(draft),
+          icon: const Icon(Icons.close),
+          tooltip: l10n.removeReminderTooltip,
+          visualDensity: VisualDensity.compact,
+        ),
+      ],
     );
   }
 }

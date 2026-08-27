@@ -38,14 +38,11 @@ class JournalStore extends ChangeNotifier {
   Future<void> _rescheduleAllPendingReminders() async {
     for (final entry in entries) {
       for (final task in entry.tasks) {
-        if (!task.done &&
-            task.id != null &&
-            task.reminderAt != null &&
-            !task.isAllDay) {
+        if (!task.done && task.id != null && task.notifyAt != null) {
           await _reminders.scheduleTaskReminder(
             taskId: task.id!,
             title: task.title,
-            scheduledAt: task.reminderAt!,
+            scheduledAt: task.notifyAt!,
           );
         }
       }
@@ -96,11 +93,11 @@ class JournalStore extends ChangeNotifier {
     final saved = await _db.insertEntry(entry);
     final syncedTasks = <TaskItem>[];
     for (final task in saved.tasks) {
-      if (task.id != null && task.reminderAt != null && !task.isAllDay) {
+      if (task.id != null && task.notifyAt != null) {
         await _reminders.scheduleTaskReminder(
           taskId: task.id!,
           title: task.title,
-          scheduledAt: task.reminderAt!,
+          scheduledAt: task.notifyAt!,
         );
       }
       if (task.id != null) {
@@ -132,18 +129,20 @@ class JournalStore extends ChangeNotifier {
 
     String? eventId = task.calendarEventId;
     if (task.reminderAt != null) {
-      if (newDone) {
-        await _reminders.cancelTaskReminder(task.id!);
-      } else if (!task.isAllDay) {
-        await _reminders.scheduleTaskReminder(
-          taskId: task.id!,
-          title: task.title,
-          scheduledAt: task.reminderAt!,
-        );
-      }
       eventId = await _syncTaskCalendarEvent(updatedTask);
       if (eventId != task.calendarEventId) {
         await _db.updateTaskCalendarEventId(task.id!, eventId);
+      }
+    }
+    if (task.notifyAt != null) {
+      if (newDone) {
+        await _reminders.cancelTaskReminder(task.id!);
+      } else {
+        await _reminders.scheduleTaskReminder(
+          taskId: task.id!,
+          title: task.title,
+          scheduledAt: task.notifyAt!,
+        );
       }
     }
 
@@ -165,7 +164,7 @@ class JournalStore extends ChangeNotifier {
   Future<void> deleteEntry(JournalEntry entry) async {
     if (entry.id == null) return;
     for (final task in entry.tasks) {
-      if (task.id != null && task.reminderAt != null) {
+      if (task.id != null && task.notifyAt != null) {
         await _reminders.cancelTaskReminder(task.id!);
       }
       await _deleteTaskCalendarEvent(task);
@@ -232,6 +231,7 @@ class JournalStore extends ChangeNotifier {
     required int fontFamilyIndex,
     required Color? textColor,
     required double fontScale,
+    required String? backgroundId,
   }) async {
     if (note.id == null) return;
     await _db.updateNoteStyle(
@@ -239,6 +239,7 @@ class JournalStore extends ChangeNotifier {
       fontFamilyIndex: fontFamilyIndex,
       textColorValue: textColor?.toARGB32(),
       fontScale: fontScale,
+      backgroundId: backgroundId,
     );
     final index = entries.indexWhere((e) => e.id == entry.id);
     if (index == -1) return;
@@ -249,6 +250,8 @@ class JournalStore extends ChangeNotifier {
         textColorValue: textColor?.toARGB32(),
         clearTextColor: textColor == null,
         fontScale: fontScale,
+        backgroundId: backgroundId,
+        clearBackground: backgroundId == null,
       );
     }).toList();
     entries[index] = entries[index].copyWith(notes: updatedNotes);
@@ -261,11 +264,11 @@ class JournalStore extends ChangeNotifier {
     final trimmed = title.trim();
     await _db.updateTaskTitle(task.id!, trimmed);
 
-    if (task.reminderAt != null && !task.done && !task.isAllDay) {
+    if (task.notifyAt != null && !task.done) {
       await _reminders.scheduleTaskReminder(
         taskId: task.id!,
         title: trimmed,
-        scheduledAt: task.reminderAt!,
+        scheduledAt: task.notifyAt!,
       );
     }
     final eventId = await _syncTaskCalendarEvent(task.copyWith(title: trimmed));
@@ -288,32 +291,31 @@ class JournalStore extends ChangeNotifier {
     unawaited(_cloudSync.pushEntry(entries[index]));
   }
 
-  Future<void> updateTaskReminder(
+  /// タスクの「開始・終了時間」（カレンダー同期用）を更新する。プッシュ通知の
+  /// 発火時刻には一切影響しない（[updateTaskNotifyAt]で別途管理）。
+  Future<void> updateTaskSchedule(
     JournalEntry entry,
-    TaskItem task,
-    DateTime? reminderAt, {
+    TaskItem task, {
+    required DateTime? startAt,
+    DateTime? endAt,
     bool isAllDay = false,
   }) async {
     if (task.id == null) return;
-    final effectiveAllDay = reminderAt != null && isAllDay;
-    await _db.updateTaskReminder(task.id!, reminderAt, isAllDay: effectiveAllDay);
+    final effectiveAllDay = startAt != null && isAllDay;
+    final effectiveEndAt = effectiveAllDay ? null : endAt;
+    await _db.updateTaskSchedule(
+      task.id!,
+      startAt,
+      endAt: effectiveEndAt,
+      isAllDay: effectiveAllDay,
+    );
 
-    if (reminderAt == null) {
-      await _reminders.cancelTaskReminder(task.id!);
-    } else if (!task.done && !effectiveAllDay) {
-      await _reminders.scheduleTaskReminder(
-        taskId: task.id!,
-        title: task.title,
-        scheduledAt: reminderAt,
-      );
-    } else if (effectiveAllDay) {
-      await _reminders.cancelTaskReminder(task.id!);
-    }
     final eventId = await _syncTaskCalendarEvent(
       task.copyWith(
-        reminderAt: reminderAt,
-        clearReminder: reminderAt == null,
-        clearReminderEndAt: effectiveAllDay,
+        reminderAt: startAt,
+        clearReminder: startAt == null,
+        reminderEndAt: effectiveEndAt,
+        clearReminderEndAt: effectiveEndAt == null,
         isAllDay: effectiveAllDay,
       ),
     );
@@ -326,13 +328,46 @@ class JournalStore extends ChangeNotifier {
       final updatedTasks = entries[index].tasks.map((t) {
         if (t.id != task.id) return t;
         return t.copyWith(
-          reminderAt: reminderAt,
-          clearReminder: reminderAt == null,
-          clearReminderEndAt: effectiveAllDay,
+          reminderAt: startAt,
+          clearReminder: startAt == null,
+          reminderEndAt: effectiveEndAt,
+          clearReminderEndAt: effectiveEndAt == null,
           calendarEventId: eventId,
           clearCalendarEventId: eventId == null,
           isAllDay: effectiveAllDay,
         );
+      }).toList();
+      entries[index] = entries[index].copyWith(tasks: updatedTasks);
+      notifyListeners();
+      unawaited(_cloudSync.pushEntry(entries[index]));
+    }
+  }
+
+  /// タスクのプッシュ通知の発火時刻を更新する。カレンダーの開始・終了時間
+  /// （[updateTaskSchedule]）には一切影響しない。
+  Future<void> updateTaskNotifyAt(
+    JournalEntry entry,
+    TaskItem task,
+    DateTime? notifyAt,
+  ) async {
+    if (task.id == null) return;
+    await _db.updateTaskNotifyAt(task.id!, notifyAt);
+
+    if (notifyAt == null) {
+      await _reminders.cancelTaskReminder(task.id!);
+    } else if (!task.done) {
+      await _reminders.scheduleTaskReminder(
+        taskId: task.id!,
+        title: task.title,
+        scheduledAt: notifyAt,
+      );
+    }
+
+    final index = entries.indexWhere((e) => e.id == entry.id);
+    if (index != -1) {
+      final updatedTasks = entries[index].tasks.map((t) {
+        if (t.id != task.id) return t;
+        return t.copyWith(notifyAt: notifyAt, clearNotify: notifyAt == null);
       }).toList();
       entries[index] = entries[index].copyWith(tasks: updatedTasks);
       notifyListeners();

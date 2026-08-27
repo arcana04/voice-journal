@@ -591,6 +591,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String get comingSoon => 'Coming soon';
 
   @override
+  String get diaryBgChihuahua => 'Chihuahua';
+
+  @override
+  String get diaryBgFruit => 'Fruit';
+
+  @override
+  String get diaryBgMintPlant => 'Mint Plant Corner';
+
+  @override
+  String get diaryBgCoffee => 'Coffee';
+
+  @override
+  String get diaryBgCake => 'Cake';
+
+  @override
+  String get diaryBgPicnic => 'Picnic';
+
+  @override
+  String get diaryBgShoppingNight => 'Night Shopping';
+
+  @override
+  String get diaryBgHeartBalloon => 'Heart Balloons';
+
+  @override
+  String get diaryBgDrive => 'Drive';
+
+  @override
+  String get diaryBgSakuraStation => 'Sakura Station';
+
+  @override
+  String get diaryBgAutumnLeaves => 'Autumn Leaves';
+
+  @override
+  String get diaryBgStudyDesk => 'Study Desk';
+
+  @override
+  String get diaryBgHome => 'At Home';
+
+  @override
+  String get diaryBgParkDay => 'Park in Daylight';
+
+  @override
+  String get diaryBgNightSky => 'Night Sky';
+
+  @override
+  String get diaryBgSadBoy => 'Feeling Down';
+
+  @override
+  String get diaryBgBeachGirl => 'By the Sea';
+
+  @override
   String get fontSheetTitle => 'Font';
 
   @override
@@ -639,7 +690,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tasksFilterEmpty => 'No tasks match this filter';
 
   @override
-  String get reminderLabel => 'Reminder';
+  String get reminderLabel => 'Notification reminder';
 
   @override
   String get removeReminderTooltip => 'Remove reminder';
@@ -652,6 +703,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allDayLabel => 'All day';
+
+  @override
+  String get taskScheduleLabel => 'Start & End Time';
+
+  @override
+  String get addStartTime => 'Set start time';
+
+  @override
+  String get removeStartTimeTooltip => 'Remove start time';
+
+  @override
+  String get addEndTime => 'Add end time';
+
+  @override
+  String get removeEndTimeTooltip => 'Remove end time';
 
   @override
   String get recurringTaskFabTooltip => 'Add recurring task';

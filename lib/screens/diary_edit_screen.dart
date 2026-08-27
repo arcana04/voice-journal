@@ -6,10 +6,12 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
+import '../models/diary_background.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
 import '../state/text_style_store.dart';
 import '../utils/note_text_style.dart';
+import '../widgets/diary_note_background.dart';
 import '../widgets/media_gallery.dart';
 
 class _NoteDraft {
@@ -42,6 +44,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
   late double _fontScale;
   late int _fontFamilyIndex;
   late Color? _textColor;
+  String? _backgroundId;
 
   JournalEntry? _findEntry(JournalStore store) {
     for (final e in store.entries) {
@@ -68,6 +71,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
               : null)
         : defaults.textColor;
     _fontScale = styleSource?.fontScale ?? defaults.fontScale;
+    _backgroundId = styleSource?.backgroundId;
 
     return _drafts = feelingNotes.map((n) => _NoteDraft(n)).toList();
   }
@@ -97,6 +101,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
         fontFamilyIndex: _fontFamilyIndex,
         textColor: _textColor,
         fontScale: _fontScale,
+        backgroundId: _backgroundId,
       );
     }
     if (mounted) Navigator.of(context).pop();
@@ -149,36 +154,54 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
     final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  l10n.backgroundSheetTitle,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.backgroundSheetTitle,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 340,
+                child: GridView.count(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 0.8,
+                  children: [
+                    _DiaryBackgroundTile(
+                      label: l10n.backgroundNone,
+                      selected: _backgroundId == null,
+                      onTap: () {
+                        setState(() => _backgroundId = null);
+                        Navigator.of(sheetContext).pop();
+                      },
+                      child: const ColoredBox(
+                        color: Color(0x11000000),
+                        child: Icon(Icons.block, color: Colors.grey),
+                      ),
+                    ),
+                    for (final background in DiaryBackground.values)
+                      _DiaryBackgroundTile(
+                        label: background.labelFor(l10n),
+                        selected: _backgroundId == background.id,
+                        onTap: () {
+                          setState(() => _backgroundId = background.id);
+                          Navigator.of(sheetContext).pop();
+                        },
+                        child: Image.asset(background.asset, fit: BoxFit.cover),
+                      ),
+                  ],
                 ),
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.check_circle, color: Colors.blue),
-              title: Text(l10n.backgroundNone),
-              onTap: () => Navigator.of(sheetContext).pop(),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  l10n.comingSoon,
-                  style: const TextStyle(color: Colors.grey),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -507,41 +530,91 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
 
   Widget _buildNoteBlock(ThemeData theme, _NoteDraft d) {
     final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextField(
-            controller: d.titleController,
-            style: _styledText(
-              theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            decoration: InputDecoration(
-              isDense: true,
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
-              hintText: l10n.titleHint,
-              hintStyle: theme.textTheme.titleLarge?.copyWith(
-                color: theme.colorScheme.outline,
-              ),
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: d.titleController,
+          style: _styledText(
+            theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          decoration: InputDecoration(
+            isDense: true,
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+            hintText: l10n.titleHint,
+            hintStyle: theme.textTheme.titleLarge?.copyWith(
+              color: theme.colorScheme.outline,
             ),
           ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: d.contentController,
-            minLines: 3,
-            maxLines: null,
-            style: _styledText(theme.textTheme.bodyLarge),
-            decoration: InputDecoration(
-              isDense: true,
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
-              hintText: l10n.bodyHint,
-              hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.outline,
-              ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: d.contentController,
+          minLines: 3,
+          maxLines: null,
+          style: _styledText(theme.textTheme.bodyLarge),
+          decoration: InputDecoration(
+            isDense: true,
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+            hintText: l10n.bodyHint,
+            hintStyle: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.outline,
             ),
+          ),
+        ),
+      ],
+    );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: DiaryNoteBackground(backgroundId: _backgroundId, child: content),
+    );
+  }
+}
+
+class _DiaryBackgroundTile extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final Widget child;
+
+  const _DiaryBackgroundTile({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Expanded(
+            child: Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: selected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.outlineVariant,
+                  width: selected ? 2 : 1,
+                ),
+              ),
+              child: child,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
         ],
       ),

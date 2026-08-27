@@ -126,7 +126,8 @@ class TaskEntryCard extends StatelessWidget {
     );
   }
 
-  String _reminderLabel(TaskItem task, String locale, AppLocalizations l10n) {
+  /// カレンダーに同期される「開始・終了時間」の表示ラベル。
+  String _scheduleLabel(TaskItem task, String locale, AppLocalizations l10n) {
     final start = task.reminderAt!;
     final startDate = DateFormat.MMMd(locale).format(start);
     if (task.isAllDay) return '$startDate (${l10n.allDayLabel})';
@@ -144,6 +145,12 @@ class TaskEntryCard extends StatelessWidget {
     return '$startDate $startTime → $endDate $endTime';
   }
 
+  /// プッシュ通知が発火する時刻の表示ラベル（開始・終了時間とは独立）。
+  String _notifyLabel(TaskItem task, String locale) {
+    final at = task.notifyAt!;
+    return '${DateFormat.MMMd(locale).format(at)} ${DateFormat.Hm(locale).format(at)}';
+  }
+
   Widget _buildTaskMeta(
     ThemeData theme,
     TaskItem task,
@@ -152,11 +159,16 @@ class TaskEntryCard extends StatelessWidget {
   ) {
     final dueLabel = taskDueLabel(task, locale: locale);
     final reminderAt = task.reminderAt;
+    final notifyAt = task.notifyAt;
 
-    if (dueLabel == null && reminderAt == null) return const SizedBox.shrink();
+    if (dueLabel == null && reminderAt == null && notifyAt == null) {
+      return const SizedBox.shrink();
+    }
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         if (dueLabel != null)
           Text(
@@ -165,26 +177,46 @@ class TaskEntryCard extends StatelessWidget {
               color: theme.colorScheme.outline,
             ),
           ),
-        if (dueLabel != null && reminderAt != null) const SizedBox(width: 8),
+        // 開始・終了時間（カレンダー同期）
         if (reminderAt != null)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.notifications_active_outlined,
-                size: 14,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(width: 2),
-              Text(
-                _reminderLabel(task, locale, l10n),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+          _MetaChip(
+            icon: Icons.event_outlined,
+            label: _scheduleLabel(task, locale, l10n),
+            color: theme.colorScheme.primary,
           ),
+        // 通知の発火時刻（開始・終了時間とは独立）
+        if (notifyAt != null)
+          _MetaChip(
+            icon: Icons.notifications_active_outlined,
+            label: _notifyLabel(task, locale),
+            color: theme.colorScheme.tertiary,
+          ),
+      ],
+    );
+  }
+}
+
+class _MetaChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _MetaChip({required this.icon, required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 2),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }

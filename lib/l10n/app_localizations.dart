@@ -1154,6 +1154,108 @@ abstract class AppLocalizations {
   /// **'Coming soon'**
   String get comingSoon;
 
+  /// No description provided for @diaryBgChihuahua.
+  ///
+  /// In en, this message translates to:
+  /// **'Chihuahua'**
+  String get diaryBgChihuahua;
+
+  /// No description provided for @diaryBgFruit.
+  ///
+  /// In en, this message translates to:
+  /// **'Fruit'**
+  String get diaryBgFruit;
+
+  /// No description provided for @diaryBgMintPlant.
+  ///
+  /// In en, this message translates to:
+  /// **'Mint Plant Corner'**
+  String get diaryBgMintPlant;
+
+  /// No description provided for @diaryBgCoffee.
+  ///
+  /// In en, this message translates to:
+  /// **'Coffee'**
+  String get diaryBgCoffee;
+
+  /// No description provided for @diaryBgCake.
+  ///
+  /// In en, this message translates to:
+  /// **'Cake'**
+  String get diaryBgCake;
+
+  /// No description provided for @diaryBgPicnic.
+  ///
+  /// In en, this message translates to:
+  /// **'Picnic'**
+  String get diaryBgPicnic;
+
+  /// No description provided for @diaryBgShoppingNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Night Shopping'**
+  String get diaryBgShoppingNight;
+
+  /// No description provided for @diaryBgHeartBalloon.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart Balloons'**
+  String get diaryBgHeartBalloon;
+
+  /// No description provided for @diaryBgDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Drive'**
+  String get diaryBgDrive;
+
+  /// No description provided for @diaryBgSakuraStation.
+  ///
+  /// In en, this message translates to:
+  /// **'Sakura Station'**
+  String get diaryBgSakuraStation;
+
+  /// No description provided for @diaryBgAutumnLeaves.
+  ///
+  /// In en, this message translates to:
+  /// **'Autumn Leaves'**
+  String get diaryBgAutumnLeaves;
+
+  /// No description provided for @diaryBgStudyDesk.
+  ///
+  /// In en, this message translates to:
+  /// **'Study Desk'**
+  String get diaryBgStudyDesk;
+
+  /// No description provided for @diaryBgHome.
+  ///
+  /// In en, this message translates to:
+  /// **'At Home'**
+  String get diaryBgHome;
+
+  /// No description provided for @diaryBgParkDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Park in Daylight'**
+  String get diaryBgParkDay;
+
+  /// No description provided for @diaryBgNightSky.
+  ///
+  /// In en, this message translates to:
+  /// **'Night Sky'**
+  String get diaryBgNightSky;
+
+  /// No description provided for @diaryBgSadBoy.
+  ///
+  /// In en, this message translates to:
+  /// **'Feeling Down'**
+  String get diaryBgSadBoy;
+
+  /// No description provided for @diaryBgBeachGirl.
+  ///
+  /// In en, this message translates to:
+  /// **'By the Sea'**
+  String get diaryBgBeachGirl;
+
   /// No description provided for @fontSheetTitle.
   ///
   /// In en, this message translates to:
@@ -1253,7 +1355,7 @@ abstract class AppLocalizations {
   /// No description provided for @reminderLabel.
   ///
   /// In en, this message translates to:
-  /// **'Reminder'**
+  /// **'Notification reminder'**
   String get reminderLabel;
 
   /// No description provided for @removeReminderTooltip.
@@ -1279,6 +1381,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All day'**
   String get allDayLabel;
+
+  /// No description provided for @taskScheduleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Start & End Time'**
+  String get taskScheduleLabel;
+
+  /// No description provided for @addStartTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Set start time'**
+  String get addStartTime;
+
+  /// No description provided for @removeStartTimeTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove start time'**
+  String get removeStartTimeTooltip;
+
+  /// No description provided for @addEndTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Add end time'**
+  String get addEndTime;
+
+  /// No description provided for @removeEndTimeTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove end time'**
+  String get removeEndTimeTooltip;
 
   /// No description provided for @recurringTaskFabTooltip.
   ///
