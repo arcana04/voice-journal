@@ -7,6 +7,7 @@ import '../state/journal_store.dart';
 import '../widgets/app_background_image.dart';
 import '../widgets/scrim_text.dart';
 import '../widgets/task_entry_card.dart';
+import 'manual_task_screen.dart';
 import 'recurring_task_screen.dart';
 import 'task_edit_screen.dart';
 
@@ -122,20 +123,35 @@ class _TaskScreenState extends State<TaskScreen> {
       floatingActionButton: Padding(
         // 外側のRootScreenが持つフローティングナビゲーションバー（透過で背後に
         // body が回り込む extendBody:true）と重ならないよう、その高さ分だけ上げる。
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 76),
-        child: FloatingActionButton(
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const RecurringTaskScreen()),
-          ),
-          tooltip: AppLocalizations.of(context)!.recurringTaskFabTooltip,
-          child: const Icon(Icons.repeat),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom + 76,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FloatingActionButton.small(
+              heroTag: 'recurring_task_fab',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const RecurringTaskScreen()),
+              ),
+              tooltip: AppLocalizations.of(context)!.recurringTaskFabTooltip,
+              child: const Icon(Icons.repeat),
+            ),
+            const SizedBox(height: 12),
+            FloatingActionButton(
+              heroTag: 'manual_task_fab',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ManualTaskScreen()),
+              ),
+              tooltip: AppLocalizations.of(context)!.manualTaskFabTooltip,
+              child: const Icon(Icons.add),
+            ),
+          ],
         ),
       ),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: const AppBackgroundImage(),
-          ),
+          Positioned.fill(child: const AppBackgroundImage()),
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,9 +190,8 @@ class _TaskScreenState extends State<TaskScreen> {
                           ? Center(
                               child: ScrimText(
                                 child: Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  )!.tasksFilterEmpty,
+                                  AppLocalizations.of(context)!
+                                      .tasksFilterEmpty,
                                   textAlign: TextAlign.center,
                                   style: theme.textTheme.bodyMedium,
                                 ),

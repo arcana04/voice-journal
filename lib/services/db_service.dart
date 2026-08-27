@@ -95,7 +95,9 @@ class DbService {
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
-          await db.execute('ALTER TABLE entries ADD COLUMN comfort_message TEXT');
+          await db.execute(
+            'ALTER TABLE entries ADD COLUMN comfort_message TEXT',
+          );
           await db.execute('ALTER TABLE tasks ADD COLUMN due_date TEXT');
         }
         if (oldVersion < 3) {
@@ -119,13 +121,17 @@ class DbService {
           await db.execute('ALTER TABLE entries ADD COLUMN emotion TEXT');
         }
         if (oldVersion < 7) {
-          await db.execute('ALTER TABLE tasks ADD COLUMN calendar_event_id TEXT');
+          await db.execute(
+            'ALTER TABLE tasks ADD COLUMN calendar_event_id TEXT',
+          );
         }
         if (oldVersion < 8) {
           await db.execute('ALTER TABLE tasks ADD COLUMN reminder_end_at TEXT');
         }
         if (oldVersion < 9) {
-          await db.execute('ALTER TABLE notes ADD COLUMN font_family_index INTEGER');
+          await db.execute(
+            'ALTER TABLE notes ADD COLUMN font_family_index INTEGER',
+          );
           await db.execute('ALTER TABLE notes ADD COLUMN text_color INTEGER');
           await db.execute('ALTER TABLE notes ADD COLUMN font_scale REAL');
         }
@@ -189,17 +195,19 @@ class DbService {
         'is_all_day': task.isAllDay ? 1 : 0,
         'notify_at': task.notifyAt?.toIso8601String(),
       });
-      savedTasks.add(TaskItem(
-        id: taskId,
-        entryId: entryId,
-        title: task.title,
-        dueHint: task.dueHint,
-        dueDate: task.dueDate,
-        reminderAt: task.reminderAt,
-        reminderEndAt: task.reminderEndAt,
-        isAllDay: task.isAllDay,
-        notifyAt: task.notifyAt,
-      ));
+      savedTasks.add(
+        TaskItem(
+          id: taskId,
+          entryId: entryId,
+          title: task.title,
+          dueHint: task.dueHint,
+          dueDate: task.dueDate,
+          reminderAt: task.reminderAt,
+          reminderEndAt: task.reminderEndAt,
+          isAllDay: task.isAllDay,
+          notifyAt: task.notifyAt,
+        ),
+      );
     }
     final savedNotes = <NoteItem>[];
     for (final note in entry.notes) {
@@ -213,17 +221,19 @@ class DbService {
         'font_scale': note.fontScale,
         'background_id': note.backgroundId,
       });
-      savedNotes.add(NoteItem(
-        id: noteId,
-        entryId: entryId,
-        category: note.category,
-        title: note.title,
-        content: note.content,
-        fontFamilyIndex: note.fontFamilyIndex,
-        textColorValue: note.textColorValue,
-        fontScale: note.fontScale,
-        backgroundId: note.backgroundId,
-      ));
+      savedNotes.add(
+        NoteItem(
+          id: noteId,
+          entryId: entryId,
+          category: note.category,
+          title: note.title,
+          content: note.content,
+          fontFamilyIndex: note.fontFamilyIndex,
+          textColorValue: note.textColorValue,
+          fontScale: note.fontScale,
+          backgroundId: note.backgroundId,
+        ),
+      );
     }
 
     return JournalEntry(
@@ -262,17 +272,19 @@ class DbService {
         orderBy: 'sort_order ASC',
       );
 
-      entries.add(JournalEntry(
-        id: entryId,
-        remoteId: row['remote_id'] as String?,
-        createdAt: DateTime.parse(row['created_at'] as String),
-        summary: row['summary'] as String,
-        tasks: taskRows.map(TaskItem.fromMap).toList(),
-        notes: noteRows.map(NoteItem.fromMap).toList(),
-        comfortMessage: row['comfort_message'] as String?,
-        emotion: EmotionTag.fromId(row['emotion'] as String?),
-        imagePaths: imageRows.map((r) => r['path'] as String).toList(),
-      ));
+      entries.add(
+        JournalEntry(
+          id: entryId,
+          remoteId: row['remote_id'] as String?,
+          createdAt: DateTime.parse(row['created_at'] as String),
+          summary: row['summary'] as String,
+          tasks: taskRows.map(TaskItem.fromMap).toList(),
+          notes: noteRows.map(NoteItem.fromMap).toList(),
+          comfortMessage: row['comfort_message'] as String?,
+          emotion: EmotionTag.fromId(row['emotion'] as String?),
+          imagePaths: imageRows.map((r) => r['path'] as String).toList(),
+        ),
+      );
     }
     return entries;
   }
@@ -281,10 +293,13 @@ class DbService {
   Future<void> addImages(int entryId, List<String> paths) async {
     if (paths.isEmpty) return;
     final db = await _database;
-    final existingCount = Sqflite.firstIntValue(await db.rawQuery(
-          'SELECT COUNT(*) FROM entry_images WHERE entry_id = ?',
-          [entryId],
-        )) ??
+    final existingCount =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM entry_images WHERE entry_id = ?',
+            [entryId],
+          ),
+        ) ??
         0;
     final batch = db.batch();
     for (var i = 0; i < paths.length; i++) {
@@ -316,7 +331,11 @@ class DbService {
     );
   }
 
-  Future<void> updateNote(int noteId, {String? title, required String content}) async {
+  Future<void> updateNote(
+    int noteId, {
+    String? title,
+    required String content,
+  }) async {
     final db = await _database;
     await db.update(
       'notes',
@@ -349,6 +368,16 @@ class DbService {
     );
   }
 
+  Future<void> updateEntryEmotion(int entryId, EmotionTag? emotion) async {
+    final db = await _database;
+    await db.update(
+      'entries',
+      {'emotion': emotion?.id},
+      where: 'id = ?',
+      whereArgs: [entryId],
+    );
+  }
+
   Future<void> updateTaskTitle(int taskId, String title) async {
     final db = await _database;
     await db.update(
@@ -377,12 +406,7 @@ class DbService {
     } else {
       values['reminder_end_at'] = endAt?.toIso8601String();
     }
-    await db.update(
-      'tasks',
-      values,
-      where: 'id = ?',
-      whereArgs: [taskId],
-    );
+    await db.update('tasks', values, where: 'id = ?', whereArgs: [taskId]);
   }
 
   /// タスクのプッシュ通知の発火時刻を更新する。「開始・終了時間」（カレンダー同期用、
@@ -411,7 +435,11 @@ class DbService {
     final db = await _database;
     await db.delete('tasks', where: 'entry_id = ?', whereArgs: [entryId]);
     await db.delete('notes', where: 'entry_id = ?', whereArgs: [entryId]);
-    await db.delete('entry_images', where: 'entry_id = ?', whereArgs: [entryId]);
+    await db.delete(
+      'entry_images',
+      where: 'entry_id = ?',
+      whereArgs: [entryId],
+    );
     await db.delete('entries', where: 'id = ?', whereArgs: [entryId]);
   }
 }

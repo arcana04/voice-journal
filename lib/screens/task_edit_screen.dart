@@ -12,20 +12,22 @@ String _dateLabel(DateTime date, String locale) =>
 class _TaskDraft {
   final TaskItem task;
   final TextEditingController titleController;
+
   /// カレンダーに同期される開始・終了時間（[JournalStore.updateTaskSchedule]）。
   DateTime? startAt;
   DateTime? endAt;
   bool isAllDay;
+
   /// プッシュ通知の発火時刻。開始・終了時間とは完全に独立
   /// （[JournalStore.updateTaskNotifyAt]）。
   DateTime? notifyAt;
 
   _TaskDraft(this.task)
-      : titleController = TextEditingController(text: task.title),
-        startAt = task.reminderAt,
-        endAt = task.reminderEndAt,
-        isAllDay = task.isAllDay,
-        notifyAt = task.notifyAt;
+    : titleController = TextEditingController(text: task.title),
+      startAt = task.reminderAt,
+      endAt = task.reminderEndAt,
+      isAllDay = task.isAllDay,
+      notifyAt = task.notifyAt;
 
   void dispose() => titleController.dispose();
 }
@@ -116,10 +118,19 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     );
     if (date == null) return;
     if (!mounted) return;
-    final time = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
     if (time == null) return;
     setState(() {
-      draft.startAt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      draft.startAt = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
     });
   }
 
@@ -170,7 +181,13 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     );
     if (time == null) return;
     setState(() {
-      draft.endAt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      draft.endAt = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
     });
   }
 
@@ -184,7 +201,13 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     );
     if (picked == null) return;
     setState(() {
-      draft.endAt = DateTime(picked.year, picked.month, picked.day, base.hour, base.minute);
+      draft.endAt = DateTime(
+        picked.year,
+        picked.month,
+        picked.day,
+        base.hour,
+        base.minute,
+      );
     });
   }
 
@@ -196,7 +219,13 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     );
     if (picked == null) return;
     setState(() {
-      draft.endAt = DateTime(base.year, base.month, base.day, picked.hour, picked.minute);
+      draft.endAt = DateTime(
+        base.year,
+        base.month,
+        base.day,
+        picked.hour,
+        picked.minute,
+      );
     });
   }
 
@@ -254,10 +283,19 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     );
     if (date == null) return;
     if (!mounted) return;
-    final time = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
     if (time == null) return;
     setState(() {
-      draft.notifyAt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      draft.notifyAt = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
     });
   }
 
@@ -334,7 +372,9 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.primary.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.12)),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.12),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,6 +389,15 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
               hintText: l10n.taskContentHint,
             ),
           ),
+          if (draft.startAt != null) ...[
+            const SizedBox(height: 10),
+            FilterChip(
+              label: Text(l10n.allDayLabel),
+              selected: draft.isAllDay,
+              onSelected: (value) => _setAllDay(draft, value),
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
           const SizedBox(height: 16),
           _buildLabel(theme, l10n.taskScheduleLabel),
           const SizedBox(height: 6),
@@ -365,11 +414,17 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
   Widget _buildLabel(ThemeData theme, String text) {
     return Text(
       text,
-      style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.outline),
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: theme.colorScheme.outline,
+      ),
     );
   }
 
-  Widget _buildScheduleSection(_TaskDraft draft, String locale, AppLocalizations l10n) {
+  Widget _buildScheduleSection(
+    _TaskDraft draft,
+    String locale,
+    AppLocalizations l10n,
+  ) {
     final startAt = draft.startAt;
     if (startAt == null) {
       return OutlinedButton.icon(
@@ -382,10 +437,9 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
+        _buildScheduleRow(
+          theme: Theme.of(context),
+          caption: l10n.startTimeCaption,
           children: [
             OutlinedButton.icon(
               onPressed: () => _pickStartDate(draft),
@@ -398,12 +452,6 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
                 icon: const Icon(Icons.schedule_outlined, size: 16),
                 label: Text(DateFormat('HH:mm').format(startAt)),
               ),
-            FilterChip(
-              label: Text(l10n.allDayLabel),
-              selected: draft.isAllDay,
-              onSelected: (value) => _setAllDay(draft, value),
-              visualDensity: VisualDensity.compact,
-            ),
             IconButton(
               onPressed: () => _clearStart(draft),
               icon: const Icon(Icons.close),
@@ -413,43 +461,79 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
           ],
         ),
         if (!draft.isAllDay) ...[
-          const SizedBox(height: 8),
-          if (draft.endAt == null)
-            OutlinedButton.icon(
-              onPressed: () => _addEndTime(draft),
-              icon: const Icon(Icons.event_outlined, size: 16),
-              label: Text(l10n.addEndTime),
-            )
-          else
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () => _pickEndDate(draft),
-                  icon: const Icon(Icons.event_outlined, size: 16),
-                  label: Text(_dateLabel(draft.endAt!, locale)),
-                ),
-                OutlinedButton.icon(
-                  onPressed: () => _pickEndTime(draft),
-                  icon: const Icon(Icons.schedule_outlined, size: 16),
-                  label: Text(DateFormat('HH:mm').format(draft.endAt!)),
-                ),
-                IconButton(
-                  onPressed: () => _clearEndTime(draft),
-                  icon: const Icon(Icons.close),
-                  tooltip: l10n.removeEndTimeTooltip,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
-            ),
+          const SizedBox(height: 12),
+          _buildScheduleRow(
+            theme: Theme.of(context),
+            caption: l10n.endTimeCaption,
+            children: draft.endAt == null
+                ? [
+                    OutlinedButton.icon(
+                      onPressed: () => _addEndTime(draft),
+                      icon: const Icon(Icons.event_outlined, size: 16),
+                      label: Text(l10n.addEndTime),
+                    ),
+                  ]
+                : [
+                    OutlinedButton.icon(
+                      onPressed: () => _pickEndDate(draft),
+                      icon: const Icon(Icons.event_outlined, size: 16),
+                      label: Text(_dateLabel(draft.endAt!, locale)),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () => _pickEndTime(draft),
+                      icon: const Icon(Icons.schedule_outlined, size: 16),
+                      label: Text(DateFormat('HH:mm').format(draft.endAt!)),
+                    ),
+                    IconButton(
+                      onPressed: () => _clearEndTime(draft),
+                      icon: const Icon(Icons.close),
+                      tooltip: l10n.removeEndTimeTooltip,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
+          ),
         ],
       ],
     );
   }
 
-  Widget _buildNotifySection(_TaskDraft draft, String locale, AppLocalizations l10n) {
+  /// 開始・終了それぞれの行に「開始」「終了」というキャプションを付けて
+  /// 見分けやすくする（ユーザーからの「どっちがどっちかわからない」というフィードバックへの対応）。
+  Widget _buildScheduleRow({
+    required ThemeData theme,
+    required String caption,
+    required List<Widget> children,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: 36,
+          child: Text(
+            caption,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: children,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNotifySection(
+    _TaskDraft draft,
+    String locale,
+    AppLocalizations l10n,
+  ) {
     final notifyAt = draft.notifyAt;
     if (notifyAt == null) {
       return OutlinedButton.icon(

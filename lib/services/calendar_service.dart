@@ -8,7 +8,14 @@ class CalendarService {
   static final CalendarService instance = CalendarService._internal();
   CalendarService._internal();
 
-  final DeviceCalendarPlugin _plugin = DeviceCalendarPlugin();
+  // shouldInitTimezone: falseにしないと、このプラグインが内部で
+  // tz.initializeTimeZones()を再実行し、その副作用でtz.localがUTCに
+  // リセットされてしまう（timezoneパッケージのinitializeDatabase()は常に
+  // _local = UTCで終わるため）。ReminderService.initialize()が既に
+  // Asia/Tokyoを設定・データベース初期化済みなので、ここでは再初期化しない。
+  final DeviceCalendarPlugin _plugin = DeviceCalendarPlugin(
+    shouldInitTimezone: false,
+  );
 
   Future<bool> hasPermissions() async {
     final result = await _plugin.hasPermissions();
@@ -44,8 +51,9 @@ class CalendarService {
     DateTime effectiveEnd = end ?? start.add(const Duration(hours: 1));
     if (allDay) {
       effectiveStart = DateTime(start.year, start.month, start.day);
-      final endDateOnly =
-          end != null ? DateTime(end.year, end.month, end.day) : effectiveStart;
+      final endDateOnly = end != null
+          ? DateTime(end.year, end.month, end.day)
+          : effectiveStart;
       // device_calendarの終日イベントは終了日時を「翌日の0時」として扱う
       effectiveEnd = endDateOnly.add(const Duration(days: 1));
     }

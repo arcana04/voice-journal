@@ -588,16 +588,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backgroundNone => 'None';
 
   @override
-  String get comingSoon => 'Coming soon';
+  String get emotionSheetTitle => 'Emotion';
 
   @override
-  String get diaryBgChihuahua => 'Chihuahua';
+  String get emotionNone => 'None';
+
+  @override
+  String get comingSoon => 'Coming soon';
 
   @override
   String get diaryBgFruit => 'Fruit';
 
   @override
-  String get diaryBgMintPlant => 'Mint Plant Corner';
+  String get diaryBgMintPlant => 'Botanical Notes';
 
   @override
   String get diaryBgCoffee => 'Coffee';
@@ -606,16 +609,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diaryBgCake => 'Cake';
 
   @override
-  String get diaryBgPicnic => 'Picnic';
-
-  @override
-  String get diaryBgShoppingNight => 'Night Shopping';
+  String get diaryBgPicnic => 'Bread Basket';
 
   @override
   String get diaryBgHeartBalloon => 'Heart Balloons';
-
-  @override
-  String get diaryBgDrive => 'Drive';
 
   @override
   String get diaryBgSakuraStation => 'Sakura Station';
@@ -630,7 +627,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diaryBgHome => 'At Home';
 
   @override
-  String get diaryBgParkDay => 'Park in Daylight';
+  String get diaryBgParkDay => 'Dandelion Field';
 
   @override
   String get diaryBgNightSky => 'Night Sky';
@@ -640,6 +637,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diaryBgBeachGirl => 'By the Sea';
+
+  @override
+  String get diaryBgSleepingCat => 'Sleeping Cat';
 
   @override
   String get fontSheetTitle => 'Font';
@@ -708,6 +708,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get taskScheduleLabel => 'Start & End Time';
 
   @override
+  String get startTimeCaption => 'Start';
+
+  @override
+  String get endTimeCaption => 'End';
+
+  @override
   String get addStartTime => 'Set start time';
 
   @override
@@ -718,6 +724,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get removeEndTimeTooltip => 'Remove end time';
+
+  @override
+  String get manualTaskFabTooltip => 'Add task';
+
+  @override
+  String get manualTaskScreenTitle => 'Add task';
+
+  @override
+  String get manualTaskTitleHint => 'Task (e.g. Buy milk)';
+
+  @override
+  String get manualTaskTitleRequiredError => 'Please enter a task';
 
   @override
   String get recurringTaskFabTooltip => 'Add recurring task';

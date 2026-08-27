@@ -7,9 +7,10 @@ import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
 import '../state/text_style_store.dart';
 import '../utils/note_text_style.dart';
-import '../widgets/diary_note_background.dart';
+import '../widgets/diary_screen_background.dart';
 import '../widgets/edit_icon_button.dart';
 import '../widgets/media_gallery.dart';
+import '../widgets/scrim_text.dart';
 import 'diary_edit_screen.dart';
 
 /// 日記の閲覧画面（読み取り専用）。右上の鉛筆から編集画面へ横スワイプで遷移する。
@@ -71,9 +72,18 @@ class DiaryViewScreen extends StatelessWidget {
         final locale = Localizations.localeOf(context).toString();
         final day = DateFormat('d', locale).format(entry.createdAt);
         final monthYearLabel = DateFormat.yMMMM(locale).format(entry.createdAt);
+        final feelingNotes = entry.notes
+            .where((n) => n.category == kNoteCategoryFeeling)
+            .toList();
+        final entryBackgroundId = feelingNotes.isNotEmpty
+            ? feelingNotes.first.backgroundId
+            : null;
 
         return Scaffold(
+          extendBodyBehindAppBar: true,
           appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
             actions: [
               EditIconButton(
                 size: 24,
@@ -90,96 +100,115 @@ class DiaryViewScreen extends StatelessWidget {
               ),
             ],
           ),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        day,
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: theme.colorScheme.primary,
-                          height: 1,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: Text(
-                          monthYearLabel,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: theme.colorScheme.primary,
+          body: Stack(
+            children: [
+              Positioned.fill(
+                child: DiaryScreenBackground(backgroundId: entryBackgroundId),
+              ),
+              Positioned.fill(
+                child: SafeArea(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ScrimText(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
                           ),
-                        ),
-                      ),
-                      if (entry.emotion != null) ...[
-                        const Spacer(),
-                        Text(
-                          entry.emotion!.emoji,
-                          style: const TextStyle(fontSize: 40),
-                          semanticsLabel: entry.emotion!.labelFor(
-                            AppLocalizations.of(context)!,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 48,
-                    height: 3,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  for (final note in entry.notes.where(
-                    (n) => n.category == kNoteCategoryFeeling,
-                  ))
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 24),
-                      child: DiaryNoteBackground(
-                        backgroundId: note.backgroundId,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if ((note.title ?? '').isNotEmpty)
-                              Text(
-                                note.title!,
-                                style: applyNoteStyle(
-                                  theme.textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w700,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    day,
+                                    style: theme.textTheme.headlineMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          color: theme.colorScheme.primary,
+                                          height: 1,
+                                        ),
                                   ),
-                                  note: note,
-                                  defaults: textStyleDefaults,
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 4),
+                                    child: Text(
+                                      monthYearLabel,
+                                      style: theme.textTheme.labelLarge
+                                          ?.copyWith(
+                                            color: theme.colorScheme.primary,
+                                          ),
+                                    ),
+                                  ),
+                                  if (entry.emotion != null) ...[
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      entry.emotion!.emoji,
+                                      style: const TextStyle(fontSize: 40),
+                                      semanticsLabel: entry.emotion!.labelFor(
+                                        AppLocalizations.of(context)!,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                width: 48,
+                                height: 3,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
-                            const SizedBox(height: 8),
-                            Text(
-                              note.content,
-                              style: applyNoteStyle(
-                                theme.textTheme.bodyLarge,
-                                note: note,
-                                defaults: textStyleDefaults,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        for (final note in feelingNotes)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 24),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if ((note.title ?? '').isNotEmpty)
+                                  Text(
+                                    note.title!,
+                                    style: applyNoteStyle(
+                                      theme.textTheme.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      note: note,
+                                      defaults: textStyleDefaults,
+                                    ),
+                                  ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  note.content,
+                                  style: applyNoteStyle(
+                                    theme.textTheme.bodyLarge,
+                                    note: note,
+                                    defaults: textStyleDefaults,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (entry.imagePaths.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          MediaGallery(paths: entry.imagePaths),
+                        ],
+                      ],
                     ),
-                  if (entry.imagePaths.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    MediaGallery(paths: entry.imagePaths),
-                  ],
-                ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         );
       },

@@ -7,12 +7,14 @@ import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/diary_background.dart';
+import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
 import '../state/text_style_store.dart';
 import '../utils/note_text_style.dart';
-import '../widgets/diary_note_background.dart';
+import '../widgets/diary_screen_background.dart';
 import '../widgets/media_gallery.dart';
+import '../widgets/scrim_text.dart';
 
 class _NoteDraft {
   final NoteItem note;
@@ -156,6 +158,73 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
       context: context,
       isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(sheetContext).size.height * 0.85,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.backgroundSheetTitle,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Flexible(
+                  child: GridView.count(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.8,
+                    children: [
+                      _DiaryBackgroundTile(
+                        label: l10n.backgroundNone,
+                        selected: _backgroundId == null,
+                        onTap: () {
+                          setState(() => _backgroundId = null);
+                          Navigator.of(sheetContext).pop();
+                        },
+                        child: const ColoredBox(
+                          color: Color(0x11000000),
+                          child: Icon(Icons.block, color: Colors.grey),
+                        ),
+                      ),
+                      for (final background in DiaryBackground.values)
+                        _DiaryBackgroundTile(
+                          label: background.labelFor(l10n),
+                          selected: _backgroundId == background.id,
+                          onTap: () {
+                            setState(() => _backgroundId = background.id);
+                            Navigator.of(sheetContext).pop();
+                          },
+                          child: Image.asset(
+                            background.asset,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openEmotionSheet(JournalStore store, JournalEntry entry) {
+    final l10n = AppLocalizations.of(context)!;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
           child: Column(
@@ -163,42 +232,43 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n.backgroundSheetTitle,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                l10n.emotionSheetTitle,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
               ),
               const SizedBox(height: 12),
-              SizedBox(
-                height: 340,
-                child: GridView.count(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 0.8,
-                  children: [
-                    _DiaryBackgroundTile(
-                      label: l10n.backgroundNone,
-                      selected: _backgroundId == null,
-                      onTap: () {
-                        setState(() => _backgroundId = null);
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  _EmotionTile(
+                    label: l10n.emotionNone,
+                    selected: entry.emotion == null,
+                    onTap: () async {
+                      Navigator.of(sheetContext).pop();
+                      await store.updateEntryEmotion(entry, null);
+                    },
+                    child: Icon(
+                      Icons.block,
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
+                  for (final tag in EmotionTag.values)
+                    _EmotionTile(
+                      label: tag.labelFor(l10n),
+                      selected: entry.emotion == tag,
+                      onTap: () async {
                         Navigator.of(sheetContext).pop();
+                        await store.updateEntryEmotion(entry, tag);
                       },
-                      child: const ColoredBox(
-                        color: Color(0x11000000),
-                        child: Icon(Icons.block, color: Colors.grey),
+                      child: Text(
+                        tag.emoji,
+                        style: const TextStyle(fontSize: 26),
                       ),
                     ),
-                    for (final background in DiaryBackground.values)
-                      _DiaryBackgroundTile(
-                        label: background.labelFor(l10n),
-                        selected: _backgroundId == background.id,
-                        onTap: () {
-                          setState(() => _backgroundId = background.id);
-                          Navigator.of(sheetContext).pop();
-                        },
-                        child: Image.asset(background.asset, fit: BoxFit.cover),
-                      ),
-                  ],
-                ),
+                ],
               ),
             ],
           ),
@@ -421,7 +491,10 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
         final monthYearLabel = DateFormat.yMMMM(locale).format(entry.createdAt);
 
         return Scaffold(
+          extendBodyBehindAppBar: true,
           appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
             actions: [
               TextButton(
                 onPressed: () => _save(store, entry),
@@ -430,59 +503,104 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
             ],
           ),
           bottomNavigationBar: _buildBottomToolbar(store, entry),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        day,
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: theme.colorScheme.primary,
-                          height: 1,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: Text(
-                          monthYearLabel,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: theme.colorScheme.primary,
+          body: Stack(
+            children: [
+              Positioned.fill(
+                child: DiaryScreenBackground(backgroundId: _backgroundId),
+              ),
+              Positioned.fill(
+                child: SafeArea(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ScrimText(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    day,
+                                    style: theme.textTheme.headlineMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          color: theme.colorScheme.primary,
+                                          height: 1,
+                                        ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 4),
+                                    child: Text(
+                                      monthYearLabel,
+                                      style: theme.textTheme.labelLarge
+                                          ?.copyWith(
+                                            color: theme.colorScheme.primary,
+                                          ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  GestureDetector(
+                                    onTap: () =>
+                                        _openEmotionSheet(store, entry),
+                                    child: entry.emotion != null
+                                        ? Text(
+                                            entry.emotion!.emoji,
+                                            style: const TextStyle(
+                                              fontSize: 32,
+                                            ),
+                                            semanticsLabel: entry.emotion!
+                                                .labelFor(
+                                                  AppLocalizations.of(context)!,
+                                                ),
+                                          )
+                                        : Icon(
+                                            Icons.add_reaction_outlined,
+                                            size: 28,
+                                            color: theme.colorScheme.outline,
+                                          ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                width: 48,
+                                height: 3,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 48,
-                    height: 3,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      borderRadius: BorderRadius.circular(2),
+                        const SizedBox(height: 16),
+                        for (final d in drafts) _buildNoteBlock(theme, d),
+                        if (entry.imagePaths.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          MediaGallery(
+                            paths: entry.imagePaths,
+                            onRemove: (index) => store.removeMediaFromEntry(
+                              entry,
+                              entry.imagePaths[index],
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  for (final d in drafts) _buildNoteBlock(theme, d),
-                  if (entry.imagePaths.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    MediaGallery(
-                      paths: entry.imagePaths,
-                      onRemove: (index) => store.removeMediaFromEntry(
-                        entry,
-                        entry.imagePaths[index],
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         );
       },
@@ -566,9 +684,53 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
         ),
       ],
     );
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
-      child: DiaryNoteBackground(backgroundId: _backgroundId, child: content),
+    return Padding(padding: const EdgeInsets.only(bottom: 24), child: content);
+  }
+}
+
+class _EmotionTile extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final Widget child;
+
+  const _EmotionTile({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: theme.colorScheme.primary.withValues(
+                alpha: selected ? 0.15 : 0.05,
+              ),
+              border: Border.all(
+                color: selected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.outlineVariant,
+                width: selected ? 2 : 1,
+              ),
+            ),
+            child: child,
+          ),
+          const SizedBox(height: 4),
+          Text(label, style: theme.textTheme.labelSmall),
+        ],
+      ),
     );
   }
 }
@@ -589,12 +751,18 @@ class _DiaryBackgroundTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Expanded(
-            child: Container(
+    // 画像を見て選ぶ形式にするため、見出しテキストは表示しない
+    // （読み上げ用のラベルとしてのみ[label]を使う）。
+    return Semantics(
+      label: label,
+      selected: selected,
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Container(
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
@@ -607,16 +775,22 @@ class _DiaryBackgroundTile extends StatelessWidget {
               ),
               child: child,
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: theme.textTheme.labelSmall,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-          ),
-        ],
+            if (selected)
+              Positioned(
+                top: 6,
+                right: 6,
+                child: CircleAvatar(
+                  radius: 11,
+                  backgroundColor: theme.colorScheme.primary,
+                  child: Icon(
+                    Icons.check,
+                    size: 14,
+                    color: theme.colorScheme.onPrimary,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

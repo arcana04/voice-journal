@@ -1148,17 +1148,23 @@ abstract class AppLocalizations {
   /// **'None'**
   String get backgroundNone;
 
+  /// No description provided for @emotionSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Emotion'**
+  String get emotionSheetTitle;
+
+  /// No description provided for @emotionNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get emotionNone;
+
   /// No description provided for @comingSoon.
   ///
   /// In en, this message translates to:
   /// **'Coming soon'**
   String get comingSoon;
-
-  /// No description provided for @diaryBgChihuahua.
-  ///
-  /// In en, this message translates to:
-  /// **'Chihuahua'**
-  String get diaryBgChihuahua;
 
   /// No description provided for @diaryBgFruit.
   ///
@@ -1169,7 +1175,7 @@ abstract class AppLocalizations {
   /// No description provided for @diaryBgMintPlant.
   ///
   /// In en, this message translates to:
-  /// **'Mint Plant Corner'**
+  /// **'Botanical Notes'**
   String get diaryBgMintPlant;
 
   /// No description provided for @diaryBgCoffee.
@@ -1187,26 +1193,14 @@ abstract class AppLocalizations {
   /// No description provided for @diaryBgPicnic.
   ///
   /// In en, this message translates to:
-  /// **'Picnic'**
+  /// **'Bread Basket'**
   String get diaryBgPicnic;
-
-  /// No description provided for @diaryBgShoppingNight.
-  ///
-  /// In en, this message translates to:
-  /// **'Night Shopping'**
-  String get diaryBgShoppingNight;
 
   /// No description provided for @diaryBgHeartBalloon.
   ///
   /// In en, this message translates to:
   /// **'Heart Balloons'**
   String get diaryBgHeartBalloon;
-
-  /// No description provided for @diaryBgDrive.
-  ///
-  /// In en, this message translates to:
-  /// **'Drive'**
-  String get diaryBgDrive;
 
   /// No description provided for @diaryBgSakuraStation.
   ///
@@ -1235,7 +1229,7 @@ abstract class AppLocalizations {
   /// No description provided for @diaryBgParkDay.
   ///
   /// In en, this message translates to:
-  /// **'Park in Daylight'**
+  /// **'Dandelion Field'**
   String get diaryBgParkDay;
 
   /// No description provided for @diaryBgNightSky.
@@ -1255,6 +1249,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'By the Sea'**
   String get diaryBgBeachGirl;
+
+  /// No description provided for @diaryBgSleepingCat.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleeping Cat'**
+  String get diaryBgSleepingCat;
 
   /// No description provided for @fontSheetTitle.
   ///
@@ -1388,6 +1388,18 @@ abstract class AppLocalizations {
   /// **'Start & End Time'**
   String get taskScheduleLabel;
 
+  /// No description provided for @startTimeCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get startTimeCaption;
+
+  /// No description provided for @endTimeCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get endTimeCaption;
+
   /// No description provided for @addStartTime.
   ///
   /// In en, this message translates to:
@@ -1411,6 +1423,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove end time'**
   String get removeEndTimeTooltip;
+
+  /// No description provided for @manualTaskFabTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add task'**
+  String get manualTaskFabTooltip;
+
+  /// No description provided for @manualTaskScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add task'**
+  String get manualTaskScreenTitle;
+
+  /// No description provided for @manualTaskTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Task (e.g. Buy milk)'**
+  String get manualTaskTitleHint;
+
+  /// No description provided for @manualTaskTitleRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a task'**
+  String get manualTaskTitleRequiredError;
 
   /// No description provided for @recurringTaskFabTooltip.
   ///

@@ -6,13 +6,16 @@ class TaskItem {
   final String title;
   final String? dueHint;
   final DateTime? dueDate;
+
   /// カレンダー同期される予定の開始日時。[reminderEndAt]と対で「開始・終了時間」を表す。
   final DateTime? reminderAt;
+
   /// カレンダー同期される予定の終了日時（任意）。
   final DateTime? reminderEndAt;
   final bool done;
   final String? calendarEventId;
   final bool isAllDay;
+
   /// 端末に届くプッシュ通知の発火時刻。[reminderAt]/[reminderEndAt]（カレンダー用の
   /// 開始・終了時間）とは完全に独立しており、どちらかを変更してももう片方には
   /// 影響しない。
@@ -91,9 +94,12 @@ class TaskItem {
       title: map['title'] as String,
       dueHint: map['due_hint'] as String?,
       dueDate: dueDateStr != null ? DateTime.tryParse(dueDateStr) : null,
-      reminderAt: reminderAtStr != null ? DateTime.tryParse(reminderAtStr) : null,
-      reminderEndAt:
-          reminderEndAtStr != null ? DateTime.tryParse(reminderEndAtStr) : null,
+      reminderAt: reminderAtStr != null
+          ? DateTime.tryParse(reminderAtStr)
+          : null,
+      reminderEndAt: reminderEndAtStr != null
+          ? DateTime.tryParse(reminderEndAtStr)
+          : null,
       done: (map['done'] as int? ?? 0) == 1,
       calendarEventId: map['calendar_event_id'] as String?,
       isAllDay: (map['is_all_day'] as int? ?? 0) == 1,
@@ -105,14 +111,17 @@ class TaskItem {
     final dueDateStr = json['due_date'] as String?;
     final reminderAtStr = json['reminder_at'] as String?;
     final reminderEndAtStr = json['reminder_end_at'] as String?;
-    final reminderAt = reminderAtStr != null ? DateTime.tryParse(reminderAtStr) : null;
+    final reminderAt = reminderAtStr != null
+        ? DateTime.tryParse(reminderAtStr)
+        : null;
     return TaskItem(
       title: (json['title'] as String? ?? '').trim(),
       dueHint: json['due_hint'] as String?,
       dueDate: dueDateStr != null ? DateTime.tryParse(dueDateStr) : null,
       reminderAt: reminderAt,
-      reminderEndAt:
-          reminderEndAtStr != null ? DateTime.tryParse(reminderEndAtStr) : null,
+      reminderEndAt: reminderEndAtStr != null
+          ? DateTime.tryParse(reminderEndAtStr)
+          : null,
       // AIが時刻を抽出した直後は、通知時刻も開始時刻と同じにしておく（後から
       // TaskEditScreenで両者を独立に変更できる）。
       notifyAt: reminderAt,
@@ -129,6 +138,7 @@ class NoteItem {
   final int? fontFamilyIndex;
   final int? textColorValue;
   final double? fontScale;
+
   /// [DiaryBackground.id]。未設定（背景なし）ならnull。
   final String? backgroundId;
 
@@ -218,6 +228,7 @@ const String kNoteCategoryIdea = 'アイデア';
 
 class JournalEntry {
   final int? id;
+
   /// 端末をまたいだクラウドバックアップ/復元で使う安定ID。ローカルの[id]は
   /// 端末ごとのSQLite連番なので端末間で一致しない。DbService.insertEntryで
   /// 未設定なら自動生成される。
@@ -246,6 +257,8 @@ class JournalEntry {
     List<TaskItem>? tasks,
     List<NoteItem>? notes,
     List<String>? imagePaths,
+    EmotionTag? emotion,
+    bool clearEmotion = false,
   }) {
     return JournalEntry(
       id: id,
@@ -255,7 +268,7 @@ class JournalEntry {
       tasks: tasks ?? this.tasks,
       notes: notes ?? this.notes,
       comfortMessage: comfortMessage,
-      emotion: emotion,
+      emotion: clearEmotion ? null : (emotion ?? this.emotion),
       imagePaths: imagePaths ?? this.imagePaths,
     );
   }

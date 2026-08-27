@@ -4,6 +4,7 @@ import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 
+import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
 import '../services/calendar_service.dart';
 import '../services/calendar_settings_service.dart';
@@ -89,7 +90,10 @@ class JournalStore extends ChangeNotifier {
 
   /// [skipCloudPush]は、クラウドから復元してきたエントリを再度クラウドへ
   /// 送り返さないようにするためのフラグ（[fullSync]から使う）。
-  Future<void> addEntry(JournalEntry entry, {bool skipCloudPush = false}) async {
+  Future<void> addEntry(
+    JournalEntry entry, {
+    bool skipCloudPush = false,
+  }) async {
     final saved = await _db.insertEntry(entry);
     final syncedTasks = <TaskItem>[];
     for (final task in saved.tasks) {
@@ -105,10 +109,12 @@ class JournalStore extends ChangeNotifier {
         if (eventId != task.calendarEventId) {
           await _db.updateTaskCalendarEventId(task.id!, eventId);
         }
-        syncedTasks.add(task.copyWith(
-          calendarEventId: eventId,
-          clearCalendarEventId: eventId == null,
-        ));
+        syncedTasks.add(
+          task.copyWith(
+            calendarEventId: eventId,
+            clearCalendarEventId: eventId == null,
+          ),
+        );
       } else {
         syncedTasks.add(task);
       }
@@ -218,7 +224,11 @@ class JournalStore extends ChangeNotifier {
     if (index == -1) return;
     final updatedNotes = entries[index].notes.map((n) {
       if (n.id != note.id) return n;
-      return n.copyWith(title: title, clearTitle: title == null, content: content);
+      return n.copyWith(
+        title: title,
+        clearTitle: title == null,
+        content: content,
+      );
     }).toList();
     entries[index] = entries[index].copyWith(notes: updatedNotes);
     notifyListeners();
@@ -259,7 +269,27 @@ class JournalStore extends ChangeNotifier {
     unawaited(_cloudSync.pushEntry(entries[index]));
   }
 
-  Future<void> updateTaskTitle(JournalEntry entry, TaskItem task, String title) async {
+  Future<void> updateEntryEmotion(
+    JournalEntry entry,
+    EmotionTag? emotion,
+  ) async {
+    if (entry.id == null) return;
+    await _db.updateEntryEmotion(entry.id!, emotion);
+    final index = entries.indexWhere((e) => e.id == entry.id);
+    if (index == -1) return;
+    entries[index] = entries[index].copyWith(
+      emotion: emotion,
+      clearEmotion: emotion == null,
+    );
+    notifyListeners();
+    unawaited(_cloudSync.pushEntry(entries[index]));
+  }
+
+  Future<void> updateTaskTitle(
+    JournalEntry entry,
+    TaskItem task,
+    String title,
+  ) async {
     if (task.id == null || title.trim().isEmpty) return;
     final trimmed = title.trim();
     await _db.updateTaskTitle(task.id!, trimmed);
@@ -388,9 +418,13 @@ class JournalStore extends ChangeNotifier {
         await _cloudSync.pushEntry(entry);
       }
       final remoteEntries = await _cloudSync.fetchAll();
-      final localRemoteIds = entries.map((e) => e.remoteId).whereType<String>().toSet();
+      final localRemoteIds = entries
+          .map((e) => e.remoteId)
+          .whereType<String>()
+          .toSet();
       for (final remote in remoteEntries) {
-        if (remote.remoteId == null || localRemoteIds.contains(remote.remoteId)) {
+        if (remote.remoteId == null ||
+            localRemoteIds.contains(remote.remoteId)) {
           continue;
         }
         await addEntry(remote, skipCloudPush: true);

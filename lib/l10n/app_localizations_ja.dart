@@ -568,16 +568,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get backgroundNone => 'なし';
 
   @override
-  String get comingSoon => '準備中です';
+  String get emotionSheetTitle => '感情';
 
   @override
-  String get diaryBgChihuahua => 'チワワ';
+  String get emotionNone => 'なし';
+
+  @override
+  String get comingSoon => '準備中です';
 
   @override
   String get diaryBgFruit => 'フルーツ';
 
   @override
-  String get diaryBgMintPlant => 'ミントの観葉植物';
+  String get diaryBgMintPlant => 'ボタニカルノート';
 
   @override
   String get diaryBgCoffee => 'コーヒー';
@@ -586,16 +589,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get diaryBgCake => 'ケーキ';
 
   @override
-  String get diaryBgPicnic => 'ピクニック';
-
-  @override
-  String get diaryBgShoppingNight => '夜のショッピング';
+  String get diaryBgPicnic => 'パン';
 
   @override
   String get diaryBgHeartBalloon => 'ハート風船';
-
-  @override
-  String get diaryBgDrive => 'ドライブ';
 
   @override
   String get diaryBgSakuraStation => '桜の駅';
@@ -610,7 +607,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get diaryBgHome => '家の中';
 
   @override
-  String get diaryBgParkDay => '昼の公園';
+  String get diaryBgParkDay => 'タンポポ畑';
 
   @override
   String get diaryBgNightSky => '夜空';
@@ -620,6 +617,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get diaryBgBeachGirl => '海辺の少女';
+
+  @override
+  String get diaryBgSleepingCat => '眠る猫';
 
   @override
   String get fontSheetTitle => 'フォント';
@@ -688,6 +688,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get taskScheduleLabel => '開始・終了時間';
 
   @override
+  String get startTimeCaption => '開始';
+
+  @override
+  String get endTimeCaption => '終了';
+
+  @override
   String get addStartTime => '開始時間を設定';
 
   @override
@@ -698,6 +704,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get removeEndTimeTooltip => '終了時間を解除';
+
+  @override
+  String get manualTaskFabTooltip => 'タスクを追加';
+
+  @override
+  String get manualTaskScreenTitle => 'タスクを追加';
+
+  @override
+  String get manualTaskTitleHint => 'タスク内容（例: 牛乳を買う）';
+
+  @override
+  String get manualTaskTitleRequiredError => 'タスク内容を入力してください';
 
   @override
   String get recurringTaskFabTooltip => '繰り返しタスクを追加';
