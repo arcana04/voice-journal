@@ -7,6 +7,7 @@ import '../state/journal_store.dart';
 import '../widgets/app_background_image.dart';
 import '../widgets/scrim_text.dart';
 import '../widgets/task_entry_card.dart';
+import 'recurring_task_screen.dart';
 import 'task_edit_screen.dart';
 
 enum _TaskFilter { all, today, thisWeek, withinMonth, completed }
@@ -118,6 +119,18 @@ class _TaskScreenState extends State<TaskScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
+      floatingActionButton: Padding(
+        // 外側のRootScreenが持つフローティングナビゲーションバー（透過で背後に
+        // body が回り込む extendBody:true）と重ならないよう、その高さ分だけ上げる。
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 76),
+        child: FloatingActionButton(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const RecurringTaskScreen()),
+          ),
+          tooltip: AppLocalizations.of(context)!.recurringTaskFabTooltip,
+          child: const Icon(Icons.repeat),
+        ),
+      ),
       body: Stack(
         children: [
           Positioned.fill(

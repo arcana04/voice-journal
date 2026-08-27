@@ -1,10 +1,16 @@
-/// 1回の録音の最大長。
-///
-/// 現在は無料版のみで一律この秒数。将来、課金プランごとに上限を変える場合は
-/// ここを差し替える（例: 有料版は180秒など）。
+/// 1回の録音の最大長（無料プラン）。
 const int kMaxRecordingSeconds = 60;
 
 const Duration kMaxRecordingDuration = Duration(seconds: kMaxRecordingSeconds);
+
+/// 1回の録音の最大長（Proプラン）＝15分。
+const int kProMaxRecordingSeconds = 15 * 60;
+
+const Duration kProMaxRecordingDuration = Duration(seconds: kProMaxRecordingSeconds);
+
+/// 加入プランに応じた1回の録音の最大長。
+Duration maxRecordingDurationFor(bool isPro) =>
+    isPro ? kProMaxRecordingDuration : kMaxRecordingDuration;
 
 /// これより連続して静かな状態が続いたら、話し終えたとみなして録音を自動停止する。
 const Duration kSilenceAutoStopDuration = Duration(seconds: 30);

@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import '../models/journal_entry.dart';
 import '../services/calendar_service.dart';
 import '../services/calendar_settings_service.dart';
+import '../services/cloud_sync_service.dart';
 import '../services/db_service.dart';
 import '../services/image_storage_service.dart';
 import '../services/reminder_service.dart';
@@ -17,9 +18,11 @@ class JournalStore extends ChangeNotifier {
   final ImageStorageService _images = ImageStorageService();
   final CalendarService _calendar = CalendarService.instance;
   final CalendarSettingsService _calendarSettings = CalendarSettingsService();
+  final CloudSyncService _cloudSync = CloudSyncService();
 
   List<JournalEntry> entries = [];
   bool loading = false;
+  bool _syncing = false;
 
   Future<void> load() async {
     loading = true;
@@ -35,7 +38,10 @@ class JournalStore extends ChangeNotifier {
   Future<void> _rescheduleAllPendingReminders() async {
     for (final entry in entries) {
       for (final task in entry.tasks) {
-        if (!task.done && task.id != null && task.reminderAt != null) {
+        if (!task.done &&
+            task.id != null &&
+            task.reminderAt != null &&
+            !task.isAllDay) {
           await _reminders.scheduleTaskReminder(
             taskId: task.id!,
             title: task.title,
@@ -65,6 +71,7 @@ class JournalStore extends ChangeNotifier {
         title: task.title,
         start: task.reminderAt!,
         end: task.reminderEndAt,
+        allDay: task.isAllDay,
       );
     } catch (e) {
       debugPrint('calendar sync failed: $e');
@@ -83,11 +90,13 @@ class JournalStore extends ChangeNotifier {
     }
   }
 
-  Future<void> addEntry(JournalEntry entry) async {
+  /// [skipCloudPush]は、クラウドから復元してきたエントリを再度クラウドへ
+  /// 送り返さないようにするためのフラグ（[fullSync]から使う）。
+  Future<void> addEntry(JournalEntry entry, {bool skipCloudPush = false}) async {
     final saved = await _db.insertEntry(entry);
     final syncedTasks = <TaskItem>[];
     for (final task in saved.tasks) {
-      if (task.id != null && task.reminderAt != null) {
+      if (task.id != null && task.reminderAt != null && !task.isAllDay) {
         await _reminders.scheduleTaskReminder(
           taskId: task.id!,
           title: task.title,
@@ -107,8 +116,12 @@ class JournalStore extends ChangeNotifier {
         syncedTasks.add(task);
       }
     }
-    entries.insert(0, saved.copyWith(tasks: syncedTasks));
+    final finalEntry = saved.copyWith(tasks: syncedTasks);
+    entries.insert(0, finalEntry);
     notifyListeners();
+    if (!skipCloudPush) {
+      unawaited(_cloudSync.pushEntry(finalEntry));
+    }
   }
 
   Future<void> toggleTask(JournalEntry entry, TaskItem task) async {
@@ -121,7 +134,7 @@ class JournalStore extends ChangeNotifier {
     if (task.reminderAt != null) {
       if (newDone) {
         await _reminders.cancelTaskReminder(task.id!);
-      } else {
+      } else if (!task.isAllDay) {
         await _reminders.scheduleTaskReminder(
           taskId: task.id!,
           title: task.title,
@@ -146,6 +159,7 @@ class JournalStore extends ChangeNotifier {
     }).toList();
     entries[index] = entries[index].copyWith(tasks: updatedTasks);
     notifyListeners();
+    unawaited(_cloudSync.pushEntry(entries[index]));
   }
 
   Future<void> deleteEntry(JournalEntry entry) async {
@@ -162,6 +176,7 @@ class JournalStore extends ChangeNotifier {
     await _db.deleteEntry(entry.id!);
     entries.removeWhere((e) => e.id == entry.id);
     notifyListeners();
+    unawaited(_cloudSync.deleteEntry(entry.remoteId));
   }
 
   /// 写真・動画のファイルを entry に追加する。
@@ -208,6 +223,7 @@ class JournalStore extends ChangeNotifier {
     }).toList();
     entries[index] = entries[index].copyWith(notes: updatedNotes);
     notifyListeners();
+    unawaited(_cloudSync.pushEntry(entries[index]));
   }
 
   Future<void> updateNoteStyle(
@@ -237,6 +253,7 @@ class JournalStore extends ChangeNotifier {
     }).toList();
     entries[index] = entries[index].copyWith(notes: updatedNotes);
     notifyListeners();
+    unawaited(_cloudSync.pushEntry(entries[index]));
   }
 
   Future<void> updateTaskTitle(JournalEntry entry, TaskItem task, String title) async {
@@ -244,7 +261,7 @@ class JournalStore extends ChangeNotifier {
     final trimmed = title.trim();
     await _db.updateTaskTitle(task.id!, trimmed);
 
-    if (task.reminderAt != null && !task.done) {
+    if (task.reminderAt != null && !task.done && !task.isAllDay) {
       await _reminders.scheduleTaskReminder(
         taskId: task.id!,
         title: trimmed,
@@ -268,27 +285,37 @@ class JournalStore extends ChangeNotifier {
     }).toList();
     entries[index] = entries[index].copyWith(tasks: updatedTasks);
     notifyListeners();
+    unawaited(_cloudSync.pushEntry(entries[index]));
   }
 
   Future<void> updateTaskReminder(
     JournalEntry entry,
     TaskItem task,
-    DateTime? reminderAt,
-  ) async {
+    DateTime? reminderAt, {
+    bool isAllDay = false,
+  }) async {
     if (task.id == null) return;
-    await _db.updateTaskReminder(task.id!, reminderAt);
+    final effectiveAllDay = reminderAt != null && isAllDay;
+    await _db.updateTaskReminder(task.id!, reminderAt, isAllDay: effectiveAllDay);
 
     if (reminderAt == null) {
       await _reminders.cancelTaskReminder(task.id!);
-    } else if (!task.done) {
+    } else if (!task.done && !effectiveAllDay) {
       await _reminders.scheduleTaskReminder(
         taskId: task.id!,
         title: task.title,
         scheduledAt: reminderAt,
       );
+    } else if (effectiveAllDay) {
+      await _reminders.cancelTaskReminder(task.id!);
     }
     final eventId = await _syncTaskCalendarEvent(
-      task.copyWith(reminderAt: reminderAt, clearReminder: reminderAt == null),
+      task.copyWith(
+        reminderAt: reminderAt,
+        clearReminder: reminderAt == null,
+        clearReminderEndAt: effectiveAllDay,
+        isAllDay: effectiveAllDay,
+      ),
     );
     if (eventId != task.calendarEventId) {
       await _db.updateTaskCalendarEventId(task.id!, eventId);
@@ -301,12 +328,41 @@ class JournalStore extends ChangeNotifier {
         return t.copyWith(
           reminderAt: reminderAt,
           clearReminder: reminderAt == null,
+          clearReminderEndAt: effectiveAllDay,
           calendarEventId: eventId,
           clearCalendarEventId: eventId == null,
+          isAllDay: effectiveAllDay,
         );
       }).toList();
       entries[index] = entries[index].copyWith(tasks: updatedTasks);
       notifyListeners();
+      unawaited(_cloudSync.pushEntry(entries[index]));
+    }
+  }
+
+  /// メールアカウントのサインアップ/サインイン後、または手動の「クラウドから復元」
+  /// 操作から呼ぶ。まず現在のローカルの全エントリをクラウドへpushし（この端末で
+  /// 未同期のまま溜まっていたデータをアップロード）、次にクラウド上にあってこの
+  /// 端末にまだ無いエントリを取り込む（削除の伝播は行わない — データを失わない
+  /// ことを優先した意図的な仕様）。
+  Future<void> fullSync() async {
+    if (_syncing) return;
+    _syncing = true;
+    try {
+      for (final entry in entries) {
+        await _cloudSync.pushEntry(entry);
+      }
+      final remoteEntries = await _cloudSync.fetchAll();
+      final localRemoteIds = entries.map((e) => e.remoteId).whereType<String>().toSet();
+      for (final remote in remoteEntries) {
+        if (remote.remoteId == null || localRemoteIds.contains(remote.remoteId)) {
+          continue;
+        }
+        await addEntry(remote, skipCloudPush: true);
+      }
+    } finally {
+      _syncing = false;
+      await load();
     }
   }
 }

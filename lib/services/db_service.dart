@@ -1,8 +1,23 @@
+import 'dart:math';
+
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
+
+const String _kIdChars =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+/// クラウド同期用の安定ID。Firestoreのドキュメント自動IDと同じ文字種・桁数で
+/// 生成する（このファイルをcloud_firestoreに依存させないよう自前で生成する）。
+String _generateLocalId() {
+  final random = Random.secure();
+  return List.generate(
+    20,
+    (_) => _kIdChars[random.nextInt(_kIdChars.length)],
+  ).join();
+}
 
 class DbService {
   static final DbService instance = DbService._internal();
@@ -23,7 +38,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 9,
+      version: 11,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE entries (
@@ -31,9 +46,13 @@ class DbService {
             created_at TEXT NOT NULL,
             summary TEXT NOT NULL,
             comfort_message TEXT,
-            emotion TEXT
+            emotion TEXT,
+            remote_id TEXT
           )
         ''');
+        await db.execute(
+          'CREATE UNIQUE INDEX idx_entries_remote_id ON entries(remote_id)',
+        );
         await db.execute('''
           CREATE TABLE tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,6 +64,7 @@ class DbService {
             reminder_end_at TEXT,
             done INTEGER NOT NULL DEFAULT 0,
             calendar_event_id TEXT,
+            is_all_day INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
           )
         ''');
@@ -107,17 +127,41 @@ class DbService {
           await db.execute('ALTER TABLE notes ADD COLUMN text_color INTEGER');
           await db.execute('ALTER TABLE notes ADD COLUMN font_scale REAL');
         }
+        if (oldVersion < 10) {
+          await db.execute(
+            'ALTER TABLE tasks ADD COLUMN is_all_day INTEGER NOT NULL DEFAULT 0',
+          );
+        }
+        if (oldVersion < 11) {
+          await db.execute('ALTER TABLE entries ADD COLUMN remote_id TEXT');
+          await db.execute(
+            'CREATE UNIQUE INDEX idx_entries_remote_id ON entries(remote_id)',
+          );
+          final rows = await db.query('entries', columns: ['id']);
+          final batch = db.batch();
+          for (final row in rows) {
+            batch.update(
+              'entries',
+              {'remote_id': _generateLocalId()},
+              where: 'id = ?',
+              whereArgs: [row['id'] as int],
+            );
+          }
+          await batch.commit(noResult: true);
+        }
       },
     );
   }
 
   Future<JournalEntry> insertEntry(JournalEntry entry) async {
     final db = await _database;
+    final remoteId = entry.remoteId ?? _generateLocalId();
     final entryId = await db.insert('entries', {
       'created_at': entry.createdAt.toIso8601String(),
       'summary': entry.summary,
       'comfort_message': entry.comfortMessage,
       'emotion': entry.emotion?.id,
+      'remote_id': remoteId,
     });
 
     final savedTasks = <TaskItem>[];
@@ -130,6 +174,7 @@ class DbService {
         'reminder_at': task.reminderAt?.toIso8601String(),
         'reminder_end_at': task.reminderEndAt?.toIso8601String(),
         'done': 0,
+        'is_all_day': task.isAllDay ? 1 : 0,
       });
       savedTasks.add(TaskItem(
         id: taskId,
@@ -139,6 +184,7 @@ class DbService {
         dueDate: task.dueDate,
         reminderAt: task.reminderAt,
         reminderEndAt: task.reminderEndAt,
+        isAllDay: task.isAllDay,
       ));
     }
     final savedNotes = <NoteItem>[];
@@ -166,6 +212,7 @@ class DbService {
 
     return JournalEntry(
       id: entryId,
+      remoteId: remoteId,
       createdAt: entry.createdAt,
       summary: entry.summary,
       tasks: savedTasks,
@@ -201,6 +248,7 @@ class DbService {
 
       entries.add(JournalEntry(
         id: entryId,
+        remoteId: row['remote_id'] as String?,
         createdAt: DateTime.parse(row['created_at'] as String),
         summary: row['summary'] as String,
         tasks: taskRows.map(TaskItem.fromMap).toList(),
@@ -293,10 +341,17 @@ class DbService {
     );
   }
 
-  Future<void> updateTaskReminder(int taskId, DateTime? reminderAt) async {
+  Future<void> updateTaskReminder(
+    int taskId,
+    DateTime? reminderAt, {
+    bool isAllDay = false,
+  }) async {
     final db = await _database;
-    final values = <String, Object?>{'reminder_at': reminderAt?.toIso8601String()};
-    if (reminderAt == null) {
+    final values = <String, Object?>{
+      'reminder_at': reminderAt?.toIso8601String(),
+      'is_all_day': (reminderAt != null && isAllDay) ? 1 : 0,
+    };
+    if (reminderAt == null || isAllDay) {
       values['reminder_end_at'] = null;
     }
     await db.update(

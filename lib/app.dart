@@ -3,16 +3,20 @@ import 'package:provider/provider.dart';
 
 import 'l10n/app_localizations.dart';
 import 'screens/root_screen.dart';
+import 'state/account_store.dart';
 import 'state/background_store.dart';
 import 'state/calendar_store.dart';
 import 'state/custom_words_store.dart';
 import 'state/journal_store.dart';
 import 'state/record_trigger_store.dart';
 import 'state/settings_store.dart';
+import 'state/subscription_store.dart';
 import 'state/text_style_store.dart';
 
 class VoiceJournalApp extends StatelessWidget {
-  const VoiceJournalApp({super.key});
+  final String uid;
+
+  const VoiceJournalApp({super.key, required this.uid});
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +29,8 @@ class VoiceJournalApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CustomWordsStore()..load()),
         ChangeNotifierProvider(create: (_) => TextStyleStore()..load()),
         ChangeNotifierProvider(create: (_) => RecordTriggerStore()),
+        ChangeNotifierProvider(create: (_) => SubscriptionStore()..initialize(uid)),
+        ChangeNotifierProvider(create: (_) => AccountStore()),
       ],
       child: Consumer<SettingsStore>(
         builder: (context, settings, _) {

@@ -45,6 +45,10 @@
   "@maxRecordingSeconds": {
     "placeholders": { "seconds": { "type": "int" } }
   },
+  "maxRecordingMinutes": "Each recording can be up to {minutes} minutes",
+  "@maxRecordingMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
   "textComposeTooltip": "Enter as text",
   "settingsTooltip": "Settings",
   "menuCustomDictionary": "Custom dictionary",
@@ -62,6 +66,28 @@
   "summaryLevelPreserveDescription": "Keeps feelings, phrasing, and names exactly as spoken, without summarizing.",
   "summaryLevelStandardDescription": "Tidies up redundant repetition while keeping a natural diary length.",
   "summaryLevelCompactDescription": "Condenses everything down to just the core in 1-2 sentences.",
+
+  "menuDiaryStyle": "Diary tone",
+  "diaryStyleSheetTitle": "Diary tone",
+  "diaryStyleSheetDescription": "Choose the tone/voice the AI writes your diary entries in. This doesn't affect how much it's summarized.",
+  "diaryStyleStandardLabel": "Standard",
+  "diaryStyleStandardDescription": "A natural, unembellished first-person diary voice.",
+  "diaryStyleGalLabel": "Hyped Gen-Z",
+  "diaryStyleGalDescription": "An extremely hyped, emoji-heavy Gen-Z slang voice. Pro plan only.",
+  "diaryStyleNovelLabel": "Literary",
+  "diaryStyleNovelDescription": "A literary first-person essay voice with scene-setting and introspection. Pro plan only.",
+  "diaryStylePositiveMonsterLabel": "Hype Yourself Up",
+  "diaryStylePositiveMonsterDescription": "Celebrates every little thing you did as an absolute win. Pro plan only.",
+  "diaryStyleBulletPointsLabel": "Bullet Points",
+  "diaryStyleBulletPointsDescription": "A minimal 3-4 line list of what happened, how you felt, and what's next. Pro plan only.",
+  "diaryStyleFutureSelfLabel": "To Future Me",
+  "diaryStyleFutureSelfDescription": "A time-capsule letter written for your future self to read. Pro plan only.",
+  "diaryStyleHardboiledLabel": "Hardboiled",
+  "diaryStyleHardboiledDescription": "Terse, unsentimental lines that record only facts and decisions. Pro plan only.",
+  "diaryStyleCinematicLabel": "Cinematic",
+  "diaryStyleCinematicDescription": "A visual voice that lingers on light, sound, and atmosphere like a film scene. Pro plan only.",
+  "diaryStyleHistoricalHeroLabel": "Epic Chronicle",
+  "diaryStyleHistoricalHeroDescription": "Recasts an ordinary day as a legendary chapter in grand, archaic prose. Pro plan only.",
 
   "settingsTitle": "Settings",
   "displaySectionTitle": "Display",
@@ -85,7 +111,58 @@
   "backgroundDeepSea": "Deep Sea",
   "backgroundAmazon": "Amazon Rainforest",
   "backgroundCat": "Cat",
-  "freeTierSectionTitle": "Free tier",
+  "accountSectionTitle": "Account",
+  "accountSignedInAs": "Signed in as {email}",
+  "@accountSignedInAs": {
+    "placeholders": { "email": { "type": "String" } }
+  },
+  "accountNotSignedIn": "Not signed in",
+  "accountNotSignedInDescription": "Create an email account to carry your diary data over to other devices",
+  "accountScreenTitle": "Account",
+  "accountSignUpTab": "Create account",
+  "accountSignInTab": "Sign in",
+  "accountEmailLabel": "Email address",
+  "accountPasswordLabel": "Password",
+  "accountSignUpButton": "Create account",
+  "accountSignInButton": "Sign in",
+  "accountForgotPassword": "Forgot your password?",
+  "accountPasswordResetSentTitle": "Sent",
+  "accountPasswordResetSentMessage": "A password reset email has been sent. Please check your inbox.",
+  "accountSignOutButton": "Sign out",
+  "accountBackupNowButton": "Back up now",
+  "accountRestoreButton": "Restore from cloud",
+  "accountSyncingMessage": "Syncing…",
+  "accountSyncCompleteTitle": "Done",
+  "accountSyncCompleteMessage": "Sync complete.",
+  "accountErrorTitle": "Error",
+  "accountErrorEmailAlreadyInUse": "This email is already registered. Try signing in instead.",
+  "accountErrorInvalidEmail": "That email address doesn't look valid.",
+  "accountErrorWeakPassword": "Password must be at least 6 characters.",
+  "accountErrorInvalidCredential": "Incorrect email or password.",
+  "accountErrorNetwork": "A network error occurred. Please try again shortly.",
+  "accountErrorUnknown": "Something went wrong. Please try again shortly.",
+  "accountSignOutConfirmTitle": "Sign out?",
+  "accountSignOutConfirmMessage": "Your data on this device won't be deleted. Sign back in anytime to resume syncing.",
+
+  "planSectionTitle": "Plan",
+  "planProTitle": "Pro plan",
+  "planFreeTitle": "Free plan",
+  "planProSubtitle": "Up to 15 minutes per recording, 30 recordings a day",
+  "planFreeSubtitle": "Up to 60 seconds per recording, 3 recordings a day for free",
+  "planManage": "Manage",
+  "planUpgrade": "Upgrade",
+  "paywallTitle": "Pro plan",
+  "paywallHeadline": "Go Pro for more room to talk",
+  "paywallBenefitDuration": "Record up to 15 minutes at a time (60 seconds on the free plan)",
+  "paywallBenefitCount": "Record up to 30 times a day (3 times on the free plan)",
+  "paywallUnavailable": "Couldn't load plans right now. Please try again later.",
+  "paywallRestore": "Restore purchases",
+  "paywallTerms": "Terms of Service",
+  "paywallPrivacy": "Privacy Policy",
+  "paywallPurchaseFailed": "Something went wrong. Please try again later.",
+  "paywallRestoreNotFound": "No restorable purchase was found.",
+
+  "freeTierSectionTitle": "Usage",
   "freeTierFetchFailed": "Couldn't load usage status",
   "freeTierUsage": "Recordings today: {used} / {limit}",
   "@freeTierUsage": {
@@ -158,6 +235,33 @@
   "removeReminderTooltip": "Remove reminder",
   "addReminder": "Add reminder",
   "taskContentHint": "Task content",
+  "allDayLabel": "All day",
+
+  "recurringTaskFabTooltip": "Add recurring task",
+  "recurringTaskScreenTitle": "Add recurring task",
+  "recurringTaskTitleHint": "Task content (e.g. Part-time job)",
+  "recurringWeekdaysLabel": "Days of week",
+  "recurringPeriodLabel": "Period",
+  "specifyTimeLabel": "Specify a time",
+  "recurringTaskCount": "{count} tasks will be created",
+  "@recurringTaskCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "recurringTaskSummary": "Recurring task: {title} ({weekdays})",
+  "@recurringTaskSummary": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "weekdays": { "type": "String" }
+    }
+  },
+  "recurringTitleRequiredError": "Please enter a task title",
+  "recurringSelectWeekdayError": "Please select at least one day of the week",
+  "recurringInvalidPeriodError": "Please set an end date on or after the start date",
+  "recurringStartTimeRequiredError": "Please set a start time",
+  "recurringTooManyError": "Only up to {max} tasks can be created at once",
+  "@recurringTooManyError": {
+    "placeholders": { "max": { "type": "int" } }
+  },
 
   "ideasEmpty": "No ideas yet\nTry saying what comes to mind",
 

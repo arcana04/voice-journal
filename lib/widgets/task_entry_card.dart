@@ -52,6 +52,7 @@ class TaskEntryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
     final timeLabel =
         '${DateFormat.MMMd(locale).format(entry.createdAt)} ${DateFormat.Hm(locale).format(entry.createdAt)}';
@@ -110,7 +111,7 @@ class TaskEntryCard extends StatelessWidget {
                                   : theme.textTheme.bodyMedium,
                             ),
                             const SizedBox(height: 2),
-                            _buildTaskMeta(theme, task, locale),
+                            _buildTaskMeta(theme, task, locale, l10n),
                           ],
                         ),
                       ),
@@ -125,10 +126,12 @@ class TaskEntryCard extends StatelessWidget {
     );
   }
 
-  String _reminderLabel(TaskItem task, String locale) {
+  String _reminderLabel(TaskItem task, String locale, AppLocalizations l10n) {
     final start = task.reminderAt!;
-    final end = task.reminderEndAt;
     final startDate = DateFormat.MMMd(locale).format(start);
+    if (task.isAllDay) return '$startDate (${l10n.allDayLabel})';
+
+    final end = task.reminderEndAt;
     final startTime = DateFormat.Hm(locale).format(start);
     if (end == null) return '$startDate $startTime';
 
@@ -141,7 +144,12 @@ class TaskEntryCard extends StatelessWidget {
     return '$startDate $startTime → $endDate $endTime';
   }
 
-  Widget _buildTaskMeta(ThemeData theme, TaskItem task, String locale) {
+  Widget _buildTaskMeta(
+    ThemeData theme,
+    TaskItem task,
+    String locale,
+    AppLocalizations l10n,
+  ) {
     final dueLabel = taskDueLabel(task, locale: locale);
     final reminderAt = task.reminderAt;
 
@@ -169,7 +177,7 @@ class TaskEntryCard extends StatelessWidget {
               ),
               const SizedBox(width: 2),
               Text(
-                _reminderLabel(task, locale),
+                _reminderLabel(task, locale, l10n),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.primary,
                   fontWeight: FontWeight.w600,

@@ -13,7 +13,7 @@ void main() {
   testWidgets('App shows the home screen with a record button', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const VoiceJournalApp());
+    await tester.pumpWidget(const VoiceJournalApp(uid: 'test-uid'));
     await tester.pump();
 
     expect(find.text('VoiceJournal'), findsOneWidget);

@@ -2,8 +2,25 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // All access goes through Cloud Functions (Admin SDK), which bypasses
-    // these rules. No client (mobile app) reads or writes directly.
+    // Text-only cloud backup/restore for signed-in (non-anonymous) users.
+    // Attachments (images/videos) are intentionally excluded for now.
+    match /users/{uid}/entries/{entryId} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(
+             ['summary', 'created_at', 'comfort_message', 'emotion', 'tasks', 'notes']
+           )
+        && request.resource.data.summary is string
+        && request.resource.data.summary.size() < 2000
+        && request.resource.data.tasks is list
+        && request.resource.data.tasks.size() < 200
+        && request.resource.data.notes is list
+        && request.resource.data.notes.size() < 200;
+    }
+
+    // Everything else (users/{uid} root doc with isPro, usage/{uid}_{date})
+    // goes through Cloud Functions (Admin SDK), which bypasses these rules.
+    // No client reads or writes those paths directly.
     match /{document=**} {
       allow read, write: if false;
     }

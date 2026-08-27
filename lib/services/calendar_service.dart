@@ -29,6 +29,7 @@ class CalendarService {
 
   /// [calendarId]に予定を作成・更新する。既存の[eventId]を渡すとその予定を更新する。
   /// [end]を渡せばその日時を終了時刻に使い、省略時は[start]の1時間後をデフォルトにする。
+  /// [allDay]がtrueの場合、時刻を無視して[start]（〜[end]）の日付だけを終日イベントとして登録する。
   /// 成功すればイベントIDを返す。
   Future<String?> upsertEvent({
     required String calendarId,
@@ -36,17 +37,25 @@ class CalendarService {
     required String title,
     required DateTime start,
     DateTime? end,
+    bool allDay = false,
   }) async {
     final location = tz.local;
+    DateTime effectiveStart = start;
+    DateTime effectiveEnd = end ?? start.add(const Duration(hours: 1));
+    if (allDay) {
+      effectiveStart = DateTime(start.year, start.month, start.day);
+      final endDateOnly =
+          end != null ? DateTime(end.year, end.month, end.day) : effectiveStart;
+      // device_calendarの終日イベントは終了日時を「翌日の0時」として扱う
+      effectiveEnd = endDateOnly.add(const Duration(days: 1));
+    }
     final event = Event(
       calendarId,
       eventId: eventId,
       title: title,
-      start: tz.TZDateTime.from(start, location),
-      end: tz.TZDateTime.from(
-        end ?? start.add(const Duration(hours: 1)),
-        location,
-      ),
+      start: tz.TZDateTime.from(effectiveStart, location),
+      end: tz.TZDateTime.from(effectiveEnd, location),
+      allDay: allDay,
     );
     final result = await _plugin.createOrUpdateEvent(event);
     return result?.data;

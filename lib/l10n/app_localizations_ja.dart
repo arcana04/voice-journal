@@ -109,6 +109,11 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String maxRecordingMinutes(int minutes) {
+    return '1回の録音は最大$minutes分です';
+  }
+
+  @override
   String get textComposeTooltip => 'テキストで入力';
 
   @override
@@ -157,6 +162,75 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get summaryLevelCompactDescription => '核心だけを1〜2文程度にぎゅっと短くまとめます';
+
+  @override
+  String get menuDiaryStyle => '日記の文体';
+
+  @override
+  String get diaryStyleSheetTitle => '日記の文体';
+
+  @override
+  String get diaryStyleSheetDescription =>
+      'AIが日記を書くときの言葉遣い・口調を選べます。要約の強さには影響しません。';
+
+  @override
+  String get diaryStyleStandardLabel => '標準';
+
+  @override
+  String get diaryStyleStandardDescription => '飾らない自然な一人称の日記文体で書きます';
+
+  @override
+  String get diaryStyleGalLabel => 'ギャル風';
+
+  @override
+  String get diaryStyleGalDescription => 'ハイテンション・絵文字多用のギャル語文体で書きます（Pro限定）';
+
+  @override
+  String get diaryStyleNovelLabel => '小説風';
+
+  @override
+  String get diaryStyleNovelDescription => '情景描写を交えた文学的な一人称エッセイ文体で書きます（Pro限定）';
+
+  @override
+  String get diaryStylePositiveMonsterLabel => 'ポジティブモンスター風';
+
+  @override
+  String get diaryStylePositiveMonsterDescription =>
+      'どんな行動も全肯定し自己肯定感を最大化する文体で書きます（Pro限定）';
+
+  @override
+  String get diaryStyleBulletPointsLabel => '箇条書き';
+
+  @override
+  String get diaryStyleBulletPointsDescription =>
+      '事実・感情・次のアクションを3〜4行のシンプルな箇条書きにまとめます（Pro限定）';
+
+  @override
+  String get diaryStyleFutureSelfLabel => '未来の自分へ';
+
+  @override
+  String get diaryStyleFutureSelfDescription =>
+      '未来の自分に語りかけるタイムカプセルのような文体で書きます（Pro限定）';
+
+  @override
+  String get diaryStyleHardboiledLabel => 'ハードボイルド';
+
+  @override
+  String get diaryStyleHardboiledDescription =>
+      '感情を排し、事実と決断だけを短文で刻むストイックな文体で書きます（Pro限定）';
+
+  @override
+  String get diaryStyleCinematicLabel => '映画のワンシーン風';
+
+  @override
+  String get diaryStyleCinematicDescription => '光・音・空気感を意識した映像的な文体で書きます（Pro限定）';
+
+  @override
+  String get diaryStyleHistoricalHeroLabel => '歴史上の偉人風';
+
+  @override
+  String get diaryStyleHistoricalHeroDescription =>
+      '日常の一コマを歴史的快挙に見立てる大言壮語な文体で書きます（Pro限定）';
 
   @override
   String get settingsTitle => '設定';
@@ -228,7 +302,151 @@ class AppLocalizationsJa extends AppLocalizations {
   String get backgroundCat => '猫';
 
   @override
-  String get freeTierSectionTitle => '無料枠';
+  String get accountSectionTitle => 'アカウント';
+
+  @override
+  String accountSignedInAs(String email) {
+    return '$email でログイン中';
+  }
+
+  @override
+  String get accountNotSignedIn => 'ログインしていません';
+
+  @override
+  String get accountNotSignedInDescription =>
+      'メールアカウントを作成すると、他の端末でも同じ日記データを引き継げます';
+
+  @override
+  String get accountScreenTitle => 'アカウント';
+
+  @override
+  String get accountSignUpTab => 'アカウント作成';
+
+  @override
+  String get accountSignInTab => 'ログイン';
+
+  @override
+  String get accountEmailLabel => 'メールアドレス';
+
+  @override
+  String get accountPasswordLabel => 'パスワード';
+
+  @override
+  String get accountSignUpButton => 'アカウントを作成';
+
+  @override
+  String get accountSignInButton => 'ログイン';
+
+  @override
+  String get accountForgotPassword => 'パスワードを忘れた方はこちら';
+
+  @override
+  String get accountPasswordResetSentTitle => '送信しました';
+
+  @override
+  String get accountPasswordResetSentMessage =>
+      'パスワード再設定用のメールを送信しました。メールをご確認ください。';
+
+  @override
+  String get accountSignOutButton => 'ログアウト';
+
+  @override
+  String get accountBackupNowButton => '今すぐバックアップ';
+
+  @override
+  String get accountRestoreButton => 'クラウドから復元';
+
+  @override
+  String get accountSyncingMessage => '同期中です…';
+
+  @override
+  String get accountSyncCompleteTitle => '完了しました';
+
+  @override
+  String get accountSyncCompleteMessage => 'データの同期が完了しました。';
+
+  @override
+  String get accountErrorTitle => 'エラー';
+
+  @override
+  String get accountErrorEmailAlreadyInUse =>
+      'このメールアドレスは既に登録されています。ログインをお試しください。';
+
+  @override
+  String get accountErrorInvalidEmail => 'メールアドレスの形式が正しくありません。';
+
+  @override
+  String get accountErrorWeakPassword => 'パスワードは6文字以上にしてください。';
+
+  @override
+  String get accountErrorInvalidCredential => 'メールアドレスまたはパスワードが正しくありません。';
+
+  @override
+  String get accountErrorNetwork => '通信エラーが発生しました。しばらくしてから再度お試しください。';
+
+  @override
+  String get accountErrorUnknown => 'エラーが発生しました。しばらくしてから再度お試しください。';
+
+  @override
+  String get accountSignOutConfirmTitle => 'ログアウトしますか？';
+
+  @override
+  String get accountSignOutConfirmMessage =>
+      '端末内のデータは削除されません。再度ログインすると同期を再開できます。';
+
+  @override
+  String get planSectionTitle => 'プラン';
+
+  @override
+  String get planProTitle => 'Proプラン';
+
+  @override
+  String get planFreeTitle => '無料プラン';
+
+  @override
+  String get planProSubtitle => '録音15分・1日30回まで利用できます';
+
+  @override
+  String get planFreeSubtitle => '録音60秒・1日3回まで無料で利用できます';
+
+  @override
+  String get planManage => '管理する';
+
+  @override
+  String get planUpgrade => 'アップグレード';
+
+  @override
+  String get paywallTitle => 'Proプラン';
+
+  @override
+  String get paywallHeadline => 'もっと自由に話せるProプラン';
+
+  @override
+  String get paywallBenefitDuration => '1回の録音が最大15分に（無料版は60秒）';
+
+  @override
+  String get paywallBenefitCount => '1日30回まで録音可能に（無料版は3回）';
+
+  @override
+  String get paywallUnavailable => '現在プランを取得できません。しばらくしてからもう一度お試しください。';
+
+  @override
+  String get paywallRestore => '購入を復元';
+
+  @override
+  String get paywallTerms => '利用規約';
+
+  @override
+  String get paywallPrivacy => 'プライバシーポリシー';
+
+  @override
+  String get paywallPurchaseFailed => '処理に失敗しました。時間をおいて再度お試しください。';
+
+  @override
+  String get paywallRestoreNotFound => '復元できる購入が見つかりませんでした。';
+
+  @override
+  String get freeTierSectionTitle => '利用状況';
 
   @override
   String get freeTierFetchFailed => '利用状況を取得できませんでした';
@@ -411,6 +629,54 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get taskContentHint => 'タスク内容';
+
+  @override
+  String get allDayLabel => '終日';
+
+  @override
+  String get recurringTaskFabTooltip => '繰り返しタスクを追加';
+
+  @override
+  String get recurringTaskScreenTitle => '繰り返しタスクを追加';
+
+  @override
+  String get recurringTaskTitleHint => 'タスク内容（例: バイト）';
+
+  @override
+  String get recurringWeekdaysLabel => '曜日';
+
+  @override
+  String get recurringPeriodLabel => '期間';
+
+  @override
+  String get specifyTimeLabel => '時刻を指定';
+
+  @override
+  String recurringTaskCount(int count) {
+    return '$count件のタスクを作成します';
+  }
+
+  @override
+  String recurringTaskSummary(String title, String weekdays) {
+    return '繰り返しタスク：$title（$weekdays）';
+  }
+
+  @override
+  String get recurringTitleRequiredError => 'タスクの内容を入力してください';
+
+  @override
+  String get recurringSelectWeekdayError => '曜日を1つ以上選んでください';
+
+  @override
+  String get recurringInvalidPeriodError => '終了日は開始日以降にしてください';
+
+  @override
+  String get recurringStartTimeRequiredError => '開始時刻を設定してください';
+
+  @override
+  String recurringTooManyError(int max) {
+    return '一度に作成できるのは$max件までです';
+  }
 
   @override
   String get ideasEmpty => 'まだアイデアがありません\n思いついたことを話してみましょう';

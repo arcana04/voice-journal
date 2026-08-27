@@ -6,11 +6,15 @@ import '../l10n/app_localizations.dart';
 import '../models/usage_status.dart';
 import '../services/backend_service.dart';
 import '../services/reminder_service.dart';
+import '../state/account_store.dart';
 import '../state/background_store.dart';
 import '../state/calendar_store.dart';
 import '../state/settings_store.dart';
+import '../state/subscription_store.dart';
+import 'account_screen.dart';
 import 'background_select_screen.dart';
 import 'integration_select_screen.dart';
+import 'paywall_screen.dart';
 import 'weekly_report_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -153,6 +157,71 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const WeeklyReportScreen()),
               ),
+            ),
+            const Divider(height: 32),
+            Text(l10n.planSectionTitle, style: theme.textTheme.labelLarge),
+            const SizedBox(height: 8),
+            Consumer<SubscriptionStore>(
+              builder: (context, subscription, _) {
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    subscription.isPro
+                        ? Icons.workspace_premium
+                        : Icons.workspace_premium_outlined,
+                  ),
+                  title: Text(
+                    subscription.isPro ? l10n.planProTitle : l10n.planFreeTitle,
+                  ),
+                  subtitle: Text(
+                    subscription.isPro
+                        ? l10n.planProSubtitle
+                        : l10n.planFreeSubtitle,
+                  ),
+                  trailing: subscription.isPro
+                      ? TextButton(
+                          onPressed: () => AppSettings.openAppSettings(
+                            type: AppSettingsType.subscriptions,
+                          ),
+                          child: Text(l10n.planManage),
+                        )
+                      : FilledButton(
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const PaywallScreen(),
+                            ),
+                          ),
+                          child: Text(l10n.planUpgrade),
+                        ),
+                );
+              },
+            ),
+            const Divider(height: 32),
+            Text(l10n.accountSectionTitle, style: theme.textTheme.labelLarge),
+            const SizedBox(height: 8),
+            Consumer<AccountStore>(
+              builder: (context, account, _) {
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    account.isSignedIn
+                        ? Icons.cloud_done_outlined
+                        : Icons.cloud_off_outlined,
+                  ),
+                  title: Text(
+                    account.isSignedIn
+                        ? l10n.accountSignedInAs(account.email ?? '')
+                        : l10n.accountNotSignedIn,
+                  ),
+                  subtitle: account.isSignedIn
+                      ? null
+                      : Text(l10n.accountNotSignedInDescription),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AccountScreen()),
+                  ),
+                );
+              },
             ),
             const Divider(height: 32),
             Text(l10n.freeTierSectionTitle, style: theme.textTheme.labelLarge),

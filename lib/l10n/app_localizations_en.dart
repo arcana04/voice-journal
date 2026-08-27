@@ -109,6 +109,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String maxRecordingMinutes(int minutes) {
+    return 'Each recording can be up to $minutes minutes';
+  }
+
+  @override
   String get textComposeTooltip => 'Enter as text';
 
   @override
@@ -161,6 +166,79 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get summaryLevelCompactDescription =>
       'Condenses everything down to just the core in 1-2 sentences.';
+
+  @override
+  String get menuDiaryStyle => 'Diary tone';
+
+  @override
+  String get diaryStyleSheetTitle => 'Diary tone';
+
+  @override
+  String get diaryStyleSheetDescription =>
+      'Choose the tone/voice the AI writes your diary entries in. This doesn\'t affect how much it\'s summarized.';
+
+  @override
+  String get diaryStyleStandardLabel => 'Standard';
+
+  @override
+  String get diaryStyleStandardDescription =>
+      'A natural, unembellished first-person diary voice.';
+
+  @override
+  String get diaryStyleGalLabel => 'Hyped Gen-Z';
+
+  @override
+  String get diaryStyleGalDescription =>
+      'An extremely hyped, emoji-heavy Gen-Z slang voice. Pro plan only.';
+
+  @override
+  String get diaryStyleNovelLabel => 'Literary';
+
+  @override
+  String get diaryStyleNovelDescription =>
+      'A literary first-person essay voice with scene-setting and introspection. Pro plan only.';
+
+  @override
+  String get diaryStylePositiveMonsterLabel => 'Hype Yourself Up';
+
+  @override
+  String get diaryStylePositiveMonsterDescription =>
+      'Celebrates every little thing you did as an absolute win. Pro plan only.';
+
+  @override
+  String get diaryStyleBulletPointsLabel => 'Bullet Points';
+
+  @override
+  String get diaryStyleBulletPointsDescription =>
+      'A minimal 3-4 line list of what happened, how you felt, and what\'s next. Pro plan only.';
+
+  @override
+  String get diaryStyleFutureSelfLabel => 'To Future Me';
+
+  @override
+  String get diaryStyleFutureSelfDescription =>
+      'A time-capsule letter written for your future self to read. Pro plan only.';
+
+  @override
+  String get diaryStyleHardboiledLabel => 'Hardboiled';
+
+  @override
+  String get diaryStyleHardboiledDescription =>
+      'Terse, unsentimental lines that record only facts and decisions. Pro plan only.';
+
+  @override
+  String get diaryStyleCinematicLabel => 'Cinematic';
+
+  @override
+  String get diaryStyleCinematicDescription =>
+      'A visual voice that lingers on light, sound, and atmosphere like a film scene. Pro plan only.';
+
+  @override
+  String get diaryStyleHistoricalHeroLabel => 'Epic Chronicle';
+
+  @override
+  String get diaryStyleHistoricalHeroDescription =>
+      'Recasts an ordinary day as a legendary chapter in grand, archaic prose. Pro plan only.';
 
   @override
   String get settingsTitle => 'Settings';
@@ -232,7 +310,161 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backgroundCat => 'Cat';
 
   @override
-  String get freeTierSectionTitle => 'Free tier';
+  String get accountSectionTitle => 'Account';
+
+  @override
+  String accountSignedInAs(String email) {
+    return 'Signed in as $email';
+  }
+
+  @override
+  String get accountNotSignedIn => 'Not signed in';
+
+  @override
+  String get accountNotSignedInDescription =>
+      'Create an email account to carry your diary data over to other devices';
+
+  @override
+  String get accountScreenTitle => 'Account';
+
+  @override
+  String get accountSignUpTab => 'Create account';
+
+  @override
+  String get accountSignInTab => 'Sign in';
+
+  @override
+  String get accountEmailLabel => 'Email address';
+
+  @override
+  String get accountPasswordLabel => 'Password';
+
+  @override
+  String get accountSignUpButton => 'Create account';
+
+  @override
+  String get accountSignInButton => 'Sign in';
+
+  @override
+  String get accountForgotPassword => 'Forgot your password?';
+
+  @override
+  String get accountPasswordResetSentTitle => 'Sent';
+
+  @override
+  String get accountPasswordResetSentMessage =>
+      'A password reset email has been sent. Please check your inbox.';
+
+  @override
+  String get accountSignOutButton => 'Sign out';
+
+  @override
+  String get accountBackupNowButton => 'Back up now';
+
+  @override
+  String get accountRestoreButton => 'Restore from cloud';
+
+  @override
+  String get accountSyncingMessage => 'Syncing…';
+
+  @override
+  String get accountSyncCompleteTitle => 'Done';
+
+  @override
+  String get accountSyncCompleteMessage => 'Sync complete.';
+
+  @override
+  String get accountErrorTitle => 'Error';
+
+  @override
+  String get accountErrorEmailAlreadyInUse =>
+      'This email is already registered. Try signing in instead.';
+
+  @override
+  String get accountErrorInvalidEmail =>
+      'That email address doesn\'t look valid.';
+
+  @override
+  String get accountErrorWeakPassword =>
+      'Password must be at least 6 characters.';
+
+  @override
+  String get accountErrorInvalidCredential => 'Incorrect email or password.';
+
+  @override
+  String get accountErrorNetwork =>
+      'A network error occurred. Please try again shortly.';
+
+  @override
+  String get accountErrorUnknown =>
+      'Something went wrong. Please try again shortly.';
+
+  @override
+  String get accountSignOutConfirmTitle => 'Sign out?';
+
+  @override
+  String get accountSignOutConfirmMessage =>
+      'Your data on this device won\'t be deleted. Sign back in anytime to resume syncing.';
+
+  @override
+  String get planSectionTitle => 'Plan';
+
+  @override
+  String get planProTitle => 'Pro plan';
+
+  @override
+  String get planFreeTitle => 'Free plan';
+
+  @override
+  String get planProSubtitle =>
+      'Up to 15 minutes per recording, 30 recordings a day';
+
+  @override
+  String get planFreeSubtitle =>
+      'Up to 60 seconds per recording, 3 recordings a day for free';
+
+  @override
+  String get planManage => 'Manage';
+
+  @override
+  String get planUpgrade => 'Upgrade';
+
+  @override
+  String get paywallTitle => 'Pro plan';
+
+  @override
+  String get paywallHeadline => 'Go Pro for more room to talk';
+
+  @override
+  String get paywallBenefitDuration =>
+      'Record up to 15 minutes at a time (60 seconds on the free plan)';
+
+  @override
+  String get paywallBenefitCount =>
+      'Record up to 30 times a day (3 times on the free plan)';
+
+  @override
+  String get paywallUnavailable =>
+      'Couldn\'t load plans right now. Please try again later.';
+
+  @override
+  String get paywallRestore => 'Restore purchases';
+
+  @override
+  String get paywallTerms => 'Terms of Service';
+
+  @override
+  String get paywallPrivacy => 'Privacy Policy';
+
+  @override
+  String get paywallPurchaseFailed =>
+      'Something went wrong. Please try again later.';
+
+  @override
+  String get paywallRestoreNotFound => 'No restorable purchase was found.';
+
+  @override
+  String get freeTierSectionTitle => 'Usage';
 
   @override
   String get freeTierFetchFailed => 'Couldn\'t load usage status';
@@ -417,6 +649,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get taskContentHint => 'Task content';
+
+  @override
+  String get allDayLabel => 'All day';
+
+  @override
+  String get recurringTaskFabTooltip => 'Add recurring task';
+
+  @override
+  String get recurringTaskScreenTitle => 'Add recurring task';
+
+  @override
+  String get recurringTaskTitleHint => 'Task content (e.g. Part-time job)';
+
+  @override
+  String get recurringWeekdaysLabel => 'Days of week';
+
+  @override
+  String get recurringPeriodLabel => 'Period';
+
+  @override
+  String get specifyTimeLabel => 'Specify a time';
+
+  @override
+  String recurringTaskCount(int count) {
+    return '$count tasks will be created';
+  }
+
+  @override
+  String recurringTaskSummary(String title, String weekdays) {
+    return 'Recurring task: $title ($weekdays)';
+  }
+
+  @override
+  String get recurringTitleRequiredError => 'Please enter a task title';
+
+  @override
+  String get recurringSelectWeekdayError =>
+      'Please select at least one day of the week';
+
+  @override
+  String get recurringInvalidPeriodError =>
+      'Please set an end date on or after the start date';
+
+  @override
+  String get recurringStartTimeRequiredError => 'Please set a start time';
+
+  @override
+  String recurringTooManyError(int max) {
+    return 'Only up to $max tasks can be created at once';
+  }
 
   @override
   String get ideasEmpty => 'No ideas yet\nTry saying what comes to mind';

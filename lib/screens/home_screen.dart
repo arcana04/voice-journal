@@ -7,6 +7,7 @@ import 'package:record/record.dart' show Amplitude;
 
 import '../config/recording_limits.dart';
 import '../l10n/app_localizations.dart';
+import '../models/diary_style.dart';
 import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
 import '../models/summary_level.dart';
@@ -16,6 +17,7 @@ import '../state/custom_words_store.dart';
 import '../state/journal_store.dart';
 import '../state/record_trigger_store.dart';
 import '../state/settings_store.dart';
+import '../state/subscription_store.dart';
 import '../widgets/app_background_image.dart';
 import '../widgets/entry_review.dart';
 import '../widgets/icon_button_style.dart';
@@ -23,6 +25,7 @@ import '../widgets/record_button.dart';
 import '../widgets/scrim_text.dart';
 import '../widgets/waveform.dart';
 import 'custom_dictionary_screen.dart';
+import 'paywall_screen.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -37,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final BackendService _backend = BackendService();
   RecordButtonState _state = RecordButtonState.idle;
   Duration _elapsed = Duration.zero;
+  Duration _maxDuration = kMaxRecordingDuration;
   Timer? _timer;
   StreamSubscription<Amplitude>? _amplitudeSub;
   DateTime? _lastSoundAt;
@@ -103,9 +107,12 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
     await _recorder.start();
+    if (!mounted) return;
+    final isPro = context.read<SubscriptionStore>().isPro;
     setState(() {
       _state = RecordButtonState.recording;
       _elapsed = Duration.zero;
+      _maxDuration = maxRecordingDurationFor(isPro);
       _statusMessage = null;
     });
     _lastSoundAt = DateTime.now();
@@ -118,8 +125,8 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       final next = _elapsed + const Duration(seconds: 1);
-      if (next >= kMaxRecordingDuration) {
-        setState(() => _elapsed = kMaxRecordingDuration);
+      if (next >= _maxDuration) {
+        setState(() => _elapsed = _maxDuration);
         _stopAndProcess();
         return;
       }
@@ -165,11 +172,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final customWords = context.read<CustomWordsStore>().words;
-      final summaryLevel = context.read<SettingsStore>().summaryLevel;
+      final settings = context.read<SettingsStore>();
       final entry = await _backend.processVoiceMemo(
         File(path),
         customWords: customWords,
-        summaryLevel: summaryLevel,
+        summaryLevel: settings.summaryLevel,
+        diaryStyle: settings.diaryStyle,
         locale: Localizations.localeOf(context).languageCode,
       );
       if (!mounted) return;
@@ -197,11 +205,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final summaryLevel = context.read<SettingsStore>().summaryLevel;
+      final settings = context.read<SettingsStore>();
       final locale = Localizations.localeOf(context).languageCode;
       final entry = await _backend.processTextMemo(
         text,
-        summaryLevel: summaryLevel,
+        summaryLevel: settings.summaryLevel,
+        diaryStyle: settings.diaryStyle,
         locale: locale,
       );
       if (!mounted) return;
@@ -231,7 +240,14 @@ class _HomeScreenState extends State<HomeScreen> {
       _state = RecordButtonState.idle;
       _statusMessage = l10n.statusError(message);
     });
-    _showResultDialog(l10n.processingErrorTitle, message);
+    final isQuotaExceeded =
+        e is BackendServiceException && e.code == 'resource-exhausted';
+    final isPro = context.read<SubscriptionStore>().isPro;
+    _showResultDialog(
+      l10n.processingErrorTitle,
+      message,
+      showUpgrade: isQuotaExceeded && !isPro,
+    );
   }
 
   List<DraftItem> _buildDraftItems(JournalEntry entry) {
@@ -291,13 +307,28 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _showResultDialog(String title, String message) {
+  void _showResultDialog(
+    String title,
+    String message, {
+    bool showUpgrade = false,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(title),
         content: SingleChildScrollView(child: Text(message)),
         actions: [
+          if (showUpgrade)
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PaywallScreen()),
+                );
+              },
+              child: Text(l10n.planUpgrade),
+            ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('OK'),
@@ -335,6 +366,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final showComposerFab =
         draftItems == null && _state == RecordButtonState.idle;
     final l10n = AppLocalizations.of(context)!;
+    final isPro = context.watch<SubscriptionStore>().isPro;
     return Scaffold(
       body: Stack(
         children: [
@@ -362,7 +394,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               maintainSize: true,
                               child: ScrimText(
                                 child: Text(
-                                  '${_formatDuration(_elapsed)} / ${_formatDuration(kMaxRecordingDuration)}',
+                                  '${_formatDuration(_elapsed)} / ${_formatDuration(_maxDuration)}',
                                   style: Theme.of(context)
                                       .textTheme
                                       .headlineMedium,
@@ -394,9 +426,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                   if (_state == RecordButtonState.idle) ...[
                                     const SizedBox(height: 4),
                                     Text(
-                                      l10n.maxRecordingSeconds(
-                                        kMaxRecordingSeconds,
-                                      ),
+                                      isPro
+                                          ? l10n.maxRecordingMinutes(
+                                              kProMaxRecordingSeconds ~/ 60,
+                                            )
+                                          : l10n.maxRecordingSeconds(
+                                              kMaxRecordingSeconds,
+                                            ),
                                       textAlign: TextAlign.center,
                                       style: Theme.of(context)
                                           .textTheme
@@ -466,6 +502,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           isScrollControlled: true,
                           builder: (_) => const _SummaryLevelSheet(),
                         );
+                      } else if (value == 'diaryStyle') {
+                        showModalBottomSheet<void>(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (_) => const _DiaryStyleSheet(),
+                        );
                       }
                     },
                     itemBuilder: (context) => [
@@ -476,6 +518,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       PopupMenuItem(
                         value: 'summaryLevel',
                         child: Text(l10n.menuSummaryLevel),
+                      ),
+                      PopupMenuItem(
+                        value: 'diaryStyle',
+                        child: Text(l10n.menuDiaryStyle),
                       ),
                     ],
                   ),
@@ -629,6 +675,129 @@ class _SummaryLevelSheet extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// notes（日記）の文体を選ぶボトムシート。Pro限定のスタイルは未加入だとロック表示にし、
+/// タップするとペイウォールへ誘導する。
+class _DiaryStyleSheet extends StatelessWidget {
+  const _DiaryStyleSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final selected = context.watch<SettingsStore>().diaryStyle;
+    final isPro = context.watch<SubscriptionStore>().isPro;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.diaryStyleSheetTitle,
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.diaryStyleSheetDescription,
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: Theme.of(context).colorScheme.outline),
+            ),
+            const SizedBox(height: 12),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    for (final style in DiaryStyle.values)
+                      _DiaryStyleOption(
+                        style: style,
+                        selected: style == selected,
+                        locked: style.requiresPro && !isPro,
+                        onTap: () {
+                          if (style.requiresPro && !isPro) {
+                            Navigator.of(context).pop();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const PaywallScreen(),
+                              ),
+                            );
+                            return;
+                          }
+                          context.read<SettingsStore>().setDiaryStyle(style);
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DiaryStyleOption extends StatelessWidget {
+  final DiaryStyle style;
+  final bool selected;
+  final bool locked;
+  final VoidCallback onTap;
+
+  const _DiaryStyleOption({
+    required this.style,
+    required this.selected,
+    required this.locked,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      color: selected ? theme.colorScheme.primary.withValues(alpha: 0.08) : null,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: selected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.outlineVariant,
+        ),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        title: Row(
+          children: [
+            Text(style.labelFor(l10n), style: theme.textTheme.titleSmall),
+            if (locked) ...[
+              const SizedBox(width: 6),
+              Icon(
+                Icons.lock_outline,
+                size: 16,
+                color: theme.colorScheme.outline,
+              ),
+            ],
+          ],
+        ),
+        subtitle: Text(style.descriptionFor(l10n)),
+        trailing: selected
+            ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
+            : (locked ? Text(l10n.planUpgrade) : null),
       ),
     );
   }

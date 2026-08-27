@@ -284,6 +284,12 @@ abstract class AppLocalizations {
   /// **'Each recording can be up to {seconds} seconds'**
   String maxRecordingSeconds(int seconds);
 
+  /// No description provided for @maxRecordingMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Each recording can be up to {minutes} minutes'**
+  String maxRecordingMinutes(int minutes);
+
   /// No description provided for @textComposeTooltip.
   ///
   /// In en, this message translates to:
@@ -379,6 +385,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Condenses everything down to just the core in 1-2 sentences.'**
   String get summaryLevelCompactDescription;
+
+  /// No description provided for @menuDiaryStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Diary tone'**
+  String get menuDiaryStyle;
+
+  /// No description provided for @diaryStyleSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Diary tone'**
+  String get diaryStyleSheetTitle;
+
+  /// No description provided for @diaryStyleSheetDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the tone/voice the AI writes your diary entries in. This doesn\'t affect how much it\'s summarized.'**
+  String get diaryStyleSheetDescription;
+
+  /// No description provided for @diaryStyleStandardLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get diaryStyleStandardLabel;
+
+  /// No description provided for @diaryStyleStandardDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A natural, unembellished first-person diary voice.'**
+  String get diaryStyleStandardDescription;
+
+  /// No description provided for @diaryStyleGalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hyped Gen-Z'**
+  String get diaryStyleGalLabel;
+
+  /// No description provided for @diaryStyleGalDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'An extremely hyped, emoji-heavy Gen-Z slang voice. Pro plan only.'**
+  String get diaryStyleGalDescription;
+
+  /// No description provided for @diaryStyleNovelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Literary'**
+  String get diaryStyleNovelLabel;
+
+  /// No description provided for @diaryStyleNovelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A literary first-person essay voice with scene-setting and introspection. Pro plan only.'**
+  String get diaryStyleNovelDescription;
+
+  /// No description provided for @diaryStylePositiveMonsterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hype Yourself Up'**
+  String get diaryStylePositiveMonsterLabel;
+
+  /// No description provided for @diaryStylePositiveMonsterDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Celebrates every little thing you did as an absolute win. Pro plan only.'**
+  String get diaryStylePositiveMonsterDescription;
+
+  /// No description provided for @diaryStyleBulletPointsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bullet Points'**
+  String get diaryStyleBulletPointsLabel;
+
+  /// No description provided for @diaryStyleBulletPointsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A minimal 3-4 line list of what happened, how you felt, and what\'s next. Pro plan only.'**
+  String get diaryStyleBulletPointsDescription;
+
+  /// No description provided for @diaryStyleFutureSelfLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'To Future Me'**
+  String get diaryStyleFutureSelfLabel;
+
+  /// No description provided for @diaryStyleFutureSelfDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A time-capsule letter written for your future self to read. Pro plan only.'**
+  String get diaryStyleFutureSelfDescription;
+
+  /// No description provided for @diaryStyleHardboiledLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hardboiled'**
+  String get diaryStyleHardboiledLabel;
+
+  /// No description provided for @diaryStyleHardboiledDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Terse, unsentimental lines that record only facts and decisions. Pro plan only.'**
+  String get diaryStyleHardboiledDescription;
+
+  /// No description provided for @diaryStyleCinematicLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cinematic'**
+  String get diaryStyleCinematicLabel;
+
+  /// No description provided for @diaryStyleCinematicDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A visual voice that lingers on light, sound, and atmosphere like a film scene. Pro plan only.'**
+  String get diaryStyleCinematicDescription;
+
+  /// No description provided for @diaryStyleHistoricalHeroLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Epic Chronicle'**
+  String get diaryStyleHistoricalHeroLabel;
+
+  /// No description provided for @diaryStyleHistoricalHeroDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Recasts an ordinary day as a legendary chapter in grand, archaic prose. Pro plan only.'**
+  String get diaryStyleHistoricalHeroDescription;
 
   /// No description provided for @settingsTitle.
   ///
@@ -512,10 +644,286 @@ abstract class AppLocalizations {
   /// **'Cat'**
   String get backgroundCat;
 
+  /// No description provided for @accountSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get accountSectionTitle;
+
+  /// No description provided for @accountSignedInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {email}'**
+  String accountSignedInAs(String email);
+
+  /// No description provided for @accountNotSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in'**
+  String get accountNotSignedIn;
+
+  /// No description provided for @accountNotSignedInDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an email account to carry your diary data over to other devices'**
+  String get accountNotSignedInDescription;
+
+  /// No description provided for @accountScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get accountScreenTitle;
+
+  /// No description provided for @accountSignUpTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get accountSignUpTab;
+
+  /// No description provided for @accountSignInTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get accountSignInTab;
+
+  /// No description provided for @accountEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address'**
+  String get accountEmailLabel;
+
+  /// No description provided for @accountPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get accountPasswordLabel;
+
+  /// No description provided for @accountSignUpButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get accountSignUpButton;
+
+  /// No description provided for @accountSignInButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get accountSignInButton;
+
+  /// No description provided for @accountForgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot your password?'**
+  String get accountForgotPassword;
+
+  /// No description provided for @accountPasswordResetSentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get accountPasswordResetSentTitle;
+
+  /// No description provided for @accountPasswordResetSentMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A password reset email has been sent. Please check your inbox.'**
+  String get accountPasswordResetSentMessage;
+
+  /// No description provided for @accountSignOutButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get accountSignOutButton;
+
+  /// No description provided for @accountBackupNowButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up now'**
+  String get accountBackupNowButton;
+
+  /// No description provided for @accountRestoreButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from cloud'**
+  String get accountRestoreButton;
+
+  /// No description provided for @accountSyncingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing…'**
+  String get accountSyncingMessage;
+
+  /// No description provided for @accountSyncCompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get accountSyncCompleteTitle;
+
+  /// No description provided for @accountSyncCompleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync complete.'**
+  String get accountSyncCompleteMessage;
+
+  /// No description provided for @accountErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get accountErrorTitle;
+
+  /// No description provided for @accountErrorEmailAlreadyInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already registered. Try signing in instead.'**
+  String get accountErrorEmailAlreadyInUse;
+
+  /// No description provided for @accountErrorInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'That email address doesn\'t look valid.'**
+  String get accountErrorInvalidEmail;
+
+  /// No description provided for @accountErrorWeakPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters.'**
+  String get accountErrorWeakPassword;
+
+  /// No description provided for @accountErrorInvalidCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect email or password.'**
+  String get accountErrorInvalidCredential;
+
+  /// No description provided for @accountErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'A network error occurred. Please try again shortly.'**
+  String get accountErrorNetwork;
+
+  /// No description provided for @accountErrorUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again shortly.'**
+  String get accountErrorUnknown;
+
+  /// No description provided for @accountSignOutConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out?'**
+  String get accountSignOutConfirmTitle;
+
+  /// No description provided for @accountSignOutConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data on this device won\'t be deleted. Sign back in anytime to resume syncing.'**
+  String get accountSignOutConfirmMessage;
+
+  /// No description provided for @planSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get planSectionTitle;
+
+  /// No description provided for @planProTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro plan'**
+  String get planProTitle;
+
+  /// No description provided for @planFreeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free plan'**
+  String get planFreeTitle;
+
+  /// No description provided for @planProSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 15 minutes per recording, 30 recordings a day'**
+  String get planProSubtitle;
+
+  /// No description provided for @planFreeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 60 seconds per recording, 3 recordings a day for free'**
+  String get planFreeSubtitle;
+
+  /// No description provided for @planManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get planManage;
+
+  /// No description provided for @planUpgrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade'**
+  String get planUpgrade;
+
+  /// No description provided for @paywallTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro plan'**
+  String get paywallTitle;
+
+  /// No description provided for @paywallHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Go Pro for more room to talk'**
+  String get paywallHeadline;
+
+  /// No description provided for @paywallBenefitDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Record up to 15 minutes at a time (60 seconds on the free plan)'**
+  String get paywallBenefitDuration;
+
+  /// No description provided for @paywallBenefitCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Record up to 30 times a day (3 times on the free plan)'**
+  String get paywallBenefitCount;
+
+  /// No description provided for @paywallUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load plans right now. Please try again later.'**
+  String get paywallUnavailable;
+
+  /// No description provided for @paywallRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore purchases'**
+  String get paywallRestore;
+
+  /// No description provided for @paywallTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get paywallTerms;
+
+  /// No description provided for @paywallPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get paywallPrivacy;
+
+  /// No description provided for @paywallPurchaseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again later.'**
+  String get paywallPurchaseFailed;
+
+  /// No description provided for @paywallRestoreNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No restorable purchase was found.'**
+  String get paywallRestoreNotFound;
+
   /// No description provided for @freeTierSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Free tier'**
+  /// **'Usage'**
   String get freeTierSectionTitle;
 
   /// No description provided for @freeTierFetchFailed.
@@ -865,6 +1273,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Task content'**
   String get taskContentHint;
+
+  /// No description provided for @allDayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'All day'**
+  String get allDayLabel;
+
+  /// No description provided for @recurringTaskFabTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add recurring task'**
+  String get recurringTaskFabTooltip;
+
+  /// No description provided for @recurringTaskScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add recurring task'**
+  String get recurringTaskScreenTitle;
+
+  /// No description provided for @recurringTaskTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Task content (e.g. Part-time job)'**
+  String get recurringTaskTitleHint;
+
+  /// No description provided for @recurringWeekdaysLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Days of week'**
+  String get recurringWeekdaysLabel;
+
+  /// No description provided for @recurringPeriodLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get recurringPeriodLabel;
+
+  /// No description provided for @specifyTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Specify a time'**
+  String get specifyTimeLabel;
+
+  /// No description provided for @recurringTaskCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tasks will be created'**
+  String recurringTaskCount(int count);
+
+  /// No description provided for @recurringTaskSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring task: {title} ({weekdays})'**
+  String recurringTaskSummary(String title, String weekdays);
+
+  /// No description provided for @recurringTitleRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a task title'**
+  String get recurringTitleRequiredError;
+
+  /// No description provided for @recurringSelectWeekdayError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select at least one day of the week'**
+  String get recurringSelectWeekdayError;
+
+  /// No description provided for @recurringInvalidPeriodError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please set an end date on or after the start date'**
+  String get recurringInvalidPeriodError;
+
+  /// No description provided for @recurringStartTimeRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please set a start time'**
+  String get recurringStartTimeRequiredError;
+
+  /// No description provided for @recurringTooManyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Only up to {max} tasks can be created at once'**
+  String recurringTooManyError(int max);
 
   /// No description provided for @ideasEmpty.
   ///

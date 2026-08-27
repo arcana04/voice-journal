@@ -5,6 +5,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 
 import '../l10n/l10n_utils.dart';
 import '../models/custom_word.dart';
+import '../models/diary_style.dart';
 import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
 import '../models/summary_level.dart';
@@ -14,7 +15,8 @@ import 'auth_service.dart';
 
 class BackendServiceException implements Exception {
   final String message;
-  BackendServiceException(this.message);
+  final String? code;
+  BackendServiceException(this.message, {this.code});
 
   @override
   String toString() => message;
@@ -27,6 +29,7 @@ class BackendService {
     File audioFile, {
     List<CustomWord> customWords = const [],
     SummaryLevel summaryLevel = SummaryLevel.preserve,
+    DiaryStyle diaryStyle = DiaryStyle.standard,
     required String locale,
   }) async {
     await _auth.ensureSignedIn();
@@ -42,17 +45,22 @@ class BackendService {
         'mimeType': 'audio/m4a',
         'customWords': customWords.map((w) => w.toJson()).toList(),
         'summaryLevel': summaryLevel.wireValue,
+        'diaryStyle': diaryStyle.wireValue,
         'locale': locale,
       });
       return _entryFromResponse(result.data);
     } on FirebaseFunctionsException catch (e) {
-      throw BackendServiceException(e.message ?? currentLocalizations().genericProcessingError);
+      throw BackendServiceException(
+        e.message ?? currentLocalizations().genericProcessingError,
+        code: e.code,
+      );
     }
   }
 
   Future<JournalEntry> processTextMemo(
     String text, {
     SummaryLevel summaryLevel = SummaryLevel.preserve,
+    DiaryStyle diaryStyle = DiaryStyle.standard,
     required String locale,
   }) async {
     await _auth.ensureSignedIn();
@@ -63,11 +71,15 @@ class BackendService {
       final result = await callable.call<Map<String, dynamic>>({
         'text': text,
         'summaryLevel': summaryLevel.wireValue,
+        'diaryStyle': diaryStyle.wireValue,
         'locale': locale,
       });
       return _entryFromResponse(result.data);
     } on FirebaseFunctionsException catch (e) {
-      throw BackendServiceException(e.message ?? currentLocalizations().genericProcessingError);
+      throw BackendServiceException(
+        e.message ?? currentLocalizations().genericProcessingError,
+        code: e.code,
+      );
     }
   }
 

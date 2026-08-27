@@ -13,10 +13,12 @@ class _TaskDraft {
   final TaskItem task;
   final TextEditingController titleController;
   DateTime? reminderAt;
+  bool isAllDay;
 
   _TaskDraft(this.task)
       : titleController = TextEditingController(text: task.title),
-        reminderAt = task.reminderAt;
+        reminderAt = task.reminderAt,
+        isAllDay = task.isAllDay;
 
   void dispose() => titleController.dispose();
 }
@@ -112,14 +114,29 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     setState(() => draft.reminderAt = null);
   }
 
+  void _setAllDay(_TaskDraft draft, bool value) {
+    setState(() {
+      draft.isAllDay = value;
+      final at = draft.reminderAt;
+      if (value && at != null) {
+        draft.reminderAt = DateTime(at.year, at.month, at.day);
+      }
+    });
+  }
+
   Future<void> _save(JournalStore store, JournalEntry entry) async {
     for (final d in _drafts ?? const <_TaskDraft>[]) {
       final title = d.titleController.text.trim();
       if (title.isNotEmpty && title != d.task.title) {
         await store.updateTaskTitle(entry, d.task, title);
       }
-      if (d.reminderAt != d.task.reminderAt) {
-        await store.updateTaskReminder(entry, d.task, d.reminderAt);
+      if (d.reminderAt != d.task.reminderAt || d.isAllDay != d.task.isAllDay) {
+        await store.updateTaskReminder(
+          entry,
+          d.task,
+          d.reminderAt,
+          isAllDay: d.isAllDay,
+        );
       }
     }
     if (mounted) Navigator.of(context).pop();
@@ -202,10 +219,17 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
                   icon: const Icon(Icons.event_outlined, size: 16),
                   label: Text(_dateLabel(reminderAt, locale)),
                 ),
-                OutlinedButton.icon(
-                  onPressed: () => _pickReminderTime(draft),
-                  icon: const Icon(Icons.schedule_outlined, size: 16),
-                  label: Text(DateFormat('HH:mm').format(reminderAt)),
+                if (!draft.isAllDay)
+                  OutlinedButton.icon(
+                    onPressed: () => _pickReminderTime(draft),
+                    icon: const Icon(Icons.schedule_outlined, size: 16),
+                    label: Text(DateFormat('HH:mm').format(reminderAt)),
+                  ),
+                FilterChip(
+                  label: Text(l10n.allDayLabel),
+                  selected: draft.isAllDay,
+                  onSelected: (value) => _setAllDay(draft, value),
+                  visualDensity: VisualDensity.compact,
                 ),
                 IconButton(
                   onPressed: () => _clearReminder(draft),

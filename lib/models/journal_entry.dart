@@ -10,6 +10,7 @@ class TaskItem {
   final DateTime? reminderEndAt;
   final bool done;
   final String? calendarEventId;
+  final bool isAllDay;
 
   TaskItem({
     this.id,
@@ -21,6 +22,7 @@ class TaskItem {
     this.reminderEndAt,
     this.done = false,
     this.calendarEventId,
+    this.isAllDay = false,
   });
 
   TaskItem copyWith({
@@ -32,6 +34,7 @@ class TaskItem {
     bool clearReminderEndAt = false,
     String? calendarEventId,
     bool clearCalendarEventId = false,
+    bool? isAllDay,
   }) {
     return TaskItem(
       id: id,
@@ -47,6 +50,7 @@ class TaskItem {
       calendarEventId: clearCalendarEventId
           ? null
           : (calendarEventId ?? this.calendarEventId),
+      isAllDay: clearReminder ? false : (isAllDay ?? this.isAllDay),
     );
   }
 
@@ -61,6 +65,7 @@ class TaskItem {
       'reminder_end_at': reminderEndAt?.toIso8601String(),
       'done': done ? 1 : 0,
       'calendar_event_id': calendarEventId,
+      'is_all_day': isAllDay ? 1 : 0,
     };
   }
 
@@ -79,6 +84,7 @@ class TaskItem {
           reminderEndAtStr != null ? DateTime.tryParse(reminderEndAtStr) : null,
       done: (map['done'] as int? ?? 0) == 1,
       calendarEventId: map['calendar_event_id'] as String?,
+      isAllDay: (map['is_all_day'] as int? ?? 0) == 1,
     );
   }
 
@@ -185,6 +191,10 @@ const String kNoteCategoryIdea = 'アイデア';
 
 class JournalEntry {
   final int? id;
+  /// 端末をまたいだクラウドバックアップ/復元で使う安定ID。ローカルの[id]は
+  /// 端末ごとのSQLite連番なので端末間で一致しない。DbService.insertEntryで
+  /// 未設定なら自動生成される。
+  final String? remoteId;
   final DateTime createdAt;
   final String summary;
   final List<TaskItem> tasks;
@@ -195,6 +205,7 @@ class JournalEntry {
 
   JournalEntry({
     this.id,
+    this.remoteId,
     required this.createdAt,
     required this.summary,
     required this.tasks,
@@ -211,6 +222,7 @@ class JournalEntry {
   }) {
     return JournalEntry(
       id: id,
+      remoteId: remoteId,
       createdAt: createdAt,
       summary: summary,
       tasks: tasks ?? this.tasks,
