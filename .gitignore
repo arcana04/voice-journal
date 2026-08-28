@@ -49,3 +49,8 @@ app.*.map.json
 
 # Claude Code local settings
 .claude/
+
+# Ad-hoc debug artifacts (adb screenshots, uiautomator dumps) saved at repo root
+# during device verification — not source, shouldn't be committed.
+/*.png
+/ui*.xml
