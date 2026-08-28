@@ -84,3 +84,4 @@ workflows:
         submit_to_testflight: true
         beta_groups:
           - Internal Testers
+          - OutTester
