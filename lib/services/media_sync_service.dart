@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_compress/flutter_compress.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 import '../utils/media_type.dart';
 import 'db_service.dart';
@@ -15,13 +17,14 @@ import 'image_storage_service.dart';
 /// として呼び出し側（JournalStore）でゲートする——ここではメールアカウント
 /// を持っているか（匿名ユーザーでないか）だけをチェックする。
 ///
-/// コスト対策として、写真はアップロード前に圧縮し（元のローカルファイルは
-/// 無圧縮のまま）、動画は圧縮せず一定サイズを超えるものはアップロードを
-/// スキップする（動画の圧縮は未対応、既知の制限）。
+/// コスト対策として、写真・動画ともアップロード前に圧縮する（元のローカル
+/// ファイルは無圧縮のまま）。動画は圧縮後も一定サイズを超える場合、あるいは
+/// 圧縮自体に失敗した場合は元のサイズでの上限チェックにフォールバックする。
 class MediaSyncService {
   static const int _maxVideoUploadBytes = 100 * 1024 * 1024; // 100MB
   static const int _imageMaxDimension = 1600;
   static const int _imageQuality = 80;
+  static const int _videoMaxDimension = 1280;
 
   final ImageStorageService _images = ImageStorageService();
 
@@ -37,9 +40,7 @@ class MediaSyncService {
     final file = File(path);
     if (!await file.exists()) return null;
     if (isVideoPath(path)) {
-      final length = await file.length();
-      if (length > _maxVideoUploadBytes) return null;
-      return file.readAsBytes();
+      return _prepareVideoBytesForUpload(path, file);
     }
     final compressed = await FlutterImageCompress.compressWithFile(
       path,
@@ -48,6 +49,47 @@ class MediaSyncService {
       quality: _imageQuality,
     );
     return compressed ?? file.readAsBytes();
+  }
+
+  /// 圧縮後もなお[_maxVideoUploadBytes]を超える場合はアップロードをスキップする。
+  /// 圧縮自体に失敗した場合（未対応コーデック等）は、元のファイルサイズでの
+  /// 上限チェックにフォールバックする。
+  Future<Uint8List?> _prepareVideoBytesForUpload(String path, File file) async {
+    String? tempOutputPath;
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final result = await FlutterCompress.instance.compress(
+        path,
+        const VideoCompressConfig(
+          quality: CompressQuality.medium,
+          maxWidth: _videoMaxDimension,
+          maxHeight: _videoMaxDimension,
+          // アップロードは追記済みのタスクをフォアグラウンドで処理する想定
+          // なので、バックグラウンド継続用のフォアグラウンドサービス
+          // （Android/Play Console側でdataSync種別の申請が必要になる）は使わない。
+          keepAliveInBackground: false,
+        ),
+        outputDirectory: tempDir.path,
+      );
+      if (!result.skipped) {
+        tempOutputPath = result.outputPath;
+      }
+      final outFile = File(result.outputPath);
+      final length = await outFile.length();
+      if (length > _maxVideoUploadBytes) return null;
+      return await outFile.readAsBytes();
+    } catch (e) {
+      debugPrint('video compress failed, falling back to original: $e');
+      final length = await file.length();
+      if (length > _maxVideoUploadBytes) return null;
+      return file.readAsBytes();
+    } finally {
+      if (tempOutputPath != null) {
+        try {
+          await File(tempOutputPath).delete();
+        } catch (_) {}
+      }
+    }
   }
 
   /// [entryId]のまだアップロードしていない添付ファイルをStorageへ送る。

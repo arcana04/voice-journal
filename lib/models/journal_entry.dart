@@ -35,6 +35,20 @@ class TaskItem {
     this.notifyAt,
   });
 
+  /// 終日タスクにユーザーが明示的な通知時刻を設定していない場合の既定値
+  /// （期限日の前日16:00）。期限が今日以前（「牛乳を買わなきゃ」のような当日
+  /// タスクなど）だと前日16:00はすでに過去になり通知が飛ばなくなるため、
+  /// その場合は既定値を設定しない（null＝通知なし、従来どおりの挙動）。
+  static DateTime? defaultAllDayNotifyAt(DateTime dueDate) {
+    final today = DateTime.now();
+    final dueDay = DateTime(dueDate.year, dueDate.month, dueDate.day);
+    if (!dueDay.isAfter(DateTime(today.year, today.month, today.day))) {
+      return null;
+    }
+    final dayBefore = dueDay.subtract(const Duration(days: 1));
+    return DateTime(dayBefore.year, dayBefore.month, dayBefore.day, 16);
+  }
+
   TaskItem copyWith({
     bool? done,
     String? title,
@@ -111,20 +125,24 @@ class TaskItem {
     final dueDateStr = json['due_date'] as String?;
     final reminderAtStr = json['reminder_at'] as String?;
     final reminderEndAtStr = json['reminder_end_at'] as String?;
+    final dueDate = dueDateStr != null ? DateTime.tryParse(dueDateStr) : null;
     final reminderAt = reminderAtStr != null
         ? DateTime.tryParse(reminderAtStr)
         : null;
+    // AIが期限日だけを抽出し、時刻を抽出できなかった場合は終日タスク扱いにする。
+    final isAllDay = dueDate != null && reminderAt == null;
     return TaskItem(
       title: (json['title'] as String? ?? '').trim(),
       dueHint: json['due_hint'] as String?,
-      dueDate: dueDateStr != null ? DateTime.tryParse(dueDateStr) : null,
+      dueDate: dueDate,
       reminderAt: reminderAt,
       reminderEndAt: reminderEndAtStr != null
           ? DateTime.tryParse(reminderEndAtStr)
           : null,
+      isAllDay: isAllDay,
       // AIが時刻を抽出した直後は、通知時刻も開始時刻と同じにしておく（後から
-      // TaskEditScreenで両者を独立に変更できる）。
-      notifyAt: reminderAt,
+      // TaskEditScreenで両者を独立に変更できる）。終日タスクは前日16:00を既定にする。
+      notifyAt: isAllDay ? TaskItem.defaultAllDayNotifyAt(dueDate) : reminderAt,
     );
   }
 }

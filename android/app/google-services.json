@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "447725635348-iav8t0dep2esmp4i6u8u571na0knbelu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.voicejournal.voicejournal",
+            "certificate_hash": "a13ea01d41b729d7ae9856cd15e294628fe4831e"
+          }
+        },
+        {
           "client_id": "447725635348-4sjd4q3qlelubsip8c96tmeomhp97sdd.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,6 +37,13 @@
             {
               "client_id": "447725635348-4sjd4q3qlelubsip8c96tmeomhp97sdd.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "447725635348-1tao3s49fsr220jvckludu4c0nvmasrd.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.arcana04.voicejournal"
+              }
             }
           ]
         }

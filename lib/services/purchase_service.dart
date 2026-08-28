@@ -58,6 +58,24 @@ class PurchaseService {
     }
   }
 
+  /// Pro機能のうち、写真・動画のクラウド同期だけはサブスク（月額/年額）限定で、
+  /// 買い切りプランの購入者には提供しない（継続的なストレージコストが発生する
+  /// 機能を、単発の売り切り収益だけで無期限に賄うのを避けるため）。買い切り購入は
+  /// 有効期限のないエンタイトルメントとして付与されるため、[expirationDate]の
+  /// 有無でサブスクかどうかを判定できる。
+  Future<bool> hasMediaSyncEntitlement() async {
+    if (!_configured) return false;
+    try {
+      final info = await Purchases.getCustomerInfo();
+      final entitlement =
+          info.entitlements.active[RevenueCatConfig.proEntitlementId];
+      return entitlement != null && entitlement.expirationDate != null;
+    } catch (e) {
+      debugPrint('RevenueCat getCustomerInfo failed: $e');
+      return false;
+    }
+  }
+
   void addCustomerInfoListener(void Function(CustomerInfo) listener) {
     if (!_configured) return;
     Purchases.addCustomerInfoUpdateListener(listener);

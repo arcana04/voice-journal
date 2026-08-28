@@ -1,14 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
+import '../services/auth_service.dart';
 import '../state/account_store.dart';
 import '../state/journal_store.dart';
 import '../state/subscription_store.dart';
 
-enum _AuthMode { signUp, signIn }
-
-/// メールアカウントのサインアップ/サインイン/管理画面。
+/// Google/Appleサインイン・アカウント管理画面。
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
 
@@ -17,24 +18,10 @@ class AccountScreen extends StatefulWidget {
 }
 
 class _AccountScreenState extends State<AccountScreen> {
-  _AuthMode _mode = _AuthMode.signUp;
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
   bool _busy = false;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
 
   String _messageFor(AppLocalizations l10n, AccountErrorReason reason) {
     return switch (reason) {
-      AccountErrorReason.emailAlreadyInUse => l10n.accountErrorEmailAlreadyInUse,
-      AccountErrorReason.invalidEmail => l10n.accountErrorInvalidEmail,
-      AccountErrorReason.weakPassword => l10n.accountErrorWeakPassword,
-      AccountErrorReason.invalidCredential => l10n.accountErrorInvalidCredential,
       AccountErrorReason.networkError => l10n.accountErrorNetwork,
       AccountErrorReason.unknown => l10n.accountErrorUnknown,
     };
@@ -69,8 +56,8 @@ class _AccountScreenState extends State<AccountScreen> {
     if (!mounted) return;
     await context.read<SubscriptionStore>().switchUser(uid);
     if (!mounted) return;
-    final isPro = context.read<SubscriptionStore>().isPro;
-    await context.read<JournalStore>().fullSync(isPro: isPro);
+    final canSyncMedia = context.read<SubscriptionStore>().isProWithMediaSync;
+    await context.read<JournalStore>().fullSync(canSyncMedia: canSyncMedia);
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
     await _showMessage(l10n.accountSyncCompleteTitle, l10n.accountSyncCompleteMessage);
@@ -78,17 +65,15 @@ class _AccountScreenState extends State<AccountScreen> {
     Navigator.of(context).pop();
   }
 
-  Future<void> _submit() async {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text;
-    if (email.isEmpty || password.isEmpty) return;
+  Future<void> _signInWithGoogle() async {
     setState(() => _busy = true);
     try {
       final accountStore = context.read<AccountStore>();
-      final uid = _mode == _AuthMode.signUp
-          ? await accountStore.signUp(email, password)
-          : await accountStore.signIn(email, password);
+      final credential = await accountStore.googleCredential();
+      final uid = await accountStore.signInWithCredential(credential);
       await _afterAuthSuccess(uid);
+    } on SignInCancelledException {
+      // ユーザーがピッカーを閉じただけなのでエラー表示はしない。
     } catch (e) {
       await _showError(e);
     } finally {
@@ -96,18 +81,15 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
-  Future<void> _forgotPassword() async {
-    final email = _emailController.text.trim();
-    if (email.isEmpty) return;
+  Future<void> _signInWithApple() async {
     setState(() => _busy = true);
     try {
-      await context.read<AccountStore>().sendPasswordReset(email);
-      if (!mounted) return;
-      final l10n = AppLocalizations.of(context)!;
-      await _showMessage(
-        l10n.accountPasswordResetSentTitle,
-        l10n.accountPasswordResetSentMessage,
-      );
+      final accountStore = context.read<AccountStore>();
+      final credential = await accountStore.appleCredential();
+      final uid = await accountStore.signInWithCredential(credential);
+      await _afterAuthSuccess(uid);
+    } on SignInCancelledException {
+      // ユーザーが認証をキャンセルしただけなのでエラー表示はしない。
     } catch (e) {
       await _showError(e);
     } finally {
@@ -149,8 +131,8 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _fullSync() async {
     setState(() => _busy = true);
     try {
-      final isPro = context.read<SubscriptionStore>().isPro;
-      await context.read<JournalStore>().fullSync(isPro: isPro);
+      final canSyncMedia = context.read<SubscriptionStore>().isProWithMediaSync;
+      await context.read<JournalStore>().fullSync(canSyncMedia: canSyncMedia);
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(
@@ -178,13 +160,14 @@ class _AccountScreenState extends State<AccountScreen> {
 
   Widget _buildSignedIn(AppLocalizations l10n, AccountStore accountStore) {
     final theme = Theme.of(context);
+    final canSyncMedia = context.watch<SubscriptionStore>().isProWithMediaSync;
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.account_circle_outlined),
-          title: Text(accountStore.email ?? ''),
+          title: Text(accountStore.displayLabel),
         ),
         const SizedBox(height: 16),
         FilledButton.icon(
@@ -192,6 +175,8 @@ class _AccountScreenState extends State<AccountScreen> {
           icon: const Icon(Icons.cloud_sync_outlined),
           label: Text(l10n.accountRestoreButton),
         ),
+        const SizedBox(height: 12),
+        _MediaSyncNotice(canSyncMedia: canSyncMedia, l10n: l10n),
         const SizedBox(height: 12),
         OutlinedButton(
           onPressed: _busy ? null : _signOut,
@@ -213,73 +198,89 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildSignedOut(AppLocalizations l10n) {
-    final theme = Theme.of(context);
+    final canSyncMedia = context.watch<SubscriptionStore>().isProWithMediaSync;
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         Text(
           l10n.accountNotSignedInDescription,
-          style: theme.textTheme.bodyMedium,
-        ),
-        const SizedBox(height: 20),
-        SegmentedButton<_AuthMode>(
-          segments: [
-            ButtonSegment(
-              value: _AuthMode.signUp,
-              label: Text(l10n.accountSignUpTab),
-            ),
-            ButtonSegment(
-              value: _AuthMode.signIn,
-              label: Text(l10n.accountSignInTab),
-            ),
-          ],
-          selected: {_mode},
-          onSelectionChanged: (selection) =>
-              setState(() => _mode = selection.first),
-        ),
-        const SizedBox(height: 20),
-        TextField(
-          controller: _emailController,
-          keyboardType: TextInputType.emailAddress,
-          autocorrect: false,
-          decoration: InputDecoration(
-            labelText: l10n.accountEmailLabel,
-            border: const OutlineInputBorder(),
-          ),
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: 12),
-        TextField(
-          controller: _passwordController,
-          obscureText: true,
-          decoration: InputDecoration(
-            labelText: l10n.accountPasswordLabel,
-            border: const OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 20),
+        _MediaSyncNotice(canSyncMedia: canSyncMedia, l10n: l10n),
+        const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,
-          child: FilledButton(
-            onPressed: _busy ? null : _submit,
-            child: Text(
-              _mode == _AuthMode.signUp
-                  ? l10n.accountSignUpButton
-                  : l10n.accountSignInButton,
+          child: OutlinedButton.icon(
+            onPressed: _busy ? null : _signInWithGoogle,
+            icon: const Icon(Icons.g_mobiledata, size: 28),
+            label: Text(l10n.accountSignInWithGoogle),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        Center(
-          child: TextButton(
-            onPressed: _busy ? null : _forgotPassword,
-            child: Text(l10n.accountForgotPassword),
+        if (Platform.isIOS) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _busy ? null : _signInWithApple,
+              icon: const Icon(Icons.apple, size: 22),
+              label: Text(l10n.accountSignInWithApple),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
           ),
-        ),
+        ],
         if (_busy) ...[
           const SizedBox(height: 20),
           const Center(child: CircularProgressIndicator()),
         ],
       ],
+    );
+  }
+}
+
+/// 写真・動画がクラウド同期の対象かどうか（サブスクプラン限定、買い切りは対象外）
+/// を明示するための注記。
+class _MediaSyncNotice extends StatelessWidget {
+  final bool canSyncMedia;
+  final AppLocalizations l10n;
+
+  const _MediaSyncNotice({required this.canSyncMedia, required this.l10n});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            canSyncMedia ? Icons.cloud_done_outlined : Icons.cloud_off_outlined,
+            size: 18,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              canSyncMedia ? l10n.accountMediaSyncProNote : l10n.accountMediaSyncFreeNote,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

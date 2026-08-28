@@ -344,44 +344,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get accountNotSignedInDescription =>
-      'メールアカウントを作成すると、他の端末でも同じ日記データを引き継げます';
+      'Google/Appleアカウントでログインすると、他の端末でも同じ日記データを引き継げます';
 
   @override
   String get accountScreenTitle => 'アカウント';
 
   @override
-  String get accountSignUpTab => 'アカウント作成';
+  String get accountSignInWithGoogle => 'Googleでサインイン';
 
   @override
-  String get accountSignInTab => 'ログイン';
-
-  @override
-  String get accountEmailLabel => 'メールアドレス';
-
-  @override
-  String get accountPasswordLabel => 'パスワード';
-
-  @override
-  String get accountSignUpButton => 'アカウントを作成';
-
-  @override
-  String get accountSignInButton => 'ログイン';
-
-  @override
-  String get accountForgotPassword => 'パスワードを忘れた方はこちら';
-
-  @override
-  String get accountPasswordResetSentTitle => '送信しました';
-
-  @override
-  String get accountPasswordResetSentMessage =>
-      'パスワード再設定用のメールを送信しました。メールをご確認ください。';
+  String get accountSignInWithApple => 'Appleでサインイン';
 
   @override
   String get accountSignOutButton => 'ログアウト';
-
-  @override
-  String get accountBackupNowButton => '今すぐバックアップ';
 
   @override
   String get accountRestoreButton => 'クラウドから復元';
@@ -399,19 +374,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get accountErrorTitle => 'エラー';
 
   @override
-  String get accountErrorEmailAlreadyInUse =>
-      'このメールアドレスは既に登録されています。ログインをお試しください。';
-
-  @override
-  String get accountErrorInvalidEmail => 'メールアドレスの形式が正しくありません。';
-
-  @override
-  String get accountErrorWeakPassword => 'パスワードは6文字以上にしてください。';
-
-  @override
-  String get accountErrorInvalidCredential => 'メールアドレスまたはパスワードが正しくありません。';
-
-  @override
   String get accountErrorNetwork => '通信エラーが発生しました。しばらくしてから再度お試しください。';
 
   @override
@@ -423,6 +385,13 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get accountSignOutConfirmMessage =>
       '端末内のデータは削除されません。再度ログインすると同期を再開できます。';
+
+  @override
+  String get accountMediaSyncFreeNote =>
+      'バックアップされるのは日記・アイデア・タスクのテキストのみです。写真・動画はクラウドに同期されません（月額/年額プラン限定機能、買い切りプランは対象外）。';
+
+  @override
+  String get accountMediaSyncProNote => '写真・動画もクラウドにバックアップされます。';
 
   @override
   String get supportSectionTitle => 'サポート';
@@ -473,7 +442,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get paywallBenefitCustomBackground => '日記の背景に自分の写真を使える';
 
   @override
-  String get paywallBenefitMediaSync => '日記に添付した写真・動画もクラウドにバックアップ';
+  String get paywallBenefitMediaSync =>
+      '日記に添付した写真・動画もクラウドにバックアップ（月額/年額プラン限定・買い切りプランは対象外）';
 
   @override
   String get paywallBenefitKnowledgeBase => '「相談」でこれまでの記録を横断してAIに質問できる';
@@ -498,6 +468,27 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get paywallRestoreNotFound => '復元できる購入が見つかりませんでした。';
+
+  @override
+  String get paywallPlanMonthly => '月額プラン';
+
+  @override
+  String get paywallPlanAnnual => '年額プラン';
+
+  @override
+  String get paywallPlanLifetime => '買い切りプラン';
+
+  @override
+  String get paywallPlanRecommended => 'おすすめ';
+
+  @override
+  String get paywallPlanLifetimeCaption => '写真・動画のクラウド同期以外は使い放題';
+
+  @override
+  String get paywallPlanComingSoon => '近日公開';
+
+  @override
+  String get paywallContinueButton => '続ける';
 
   @override
   String homeUsageToday(int used, int limit) {
@@ -768,51 +759,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get manualTaskTitleRequiredError => 'タスク内容を入力してください';
-
-  @override
-  String get recurringTaskFabTooltip => '繰り返しタスクを追加';
-
-  @override
-  String get recurringTaskScreenTitle => '繰り返しタスクを追加';
-
-  @override
-  String get recurringTaskTitleHint => 'タスク内容（例: バイト）';
-
-  @override
-  String get recurringWeekdaysLabel => '曜日';
-
-  @override
-  String get recurringPeriodLabel => '期間';
-
-  @override
-  String get specifyTimeLabel => '時刻を指定';
-
-  @override
-  String recurringTaskCount(int count) {
-    return '$count件のタスクを作成します';
-  }
-
-  @override
-  String recurringTaskSummary(String title, String weekdays) {
-    return '繰り返しタスク：$title（$weekdays）';
-  }
-
-  @override
-  String get recurringTitleRequiredError => 'タスクの内容を入力してください';
-
-  @override
-  String get recurringSelectWeekdayError => '曜日を1つ以上選んでください';
-
-  @override
-  String get recurringInvalidPeriodError => '終了日は開始日以降にしてください';
-
-  @override
-  String get recurringStartTimeRequiredError => '開始時刻を設定してください';
-
-  @override
-  String recurringTooManyError(int max) {
-    return '一度に作成できるのは$max件までです';
-  }
 
   @override
   String get ideasEmpty => 'まだアイデアがありません\n思いついたことを話してみましょう';

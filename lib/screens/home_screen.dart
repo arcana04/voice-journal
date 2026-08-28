@@ -280,6 +280,8 @@ class _HomeScreenState extends State<HomeScreen> {
           dueDate: task.dueDate,
           reminderAt: task.reminderAt,
           reminderEndAt: task.reminderEndAt,
+          isAllDay: task.isAllDay,
+          notifyAt: task.notifyAt,
         ),
       );
     }

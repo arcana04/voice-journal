@@ -33,7 +33,7 @@ class DiaryViewScreen extends StatelessWidget {
     JournalEntry entry,
   ) async {
     final l10n = AppLocalizations.of(context)!;
-    final isPro = context.read<SubscriptionStore>().isPro;
+    final canSyncMedia = context.read<SubscriptionStore>().isProWithMediaSync;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -52,7 +52,7 @@ class DiaryViewScreen extends StatelessWidget {
       ),
     );
     if (confirmed != true) return;
-    await store.deleteEntry(entry, isPro: isPro);
+    await store.deleteEntry(entry, canSyncMedia: canSyncMedia);
     if (context.mounted) Navigator.of(context).pop();
   }
 

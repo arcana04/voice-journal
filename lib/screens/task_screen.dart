@@ -8,7 +8,6 @@ import '../widgets/app_background_image.dart';
 import '../widgets/scrim_text.dart';
 import '../widgets/task_entry_card.dart';
 import 'manual_task_screen.dart';
-import 'recurring_task_screen.dart';
 import 'task_edit_screen.dart';
 
 enum _TaskFilter { all, today, thisWeek, withinMonth, completed }
@@ -129,15 +128,6 @@ class _TaskScreenState extends State<TaskScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FloatingActionButton.small(
-              heroTag: 'recurring_task_fab',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const RecurringTaskScreen()),
-              ),
-              tooltip: AppLocalizations.of(context)!.recurringTaskFabTooltip,
-              child: const Icon(Icons.repeat),
-            ),
-            const SizedBox(height: 12),
             FloatingActionButton(
               heroTag: 'manual_task_fab',
               onPressed: () => Navigator.of(context).push(

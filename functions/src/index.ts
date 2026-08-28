@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions/v2";
@@ -513,6 +514,38 @@ export const getUsageStatus = onCall(async (request) => {
 });
 
 /**
+ * ユーザーの写真・動画（users/{uid}/entries/*\/media/*）のストレージクラスを
+ * 一括変更する。Proが失効したら低頻度アクセス向けの安価なクラスに移し、
+ * 再度Proに復帰したら標準クラスに戻す——バイト単価はどちらも即時ダウンロード
+ * 可能な点は変わらないので、ユーザー体験に影響しない。
+ */
+async function setUserMediaStorageClass(
+  uid: string,
+  storageClass: "STANDARD" | "COLDLINE"
+): Promise<void> {
+  try {
+    const bucket = getStorage().bucket();
+    const [files] = await bucket.getFiles({ prefix: `users/${uid}/entries/` });
+    await Promise.all(
+      files
+        .filter((f) => f.name.includes("/media/"))
+        .map((f) =>
+          f.setStorageClass(storageClass).catch((err) => {
+            logger.error("setUserMediaStorageClass failed for file", {
+              uid,
+              file: f.name,
+              storageClass,
+              err,
+            });
+          })
+        )
+    );
+  } catch (err) {
+    logger.error("setUserMediaStorageClass failed", { uid, storageClass, err });
+  }
+}
+
+/**
  * RevenueCatからのWebhook受信エンドポイント。RevenueCatダッシュボードの
  * Webhook設定でこの関数のURLを登録し、AuthorizationヘッダーにREVENUECAT_WEBHOOK_SECRET
  * の値を設定する。app_user_idにはクライアント側でFirebase AuthのUIDを渡している
@@ -557,7 +590,9 @@ export const revenueCatWebhook = onRequest(
           (!event?.entitlement_ids ||
             event.entitlement_ids.includes(PRO_ENTITLEMENT_ID));
         const db = getFirestore();
-        await db.collection("users").doc(uid).set(
+        const userRef = db.collection("users").doc(uid);
+        const previousIsPro = (await userRef.get()).data()?.isPro === true;
+        await userRef.set(
           {
             isPro,
             revenueCatEventType: eventType,
@@ -573,6 +608,15 @@ export const revenueCatWebhook = onRequest(
           await getAuth().setCustomUserClaims(uid, { isPro });
         } catch (claimErr) {
           logger.error("revenueCatWebhook setCustomUserClaims failed", claimErr);
+        }
+
+        // 失効/復帰の「遷移」のときだけメディアのストレージクラスを移動する
+        // （RENEWALなど既にPro/非Proのまま変わらないイベントでは何もしない
+        // ——書き換えのたびに課金が発生するオペレーションなので不要な実行を避ける）。
+        if (eventType === "EXPIRATION") {
+          await setUserMediaStorageClass(uid, "COLDLINE");
+        } else if (isPro && !previousIsPro) {
+          await setUserMediaStorageClass(uid, "STANDARD");
         }
       }
 

@@ -725,7 +725,7 @@ abstract class AppLocalizations {
   /// No description provided for @accountNotSignedInDescription.
   ///
   /// In en, this message translates to:
-  /// **'Create an email account to carry your diary data over to other devices'**
+  /// **'Sign in with Google or Apple to carry your diary data over to other devices'**
   String get accountNotSignedInDescription;
 
   /// No description provided for @accountScreenTitle.
@@ -734,71 +734,23 @@ abstract class AppLocalizations {
   /// **'Account'**
   String get accountScreenTitle;
 
-  /// No description provided for @accountSignUpTab.
+  /// No description provided for @accountSignInWithGoogle.
   ///
   /// In en, this message translates to:
-  /// **'Create account'**
-  String get accountSignUpTab;
+  /// **'Sign in with Google'**
+  String get accountSignInWithGoogle;
 
-  /// No description provided for @accountSignInTab.
+  /// No description provided for @accountSignInWithApple.
   ///
   /// In en, this message translates to:
-  /// **'Sign in'**
-  String get accountSignInTab;
-
-  /// No description provided for @accountEmailLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Email address'**
-  String get accountEmailLabel;
-
-  /// No description provided for @accountPasswordLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Password'**
-  String get accountPasswordLabel;
-
-  /// No description provided for @accountSignUpButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Create account'**
-  String get accountSignUpButton;
-
-  /// No description provided for @accountSignInButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in'**
-  String get accountSignInButton;
-
-  /// No description provided for @accountForgotPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Forgot your password?'**
-  String get accountForgotPassword;
-
-  /// No description provided for @accountPasswordResetSentTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Sent'**
-  String get accountPasswordResetSentTitle;
-
-  /// No description provided for @accountPasswordResetSentMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'A password reset email has been sent. Please check your inbox.'**
-  String get accountPasswordResetSentMessage;
+  /// **'Sign in with Apple'**
+  String get accountSignInWithApple;
 
   /// No description provided for @accountSignOutButton.
   ///
   /// In en, this message translates to:
   /// **'Sign out'**
   String get accountSignOutButton;
-
-  /// No description provided for @accountBackupNowButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Back up now'**
-  String get accountBackupNowButton;
 
   /// No description provided for @accountRestoreButton.
   ///
@@ -830,30 +782,6 @@ abstract class AppLocalizations {
   /// **'Error'**
   String get accountErrorTitle;
 
-  /// No description provided for @accountErrorEmailAlreadyInUse.
-  ///
-  /// In en, this message translates to:
-  /// **'This email is already registered. Try signing in instead.'**
-  String get accountErrorEmailAlreadyInUse;
-
-  /// No description provided for @accountErrorInvalidEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'That email address doesn\'t look valid.'**
-  String get accountErrorInvalidEmail;
-
-  /// No description provided for @accountErrorWeakPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Password must be at least 6 characters.'**
-  String get accountErrorWeakPassword;
-
-  /// No description provided for @accountErrorInvalidCredential.
-  ///
-  /// In en, this message translates to:
-  /// **'Incorrect email or password.'**
-  String get accountErrorInvalidCredential;
-
   /// No description provided for @accountErrorNetwork.
   ///
   /// In en, this message translates to:
@@ -877,6 +805,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your data on this device won\'t be deleted. Sign back in anytime to resume syncing.'**
   String get accountSignOutConfirmMessage;
+
+  /// No description provided for @accountMediaSyncFreeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Only text (diary entries, ideas, and tasks) is backed up. Photos and videos aren\'t synced to the cloud — that\'s limited to the monthly/annual plans (not included with the lifetime plan).'**
+  String get accountMediaSyncFreeNote;
+
+  /// No description provided for @accountMediaSyncProNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and videos are backed up to the cloud too.'**
+  String get accountMediaSyncProNote;
 
   /// No description provided for @supportSectionTitle.
   ///
@@ -977,7 +917,7 @@ abstract class AppLocalizations {
   /// No description provided for @paywallBenefitMediaSync.
   ///
   /// In en, this message translates to:
-  /// **'Cloud backup for photos and videos attached to entries'**
+  /// **'Cloud backup for photos and videos attached to entries (monthly/annual plans only — not included with the lifetime plan)'**
   String get paywallBenefitMediaSync;
 
   /// No description provided for @paywallBenefitKnowledgeBase.
@@ -1027,6 +967,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No restorable purchase was found.'**
   String get paywallRestoreNotFound;
+
+  /// No description provided for @paywallPlanMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get paywallPlanMonthly;
+
+  /// No description provided for @paywallPlanAnnual.
+  ///
+  /// In en, this message translates to:
+  /// **'Annual'**
+  String get paywallPlanAnnual;
+
+  /// No description provided for @paywallPlanLifetime.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifetime'**
+  String get paywallPlanLifetime;
+
+  /// No description provided for @paywallPlanRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get paywallPlanRecommended;
+
+  /// No description provided for @paywallPlanLifetimeCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything except cloud photo/video sync'**
+  String get paywallPlanLifetimeCaption;
+
+  /// No description provided for @paywallPlanComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get paywallPlanComingSoon;
+
+  /// No description provided for @paywallContinueButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get paywallContinueButton;
 
   /// No description provided for @homeUsageToday.
   ///
@@ -1555,84 +1537,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please enter a task'**
   String get manualTaskTitleRequiredError;
-
-  /// No description provided for @recurringTaskFabTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Add recurring task'**
-  String get recurringTaskFabTooltip;
-
-  /// No description provided for @recurringTaskScreenTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Add recurring task'**
-  String get recurringTaskScreenTitle;
-
-  /// No description provided for @recurringTaskTitleHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Task content (e.g. Part-time job)'**
-  String get recurringTaskTitleHint;
-
-  /// No description provided for @recurringWeekdaysLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Days of week'**
-  String get recurringWeekdaysLabel;
-
-  /// No description provided for @recurringPeriodLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Period'**
-  String get recurringPeriodLabel;
-
-  /// No description provided for @specifyTimeLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Specify a time'**
-  String get specifyTimeLabel;
-
-  /// No description provided for @recurringTaskCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} tasks will be created'**
-  String recurringTaskCount(int count);
-
-  /// No description provided for @recurringTaskSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Recurring task: {title} ({weekdays})'**
-  String recurringTaskSummary(String title, String weekdays);
-
-  /// No description provided for @recurringTitleRequiredError.
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter a task title'**
-  String get recurringTitleRequiredError;
-
-  /// No description provided for @recurringSelectWeekdayError.
-  ///
-  /// In en, this message translates to:
-  /// **'Please select at least one day of the week'**
-  String get recurringSelectWeekdayError;
-
-  /// No description provided for @recurringInvalidPeriodError.
-  ///
-  /// In en, this message translates to:
-  /// **'Please set an end date on or after the start date'**
-  String get recurringInvalidPeriodError;
-
-  /// No description provided for @recurringStartTimeRequiredError.
-  ///
-  /// In en, this message translates to:
-  /// **'Please set a start time'**
-  String get recurringStartTimeRequiredError;
-
-  /// No description provided for @recurringTooManyError.
-  ///
-  /// In en, this message translates to:
-  /// **'Only up to {max} tasks can be created at once'**
-  String recurringTooManyError(int max);
 
   /// No description provided for @ideasEmpty.
   ///

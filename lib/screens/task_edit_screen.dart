@@ -150,6 +150,7 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
         draft.endAt = null;
         if (at != null) {
           draft.startAt = DateTime(at.year, at.month, at.day);
+          draft.notifyAt ??= TaskItem.defaultAllDayNotifyAt(draft.startAt!);
         }
       }
     });

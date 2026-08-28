@@ -128,32 +128,22 @@
     "placeholders": { "email": { "type": "String" } }
   },
   "accountNotSignedIn": "Not signed in",
-  "accountNotSignedInDescription": "Create an email account to carry your diary data over to other devices",
+  "accountNotSignedInDescription": "Sign in with Google or Apple to carry your diary data over to other devices",
   "accountScreenTitle": "Account",
-  "accountSignUpTab": "Create account",
-  "accountSignInTab": "Sign in",
-  "accountEmailLabel": "Email address",
-  "accountPasswordLabel": "Password",
-  "accountSignUpButton": "Create account",
-  "accountSignInButton": "Sign in",
-  "accountForgotPassword": "Forgot your password?",
-  "accountPasswordResetSentTitle": "Sent",
-  "accountPasswordResetSentMessage": "A password reset email has been sent. Please check your inbox.",
+  "accountSignInWithGoogle": "Sign in with Google",
+  "accountSignInWithApple": "Sign in with Apple",
   "accountSignOutButton": "Sign out",
-  "accountBackupNowButton": "Back up now",
   "accountRestoreButton": "Restore from cloud",
   "accountSyncingMessage": "Syncing…",
   "accountSyncCompleteTitle": "Done",
   "accountSyncCompleteMessage": "Sync complete.",
   "accountErrorTitle": "Error",
-  "accountErrorEmailAlreadyInUse": "This email is already registered. Try signing in instead.",
-  "accountErrorInvalidEmail": "That email address doesn't look valid.",
-  "accountErrorWeakPassword": "Password must be at least 6 characters.",
-  "accountErrorInvalidCredential": "Incorrect email or password.",
   "accountErrorNetwork": "A network error occurred. Please try again shortly.",
   "accountErrorUnknown": "Something went wrong. Please try again shortly.",
   "accountSignOutConfirmTitle": "Sign out?",
   "accountSignOutConfirmMessage": "Your data on this device won't be deleted. Sign back in anytime to resume syncing.",
+  "accountMediaSyncFreeNote": "Only text (diary entries, ideas, and tasks) is backed up. Photos and videos aren't synced to the cloud — that's limited to the monthly/annual plans (not included with the lifetime plan).",
+  "accountMediaSyncProNote": "Photos and videos are backed up to the cloud too.",
 
   "supportSectionTitle": "Support",
   "contactSupportTitle": "Contact us",
@@ -172,7 +162,7 @@
   "paywallBenefitCount": "Record up to 30 times a day (3 times on the free plan)",
   "paywallBenefitDiaryStyle": "9 diary writing styles to choose from (standard only on the free plan)",
   "paywallBenefitCustomBackground": "Use your own photos as diary backgrounds",
-  "paywallBenefitMediaSync": "Cloud backup for photos and videos attached to entries",
+  "paywallBenefitMediaSync": "Cloud backup for photos and videos attached to entries (monthly/annual plans only — not included with the lifetime plan)",
   "paywallBenefitKnowledgeBase": "Ask AI questions across all your past entries in \"Ask\"",
   "paywallBenefitWeeklyReport": "Get an AI-written Weekly Brain Report looking back on your week",
   "paywallUnavailable": "Couldn't load plans right now. Please try again later.",
@@ -181,6 +171,13 @@
   "paywallPrivacy": "Privacy Policy",
   "paywallPurchaseFailed": "Something went wrong. Please try again later.",
   "paywallRestoreNotFound": "No restorable purchase was found.",
+  "paywallPlanMonthly": "Monthly",
+  "paywallPlanAnnual": "Annual",
+  "paywallPlanLifetime": "Lifetime",
+  "paywallPlanRecommended": "Recommended",
+  "paywallPlanLifetimeCaption": "Everything except cloud photo/video sync",
+  "paywallPlanComingSoon": "Coming soon",
+  "paywallContinueButton": "Continue",
 
   "homeUsageToday": "Today {used} / {limit}",
   "@homeUsageToday": {
@@ -283,32 +280,6 @@
   "manualTaskScreenTitle": "Add task",
   "manualTaskTitleHint": "Task (e.g. Buy milk)",
   "manualTaskTitleRequiredError": "Please enter a task",
-
-  "recurringTaskFabTooltip": "Add recurring task",
-  "recurringTaskScreenTitle": "Add recurring task",
-  "recurringTaskTitleHint": "Task content (e.g. Part-time job)",
-  "recurringWeekdaysLabel": "Days of week",
-  "recurringPeriodLabel": "Period",
-  "specifyTimeLabel": "Specify a time",
-  "recurringTaskCount": "{count} tasks will be created",
-  "@recurringTaskCount": {
-    "placeholders": { "count": { "type": "int" } }
-  },
-  "recurringTaskSummary": "Recurring task: {title} ({weekdays})",
-  "@recurringTaskSummary": {
-    "placeholders": {
-      "title": { "type": "String" },
-      "weekdays": { "type": "String" }
-    }
-  },
-  "recurringTitleRequiredError": "Please enter a task title",
-  "recurringSelectWeekdayError": "Please select at least one day of the week",
-  "recurringInvalidPeriodError": "Please set an end date on or after the start date",
-  "recurringStartTimeRequiredError": "Please set a start time",
-  "recurringTooManyError": "Only up to {max} tasks can be created at once",
-  "@recurringTooManyError": {
-    "placeholders": { "max": { "type": "int" } }
-  },
 
   "ideasEmpty": "No ideas yet\nTry saying what comes to mind",
 

@@ -116,6 +116,7 @@ class _ManualTaskScreenState extends State<ManualTaskScreen> {
         _endAt = null;
         if (at != null) {
           _startAt = DateTime(at.year, at.month, at.day);
+          _notifyAt ??= TaskItem.defaultAllDayNotifyAt(_startAt!);
         }
       }
     });

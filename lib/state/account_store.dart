@@ -5,27 +5,18 @@ import 'package:flutter/foundation.dart';
 
 import '../services/auth_service.dart';
 
-/// アカウント作成/失敗理由をUI側で判別できるようにする例外。
+/// アカウント連携エラーの理由。UI側でメッセージ出し分けに使う。
 class AccountException implements Exception {
   final AccountErrorReason reason;
   AccountException(this.reason);
 }
 
-enum AccountErrorReason {
-  /// サインアップ時、そのメールが既に別アカウントに登録済み。
-  emailAlreadyInUse,
-  invalidEmail,
-  weakPassword,
-  /// サインイン時、メール/パスワードが誤っている（存在しない・不一致）。
-  invalidCredential,
-  networkError,
-  unknown,
-}
+enum AccountErrorReason { networkError, unknown }
 
-/// メールアカウントのサインアップ/サインイン/サインアウトを管理する。
-/// 端末は起動時から常にFirebase匿名認証でサインインしている前提
-/// （[AuthService]）で、ここではその匿名ユーザーをメールアカウントへ昇格
-/// （サインアップ）、または別の既存アカウントへの切り替え（サインイン）を行う。
+/// Google/Appleサインインを管理する。端末は起動時から常にFirebase匿名認証で
+/// サインインしている前提（[AuthService]）で、その匿名ユーザーをGoogle/Apple
+/// アカウントへ昇格（初回リンク）、または同じアカウントで既に登録済みの
+/// 別ユーザーへの切り替え（2台目以降の端末など）を行う。
 class AccountStore extends ChangeNotifier {
   final AuthService _authService = AuthService();
   StreamSubscription<User?>? _authSub;
@@ -43,19 +34,15 @@ class AccountStore extends ChangeNotifier {
 
   String? get email => FirebaseAuth.instance.currentUser?.email;
 
+  /// サインイン中のアカウントを表す表示名。Apple の「メールを非公開」選択時など
+  /// emailが取れない場合はdisplayNameにフォールバックする。
+  String get displayLabel {
+    final user = FirebaseAuth.instance.currentUser;
+    return user?.email ?? user?.displayName ?? '';
+  }
+
   AccountErrorReason _reasonFor(FirebaseAuthException e) {
     switch (e.code) {
-      case 'email-already-in-use':
-      case 'credential-already-in-use':
-        return AccountErrorReason.emailAlreadyInUse;
-      case 'invalid-email':
-        return AccountErrorReason.invalidEmail;
-      case 'weak-password':
-        return AccountErrorReason.weakPassword;
-      case 'invalid-credential':
-      case 'wrong-password':
-      case 'user-not-found':
-        return AccountErrorReason.invalidCredential;
       case 'network-request-failed':
         return AccountErrorReason.networkError;
       default:
@@ -63,42 +50,45 @@ class AccountStore extends ChangeNotifier {
     }
   }
 
-  /// 現在の（匿名の）Firebaseユーザーをメール+パスワードのアカウントへ昇格する。
-  /// uidは変わらないため、既存のPro状態・利用回数トラッキングはそのまま引き継がれる。
-  /// 戻り値は新しいuid。
-  Future<String> signUp(String email, String password) async {
+  /// [credential]で認証する。現在が匿名ユーザーならまずそのアカウントへ
+  /// リンクを試み（uidが変わらないため既存のPro状態・利用回数トラッキングは
+  /// そのまま引き継がれる）、そのクレデンシャルが既に別の既存アカウントに
+  /// 紐付いている場合（2台目の端末で同じGoogle/Appleアカウントを選んだ場合
+  /// など）は、そちらの既存アカウントへのサインインにフォールバックする。
+  /// 戻り値は最終的なuid。
+  Future<String> signInWithCredential(AuthCredential credential) async {
     try {
-      final credential = EmailAuthProvider.credential(
-        email: email,
-        password: password,
-      );
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        await _authService.ensureSignedIn();
-        return await signUp(email, password);
+      if (user == null || !user.isAnonymous) {
+        final result = await FirebaseAuth.instance.signInWithCredential(
+          credential,
+        );
+        notifyListeners();
+        return result.user!.uid;
       }
-      final result = await user.linkWithCredential(credential);
-      notifyListeners();
-      return result.user!.uid;
+      try {
+        final result = await user.linkWithCredential(credential);
+        notifyListeners();
+        return result.user!.uid;
+      } on FirebaseAuthException catch (e) {
+        if (e.code != 'credential-already-in-use' &&
+            e.code != 'email-already-in-use') {
+          rethrow;
+        }
+        final result = await FirebaseAuth.instance.signInWithCredential(
+          credential,
+        );
+        notifyListeners();
+        return result.user!.uid;
+      }
     } on FirebaseAuthException catch (e) {
       throw AccountException(_reasonFor(e));
     }
   }
 
-  /// 既存のメールアカウントへサインインする（別端末で作成済みのアカウントに
-  /// この端末を接続する場合など）。uidは既存アカウントのものに切り替わる。
-  Future<String> signIn(String email, String password) async {
-    try {
-      final result = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      notifyListeners();
-      return result.user!.uid;
-    } on FirebaseAuthException catch (e) {
-      throw AccountException(_reasonFor(e));
-    }
-  }
+  Future<AuthCredential> googleCredential() => _authService.signInWithGoogle();
+
+  Future<AuthCredential> appleCredential() => _authService.signInWithApple();
 
   /// サインアウトしてすぐに新しい匿名セッションを再確立する。ローカルの
   /// 日記データは一切削除しない — ログアウトは同期を止めるだけで、
@@ -108,14 +98,6 @@ class AccountStore extends ChangeNotifier {
     final uid = await _authService.ensureSignedIn();
     notifyListeners();
     return uid;
-  }
-
-  Future<void> sendPasswordReset(String email) async {
-    try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-    } on FirebaseAuthException catch (e) {
-      throw AccountException(_reasonFor(e));
-    }
   }
 
   @override

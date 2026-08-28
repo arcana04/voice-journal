@@ -357,44 +357,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountNotSignedInDescription =>
-      'Create an email account to carry your diary data over to other devices';
+      'Sign in with Google or Apple to carry your diary data over to other devices';
 
   @override
   String get accountScreenTitle => 'Account';
 
   @override
-  String get accountSignUpTab => 'Create account';
+  String get accountSignInWithGoogle => 'Sign in with Google';
 
   @override
-  String get accountSignInTab => 'Sign in';
-
-  @override
-  String get accountEmailLabel => 'Email address';
-
-  @override
-  String get accountPasswordLabel => 'Password';
-
-  @override
-  String get accountSignUpButton => 'Create account';
-
-  @override
-  String get accountSignInButton => 'Sign in';
-
-  @override
-  String get accountForgotPassword => 'Forgot your password?';
-
-  @override
-  String get accountPasswordResetSentTitle => 'Sent';
-
-  @override
-  String get accountPasswordResetSentMessage =>
-      'A password reset email has been sent. Please check your inbox.';
+  String get accountSignInWithApple => 'Sign in with Apple';
 
   @override
   String get accountSignOutButton => 'Sign out';
-
-  @override
-  String get accountBackupNowButton => 'Back up now';
 
   @override
   String get accountRestoreButton => 'Restore from cloud';
@@ -412,21 +387,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountErrorTitle => 'Error';
 
   @override
-  String get accountErrorEmailAlreadyInUse =>
-      'This email is already registered. Try signing in instead.';
-
-  @override
-  String get accountErrorInvalidEmail =>
-      'That email address doesn\'t look valid.';
-
-  @override
-  String get accountErrorWeakPassword =>
-      'Password must be at least 6 characters.';
-
-  @override
-  String get accountErrorInvalidCredential => 'Incorrect email or password.';
-
-  @override
   String get accountErrorNetwork =>
       'A network error occurred. Please try again shortly.';
 
@@ -440,6 +400,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get accountSignOutConfirmMessage =>
       'Your data on this device won\'t be deleted. Sign back in anytime to resume syncing.';
+
+  @override
+  String get accountMediaSyncFreeNote =>
+      'Only text (diary entries, ideas, and tasks) is backed up. Photos and videos aren\'t synced to the cloud — that\'s limited to the monthly/annual plans (not included with the lifetime plan).';
+
+  @override
+  String get accountMediaSyncProNote =>
+      'Photos and videos are backed up to the cloud too.';
 
   @override
   String get supportSectionTitle => 'Support';
@@ -497,7 +465,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paywallBenefitMediaSync =>
-      'Cloud backup for photos and videos attached to entries';
+      'Cloud backup for photos and videos attached to entries (monthly/annual plans only — not included with the lifetime plan)';
 
   @override
   String get paywallBenefitKnowledgeBase =>
@@ -526,6 +494,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paywallRestoreNotFound => 'No restorable purchase was found.';
+
+  @override
+  String get paywallPlanMonthly => 'Monthly';
+
+  @override
+  String get paywallPlanAnnual => 'Annual';
+
+  @override
+  String get paywallPlanLifetime => 'Lifetime';
+
+  @override
+  String get paywallPlanRecommended => 'Recommended';
+
+  @override
+  String get paywallPlanLifetimeCaption =>
+      'Everything except cloud photo/video sync';
+
+  @override
+  String get paywallPlanComingSoon => 'Coming soon';
+
+  @override
+  String get paywallContinueButton => 'Continue';
 
   @override
   String homeUsageToday(int used, int limit) {
@@ -799,53 +789,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get manualTaskTitleRequiredError => 'Please enter a task';
-
-  @override
-  String get recurringTaskFabTooltip => 'Add recurring task';
-
-  @override
-  String get recurringTaskScreenTitle => 'Add recurring task';
-
-  @override
-  String get recurringTaskTitleHint => 'Task content (e.g. Part-time job)';
-
-  @override
-  String get recurringWeekdaysLabel => 'Days of week';
-
-  @override
-  String get recurringPeriodLabel => 'Period';
-
-  @override
-  String get specifyTimeLabel => 'Specify a time';
-
-  @override
-  String recurringTaskCount(int count) {
-    return '$count tasks will be created';
-  }
-
-  @override
-  String recurringTaskSummary(String title, String weekdays) {
-    return 'Recurring task: $title ($weekdays)';
-  }
-
-  @override
-  String get recurringTitleRequiredError => 'Please enter a task title';
-
-  @override
-  String get recurringSelectWeekdayError =>
-      'Please select at least one day of the week';
-
-  @override
-  String get recurringInvalidPeriodError =>
-      'Please set an end date on or after the start date';
-
-  @override
-  String get recurringStartTimeRequiredError => 'Please set a start time';
-
-  @override
-  String recurringTooManyError(int max) {
-    return 'Only up to $max tasks can be created at once';
-  }
 
   @override
   String get ideasEmpty => 'No ideas yet\nTry saying what comes to mind';

@@ -1,18 +1,20 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../l10n/l10n_utils.dart';
+import 'db_service.dart';
 
 const String _kWeeklyReportPayload = 'weekly_report';
 const int _kWeeklyReportNotificationId = 900000;
 
 /// 時刻付きのToDoに対するローカル通知（リマインダー）を管理する。
 ///
-/// タスクの reminder_at はサーバー側でJST（Asia/Tokyo）として計算されるため、
-/// 端末のOSタイムゾーン設定に関わらずAsia/Tokyoのウォールクロック時刻として
-/// スケジュールする。
+/// 通知時刻は端末の実際のタイムゾーン（現地時刻）のウォールクロック時刻として
+/// スケジュールする——海外渡航中など、端末のOSタイムゾーンが変わればそれに
+/// 追従する。タイムゾーンの検出に失敗した場合のみAsia/Tokyoにフォールバックする。
 class ReminderService {
   ReminderService._internal();
   static final ReminderService instance = ReminderService._internal();
@@ -20,6 +22,7 @@ class ReminderService {
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
   bool _initialized = false;
+  bool _pluginInitialized = false;
 
   /// 週刊レポート通知がタップされるたびにインクリメントされる。[RootScreen]が
   /// これを監視し、週刊レポート画面を開く。
@@ -33,10 +36,37 @@ class ReminderService {
 
   Future<void> initialize() async {
     if (_initialized) return;
+    await _initializePluginOnly();
     _initialized = true;
 
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.requestNotificationsPermission();
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >()
+        ?.requestPermissions(alert: true, badge: true, sound: true);
+  }
+
+  /// [rescheduleAllPending]をWorkManagerのバックグラウンドisolateから呼ぶ際に使う。
+  /// フォアグラウンドのActivityが存在しない状態で通知許可をリクエストすると
+  /// （[initialize]内の`requestNotificationsPermission`）NullPointerExceptionで
+  /// タスクが失敗するため、プラグインの初期化のみ行い許可リクエストは行わない。
+  Future<void> _initializePluginOnly() async {
+    if (_pluginInitialized) return;
+    _pluginInitialized = true;
+
     tz_data.initializeTimeZones();
-    tz.setLocalLocation(tz.getLocation('Asia/Tokyo'));
+    try {
+      final deviceTimezone = (await FlutterTimezone.getLocalTimezone()).identifier;
+      tz.setLocalLocation(tz.getLocation(deviceTimezone));
+    } catch (e) {
+      debugPrint('failed to resolve device timezone, defaulting to Asia/Tokyo: $e');
+      tz.setLocalLocation(tz.getLocation('Asia/Tokyo'));
+    }
 
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
@@ -53,17 +83,6 @@ class ReminderService {
     if (launchDetails?.didNotificationLaunchApp == true) {
       _handleNotificationTap(launchDetails?.notificationResponse?.payload);
     }
-
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.requestNotificationsPermission();
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin
-        >()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
   Future<void> scheduleTaskReminder({
@@ -104,6 +123,27 @@ class ReminderService {
   }
 
   Future<void> cancelTaskReminder(int taskId) => _plugin.cancel(taskId);
+
+  /// DBに保存済みの未完了タスクを読み直し、通知が消えていても再スケジュールする。
+  /// アプリ起動時（[JournalStore.load]）に加えて、端末再起動後もWorkManager経由の
+  /// バックグラウンドタスク（[reminderCallbackDispatcher]）から呼ばれる — Android の
+  /// AlarmManagerベースの通知はOS再起動で消えるため、アプリを開かなくても復元できる
+  /// ようにするための保険。
+  Future<void> rescheduleAllPending() async {
+    await _initializePluginOnly();
+    final entries = await DbService.instance.fetchEntries();
+    for (final entry in entries) {
+      for (final task in entry.tasks) {
+        if (!task.done && task.id != null && task.notifyAt != null) {
+          await scheduleTaskReminder(
+            taskId: task.id!,
+            title: task.title,
+            scheduledAt: task.notifyAt!,
+          );
+        }
+      }
+    }
+  }
 
   /// 毎週日曜20:00（JST）に週刊脳内レポートの完成を知らせる通知を（再）スケジュール
   /// する。既存のスケジュールがあれば同じ通知IDで上書きされる。

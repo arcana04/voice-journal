@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
@@ -10,42 +12,55 @@ class SubscriptionStore extends ChangeNotifier {
   final PurchaseService _purchases = PurchaseService.instance;
 
   bool isPro = false;
+
+  /// 写真・動画のクラウド同期が使えるかどうか。買い切りプランはPro機能の大半が
+  /// 使えるが、これだけはサブスク（月額/年額）限定（[[isPro]]がtrueでも
+  /// falseになりうる）。
+  bool isProWithMediaSync = false;
   bool loading = true;
 
   void Function(CustomerInfo)? _listener;
 
+  Future<void> _refreshFromCustomerInfo(CustomerInfo info) async {
+    final active = info.entitlements.active.containsKey(
+      RevenueCatConfig.proEntitlementId,
+    );
+    final entitlement =
+        info.entitlements.active[RevenueCatConfig.proEntitlementId];
+    final withMediaSync = entitlement != null && entitlement.expirationDate != null;
+    if (active != isPro || withMediaSync != isProWithMediaSync) {
+      isPro = active;
+      isProWithMediaSync = withMediaSync;
+      notifyListeners();
+    }
+  }
+
   Future<void> initialize(String appUserId) async {
     await _purchases.initialize(appUserId: appUserId);
     _listener = (info) {
-      final active = info.entitlements.active.containsKey(
-        RevenueCatConfig.proEntitlementId,
-      );
-      if (active != isPro) {
-        isPro = active;
-        notifyListeners();
-      }
+      unawaited(_refreshFromCustomerInfo(info));
     };
     _purchases.addCustomerInfoListener(_listener!);
 
-    isPro = await _purchases.hasProEntitlement();
+    await refresh();
     loading = false;
     notifyListeners();
   }
 
   Future<void> refresh() async {
     isPro = await _purchases.hasProEntitlement();
+    isProWithMediaSync = await _purchases.hasMediaSyncEntitlement();
     notifyListeners();
   }
 
   Future<bool> restore() async {
     final restored = await _purchases.restorePurchases();
-    isPro = restored;
-    notifyListeners();
+    await refresh();
     return restored;
   }
 
   /// メールアカウントのサインアップ/サインイン/サインアウト後に呼ぶ。RevenueCat側の
-  /// ユーザーをFirebase Authの新しいuidに揃え、Pro状態を再取得する。
+  /// ユーザーを新しいuidに揃え、Pro状態を再取得する。
   Future<void> switchUser(String uid) async {
     await _purchases.switchAppUserId(uid);
     await refresh();

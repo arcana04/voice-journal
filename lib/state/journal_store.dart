@@ -34,22 +34,10 @@ class JournalStore extends ChangeNotifier {
     loading = false;
     notifyListeners();
     // 端末の再起動やアプリ再インストールでOS側のスケジュールが失われていても、
-    // 未完了かつ未来のリマインダーを起動のたびに再登録して復元する。
-    unawaited(_rescheduleAllPendingReminders());
-  }
-
-  Future<void> _rescheduleAllPendingReminders() async {
-    for (final entry in entries) {
-      for (final task in entry.tasks) {
-        if (!task.done && task.id != null && task.notifyAt != null) {
-          await _reminders.scheduleTaskReminder(
-            taskId: task.id!,
-            title: task.title,
-            scheduledAt: task.notifyAt!,
-          );
-        }
-      }
-    }
+    // 未完了かつ未来のリマインダーを起動のたびに再登録して復元する。Android では
+    // これに加えて WorkManager 経由でも定期的に同じ復元処理を行う
+    // （[reminderCallbackDispatcher]）ため、再起動後アプリを開かなくても復元される。
+    unawaited(_reminders.rescheduleAllPending());
   }
 
   /// 連携先カレンダーが選ばれていれば、タスクの状態に合わせて予定を作成・更新・
@@ -170,7 +158,7 @@ class JournalStore extends ChangeNotifier {
     unawaited(_cloudSync.pushEntry(entries[index]));
   }
 
-  Future<void> deleteEntry(JournalEntry entry, {bool isPro = false}) async {
+  Future<void> deleteEntry(JournalEntry entry, {bool canSyncMedia = false}) async {
     if (entry.id == null) return;
     for (final task in entry.tasks) {
       if (task.id != null && task.notifyAt != null) {
@@ -185,17 +173,18 @@ class JournalStore extends ChangeNotifier {
     entries.removeWhere((e) => e.id == entry.id);
     notifyListeners();
     unawaited(_cloudSync.deleteEntry(entry.remoteId));
-    if (isPro) {
+    if (canSyncMedia) {
       unawaited(_mediaSync.deleteAllMedia(entry.remoteId));
     }
   }
 
-  /// 写真・動画のファイルを entry に追加する。[isPro]なら、Firebase Storageへの
-  /// クラウドバックアップも行う（Pro限定機能）。
+  /// 写真・動画のファイルを entry に追加する。[canSyncMedia]なら、Firebase Storageへの
+  /// クラウドバックアップも行う（サブスクプラン限定機能——買い切りプランでは
+  /// 写真・動画の同期は対象外）。
   Future<void> addMediaToEntry(
     JournalEntry entry,
     List<File> files, {
-    bool isPro = false,
+    bool canSyncMedia = false,
   }) async {
     if (entry.id == null || files.isEmpty) return;
     final paths = <String>[];
@@ -209,7 +198,7 @@ class JournalStore extends ChangeNotifier {
       imagePaths: [...entries[index].imagePaths, ...paths],
     );
     notifyListeners();
-    if (isPro) {
+    if (canSyncMedia) {
       unawaited(
         _mediaSync.uploadPendingMedia(
           entryId: entry.id!,
@@ -222,7 +211,7 @@ class JournalStore extends ChangeNotifier {
   Future<void> removeMediaFromEntry(
     JournalEntry entry,
     String path, {
-    bool isPro = false,
+    bool canSyncMedia = false,
   }) async {
     if (entry.id == null) return;
     await _db.deleteImage(entry.id!, path);
@@ -233,7 +222,7 @@ class JournalStore extends ChangeNotifier {
       imagePaths: entries[index].imagePaths.where((p) => p != path).toList(),
     );
     notifyListeners();
-    if (isPro) {
+    if (canSyncMedia) {
       unawaited(_mediaSync.deleteMedia(entry.remoteId, path));
     }
   }
@@ -436,13 +425,13 @@ class JournalStore extends ChangeNotifier {
   /// 未同期のまま溜まっていたデータをアップロード）、次にクラウド上にあってこの
   /// 端末にまだ無いエントリを取り込む（削除の伝播は行わない — データを失わない
   /// ことを優先した意図的な仕様）。
-  Future<void> fullSync({bool isPro = false}) async {
+  Future<void> fullSync({bool canSyncMedia = false}) async {
     if (_syncing) return;
     _syncing = true;
     try {
       for (final entry in entries) {
         await _cloudSync.pushEntry(entry);
-        if (isPro && entry.id != null) {
+        if (canSyncMedia && entry.id != null) {
           await _mediaSync.uploadPendingMedia(
             entryId: entry.id!,
             remoteId: entry.remoteId,
@@ -460,7 +449,7 @@ class JournalStore extends ChangeNotifier {
           continue;
         }
         final saved = await addEntry(remote, skipCloudPush: true);
-        if (isPro && saved.id != null) {
+        if (canSyncMedia && saved.id != null) {
           await _mediaSync.downloadMissingMedia(
             entryId: saved.id!,
             remoteId: saved.remoteId,

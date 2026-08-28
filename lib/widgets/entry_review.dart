@@ -17,6 +17,8 @@ class DraftItem {
     this.dueDate,
     this.reminderAt,
     this.reminderEndAt,
+    this.isAllDay = false,
+    this.notifyAt,
     this.noteCategory = kNoteCategoryIdea,
     this.noteTitle,
   });
@@ -28,6 +30,8 @@ class DraftItem {
   final DateTime? dueDate;
   final DateTime? reminderAt;
   final DateTime? reminderEndAt;
+  final bool isAllDay;
+  final DateTime? notifyAt;
   String noteCategory;
   final String? noteTitle;
 }
@@ -96,8 +100,8 @@ class _EntryReviewState extends State<EntryReview> {
             dueDate: i.dueDate,
             reminderAt: i.reminderAt,
             reminderEndAt: i.reminderEndAt,
-            // 通知時刻も開始時刻に合わせておく（後からTaskEditScreenで独立に変更可能）。
-            notifyAt: i.reminderAt,
+            isAllDay: i.isAllDay,
+            notifyAt: i.notifyAt,
           ),
         )
         .toList();

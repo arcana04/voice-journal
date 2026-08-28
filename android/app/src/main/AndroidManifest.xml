@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
@@ -6,6 +7,11 @@
     <uses-permission android:name="android.permission.WRITE_CALENDAR"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
+    <!-- flutter_compress: 動画圧縮はアプリがフォアグラウンドの間だけ行う想定
+         （MediaSyncService側でkeepAliveInBackground: falseを指定）なので、
+         Play Console側で申請書＋デモ動画が必要になる「dataSync」特殊種別の
+         フォアグラウンドサービス権限は使わない。マニフェストマージで除去する。 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" tools:node="remove"/>
     <application
         android:label="voicejournal"
         android:name="${applicationName}"

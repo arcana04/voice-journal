@@ -223,7 +223,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   title: Text(
                     account.isSignedIn
-                        ? l10n.accountSignedInAs(account.email ?? '')
+                        ? l10n.accountSignedInAs(account.displayLabel)
                         : l10n.accountNotSignedIn,
                   ),
                   subtitle: account.isSignedIn

@@ -64,6 +64,12 @@ dependencies:
   screenshot: ^3.0.0
   share_plus: ^10.1.4
   flutter_foreground_task: ^8.17.0
+  workmanager: ^0.10.9
+  flutter_compress: ^1.5.1
+  flutter_timezone: ^5.1.0
+  google_sign_in: ^7.2.0
+  sign_in_with_apple: ^8.2.0
+  crypto: ^3.0.7
 
 dev_dependencies:
   flutter_test:

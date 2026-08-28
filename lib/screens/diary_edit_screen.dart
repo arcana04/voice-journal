@@ -135,7 +135,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
     await store.addMediaToEntry(
       entry,
       picked.map((x) => File(x.path)).toList(),
-      isPro: context.read<SubscriptionStore>().isPro,
+      canSyncMedia: context.read<SubscriptionStore>().isProWithMediaSync,
     );
   }
 
@@ -157,7 +157,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
     await store.addMediaToEntry(
       entry,
       [File(picked.path)],
-      isPro: context.read<SubscriptionStore>().isPro,
+      canSyncMedia: context.read<SubscriptionStore>().isProWithMediaSync,
     );
   }
 
@@ -620,7 +620,8 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                             onRemove: (index) => store.removeMediaFromEntry(
                               entry,
                               entry.imagePaths[index],
-                              isPro: context.read<SubscriptionStore>().isPro,
+                              canSyncMedia:
+                                  context.read<SubscriptionStore>().isProWithMediaSync,
                             ),
                           ),
                         ],
