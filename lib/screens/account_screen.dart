@@ -69,7 +69,8 @@ class _AccountScreenState extends State<AccountScreen> {
     if (!mounted) return;
     await context.read<SubscriptionStore>().switchUser(uid);
     if (!mounted) return;
-    await context.read<JournalStore>().fullSync();
+    final isPro = context.read<SubscriptionStore>().isPro;
+    await context.read<JournalStore>().fullSync(isPro: isPro);
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
     await _showMessage(l10n.accountSyncCompleteTitle, l10n.accountSyncCompleteMessage);
@@ -148,7 +149,8 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _fullSync() async {
     setState(() => _busy = true);
     try {
-      await context.read<JournalStore>().fullSync();
+      final isPro = context.read<SubscriptionStore>().isPro;
+      await context.read<JournalStore>().fullSync(isPro: isPro);
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(

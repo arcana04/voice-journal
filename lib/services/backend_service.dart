@@ -129,6 +129,7 @@ class BackendService {
 
   Future<WeeklyReportInsights> generateWeeklyReport({
     required String context,
+    required Map<String, int> emotionBreakdown,
     required String locale,
   }) async {
     await _auth.ensureSignedIn();
@@ -138,6 +139,7 @@ class BackendService {
       final callable = functions.httpsCallable('generateWeeklyReport');
       final result = await callable.call<Map<String, dynamic>>({
         'context': context,
+        'emotionBreakdown': emotionBreakdown,
         'locale': locale,
       });
       return WeeklyReportInsights.fromJson(result.data);

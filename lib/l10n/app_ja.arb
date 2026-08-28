@@ -140,6 +140,10 @@
   "accountSignOutConfirmTitle": "ログアウトしますか？",
   "accountSignOutConfirmMessage": "端末内のデータは削除されません。再度ログインすると同期を再開できます。",
 
+  "supportSectionTitle": "サポート",
+  "contactSupportTitle": "お問い合わせ",
+  "contactSupportEmailSubject": "VoiceJournalへのお問い合わせ",
+
   "planSectionTitle": "プラン",
   "planProTitle": "Proプラン",
   "planFreeTitle": "無料プラン",
@@ -153,6 +157,7 @@
   "paywallBenefitCount": "1日30回まで録音可能に（無料版は3回）",
   "paywallBenefitDiaryStyle": "日記の文体が9種類に（無料版は標準のみ）",
   "paywallBenefitCustomBackground": "日記の背景に自分の写真を使える",
+  "paywallBenefitMediaSync": "日記に添付した写真・動画もクラウドにバックアップ",
   "paywallBenefitKnowledgeBase": "「相談」でこれまでの記録を横断してAIに質問できる",
   "paywallBenefitWeeklyReport": "週刊脳内レポートでAIが1週間分の記録を振り返ってくれる",
   "paywallUnavailable": "現在プランを取得できません。しばらくしてからもう一度お試しください。",
@@ -162,10 +167,6 @@
   "paywallPurchaseFailed": "処理に失敗しました。時間をおいて再度お試しください。",
   "paywallRestoreNotFound": "復元できる購入が見つかりませんでした。",
 
-  "freeTierSectionTitle": "利用状況",
-  "freeTierFetchFailed": "利用状況を取得できませんでした",
-  "freeTierUsage": "本日の録音回数: {used} / {limit}回",
-  "freeTierRemaining": "残り{remaining}回（日本時間の日付で毎日リセット）",
   "homeUsageToday": "本日 {used} / {limit}回",
   "notificationSectionTitle": "通知",
   "reminderNotificationsTitle": "リマインダー通知",
@@ -225,8 +226,6 @@
   "diaryBgBeachGirl": "海辺の少女",
   "diaryBgSleepingCat": "眠る猫",
   "fontSheetTitle": "フォント",
-  "setAsDefaultTooltip": "この設定をデフォルトにする",
-  "setAsDefaultSnackbar": "デフォルトに設定しました",
   "closeTooltip": "閉じる",
   "favoriteSettingsTooltip": "お気に入り設定",
   "favoriteSettingsSheetTitle": "お気に入り設定",
@@ -307,9 +306,22 @@
   "genericProcessingError": "処理中にエラーが発生しました",
   "usageFetchError": "利用状況の取得に失敗しました",
 
+  "backgroundRecordingChannelName": "バックグラウンド録音",
+  "backgroundRecordingChannelDescription": "録音中にバックグラウンド/画面オフでも録音を継続するための通知です",
+  "backgroundRecordingNotificationTitle": "録音中です",
+  "backgroundRecordingNotificationText": "タップしてアプリに戻る",
+
   "reminderNotificationTitle": "リマインダー",
   "reminderNotificationChannelName": "ToDoリマインダー",
   "reminderNotificationChannelDescription": "独り言から作られたToDoの時刻リマインダー",
+
+  "weeklyReportNotificationTitle": "週刊脳内レポートができました！",
+  "weeklyReportNotificationBody": "今週のあなたの記録をAIが振り返りました。タップして見てみましょう",
+  "weeklyReportNotificationChannelName": "週刊レポート通知",
+  "weeklyReportNotificationChannelDescription": "毎週日曜20時に週刊脳内レポートの完成をお知らせします",
+  "weeklyReportHistoryTooltip": "過去のレポート",
+  "weeklyReportHistoryTitle": "週刊レポート履歴",
+  "weeklyReportHistoryEmpty": "まだ保存されたレポートがありません",
 
   "knowledgeBaseTitle": "思考、記憶の検索",
   "knowledgeBaseDescription": "これまでの日記・アイデア・タスクをAIが振り返って答えます。",
@@ -328,13 +340,20 @@
   "weeklyReportErrorTitle": "レポートの取得に失敗しました",
   "weeklyReportEmotionSectionTitle": "感情の傾向",
   "weeklyReportNoEmotionData": "今週はまだ感情の記録がありません",
+  "weeklyReportCalendarSectionTitle": "感情カレンダー",
+  "weeklyReportCategorySectionTitle": "仕分け比率",
+  "weeklyReportNoCategoryData": "今週はまだ記録がありません",
   "weeklyReportKeywordsSectionTitle": "今週のキーワード",
   "weeklyReportNoKeywords": "目立ったキーワードはありませんでした",
   "weeklyReportIdeasSectionTitle": "輝いていたアイデア",
   "weeklyReportNoIdeas": "今週はまだアイデアの記録がありません",
+  "weeklyReportHighlightSectionTitle": "今週のベストフレーズ",
+  "weeklyReportNoHighlight": "今週はまだ日記の記録がありません",
   "weeklyReportAchievementSectionTitle": "今週の達成",
   "weeklyReportTasksCompleted": "完了したタスク {count}件",
   "weeklyReportDiaryCount": "書いた日記 {count}件",
   "weeklyReportEncouragement": "今週もよく頑張りました！",
-  "weeklyReportAdviceSectionTitle": "来週へのアドバイス"
+  "weeklyReportAdviceSectionTitle": "来週へのアドバイス",
+  "weeklyReportShareTooltip": "画像として共有",
+  "weeklyReportShareCaption": "今週の脳内、こんな感じでした📝 #VoiceJournal"
 }

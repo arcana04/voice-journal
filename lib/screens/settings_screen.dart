@@ -1,10 +1,10 @@
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../config/legal_links.dart';
 import '../l10n/app_localizations.dart';
-import '../models/usage_status.dart';
-import '../services/backend_service.dart';
 import '../services/reminder_service.dart';
 import '../state/account_store.dart';
 import '../state/background_store.dart';
@@ -25,16 +25,10 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final BackendService _backend = BackendService();
   final ReminderService _reminders = ReminderService.instance;
 
-  late Future<UsageStatus> _usageFuture = _backend.fetchUsageStatus();
   late Future<bool> _notificationFuture = _reminders
       .hasNotificationPermission();
-
-  void _refreshUsage() {
-    setState(() => _usageFuture = _backend.fetchUsageStatus());
-  }
 
   Future<void> _requestNotificationPermission() async {
     final granted = await _reminders.requestNotificationPermission();
@@ -66,6 +60,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
         () => _notificationFuture = _reminders.hasNotificationPermission(),
       );
     }
+  }
+
+  Future<void> _openUrl(String url) async {
+    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _contactSupport(AppLocalizations l10n) async {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: LegalLinks.supportEmail,
+      query: 'subject=${Uri.encodeComponent(l10n.contactSupportEmailSubject)}',
+    );
+    await launchUrl(uri);
   }
 
   @override
@@ -230,42 +237,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             const Divider(height: 32),
-            Text(l10n.freeTierSectionTitle, style: theme.textTheme.labelLarge),
-            const SizedBox(height: 8),
-            FutureBuilder<UsageStatus>(
-              future: _usageFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: LinearProgressIndicator(),
-                  );
-                }
-                if (snapshot.hasError) {
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.error_outline),
-                    title: Text(l10n.freeTierFetchFailed),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.refresh),
-                      onPressed: _refreshUsage,
-                    ),
-                  );
-                }
-                final usage = snapshot.data!;
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.mic_none),
-                  title: Text(l10n.freeTierUsage(usage.used, usage.limit)),
-                  subtitle: Text(l10n.freeTierRemaining(usage.remaining)),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.refresh),
-                    onPressed: _refreshUsage,
-                  ),
-                );
-              },
-            ),
-            const Divider(height: 32),
             Text(
               l10n.notificationSectionTitle,
               style: theme.textTheme.labelLarge,
@@ -300,6 +271,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                 );
               },
+            ),
+            const Divider(height: 32),
+            Text(l10n.supportSectionTitle, style: theme.textTheme.labelLarge),
+            const SizedBox(height: 8),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.description_outlined),
+              title: Text(l10n.paywallTerms),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _openUrl(LegalLinks.termsOfServiceUrl),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.privacy_tip_outlined),
+              title: Text(l10n.paywallPrivacy),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _openUrl(LegalLinks.privacyPolicyUrl),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.mail_outline),
+              title: Text(l10n.contactSupportTitle),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _contactSupport(l10n),
             ),
           ],
         ),

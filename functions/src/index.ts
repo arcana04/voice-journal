@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 
 import { initializeApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
@@ -564,6 +565,15 @@ export const revenueCatWebhook = onRequest(
           },
           { merge: true }
         );
+        // Storage Security Rulesはfirestore.get()によるクロスサービス参照が
+        // 使えないため、カスタムクレームでisProを持たせて`request.auth.token.isPro`
+        // として直接参照できるようにする（Firestore側のisProUser()はこれまで通り
+        // Firestoreドキュメントを見る）。
+        try {
+          await getAuth().setCustomUserClaims(uid, { isPro });
+        } catch (claimErr) {
+          logger.error("revenueCatWebhook setCustomUserClaims failed", claimErr);
+        }
       }
 
       res.status(200).send("ok");
@@ -1003,12 +1013,14 @@ function buildWeeklyReportSystemPrompt(locale: Locale): string {
   if (locale === "en") {
     return `You are an AI assistant that reviews a user's own voice-memo journal entries from the past week and writes a short "weekly brain report" summarizing their emotional trends and thinking patterns.
 
-You will be given the week's diary entries, ideas, and tasks below, each with its date. Analyze ONLY this content and respond with a JSON object in this exact shape:
+You will be given the week's diary entries, ideas, and tasks below, each with its date, plus a pre-counted breakdown of emotion tags for the week. Analyze ONLY this content and respond with a JSON object in this exact shape:
 
 {
+  "mood_headline": "One short, punchy catchphrase headline (under ~12 words) capturing the week's emotional pattern, quoting the two most common emotions from the given breakdown with their approximate percentages of the week's total, e.g. \\"An 'Excited 70% / Anxious 30%' challenger week!\\". Compute the percentages yourself from the given counts — never invent numbers not supported by the breakdown. If the breakdown is empty, write a gentle one-line note that there wasn't enough emotional data this week instead of inventing a mood.",
   "emotion_narrative": "1-2 sentences describing the emotional trend across the week (e.g. which day had the most of a particular feeling, whether it improved or worsened toward the weekend). Write it in a warm, encouraging tone, in English. If there isn't enough emotional content to say anything meaningful, say so briefly instead of inventing a trend.",
   "top_keywords": [ up to 3 objects like {"keyword": "short theme name", "count": approximate number of times it came up} ], ordered by how often they came up. Empty array if nothing recurring.
   "shining_ideas": [ up to 2 objects like {"title": "short idea title", "reason": "1 short sentence on why this idea stands out"} ] — pick from the "Idea" entries only, the ones with the most potential or spark. Empty array if there are no ideas this week.
+  "highlight_quote": { "quote": "the single most striking/positive/insightful line quoted (or lightly trimmed) from this week's Diary entries only — pick the one that best captures a realization, a win, or genuine emotion. Empty string if there are no diary entries this week.", "reason": "1 short sentence on why this line stands out" },
   "advice": "One short, concrete, actionable tip for the upcoming week based on the patterns you noticed (e.g. a day of the week that tends to be busy). Keep it under 2 sentences, warm and non-preachy, in English."
 }
 
@@ -1017,12 +1029,14 @@ Output ONLY the JSON object, no extra commentary.`;
 
   return `あなたはユーザー本人が1週間分記録した音声メモ（日記・アイデア・タスク）を振り返り、「週刊脳内レポート」として感情の傾向や思考パターンを短くまとめるAIアシスタントです。
 
-以下に今週の日記・アイデア・タスクの一覧を日付つきで渡します。この内容だけを根拠に分析し、必ず以下の形のJSONオブジェクトで出力してください：
+以下に今週の日記・アイデア・タスクの一覧を日付つきで、そして今週の感情タグの集計済み内訳を渡します。この内容だけを根拠に分析し、必ず以下の形のJSONオブジェクトで出力してください：
 
 {
+  "mood_headline": "今週の感情パターンを表す、短くキャッチーな一言見出し（15文字〜30文字程度）。渡された感情タグの内訳から最も多い上位2つの感情とそのおおよその割合（%）を引用すること。例：「『ワクワク70%／焦り30%』の挑戦者モード」。割合は必ず渡された集計値から自分で計算し、根拠のない数字を作らないこと。内訳が空の場合は、無理に気分を作らず「今週は感情の記録が少なめでした」のような優しい一言にすること。",
   "emotion_narrative": "今週の感情の傾向を1〜2文で。例えば特定の感情がどの曜日に集中していたか、週末にかけて改善/悪化したかなど。温かく励ますようなトーンで日本語で書いてください。感情に関する記録が少なすぎて有意な傾向が言えない場合は、無理に傾向を作らず正直にそう書いてください。",
   "top_keywords": [ 最大3件、{"keyword": "短いテーマ名", "count": 言及されたおおよその回数} という形のオブジェクト。よく出てきた順。繰り返し出てきたテーマが無ければ空配列。 ],
   "shining_ideas": [ 最大2件、{"title": "アイデアの短いタイトル", "reason": "なぜこのアイデアが光っているかの短い理由（1文）"} という形のオブジェクト。「アイデア」カテゴリのnoteの中から、特にポテンシャルや閃きを感じるものを選ぶこと。今週アイデアが無ければ空配列。 ],
+  "highlight_quote": { "quote": "今週の「日記」カテゴリのnoteの中から、気づき・達成・率直な感情が最もよく表れている一文を、そのまま（または軽くトリミングして）引用したもの。今週日記が無ければ空文字列。", "reason": "なぜこの一文が光っているかの短い理由（1文）" },
   "advice": "気づいたパターンを踏まえた、来週に向けた短く具体的なワンポイントアドバイス。2文以内、説教くさくなく温かいトーンで、日本語で。"
 }
 
@@ -1030,9 +1044,11 @@ JSONオブジェクトのみを出力し、余計な説明文は含めないで�
 }
 
 interface WeeklyReportInsightsResult {
+  mood_headline: string;
   emotion_narrative: string;
   top_keywords: { keyword: string; count: number }[];
   shining_ideas: { title: string; reason: string }[];
+  highlight_quote: { quote: string; reason: string };
   advice: string;
 }
 
@@ -1043,13 +1059,18 @@ interface WeeklyReportInsightsResult {
 async function generateWeeklyReportInsights(
   apiKey: string,
   context: string,
+  emotionBreakdown: Record<string, number>,
   locale: Locale
 ): Promise<WeeklyReportInsightsResult> {
   const systemPrompt = buildWeeklyReportSystemPrompt(locale);
+  const breakdownEntries = Object.entries(emotionBreakdown).filter(([, c]) => c > 0);
+  const breakdownText = breakdownEntries.length
+    ? breakdownEntries.map(([tag, count]) => `${tag}: ${count}`).join(", ")
+    : locale === "en" ? "(no emotion data this week)" : "（今週の感情記録なし）";
   const userContent =
     locale === "en"
-      ? `[This week's entries]\n${context || "(none)"}`
-      : `【今週の記録】\n${context || "（記録がありません）"}`;
+      ? `[This week's emotion tag breakdown]\n${breakdownText}\n\n[This week's entries]\n${context || "(none)"}`
+      : `【今週の感情タグ内訳】\n${breakdownText}\n\n【今週の記録】\n${context || "（記録がありません）"}`;
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -1080,6 +1101,7 @@ async function generateWeeklyReportInsights(
 
 function toWeeklyReportResponse(result: WeeklyReportInsightsResult) {
   return {
+    mood_headline: result.mood_headline ?? "",
     emotion_narrative: result.emotion_narrative ?? "",
     top_keywords: (result.top_keywords ?? []).slice(0, 3).map((k) => ({
       keyword: k.keyword ?? "",
@@ -1089,12 +1111,17 @@ function toWeeklyReportResponse(result: WeeklyReportInsightsResult) {
       title: i.title ?? "",
       reason: i.reason ?? "",
     })),
+    highlight_quote: {
+      quote: result.highlight_quote?.quote ?? "",
+      reason: result.highlight_quote?.reason ?? "",
+    },
     advice: result.advice ?? "",
   };
 }
 
 interface GenerateWeeklyReportRequest {
   context?: string;
+  emotionBreakdown?: Record<string, number>;
   locale?: string;
 }
 
@@ -1103,7 +1130,8 @@ interface GenerateWeeklyReportRequest {
 export const generateWeeklyReport = onCall(
   { secrets: [openAiApiKey], timeoutSeconds: 60, memory: "256MiB" },
   async (request) => {
-    const { context, locale } = (request.data ?? {}) as GenerateWeeklyReportRequest;
+    const { context, emotionBreakdown, locale } =
+      (request.data ?? {}) as GenerateWeeklyReportRequest;
     const loc = normalizeLocale(locale);
 
     const uid = request.auth?.uid;
@@ -1119,6 +1147,7 @@ export const generateWeeklyReport = onCall(
       const result = await generateWeeklyReportInsights(
         apiKey,
         (context ?? "").trim(),
+        emotionBreakdown ?? {},
         loc
       );
       return toWeeklyReportResponse(result);

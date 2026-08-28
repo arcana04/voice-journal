@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:record/record.dart';
 
+import 'background_recording_service.dart';
+
 class RecorderService {
   final AudioRecorder _recorder = AudioRecorder();
 
@@ -18,11 +20,21 @@ class RecorderService {
       const RecordConfig(encoder: AudioEncoder.aacLc),
       path: path,
     );
+    // バックグラウンド/画面オフでも録音を継続できるよう、Androidではここで
+    // フォアグラウンドサービスを開始する（iOSはInfo.plistの設定のみで対応）。
+    await BackgroundRecordingService.start();
   }
 
-  Future<String?> stop() => _recorder.stop();
+  Future<String?> stop() async {
+    final path = await _recorder.stop();
+    await BackgroundRecordingService.stop();
+    return path;
+  }
 
-  Future<void> cancel() => _recorder.cancel();
+  Future<void> cancel() async {
+    await _recorder.cancel();
+    await BackgroundRecordingService.stop();
+  }
 
   void dispose() {
     _recorder.dispose();

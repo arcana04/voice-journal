@@ -3,7 +3,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // Text-only cloud backup/restore for signed-in (non-anonymous) users.
-    // Attachments (images/videos) are intentionally excluded for now.
+    // Attachments (images/videos) sync separately via Firebase Storage
+    // (see storage.rules) — Pro-gated, not tracked as a field on this doc.
     match /users/{uid}/entries/{entryId} {
       allow read, delete: if request.auth != null && request.auth.uid == uid;
       allow create, update: if request.auth != null && request.auth.uid == uid

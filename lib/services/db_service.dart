@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
+import '../models/weekly_report.dart';
 
 const String _kIdChars =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -38,7 +39,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 13,
+      version: 15,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE entries (
@@ -89,7 +90,29 @@ class DbService {
             entry_id INTEGER NOT NULL,
             path TEXT NOT NULL,
             sort_order INTEGER NOT NULL DEFAULT 0,
+            uploaded INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE weekly_reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            week_key TEXT NOT NULL UNIQUE,
+            week_start TEXT NOT NULL,
+            week_end TEXT NOT NULL,
+            mood_headline TEXT NOT NULL,
+            emotion_narrative TEXT NOT NULL,
+            top_keywords_json TEXT NOT NULL,
+            shining_ideas_json TEXT NOT NULL,
+            highlight_quote_json TEXT NOT NULL,
+            advice TEXT NOT NULL,
+            emotion_counts_json TEXT NOT NULL,
+            daily_emotions_json TEXT NOT NULL,
+            diary_count INTEGER NOT NULL,
+            idea_count INTEGER NOT NULL,
+            total_tasks INTEGER NOT NULL,
+            completed_tasks INTEGER NOT NULL,
+            created_at TEXT NOT NULL
           )
         ''');
       },
@@ -166,6 +189,34 @@ class DbService {
           // （以後はTaskEditScreenで両者を別々に変更できる）。
           await db.execute('ALTER TABLE tasks ADD COLUMN notify_at TEXT');
           await db.execute('UPDATE tasks SET notify_at = reminder_at');
+        }
+        if (oldVersion < 14) {
+          await db.execute('''
+            CREATE TABLE weekly_reports (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              week_key TEXT NOT NULL UNIQUE,
+              week_start TEXT NOT NULL,
+              week_end TEXT NOT NULL,
+              mood_headline TEXT NOT NULL,
+              emotion_narrative TEXT NOT NULL,
+              top_keywords_json TEXT NOT NULL,
+              shining_ideas_json TEXT NOT NULL,
+              highlight_quote_json TEXT NOT NULL,
+              advice TEXT NOT NULL,
+              emotion_counts_json TEXT NOT NULL,
+              daily_emotions_json TEXT NOT NULL,
+              diary_count INTEGER NOT NULL,
+              idea_count INTEGER NOT NULL,
+              total_tasks INTEGER NOT NULL,
+              completed_tasks INTEGER NOT NULL,
+              created_at TEXT NOT NULL
+            )
+          ''');
+        }
+        if (oldVersion < 15) {
+          await db.execute(
+            'ALTER TABLE entry_images ADD COLUMN uploaded INTEGER NOT NULL DEFAULT 0',
+          );
         }
       },
     );
@@ -321,6 +372,29 @@ class DbService {
     );
   }
 
+  /// まだクラウドにアップロードしていない（[uploaded]=0の）添付ファイルの
+  /// ローカルパス一覧。
+  Future<List<String>> getUnuploadedImagePaths(int entryId) async {
+    final db = await _database;
+    final rows = await db.query(
+      'entry_images',
+      columns: ['path'],
+      where: 'entry_id = ? AND uploaded = 0',
+      whereArgs: [entryId],
+    );
+    return rows.map((r) => r['path'] as String).toList();
+  }
+
+  Future<void> markImageUploaded(String path) async {
+    final db = await _database;
+    await db.update(
+      'entry_images',
+      {'uploaded': 1},
+      where: 'path = ?',
+      whereArgs: [path],
+    );
+  }
+
   Future<void> setTaskDone(int taskId, bool done) async {
     final db = await _database;
     await db.update(
@@ -441,5 +515,22 @@ class DbService {
       whereArgs: [entryId],
     );
     await db.delete('entries', where: 'id = ?', whereArgs: [entryId]);
+  }
+
+  /// [weekKey]（週の月曜日の日付、例: '2026-08-24'）で upsert する。同じ週に
+  /// 何度開いても最新の内容で上書きされる。
+  Future<void> saveWeeklyReport(SavedWeeklyReport report) async {
+    final db = await _database;
+    await db.insert(
+      'weekly_reports',
+      report.toMap()..remove('id'),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<SavedWeeklyReport>> listWeeklyReports() async {
+    final db = await _database;
+    final rows = await db.query('weekly_reports', orderBy: 'week_start DESC');
+    return rows.map(SavedWeeklyReport.fromMap).toList();
   }
 }

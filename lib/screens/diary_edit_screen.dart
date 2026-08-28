@@ -131,10 +131,11 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
       );
       return;
     }
-    if (picked.isEmpty) return;
+    if (picked.isEmpty || !mounted) return;
     await store.addMediaToEntry(
       entry,
       picked.map((x) => File(x.path)).toList(),
+      isPro: context.read<SubscriptionStore>().isPro,
     );
   }
 
@@ -152,8 +153,12 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
       );
       return;
     }
-    if (picked == null) return;
-    await store.addMediaToEntry(entry, [File(picked.path)]);
+    if (picked == null || !mounted) return;
+    await store.addMediaToEntry(
+      entry,
+      [File(picked.path)],
+      isPro: context.read<SubscriptionStore>().isPro,
+    );
   }
 
   Future<void> _openMediaSheet(JournalStore store, JournalEntry entry) async {
@@ -202,30 +207,12 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.backgroundSheetTitle,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.star_border),
-                      tooltip: l10n.setAsDefaultTooltip,
-                      onPressed: () {
-                        context.read<TextStyleStore>().setDefaultBackground(
-                          _backgroundId,
-                        );
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(l10n.setAsDefaultSnackbar)),
-                        );
-                      },
-                    ),
-                  ],
+                Text(
+                  l10n.backgroundSheetTitle,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Flexible(
@@ -462,26 +449,6 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.star_border),
-                            tooltip: AppLocalizations.of(context)!
-                                .setAsDefaultTooltip,
-                            onPressed: () {
-                              context.read<TextStyleStore>().setDefault(
-                                fontFamilyIndex: _fontFamilyIndex,
-                                textColor: _textColor,
-                                fontScale: _fontScale,
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    AppLocalizations.of(context)!
-                                        .setAsDefaultSnackbar,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                          IconButton(
                             icon: const Icon(Icons.check),
                             tooltip: AppLocalizations.of(context)!.closeTooltip,
                             onPressed: () => Navigator.of(sheetContext).pop(),
@@ -653,6 +620,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                             onRemove: (index) => store.removeMediaFromEntry(
                               entry,
                               entry.imagePaths[index],
+                              isPro: context.read<SubscriptionStore>().isPro,
                             ),
                           ),
                         ],

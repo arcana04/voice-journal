@@ -1,0 +1,571 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:screenshot/screenshot.dart';
+
+import '../l10n/app_localizations.dart';
+import '../models/emotion_tag.dart';
+import '../models/weekly_report.dart';
+import 'category_donut_chart.dart';
+
+/// 「仕分け比率」ドーナツチャート用の3カテゴリの色。dataviz skillの検証済み
+/// パレット（palette.md）の先頭3スロットをそのまま使用（all-pairsで検証済み）。
+class CategoryColors {
+  static Color diary(bool dark) => dark ? const Color(0xFF3987E5) : const Color(0xFF2A78D6);
+  static Color task(bool dark) => dark ? const Color(0xFFD95926) : const Color(0xFFEB6834);
+  static Color idea(bool dark) => dark ? const Color(0xFF199E70) : const Color(0xFF1BAF7A);
+}
+
+/// レポート本体。ライブ生成画面・履歴閲覧画面の両方から使う共通の見た目。
+/// 共有画像として撮影する[ShareCard]も内包し、画面には見えない位置に配置して
+/// キャプチャできるようにしている。
+class WeeklyReportContent extends StatelessWidget {
+  final WeeklyReportInsights insights;
+  final DateTime weekStart;
+  final DateTime weekEnd;
+  final Map<EmotionTag, int> emotionCounts;
+  final List<EmotionTag?> dailyEmotions;
+  final int diaryCount;
+  final int ideaCount;
+  final int totalTasks;
+  final int completedTasks;
+  final ScreenshotController shareController;
+
+  const WeeklyReportContent({
+    super.key,
+    required this.insights,
+    required this.weekStart,
+    required this.weekEnd,
+    required this.emotionCounts,
+    required this.dailyEmotions,
+    required this.diaryCount,
+    required this.ideaCount,
+    required this.totalTasks,
+    required this.completedTasks,
+    required this.shareController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+    final locale = Localizations.localeOf(context).toString();
+    final dateRange =
+        '${DateFormat('yyyy.MM.dd').format(weekStart)} – ${DateFormat('MM.dd').format(weekEnd)}';
+
+    final categorySlices = [
+      CategorySlice(label: l10n.navDiary, value: diaryCount, color: CategoryColors.diary(dark)),
+      CategorySlice(label: l10n.navIdea, value: ideaCount, color: CategoryColors.idea(dark)),
+      CategorySlice(label: l10n.navTask, value: totalTasks, color: CategoryColors.task(dark)),
+    ];
+
+    return Stack(
+      children: [
+        ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+          children: [
+            _MagazineHeader(dateRange: dateRange),
+            const SizedBox(height: 20),
+            _SectionCard(
+              icon: Icons.emoji_emotions_outlined,
+              title: l10n.weeklyReportEmotionSectionTitle,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (insights.moodHeadline.isNotEmpty) ...[
+                    Text(
+                      insights.moodHeadline,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  emotionCounts.isEmpty
+                      ? Text(l10n.weeklyReportNoEmotionData, style: theme.textTheme.bodyMedium)
+                      : _EmotionBreakdown(counts: emotionCounts),
+                  if (insights.emotionNarrative.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      insights.emotionNarrative,
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: theme.colorScheme.outline),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            _SectionCard(
+              icon: Icons.calendar_view_week_outlined,
+              title: l10n.weeklyReportCalendarSectionTitle,
+              child: _EmotionCalendar(weekStart: weekStart, dailyEmotions: dailyEmotions, locale: locale),
+            ),
+            const SizedBox(height: 16),
+            _SectionCard(
+              icon: Icons.donut_small_outlined,
+              title: l10n.weeklyReportCategorySectionTitle,
+              child: (diaryCount + ideaCount + totalTasks) == 0
+                  ? Text(l10n.weeklyReportNoCategoryData, style: theme.textTheme.bodyMedium)
+                  : CategoryDonutChart(slices: categorySlices),
+            ),
+            const SizedBox(height: 16),
+            _SectionCard(
+              icon: Icons.format_quote,
+              title: l10n.weeklyReportHighlightSectionTitle,
+              child: insights.highlightQuote.quote.isEmpty
+                  ? Text(l10n.weeklyReportNoHighlight, style: theme.textTheme.bodyMedium)
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '“${insights.highlightQuote.quote}”',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          insights.highlightQuote.reason,
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: theme.colorScheme.outline),
+                        ),
+                      ],
+                    ),
+            ),
+            const SizedBox(height: 16),
+            _SectionCard(
+              icon: Icons.tag,
+              title: l10n.weeklyReportKeywordsSectionTitle,
+              child: insights.topKeywords.isEmpty
+                  ? Text(l10n.weeklyReportNoKeywords, style: theme.textTheme.bodyMedium)
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (var i = 0; i < insights.topKeywords.length; i++)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 3),
+                            child: Text(
+                              '${i + 1}. #${insights.topKeywords[i].keyword}'
+                              '（${insights.topKeywords[i].count}）',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                          ),
+                      ],
+                    ),
+            ),
+            const SizedBox(height: 16),
+            _SectionCard(
+              icon: Icons.auto_awesome,
+              title: l10n.weeklyReportIdeasSectionTitle,
+              child: insights.shiningIdeas.isEmpty
+                  ? Text(l10n.weeklyReportNoIdeas, style: theme.textTheme.bodyMedium)
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final idea in insights.shiningIdeas)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  idea.title,
+                                  style: theme.textTheme.titleSmall
+                                      ?.copyWith(fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  idea.reason,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.outline,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+            ),
+            const SizedBox(height: 16),
+            _SectionCard(
+              icon: Icons.celebration_outlined,
+              title: l10n.weeklyReportAchievementSectionTitle,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _StatTile(
+                          value: '$completedTasks',
+                          label: l10n.weeklyReportTasksCompleted(completedTasks),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatTile(
+                          value: '$diaryCount',
+                          label: l10n.weeklyReportDiaryCount(diaryCount),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    l10n.weeklyReportEncouragement,
+                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            _SectionCard(
+              icon: Icons.tips_and_updates_outlined,
+              title: l10n.weeklyReportAdviceSectionTitle,
+              child: Text(insights.advice, style: theme.textTheme.bodyMedium),
+            ),
+          ],
+        ),
+        // 画面には表示せず、共有画像キャプチャのためだけにオフキャンバスへ配置。
+        Positioned(
+          left: -3000,
+          top: 0,
+          child: Screenshot(
+            controller: shareController,
+            child: ShareCard(
+              dateRange: dateRange,
+              insights: insights,
+              categorySlices: categorySlices,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MagazineHeader extends StatelessWidget {
+  final String dateRange;
+
+  const _MagazineHeader({required this.dateRange});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'WEEKLY MIND REPORT',
+            style: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: 3,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            dateRange,
+            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmotionCalendar extends StatelessWidget {
+  final DateTime weekStart;
+  final List<EmotionTag?> dailyEmotions;
+  final String locale;
+
+  const _EmotionCalendar({
+    required this.weekStart,
+    required this.dailyEmotions,
+    required this.locale,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dayZero = DateTime(weekStart.year, weekStart.month, weekStart.day);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        for (var i = 0; i < 7; i++)
+          Column(
+            children: [
+              Text(
+                DateFormat.E(locale).format(dayZero.add(Duration(days: i))),
+                style: theme.textTheme.labelSmall
+                    ?.copyWith(color: theme.colorScheme.outline),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                dailyEmotions[i]?.emoji ?? '・',
+                style: const TextStyle(fontSize: 20),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final Widget child;
+
+  const _SectionCard({required this.icon, required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 20, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _EmotionBreakdown extends StatelessWidget {
+  final Map<EmotionTag, int> counts;
+
+  const _EmotionBreakdown({required this.counts});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final total = counts.values.fold<int>(0, (a, b) => a + b);
+    final entries = counts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return Column(
+      children: [
+        for (final entry in entries)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Text(entry.key.emoji, style: const TextStyle(fontSize: 20)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(entry.key.labelFor(l10n), style: theme.textTheme.bodySmall),
+                          Text('${entry.value}', style: theme.textTheme.bodySmall),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: total == 0 ? 0 : entry.value / total,
+                          minHeight: 7,
+                          backgroundColor:
+                              theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  final String value;
+  final String label;
+
+  const _StatTile({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: theme.textTheme.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w800, color: theme.colorScheme.primary),
+          ),
+          const SizedBox(height: 2),
+          Text(label, style: theme.textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+}
+
+/// データ到着時の「立ち上がる」リビール演出。フェード＋下からのスライド。
+class RevealIn extends StatefulWidget {
+  final Widget child;
+
+  const RevealIn({super.key, required this.child});
+
+  @override
+  State<RevealIn> createState() => _RevealInState();
+}
+
+class _RevealInState extends State<RevealIn> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 450),
+  )..forward();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final curved = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    return FadeTransition(
+      opacity: curved,
+      child: SlideTransition(
+        position: Tween(begin: const Offset(0, 0.04), end: Offset.zero).animate(curved),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+/// SNS共有用に撮影する縦長サマリーカード（画面には表示しない）。
+class ShareCard extends StatelessWidget {
+  final String dateRange;
+  final WeeklyReportInsights insights;
+  final List<CategorySlice> categorySlices;
+
+  const ShareCard({
+    super.key,
+    required this.dateRange,
+    required this.insights,
+    required this.categorySlices,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        width: 360,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              theme.colorScheme.primaryContainer,
+              theme.colorScheme.surface,
+            ],
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'WEEKLY MIND REPORT',
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: 3,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            Text(
+              dateRange,
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 20),
+            if (insights.moodHeadline.isNotEmpty)
+              Text(
+                insights.moodHeadline,
+                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+              ),
+            const SizedBox(height: 20),
+            CategoryDonutChart(slices: categorySlices),
+            if (insights.highlightQuote.quote.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Text(
+                '“${insights.highlightQuote.quote}”',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+            const SizedBox(height: 24),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'VoiceJournal',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.outline,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

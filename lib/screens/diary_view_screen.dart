@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
+import '../state/subscription_store.dart';
 import '../state/text_style_store.dart';
 import '../utils/note_text_style.dart';
 import '../widgets/diary_screen_background.dart';
@@ -32,6 +33,7 @@ class DiaryViewScreen extends StatelessWidget {
     JournalEntry entry,
   ) async {
     final l10n = AppLocalizations.of(context)!;
+    final isPro = context.read<SubscriptionStore>().isPro;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -50,7 +52,7 @@ class DiaryViewScreen extends StatelessWidget {
       ),
     );
     if (confirmed != true) return;
-    await store.deleteEntry(entry);
+    await store.deleteEntry(entry, isPro: isPro);
     if (context.mounted) Navigator.of(context).pop();
   }
 

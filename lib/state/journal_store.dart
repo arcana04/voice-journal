@@ -11,6 +11,7 @@ import '../services/calendar_settings_service.dart';
 import '../services/cloud_sync_service.dart';
 import '../services/db_service.dart';
 import '../services/image_storage_service.dart';
+import '../services/media_sync_service.dart';
 import '../services/reminder_service.dart';
 
 class JournalStore extends ChangeNotifier {
@@ -20,6 +21,7 @@ class JournalStore extends ChangeNotifier {
   final CalendarService _calendar = CalendarService.instance;
   final CalendarSettingsService _calendarSettings = CalendarSettingsService();
   final CloudSyncService _cloudSync = CloudSyncService();
+  final MediaSyncService _mediaSync = MediaSyncService();
 
   List<JournalEntry> entries = [];
   bool loading = false;
@@ -90,7 +92,7 @@ class JournalStore extends ChangeNotifier {
 
   /// [skipCloudPush]は、クラウドから復元してきたエントリを再度クラウドへ
   /// 送り返さないようにするためのフラグ（[fullSync]から使う）。
-  Future<void> addEntry(
+  Future<JournalEntry> addEntry(
     JournalEntry entry, {
     bool skipCloudPush = false,
   }) async {
@@ -125,6 +127,7 @@ class JournalStore extends ChangeNotifier {
     if (!skipCloudPush) {
       unawaited(_cloudSync.pushEntry(finalEntry));
     }
+    return finalEntry;
   }
 
   Future<void> toggleTask(JournalEntry entry, TaskItem task) async {
@@ -167,7 +170,7 @@ class JournalStore extends ChangeNotifier {
     unawaited(_cloudSync.pushEntry(entries[index]));
   }
 
-  Future<void> deleteEntry(JournalEntry entry) async {
+  Future<void> deleteEntry(JournalEntry entry, {bool isPro = false}) async {
     if (entry.id == null) return;
     for (final task in entry.tasks) {
       if (task.id != null && task.notifyAt != null) {
@@ -182,10 +185,18 @@ class JournalStore extends ChangeNotifier {
     entries.removeWhere((e) => e.id == entry.id);
     notifyListeners();
     unawaited(_cloudSync.deleteEntry(entry.remoteId));
+    if (isPro) {
+      unawaited(_mediaSync.deleteAllMedia(entry.remoteId));
+    }
   }
 
-  /// 写真・動画のファイルを entry に追加する。
-  Future<void> addMediaToEntry(JournalEntry entry, List<File> files) async {
+  /// 写真・動画のファイルを entry に追加する。[isPro]なら、Firebase Storageへの
+  /// クラウドバックアップも行う（Pro限定機能）。
+  Future<void> addMediaToEntry(
+    JournalEntry entry,
+    List<File> files, {
+    bool isPro = false,
+  }) async {
     if (entry.id == null || files.isEmpty) return;
     final paths = <String>[];
     for (final file in files) {
@@ -198,9 +209,21 @@ class JournalStore extends ChangeNotifier {
       imagePaths: [...entries[index].imagePaths, ...paths],
     );
     notifyListeners();
+    if (isPro) {
+      unawaited(
+        _mediaSync.uploadPendingMedia(
+          entryId: entry.id!,
+          remoteId: entry.remoteId,
+        ),
+      );
+    }
   }
 
-  Future<void> removeMediaFromEntry(JournalEntry entry, String path) async {
+  Future<void> removeMediaFromEntry(
+    JournalEntry entry,
+    String path, {
+    bool isPro = false,
+  }) async {
     if (entry.id == null) return;
     await _db.deleteImage(entry.id!, path);
     await _images.deleteImage(path);
@@ -210,6 +233,9 @@ class JournalStore extends ChangeNotifier {
       imagePaths: entries[index].imagePaths.where((p) => p != path).toList(),
     );
     notifyListeners();
+    if (isPro) {
+      unawaited(_mediaSync.deleteMedia(entry.remoteId, path));
+    }
   }
 
   Future<void> updateNoteText(
@@ -410,12 +436,18 @@ class JournalStore extends ChangeNotifier {
   /// 未同期のまま溜まっていたデータをアップロード）、次にクラウド上にあってこの
   /// 端末にまだ無いエントリを取り込む（削除の伝播は行わない — データを失わない
   /// ことを優先した意図的な仕様）。
-  Future<void> fullSync() async {
+  Future<void> fullSync({bool isPro = false}) async {
     if (_syncing) return;
     _syncing = true;
     try {
       for (final entry in entries) {
         await _cloudSync.pushEntry(entry);
+        if (isPro && entry.id != null) {
+          await _mediaSync.uploadPendingMedia(
+            entryId: entry.id!,
+            remoteId: entry.remoteId,
+          );
+        }
       }
       final remoteEntries = await _cloudSync.fetchAll();
       final localRemoteIds = entries
@@ -427,7 +459,14 @@ class JournalStore extends ChangeNotifier {
             localRemoteIds.contains(remote.remoteId)) {
           continue;
         }
-        await addEntry(remote, skipCloudPush: true);
+        final saved = await addEntry(remote, skipCloudPush: true);
+        if (isPro && saved.id != null) {
+          await _mediaSync.downloadMissingMedia(
+            entryId: saved.id!,
+            remoteId: saved.remoteId,
+            localPaths: saved.imagePaths,
+          );
+        }
       }
     } finally {
       _syncing = false;

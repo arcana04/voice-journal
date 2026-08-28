@@ -47,6 +47,8 @@ dependencies:
   firebase_auth: ^5.3.3
   cloud_functions: ^5.2.3
   cloud_firestore: ^5.6.0
+  firebase_storage: ^12.3.7
+  flutter_image_compress: ^2.3.0
   flutter_local_notifications: ^17.2.3
   timezone: ^0.9.4
   image_picker: ^1.1.2
@@ -59,6 +61,9 @@ dependencies:
   device_calendar: ^4.3.3
   purchases_flutter: ^8.0.0
   url_launcher: ^6.3.1
+  screenshot: ^3.0.0
+  share_plus: ^10.1.4
+  flutter_foreground_task: ^8.17.0
 
 dev_dependencies:
   flutter_test:

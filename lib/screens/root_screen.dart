@@ -3,13 +3,16 @@ import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/deep_link_service.dart';
+import '../services/reminder_service.dart';
 import '../state/record_trigger_store.dart';
+import '../state/subscription_store.dart';
 import '../widgets/floating_nav_bar.dart';
 import 'diary_screen.dart';
 import 'home_screen.dart';
 import 'idea_screen.dart';
 import 'knowledge_base_screen.dart';
 import 'task_screen.dart';
+import 'weekly_report_screen.dart';
 
 class RootScreen extends StatefulWidget {
   const RootScreen({super.key});
@@ -21,6 +24,7 @@ class RootScreen extends StatefulWidget {
 class _RootScreenState extends State<RootScreen> {
   int _index = 0;
   final DeepLinkService _deepLinks = DeepLinkService();
+  bool? _lastIsPro;
 
   static const _screens = [
     HomeScreen(),
@@ -34,11 +38,15 @@ class _RootScreenState extends State<RootScreen> {
   void initState() {
     super.initState();
     _deepLinks.init(onRecordRequested: _handleRecordRequested);
+    ReminderService.instance.weeklyReportRequests
+        .addListener(_handleWeeklyReportRequested);
   }
 
   @override
   void dispose() {
     _deepLinks.dispose();
+    ReminderService.instance.weeklyReportRequests
+        .removeListener(_handleWeeklyReportRequested);
     super.dispose();
   }
 
@@ -48,9 +56,29 @@ class _RootScreenState extends State<RootScreen> {
     context.read<RecordTriggerStore>().requestRecordNow();
   }
 
+  void _handleWeeklyReportRequested() {
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const WeeklyReportScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
+    final isPro = context.watch<SubscriptionStore>().isPro;
+    if (_lastIsPro != isPro) {
+      _lastIsPro = isPro;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (isPro) {
+          ReminderService.instance.scheduleWeeklyReportNotification();
+        } else {
+          ReminderService.instance.cancelWeeklyReportNotification();
+        }
+      });
+    }
+
     return Scaffold(
       extendBody: true,
       body: IndexedStack(index: _index, children: _screens),

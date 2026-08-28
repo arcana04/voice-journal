@@ -111,6 +111,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   text: l10n.paywallBenefitCustomBackground,
                 ),
                 _BenefitRow(
+                  icon: Icons.cloud_upload_outlined,
+                  text: l10n.paywallBenefitMediaSync,
+                ),
+                _BenefitRow(
                   icon: Icons.psychology_outlined,
                   text: l10n.paywallBenefitKnowledgeBase,
                 ),

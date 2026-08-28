@@ -38,7 +38,11 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>ボイスメモを録音してタスクや日記に整理するためにマイクを使用します。</string>
+	<string>音声を入力し、AIが自動でタスクや日記、アイデアに分類・整理するためにマイクを使用します。</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>日記に写真を追加するために写真ライブラリを使用します。</string>
 	<key>NSCalendarsUsageDescription</key>

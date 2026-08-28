@@ -425,6 +425,15 @@ class AppLocalizationsJa extends AppLocalizations {
       '端末内のデータは削除されません。再度ログインすると同期を再開できます。';
 
   @override
+  String get supportSectionTitle => 'サポート';
+
+  @override
+  String get contactSupportTitle => 'お問い合わせ';
+
+  @override
+  String get contactSupportEmailSubject => 'VoiceJournalへのお問い合わせ';
+
+  @override
   String get planSectionTitle => 'プラン';
 
   @override
@@ -464,6 +473,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get paywallBenefitCustomBackground => '日記の背景に自分の写真を使える';
 
   @override
+  String get paywallBenefitMediaSync => '日記に添付した写真・動画もクラウドにバックアップ';
+
+  @override
   String get paywallBenefitKnowledgeBase => '「相談」でこれまでの記録を横断してAIに質問できる';
 
   @override
@@ -486,22 +498,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get paywallRestoreNotFound => '復元できる購入が見つかりませんでした。';
-
-  @override
-  String get freeTierSectionTitle => '利用状況';
-
-  @override
-  String get freeTierFetchFailed => '利用状況を取得できませんでした';
-
-  @override
-  String freeTierUsage(int used, int limit) {
-    return '本日の録音回数: $used / $limit回';
-  }
-
-  @override
-  String freeTierRemaining(int remaining) {
-    return '残り$remaining回（日本時間の日付で毎日リセット）';
-  }
 
   @override
   String homeUsageToday(int used, int limit) {
@@ -673,12 +669,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get fontSheetTitle => 'フォント';
-
-  @override
-  String get setAsDefaultTooltip => 'この設定をデフォルトにする';
-
-  @override
-  String get setAsDefaultSnackbar => 'デフォルトに設定しました';
 
   @override
   String get closeTooltip => '閉じる';
@@ -865,6 +855,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get usageFetchError => '利用状況の取得に失敗しました';
 
   @override
+  String get backgroundRecordingChannelName => 'バックグラウンド録音';
+
+  @override
+  String get backgroundRecordingChannelDescription =>
+      '録音中にバックグラウンド/画面オフでも録音を継続するための通知です';
+
+  @override
+  String get backgroundRecordingNotificationTitle => '録音中です';
+
+  @override
+  String get backgroundRecordingNotificationText => 'タップしてアプリに戻る';
+
+  @override
   String get reminderNotificationTitle => 'リマインダー';
 
   @override
@@ -872,6 +875,29 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get reminderNotificationChannelDescription => '独り言から作られたToDoの時刻リマインダー';
+
+  @override
+  String get weeklyReportNotificationTitle => '週刊脳内レポートができました！';
+
+  @override
+  String get weeklyReportNotificationBody =>
+      '今週のあなたの記録をAIが振り返りました。タップして見てみましょう';
+
+  @override
+  String get weeklyReportNotificationChannelName => '週刊レポート通知';
+
+  @override
+  String get weeklyReportNotificationChannelDescription =>
+      '毎週日曜20時に週刊脳内レポートの完成をお知らせします';
+
+  @override
+  String get weeklyReportHistoryTooltip => '過去のレポート';
+
+  @override
+  String get weeklyReportHistoryTitle => '週刊レポート履歴';
+
+  @override
+  String get weeklyReportHistoryEmpty => 'まだ保存されたレポートがありません';
 
   @override
   String get knowledgeBaseTitle => '思考、記憶の検索';
@@ -924,6 +950,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get weeklyReportNoEmotionData => '今週はまだ感情の記録がありません';
 
   @override
+  String get weeklyReportCalendarSectionTitle => '感情カレンダー';
+
+  @override
+  String get weeklyReportCategorySectionTitle => '仕分け比率';
+
+  @override
+  String get weeklyReportNoCategoryData => '今週はまだ記録がありません';
+
+  @override
   String get weeklyReportKeywordsSectionTitle => '今週のキーワード';
 
   @override
@@ -934,6 +969,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get weeklyReportNoIdeas => '今週はまだアイデアの記録がありません';
+
+  @override
+  String get weeklyReportHighlightSectionTitle => '今週のベストフレーズ';
+
+  @override
+  String get weeklyReportNoHighlight => '今週はまだ日記の記録がありません';
 
   @override
   String get weeklyReportAchievementSectionTitle => '今週の達成';
@@ -953,4 +994,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get weeklyReportAdviceSectionTitle => '来週へのアドバイス';
+
+  @override
+  String get weeklyReportShareTooltip => '画像として共有';
+
+  @override
+  String get weeklyReportShareCaption => '今週の脳内、こんな感じでした📝 #VoiceJournal';
 }

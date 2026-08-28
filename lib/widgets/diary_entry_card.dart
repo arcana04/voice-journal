@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
 import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
+import '../services/video_thumbnail_service.dart';
 import '../utils/media_type.dart';
 
 /// 日記画面の一覧に出す、タップで詳細画面を開くための読み取り専用プレビューカード。
@@ -140,42 +141,93 @@ class DiaryEntryCard extends StatelessWidget {
         children: [
           for (var i = 0; i < shown.length; i++) ...[
             if (i > 0) const SizedBox(width: 6),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: SizedBox(
-                width: thumbSize,
-                height: thumbSize,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    isVideoPath(shown[i])
-                        ? const ColoredBox(
-                            color: Colors.black87,
-                            child: Icon(
-                              Icons.play_circle_fill,
-                              color: Colors.white,
-                              size: 26,
-                            ),
-                          )
-                        : Image.file(File(shown[i]), fit: BoxFit.cover),
-                    if (i == shown.length - 1 && remaining > 0)
-                      Container(
-                        color: Colors.black.withValues(alpha: 0.45),
-                        alignment: Alignment.center,
-                        child: Text(
-                          '+$remaining',
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+            _MediaPreviewTile(
+              path: shown[i],
+              size: thumbSize,
+              overlayLabel: (i == shown.length - 1 && remaining > 0)
+                  ? '+$remaining'
+                  : null,
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// 一覧カードの添付サムネイル1枚分。動画は実際のフレーム画像を生成して表示する
+/// （編集/閲覧画面の[MediaGallery]と同じ[VideoThumbnailService]を使う）。
+class _MediaPreviewTile extends StatefulWidget {
+  final String path;
+  final double size;
+  final String? overlayLabel;
+
+  const _MediaPreviewTile({
+    required this.path,
+    required this.size,
+    this.overlayLabel,
+  });
+
+  @override
+  State<_MediaPreviewTile> createState() => _MediaPreviewTileState();
+}
+
+class _MediaPreviewTileState extends State<_MediaPreviewTile> {
+  final _thumbnailService = VideoThumbnailService();
+  String? _videoThumbnailPath;
+
+  @override
+  void initState() {
+    super.initState();
+    if (isVideoPath(widget.path)) {
+      _thumbnailService.getOrCreateThumbnail(widget.path).then((thumbPath) {
+        if (mounted) setState(() => _videoThumbnailPath = thumbPath);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isVideo = isVideoPath(widget.path);
+    final videoThumb = _videoThumbnailPath;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (isVideo)
+              videoThumb != null
+                  ? Image.file(File(videoThumb), fit: BoxFit.cover)
+                  : const ColoredBox(color: Colors.black87)
+            else
+              Image.file(File(widget.path), fit: BoxFit.cover),
+            if (isVideo)
+              const Center(
+                child: Icon(
+                  Icons.play_circle_fill,
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ),
+            if (widget.overlayLabel != null)
+              Container(
+                color: Colors.black.withValues(alpha: 0.45),
+                alignment: Alignment.center,
+                child: Text(
+                  widget.overlayLabel!,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -442,6 +442,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your data on this device won\'t be deleted. Sign back in anytime to resume syncing.';
 
   @override
+  String get supportSectionTitle => 'Support';
+
+  @override
+  String get contactSupportTitle => 'Contact us';
+
+  @override
+  String get contactSupportEmailSubject => 'VoiceJournal Support';
+
+  @override
   String get planSectionTitle => 'Plan';
 
   @override
@@ -487,6 +496,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use your own photos as diary backgrounds';
 
   @override
+  String get paywallBenefitMediaSync =>
+      'Cloud backup for photos and videos attached to entries';
+
+  @override
   String get paywallBenefitKnowledgeBase =>
       'Ask AI questions across all your past entries in \"Ask\"';
 
@@ -513,22 +526,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paywallRestoreNotFound => 'No restorable purchase was found.';
-
-  @override
-  String get freeTierSectionTitle => 'Usage';
-
-  @override
-  String get freeTierFetchFailed => 'Couldn\'t load usage status';
-
-  @override
-  String freeTierUsage(int used, int limit) {
-    return 'Recordings today: $used / $limit';
-  }
-
-  @override
-  String freeTierRemaining(int remaining) {
-    return '$remaining left today (resets daily, Japan time)';
-  }
 
   @override
   String homeUsageToday(int used, int limit) {
@@ -702,12 +699,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fontSheetTitle => 'Font';
-
-  @override
-  String get setAsDefaultTooltip => 'Set as default';
-
-  @override
-  String get setAsDefaultSnackbar => 'Set as default';
 
   @override
   String get closeTooltip => 'Close';
@@ -897,6 +888,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get usageFetchError => 'Failed to load usage status';
 
   @override
+  String get backgroundRecordingChannelName => 'Background recording';
+
+  @override
+  String get backgroundRecordingChannelDescription =>
+      'Keeps recording running while the app is backgrounded or the screen is off';
+
+  @override
+  String get backgroundRecordingNotificationTitle => 'Recording…';
+
+  @override
+  String get backgroundRecordingNotificationText => 'Tap to return to the app';
+
+  @override
   String get reminderNotificationTitle => 'Reminder';
 
   @override
@@ -905,6 +909,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get reminderNotificationChannelDescription =>
       'Time-based reminders for to-dos created from your voice notes';
+
+  @override
+  String get weeklyReportNotificationTitle =>
+      'Your Weekly Brain Report is ready!';
+
+  @override
+  String get weeklyReportNotificationBody =>
+      'AI has looked back on your week. Tap to see it.';
+
+  @override
+  String get weeklyReportNotificationChannelName =>
+      'Weekly report notifications';
+
+  @override
+  String get weeklyReportNotificationChannelDescription =>
+      'Notifies you every Sunday at 8pm when your Weekly Brain Report is ready';
+
+  @override
+  String get weeklyReportHistoryTooltip => 'Past reports';
+
+  @override
+  String get weeklyReportHistoryTitle => 'Weekly Report History';
+
+  @override
+  String get weeklyReportHistoryEmpty => 'No saved reports yet';
 
   @override
   String get knowledgeBaseTitle => 'Second Brain';
@@ -960,6 +989,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weeklyReportNoEmotionData => 'No emotional entries yet this week';
 
   @override
+  String get weeklyReportCalendarSectionTitle => 'Emotion calendar';
+
+  @override
+  String get weeklyReportCategorySectionTitle => 'Category mix';
+
+  @override
+  String get weeklyReportNoCategoryData => 'No entries yet this week';
+
+  @override
   String get weeklyReportKeywordsSectionTitle => 'This week\'s keywords';
 
   @override
@@ -970,6 +1008,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weeklyReportNoIdeas => 'No ideas recorded yet this week';
+
+  @override
+  String get weeklyReportHighlightSectionTitle => 'This week\'s highlight';
+
+  @override
+  String get weeklyReportNoHighlight => 'No diary entries yet this week';
 
   @override
   String get weeklyReportAchievementSectionTitle => 'This week\'s wins';
@@ -989,4 +1033,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weeklyReportAdviceSectionTitle => 'Advice for next week';
+
+  @override
+  String get weeklyReportShareTooltip => 'Share as image';
+
+  @override
+  String get weeklyReportShareCaption =>
+      'Here\'s what my week looked like 📝 #VoiceJournal';
 }

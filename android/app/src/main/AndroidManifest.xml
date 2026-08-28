@@ -4,10 +4,18 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.READ_CALENDAR"/>
     <uses-permission android:name="android.permission.WRITE_CALENDAR"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
     <application
         android:label="voicejournal"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- flutter_foreground_task: バックグラウンド/画面オフでも録音のマイクアクセスを
+             維持するためのフォアグラウンドサービス。サービス名は変更しないこと。 -->
+        <service
+            android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
+            android:foregroundServiceType="microphone"
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

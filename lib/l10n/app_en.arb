@@ -155,6 +155,10 @@
   "accountSignOutConfirmTitle": "Sign out?",
   "accountSignOutConfirmMessage": "Your data on this device won't be deleted. Sign back in anytime to resume syncing.",
 
+  "supportSectionTitle": "Support",
+  "contactSupportTitle": "Contact us",
+  "contactSupportEmailSubject": "VoiceJournal Support",
+
   "planSectionTitle": "Plan",
   "planProTitle": "Pro plan",
   "planFreeTitle": "Free plan",
@@ -168,6 +172,7 @@
   "paywallBenefitCount": "Record up to 30 times a day (3 times on the free plan)",
   "paywallBenefitDiaryStyle": "9 diary writing styles to choose from (standard only on the free plan)",
   "paywallBenefitCustomBackground": "Use your own photos as diary backgrounds",
+  "paywallBenefitMediaSync": "Cloud backup for photos and videos attached to entries",
   "paywallBenefitKnowledgeBase": "Ask AI questions across all your past entries in \"Ask\"",
   "paywallBenefitWeeklyReport": "Get an AI-written Weekly Brain Report looking back on your week",
   "paywallUnavailable": "Couldn't load plans right now. Please try again later.",
@@ -177,16 +182,6 @@
   "paywallPurchaseFailed": "Something went wrong. Please try again later.",
   "paywallRestoreNotFound": "No restorable purchase was found.",
 
-  "freeTierSectionTitle": "Usage",
-  "freeTierFetchFailed": "Couldn't load usage status",
-  "freeTierUsage": "Recordings today: {used} / {limit}",
-  "@freeTierUsage": {
-    "placeholders": { "used": { "type": "int" }, "limit": { "type": "int" } }
-  },
-  "freeTierRemaining": "{remaining} left today (resets daily, Japan time)",
-  "@freeTierRemaining": {
-    "placeholders": { "remaining": { "type": "int" } }
-  },
   "homeUsageToday": "Today {used} / {limit}",
   "@homeUsageToday": {
     "placeholders": { "used": { "type": "int" }, "limit": { "type": "int" } }
@@ -252,8 +247,6 @@
   "diaryBgBeachGirl": "By the Sea",
   "diaryBgSleepingCat": "Sleeping Cat",
   "fontSheetTitle": "Font",
-  "setAsDefaultTooltip": "Set as default",
-  "setAsDefaultSnackbar": "Set as default",
   "closeTooltip": "Close",
   "favoriteSettingsTooltip": "Favorite settings",
   "favoriteSettingsSheetTitle": "Favorite settings",
@@ -334,9 +327,22 @@
   "genericProcessingError": "An error occurred while processing",
   "usageFetchError": "Failed to load usage status",
 
+  "backgroundRecordingChannelName": "Background recording",
+  "backgroundRecordingChannelDescription": "Keeps recording running while the app is backgrounded or the screen is off",
+  "backgroundRecordingNotificationTitle": "Recording…",
+  "backgroundRecordingNotificationText": "Tap to return to the app",
+
   "reminderNotificationTitle": "Reminder",
   "reminderNotificationChannelName": "To-do reminders",
   "reminderNotificationChannelDescription": "Time-based reminders for to-dos created from your voice notes",
+
+  "weeklyReportNotificationTitle": "Your Weekly Brain Report is ready!",
+  "weeklyReportNotificationBody": "AI has looked back on your week. Tap to see it.",
+  "weeklyReportNotificationChannelName": "Weekly report notifications",
+  "weeklyReportNotificationChannelDescription": "Notifies you every Sunday at 8pm when your Weekly Brain Report is ready",
+  "weeklyReportHistoryTooltip": "Past reports",
+  "weeklyReportHistoryTitle": "Weekly Report History",
+  "weeklyReportHistoryEmpty": "No saved reports yet",
 
   "knowledgeBaseTitle": "Second Brain",
   "knowledgeBaseDescription": "AI looks back across all your diary entries, ideas, and tasks to answer you.",
@@ -355,10 +361,15 @@
   "weeklyReportErrorTitle": "Couldn't load the report",
   "weeklyReportEmotionSectionTitle": "Emotional trends",
   "weeklyReportNoEmotionData": "No emotional entries yet this week",
+  "weeklyReportCalendarSectionTitle": "Emotion calendar",
+  "weeklyReportCategorySectionTitle": "Category mix",
+  "weeklyReportNoCategoryData": "No entries yet this week",
   "weeklyReportKeywordsSectionTitle": "This week's keywords",
   "weeklyReportNoKeywords": "No standout keywords this week",
   "weeklyReportIdeasSectionTitle": "Ideas that shined",
   "weeklyReportNoIdeas": "No ideas recorded yet this week",
+  "weeklyReportHighlightSectionTitle": "This week's highlight",
+  "weeklyReportNoHighlight": "No diary entries yet this week",
   "weeklyReportAchievementSectionTitle": "This week's wins",
   "weeklyReportTasksCompleted": "{count} tasks completed",
   "@weeklyReportTasksCompleted": {
@@ -369,5 +380,7 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "weeklyReportEncouragement": "You did great this week!",
-  "weeklyReportAdviceSectionTitle": "Advice for next week"
+  "weeklyReportAdviceSectionTitle": "Advice for next week",
+  "weeklyReportShareTooltip": "Share as image",
+  "weeklyReportShareCaption": "Here's what my week looked like 📝 #VoiceJournal"
 }

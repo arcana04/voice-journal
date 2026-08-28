@@ -878,6 +878,24 @@ abstract class AppLocalizations {
   /// **'Your data on this device won\'t be deleted. Sign back in anytime to resume syncing.'**
   String get accountSignOutConfirmMessage;
 
+  /// No description provided for @supportSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get supportSectionTitle;
+
+  /// No description provided for @contactSupportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact us'**
+  String get contactSupportTitle;
+
+  /// No description provided for @contactSupportEmailSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'VoiceJournal Support'**
+  String get contactSupportEmailSubject;
+
   /// No description provided for @planSectionTitle.
   ///
   /// In en, this message translates to:
@@ -956,6 +974,12 @@ abstract class AppLocalizations {
   /// **'Use your own photos as diary backgrounds'**
   String get paywallBenefitCustomBackground;
 
+  /// No description provided for @paywallBenefitMediaSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud backup for photos and videos attached to entries'**
+  String get paywallBenefitMediaSync;
+
   /// No description provided for @paywallBenefitKnowledgeBase.
   ///
   /// In en, this message translates to:
@@ -1003,30 +1027,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No restorable purchase was found.'**
   String get paywallRestoreNotFound;
-
-  /// No description provided for @freeTierSectionTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Usage'**
-  String get freeTierSectionTitle;
-
-  /// No description provided for @freeTierFetchFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Couldn\'t load usage status'**
-  String get freeTierFetchFailed;
-
-  /// No description provided for @freeTierUsage.
-  ///
-  /// In en, this message translates to:
-  /// **'Recordings today: {used} / {limit}'**
-  String freeTierUsage(int used, int limit);
-
-  /// No description provided for @freeTierRemaining.
-  ///
-  /// In en, this message translates to:
-  /// **'{remaining} left today (resets daily, Japan time)'**
-  String freeTierRemaining(int remaining);
 
   /// No description provided for @homeUsageToday.
   ///
@@ -1357,18 +1357,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Font'**
   String get fontSheetTitle;
-
-  /// No description provided for @setAsDefaultTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Set as default'**
-  String get setAsDefaultTooltip;
-
-  /// No description provided for @setAsDefaultSnackbar.
-  ///
-  /// In en, this message translates to:
-  /// **'Set as default'**
-  String get setAsDefaultSnackbar;
 
   /// No description provided for @closeTooltip.
   ///
@@ -1724,6 +1712,30 @@ abstract class AppLocalizations {
   /// **'Failed to load usage status'**
   String get usageFetchError;
 
+  /// No description provided for @backgroundRecordingChannelName.
+  ///
+  /// In en, this message translates to:
+  /// **'Background recording'**
+  String get backgroundRecordingChannelName;
+
+  /// No description provided for @backgroundRecordingChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps recording running while the app is backgrounded or the screen is off'**
+  String get backgroundRecordingChannelDescription;
+
+  /// No description provided for @backgroundRecordingNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording…'**
+  String get backgroundRecordingNotificationTitle;
+
+  /// No description provided for @backgroundRecordingNotificationText.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to return to the app'**
+  String get backgroundRecordingNotificationText;
+
   /// No description provided for @reminderNotificationTitle.
   ///
   /// In en, this message translates to:
@@ -1741,6 +1753,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Time-based reminders for to-dos created from your voice notes'**
   String get reminderNotificationChannelDescription;
+
+  /// No description provided for @weeklyReportNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Weekly Brain Report is ready!'**
+  String get weeklyReportNotificationTitle;
+
+  /// No description provided for @weeklyReportNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'AI has looked back on your week. Tap to see it.'**
+  String get weeklyReportNotificationBody;
+
+  /// No description provided for @weeklyReportNotificationChannelName.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly report notifications'**
+  String get weeklyReportNotificationChannelName;
+
+  /// No description provided for @weeklyReportNotificationChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifies you every Sunday at 8pm when your Weekly Brain Report is ready'**
+  String get weeklyReportNotificationChannelDescription;
+
+  /// No description provided for @weeklyReportHistoryTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Past reports'**
+  String get weeklyReportHistoryTooltip;
+
+  /// No description provided for @weeklyReportHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Report History'**
+  String get weeklyReportHistoryTitle;
+
+  /// No description provided for @weeklyReportHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved reports yet'**
+  String get weeklyReportHistoryEmpty;
 
   /// No description provided for @knowledgeBaseTitle.
   ///
@@ -1838,6 +1892,24 @@ abstract class AppLocalizations {
   /// **'No emotional entries yet this week'**
   String get weeklyReportNoEmotionData;
 
+  /// No description provided for @weeklyReportCalendarSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Emotion calendar'**
+  String get weeklyReportCalendarSectionTitle;
+
+  /// No description provided for @weeklyReportCategorySectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Category mix'**
+  String get weeklyReportCategorySectionTitle;
+
+  /// No description provided for @weeklyReportNoCategoryData.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries yet this week'**
+  String get weeklyReportNoCategoryData;
+
   /// No description provided for @weeklyReportKeywordsSectionTitle.
   ///
   /// In en, this message translates to:
@@ -1861,6 +1933,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No ideas recorded yet this week'**
   String get weeklyReportNoIdeas;
+
+  /// No description provided for @weeklyReportHighlightSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This week\'s highlight'**
+  String get weeklyReportHighlightSectionTitle;
+
+  /// No description provided for @weeklyReportNoHighlight.
+  ///
+  /// In en, this message translates to:
+  /// **'No diary entries yet this week'**
+  String get weeklyReportNoHighlight;
 
   /// No description provided for @weeklyReportAchievementSectionTitle.
   ///
@@ -1891,6 +1975,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Advice for next week'**
   String get weeklyReportAdviceSectionTitle;
+
+  /// No description provided for @weeklyReportShareTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Share as image'**
+  String get weeklyReportShareTooltip;
+
+  /// No description provided for @weeklyReportShareCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Here\'s what my week looked like 📝 #VoiceJournal'**
+  String get weeklyReportShareCaption;
 }
 
 class _AppLocalizationsDelegate

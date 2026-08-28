@@ -13,6 +13,7 @@ import '../models/journal_entry.dart';
 import '../models/summary_level.dart';
 import '../models/usage_status.dart';
 import '../services/backend_service.dart';
+import '../services/background_recording_service.dart';
 import '../services/recorder_service.dart';
 import '../state/custom_words_store.dart';
 import '../state/journal_store.dart';
@@ -59,7 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<UsageStatus> _usageFuture = _backend.fetchUsageStatus();
 
   void _refreshUsage() {
-    setState(() => _usageFuture = _backend.fetchUsageStatus());
+    setState(() {
+      _usageFuture = _backend.fetchUsageStatus();
+    });
   }
 
   @override
@@ -122,6 +125,9 @@ class _HomeScreenState extends State<HomeScreen> {
       _maxDuration = maxRecordingDurationFor(isPro);
       _statusMessage = null;
     });
+    BackgroundRecordingService.updateNotificationText(
+      '${_formatDuration(_elapsed)} / ${_formatDuration(_maxDuration)}',
+    );
     _lastSoundAt = DateTime.now();
     _amplitudeSub = _recorder
         .onAmplitudeChanged(const Duration(milliseconds: 300))
@@ -144,6 +150,9 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
       setState(() => _elapsed = next);
+      BackgroundRecordingService.updateNotificationText(
+        '${_formatDuration(next)} / ${_formatDuration(_maxDuration)}',
+      );
     });
   }
 

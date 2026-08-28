@@ -50,6 +50,9 @@ app.*.map.json
 # Claude Code local settings
 .claude/
 
+# Firebase CLI local deploy cache
+.firebase/
+
 # Ad-hoc debug artifacts (adb screenshots, uiautomator dumps) saved at repo root
 # during device verification — not source, shouldn't be committed.
 /*.png
