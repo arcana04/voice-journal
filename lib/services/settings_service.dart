@@ -7,6 +7,7 @@ class SettingsService {
   static const _summaryLevelPref = 'summary_level';
   static const _diaryStylePref = 'diary_style';
   static const _darkModePref = 'dark_mode';
+  static const _hasSeenOnboardingPref = 'has_seen_onboarding';
 
   Future<SummaryLevel> getSummaryLevel() async {
     final prefs = await SharedPreferences.getInstance();
@@ -36,5 +37,15 @@ class SettingsService {
   Future<void> setDarkMode(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_darkModePref, value);
+  }
+
+  Future<bool> getHasSeenOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_hasSeenOnboardingPref) ?? false;
+  }
+
+  Future<void> setHasSeenOnboarding(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_hasSeenOnboardingPref, value);
   }
 }

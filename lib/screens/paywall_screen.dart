@@ -102,6 +102,22 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   text: l10n.paywallBenefitDuration,
                 ),
                 _BenefitRow(icon: Icons.repeat, text: l10n.paywallBenefitCount),
+                _BenefitRow(
+                  icon: Icons.auto_stories_outlined,
+                  text: l10n.paywallBenefitDiaryStyle,
+                ),
+                _BenefitRow(
+                  icon: Icons.image_outlined,
+                  text: l10n.paywallBenefitCustomBackground,
+                ),
+                _BenefitRow(
+                  icon: Icons.psychology_outlined,
+                  text: l10n.paywallBenefitKnowledgeBase,
+                ),
+                _BenefitRow(
+                  icon: Icons.insights_outlined,
+                  text: l10n.paywallBenefitWeeklyReport,
+                ),
                 const SizedBox(height: 24),
                 if (packages.isEmpty)
                   Padding(

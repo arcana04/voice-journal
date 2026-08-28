@@ -11,6 +11,7 @@ import '../models/diary_style.dart';
 import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
 import '../models/summary_level.dart';
+import '../models/usage_status.dart';
 import '../services/backend_service.dart';
 import '../services/recorder_service.dart';
 import '../state/custom_words_store.dart';
@@ -54,6 +55,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   RecordTriggerStore? _recordTrigger;
   int _lastHandledRequestId = 0;
+
+  late Future<UsageStatus> _usageFuture = _backend.fetchUsageStatus();
+
+  void _refreshUsage() {
+    setState(() => _usageFuture = _backend.fetchUsageStatus());
+  }
 
   @override
   void didChangeDependencies() {
@@ -231,6 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _draftEmotion = entry.emotion;
       _draftItems = _buildDraftItems(entry);
     });
+    _refreshUsage();
   }
 
   void _handleProcessingError(Object e) {
@@ -442,6 +450,31 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 .colorScheme
                                                 .outline,
                                           ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    FutureBuilder<UsageStatus>(
+                                      future: _usageFuture,
+                                      builder: (context, snapshot) {
+                                        final usage = snapshot.data;
+                                        if (usage == null) {
+                                          return const SizedBox.shrink();
+                                        }
+                                        return Text(
+                                          l10n.homeUsageToday(
+                                            usage.used,
+                                            usage.limit,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .outline,
+                                              ),
+                                        );
+                                      },
                                     ),
                                   ],
                                   if (_statusMessage != null) ...[

@@ -25,6 +25,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navKnowledgeBase => 'Ask';
 
   @override
+  String get onboardingSkip => 'Skip';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingGetStarted => 'Get Started';
+
+  @override
+  String get onboardingCreateAccount =>
+      'Create an account (you can also do this later in Settings)';
+
+  @override
+  String get onboardingPage1Title =>
+      'The moment it crosses your mind,\njust say it out loud';
+
+  @override
+  String get onboardingPage1Body =>
+      'Tap the record button and speak — VoiceJournal takes care of the rest';
+
+  @override
+  String get onboardingPage2Title => 'AI sorts it out for you';
+
+  @override
+  String get onboardingPage2Body =>
+      'What you say is automatically sorted into a diary entry, idea, or task';
+
+  @override
+  String get onboardingPage3Title => 'Let\'s get started';
+
+  @override
+  String get onboardingPage3Body =>
+      'Whenever something\'s on your mind, just tap and talk';
+
+  @override
   String get emotionFatigue => 'Fatigue';
 
   @override
@@ -444,6 +479,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Record up to 30 times a day (3 times on the free plan)';
 
   @override
+  String get paywallBenefitDiaryStyle =>
+      '9 diary writing styles to choose from (standard only on the free plan)';
+
+  @override
+  String get paywallBenefitCustomBackground =>
+      'Use your own photos as diary backgrounds';
+
+  @override
+  String get paywallBenefitKnowledgeBase =>
+      'Ask AI questions across all your past entries in \"Ask\"';
+
+  @override
+  String get paywallBenefitWeeklyReport =>
+      'Get an AI-written Weekly Brain Report looking back on your week';
+
+  @override
   String get paywallUnavailable =>
       'Couldn\'t load plans right now. Please try again later.';
 
@@ -477,6 +528,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String freeTierRemaining(int remaining) {
     return '$remaining left today (resets daily, Japan time)';
+  }
+
+  @override
+  String homeUsageToday(int used, int limit) {
+    return 'Today $used / $limit';
   }
 
   @override
@@ -579,7 +635,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get pickFromLibrary => 'Choose photo/video from library';
+  String get pickPhotosFromLibrary => 'Choose photos';
+
+  @override
+  String get pickVideoFromLibrary => 'Choose a video';
 
   @override
   String get backgroundSheetTitle => 'Background';
@@ -652,6 +711,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get closeTooltip => 'Close';
+
+  @override
+  String get favoriteSettingsTooltip => 'Favorite settings';
+
+  @override
+  String get favoriteSettingsSheetTitle => 'Favorite settings';
+
+  @override
+  String get favoriteSettingsDescription =>
+      'The default text style and background used for newly created diary entries';
+
+  @override
+  String get addCustomBackgroundTile => 'Add your own photo';
 
   @override
   String get toolbarMedia => 'Photo/Video';
@@ -859,10 +931,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get knowledgeBaseErrorTitle => 'Couldn\'t get an answer';
 
   @override
+  String get knowledgeBaseProLockedDescription =>
+      'Chatting across all your entries is a Pro feature. Upgrade to unlock it.';
+
+  @override
   String get weeklyReportSettingsTitle => 'Weekly report';
 
   @override
   String get weeklyReportTitle => 'Weekly Brain Report';
+
+  @override
+  String get weeklyReportProLockedDescription =>
+      'The Weekly Brain Report is a Pro feature. Upgrade to unlock it.';
 
   @override
   String get weeklyReportRetry => 'Retry';

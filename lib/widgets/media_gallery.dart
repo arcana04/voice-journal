@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
+import '../services/video_thumbnail_service.dart';
 import '../utils/media_type.dart';
 
 /// 日記に添付された写真・動画のサムネイル一覧。[onRemove]を渡すと各サムネイルに
@@ -38,7 +39,7 @@ class MediaGallery extends StatelessWidget {
   }
 }
 
-class _MediaThumbnail extends StatelessWidget {
+class _MediaThumbnail extends StatefulWidget {
   final String path;
   final VoidCallback onTap;
   final VoidCallback? onRemove;
@@ -46,10 +47,29 @@ class _MediaThumbnail extends StatelessWidget {
   const _MediaThumbnail({required this.path, required this.onTap, this.onRemove});
 
   @override
+  State<_MediaThumbnail> createState() => _MediaThumbnailState();
+}
+
+class _MediaThumbnailState extends State<_MediaThumbnail> {
+  final _thumbnailService = VideoThumbnailService();
+  String? _videoThumbnailPath;
+
+  @override
+  void initState() {
+    super.initState();
+    if (isVideoPath(widget.path)) {
+      _thumbnailService.getOrCreateThumbnail(widget.path).then((thumbPath) {
+        if (mounted) setState(() => _videoThumbnailPath = thumbPath);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isVideo = isVideoPath(path);
+    final isVideo = isVideoPath(widget.path);
+    final videoThumb = _videoThumbnailPath;
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Stack(
         children: [
           ClipRRect(
@@ -58,19 +78,30 @@ class _MediaThumbnail extends StatelessWidget {
               width: 104,
               height: 104,
               child: isVideo
-                  ? ColoredBox(
-                      color: Colors.black87,
-                      child: Icon(Icons.play_circle_fill, color: Colors.white, size: 34),
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        videoThumb != null
+                            ? Image.file(File(videoThumb), fit: BoxFit.cover)
+                            : const ColoredBox(color: Colors.black87),
+                        const Center(
+                          child: Icon(
+                            Icons.play_circle_fill,
+                            color: Colors.white,
+                            size: 34,
+                          ),
+                        ),
+                      ],
                     )
-                  : Image.file(File(path), fit: BoxFit.cover),
+                  : Image.file(File(widget.path), fit: BoxFit.cover),
             ),
           ),
-          if (onRemove != null)
+          if (widget.onRemove != null)
             Positioned(
               top: 4,
               right: 4,
               child: GestureDetector(
-                onTap: onRemove,
+                onTap: widget.onRemove,
                 child: const CircleAvatar(
                   radius: 11,
                   backgroundColor: Colors.black54,

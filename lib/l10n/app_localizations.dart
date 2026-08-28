@@ -128,6 +128,66 @@ abstract class AppLocalizations {
   /// **'Ask'**
   String get navKnowledgeBase;
 
+  /// No description provided for @onboardingSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onboardingSkip;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// No description provided for @onboardingGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get onboardingGetStarted;
+
+  /// No description provided for @onboardingCreateAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an account (you can also do this later in Settings)'**
+  String get onboardingCreateAccount;
+
+  /// No description provided for @onboardingPage1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'The moment it crosses your mind,\njust say it out loud'**
+  String get onboardingPage1Title;
+
+  /// No description provided for @onboardingPage1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the record button and speak — VoiceJournal takes care of the rest'**
+  String get onboardingPage1Body;
+
+  /// No description provided for @onboardingPage2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'AI sorts it out for you'**
+  String get onboardingPage2Title;
+
+  /// No description provided for @onboardingPage2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'What you say is automatically sorted into a diary entry, idea, or task'**
+  String get onboardingPage2Body;
+
+  /// No description provided for @onboardingPage3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s get started'**
+  String get onboardingPage3Title;
+
+  /// No description provided for @onboardingPage3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Whenever something\'s on your mind, just tap and talk'**
+  String get onboardingPage3Body;
+
   /// No description provided for @emotionFatigue.
   ///
   /// In en, this message translates to:
@@ -884,6 +944,30 @@ abstract class AppLocalizations {
   /// **'Record up to 30 times a day (3 times on the free plan)'**
   String get paywallBenefitCount;
 
+  /// No description provided for @paywallBenefitDiaryStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'9 diary writing styles to choose from (standard only on the free plan)'**
+  String get paywallBenefitDiaryStyle;
+
+  /// No description provided for @paywallBenefitCustomBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your own photos as diary backgrounds'**
+  String get paywallBenefitCustomBackground;
+
+  /// No description provided for @paywallBenefitKnowledgeBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask AI questions across all your past entries in \"Ask\"'**
+  String get paywallBenefitKnowledgeBase;
+
+  /// No description provided for @paywallBenefitWeeklyReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Get an AI-written Weekly Brain Report looking back on your week'**
+  String get paywallBenefitWeeklyReport;
+
   /// No description provided for @paywallUnavailable.
   ///
   /// In en, this message translates to:
@@ -943,6 +1027,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{remaining} left today (resets daily, Japan time)'**
   String freeTierRemaining(int remaining);
+
+  /// No description provided for @homeUsageToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today {used} / {limit}'**
+  String homeUsageToday(int used, int limit);
 
   /// No description provided for @notificationSectionTitle.
   ///
@@ -1130,11 +1220,17 @@ abstract class AppLocalizations {
   /// **'Failed to select photo/video: {error}'**
   String mediaPickFailed(String error);
 
-  /// No description provided for @pickFromLibrary.
+  /// No description provided for @pickPhotosFromLibrary.
   ///
   /// In en, this message translates to:
-  /// **'Choose photo/video from library'**
-  String get pickFromLibrary;
+  /// **'Choose photos'**
+  String get pickPhotosFromLibrary;
+
+  /// No description provided for @pickVideoFromLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a video'**
+  String get pickVideoFromLibrary;
 
   /// No description provided for @backgroundSheetTitle.
   ///
@@ -1279,6 +1375,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get closeTooltip;
+
+  /// No description provided for @favoriteSettingsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite settings'**
+  String get favoriteSettingsTooltip;
+
+  /// No description provided for @favoriteSettingsSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite settings'**
+  String get favoriteSettingsSheetTitle;
+
+  /// No description provided for @favoriteSettingsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The default text style and background used for newly created diary entries'**
+  String get favoriteSettingsDescription;
+
+  /// No description provided for @addCustomBackgroundTile.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your own photo'**
+  String get addCustomBackgroundTile;
 
   /// No description provided for @toolbarMedia.
   ///
@@ -1664,6 +1784,12 @@ abstract class AppLocalizations {
   /// **'Couldn\'t get an answer'**
   String get knowledgeBaseErrorTitle;
 
+  /// No description provided for @knowledgeBaseProLockedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Chatting across all your entries is a Pro feature. Upgrade to unlock it.'**
+  String get knowledgeBaseProLockedDescription;
+
   /// No description provided for @weeklyReportSettingsTitle.
   ///
   /// In en, this message translates to:
@@ -1675,6 +1801,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Weekly Brain Report'**
   String get weeklyReportTitle;
+
+  /// No description provided for @weeklyReportProLockedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The Weekly Brain Report is a Pro feature. Upgrade to unlock it.'**
+  String get weeklyReportProLockedDescription;
 
   /// No description provided for @weeklyReportRetry.
   ///

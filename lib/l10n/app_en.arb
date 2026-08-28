@@ -7,6 +7,17 @@
   "navTask": "Task",
   "navKnowledgeBase": "Ask",
 
+  "onboardingSkip": "Skip",
+  "onboardingNext": "Next",
+  "onboardingGetStarted": "Get Started",
+  "onboardingCreateAccount": "Create an account (you can also do this later in Settings)",
+  "onboardingPage1Title": "The moment it crosses your mind,\njust say it out loud",
+  "onboardingPage1Body": "Tap the record button and speak — VoiceJournal takes care of the rest",
+  "onboardingPage2Title": "AI sorts it out for you",
+  "onboardingPage2Body": "What you say is automatically sorted into a diary entry, idea, or task",
+  "onboardingPage3Title": "Let's get started",
+  "onboardingPage3Body": "Whenever something's on your mind, just tap and talk",
+
   "emotionFatigue": "Fatigue",
   "emotionLove": "Love",
   "emotionAnxious": "Anxious",
@@ -155,6 +166,10 @@
   "paywallHeadline": "Go Pro for more room to talk",
   "paywallBenefitDuration": "Record up to 15 minutes at a time (60 seconds on the free plan)",
   "paywallBenefitCount": "Record up to 30 times a day (3 times on the free plan)",
+  "paywallBenefitDiaryStyle": "9 diary writing styles to choose from (standard only on the free plan)",
+  "paywallBenefitCustomBackground": "Use your own photos as diary backgrounds",
+  "paywallBenefitKnowledgeBase": "Ask AI questions across all your past entries in \"Ask\"",
+  "paywallBenefitWeeklyReport": "Get an AI-written Weekly Brain Report looking back on your week",
   "paywallUnavailable": "Couldn't load plans right now. Please try again later.",
   "paywallRestore": "Restore purchases",
   "paywallTerms": "Terms of Service",
@@ -171,6 +186,10 @@
   "freeTierRemaining": "{remaining} left today (resets daily, Japan time)",
   "@freeTierRemaining": {
     "placeholders": { "remaining": { "type": "int" } }
+  },
+  "homeUsageToday": "Today {used} / {limit}",
+  "@homeUsageToday": {
+    "placeholders": { "used": { "type": "int" }, "limit": { "type": "int" } }
   },
   "notificationSectionTitle": "Notifications",
   "reminderNotificationsTitle": "Reminder notifications",
@@ -209,7 +228,8 @@
   "@mediaPickFailed": {
     "placeholders": { "error": { "type": "String" } }
   },
-  "pickFromLibrary": "Choose photo/video from library",
+  "pickPhotosFromLibrary": "Choose photos",
+  "pickVideoFromLibrary": "Choose a video",
   "backgroundSheetTitle": "Background",
   "backgroundNone": "None",
 
@@ -235,6 +255,10 @@
   "setAsDefaultTooltip": "Set as default",
   "setAsDefaultSnackbar": "Set as default",
   "closeTooltip": "Close",
+  "favoriteSettingsTooltip": "Favorite settings",
+  "favoriteSettingsSheetTitle": "Favorite settings",
+  "favoriteSettingsDescription": "The default text style and background used for newly created diary entries",
+  "addCustomBackgroundTile": "Add your own photo",
   "toolbarMedia": "Photo/Video",
   "toolbarBackground": "Background",
   "toolbarText": "Text",
@@ -321,9 +345,11 @@
   "knowledgeBaseThinking": "Looking back through your past entries…",
   "knowledgeBaseEmpty": "There's nothing recorded yet. Record something, then ask again.",
   "knowledgeBaseErrorTitle": "Couldn't get an answer",
+  "knowledgeBaseProLockedDescription": "Chatting across all your entries is a Pro feature. Upgrade to unlock it.",
 
   "weeklyReportSettingsTitle": "Weekly report",
   "weeklyReportTitle": "Weekly Brain Report",
+  "weeklyReportProLockedDescription": "The Weekly Brain Report is a Pro feature. Upgrade to unlock it.",
   "weeklyReportRetry": "Retry",
   "weeklyReportLoadingInsights": "AI is reflecting on your week…",
   "weeklyReportErrorTitle": "Couldn't load the report",

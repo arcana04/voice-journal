@@ -25,6 +25,36 @@ class AppLocalizationsJa extends AppLocalizations {
   String get navKnowledgeBase => '相談';
 
   @override
+  String get onboardingSkip => 'スキップ';
+
+  @override
+  String get onboardingNext => '次へ';
+
+  @override
+  String get onboardingGetStarted => 'はじめる';
+
+  @override
+  String get onboardingCreateAccount => 'アカウントを作成する（あとで設定からも可能）';
+
+  @override
+  String get onboardingPage1Title => '思いついた瞬間に、\nつぶやくだけ';
+
+  @override
+  String get onboardingPage1Body => '録音ボタンをタップして話すだけで、VoiceJournalが記録してくれます';
+
+  @override
+  String get onboardingPage2Title => 'AIが自動で仕分けします';
+
+  @override
+  String get onboardingPage2Body => '話した内容から、日記・アイデア・タスクに自動で振り分けます';
+
+  @override
+  String get onboardingPage3Title => 'さあ、はじめましょう';
+
+  @override
+  String get onboardingPage3Body => '気になったことがあれば、いつでもタップして話しかけてください';
+
+  @override
   String get emotionFatigue => '疲労';
 
   @override
@@ -428,6 +458,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get paywallBenefitCount => '1日30回まで録音可能に（無料版は3回）';
 
   @override
+  String get paywallBenefitDiaryStyle => '日記の文体が9種類に（無料版は標準のみ）';
+
+  @override
+  String get paywallBenefitCustomBackground => '日記の背景に自分の写真を使える';
+
+  @override
+  String get paywallBenefitKnowledgeBase => '「相談」でこれまでの記録を横断してAIに質問できる';
+
+  @override
+  String get paywallBenefitWeeklyReport => '週刊脳内レポートでAIが1週間分の記録を振り返ってくれる';
+
+  @override
   String get paywallUnavailable => '現在プランを取得できません。しばらくしてからもう一度お試しください。';
 
   @override
@@ -459,6 +501,11 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String freeTierRemaining(int remaining) {
     return '残り$remaining回（日本時間の日付で毎日リセット）';
+  }
+
+  @override
+  String homeUsageToday(int used, int limit) {
+    return '本日 $used / $limit回';
   }
 
   @override
@@ -559,7 +606,10 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get pickFromLibrary => '写真・動画をライブラリから選択';
+  String get pickPhotosFromLibrary => '写真を選択';
+
+  @override
+  String get pickVideoFromLibrary => '動画を選択';
 
   @override
   String get backgroundSheetTitle => '背景';
@@ -632,6 +682,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get closeTooltip => '閉じる';
+
+  @override
+  String get favoriteSettingsTooltip => 'お気に入り設定';
+
+  @override
+  String get favoriteSettingsSheetTitle => 'お気に入り設定';
+
+  @override
+  String get favoriteSettingsDescription => '新しく作られる日記に使われる、文字スタイルと背景のデフォルトです';
+
+  @override
+  String get addCustomBackgroundTile => '自分の画像を追加';
 
   @override
   String get toolbarMedia => '画像・動画';
@@ -833,10 +895,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get knowledgeBaseErrorTitle => '回答の取得に失敗しました';
 
   @override
+  String get knowledgeBaseProLockedDescription =>
+      '記録を横断したAIチャットはProプラン限定の機能です。アップグレードすると使えるようになります。';
+
+  @override
   String get weeklyReportSettingsTitle => '週刊レポート';
 
   @override
   String get weeklyReportTitle => '週刊脳内レポート';
+
+  @override
+  String get weeklyReportProLockedDescription =>
+      '週刊脳内レポートはProプラン限定の機能です。アップグレードすると使えるようになります。';
 
   @override
   String get weeklyReportRetry => '再試行';

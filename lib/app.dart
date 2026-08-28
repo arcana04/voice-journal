@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'l10n/app_localizations.dart';
+import 'screens/onboarding_screen.dart';
 import 'screens/root_screen.dart';
 import 'state/account_store.dart';
 import 'state/background_store.dart';
@@ -61,7 +62,11 @@ class VoiceJournalApp extends StatelessWidget {
                 surfaceTintColor: Colors.transparent,
               ),
             ),
-            home: const RootScreen(),
+            home: !settings.loaded
+                ? const SizedBox.shrink()
+                : settings.hasSeenOnboarding
+                ? const RootScreen()
+                : OnboardingScreen(onFinished: settings.completeOnboarding),
           );
         },
       ),

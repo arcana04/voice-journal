@@ -10,6 +10,7 @@ class SettingsStore extends ChangeNotifier {
   SummaryLevel summaryLevel = SummaryLevel.preserve;
   DiaryStyle diaryStyle = DiaryStyle.standard;
   bool darkMode = true;
+  bool hasSeenOnboarding = false;
   bool _loaded = false;
   bool get loaded => _loaded;
 
@@ -17,7 +18,14 @@ class SettingsStore extends ChangeNotifier {
     summaryLevel = await _service.getSummaryLevel();
     diaryStyle = await _service.getDiaryStyle();
     darkMode = await _service.getDarkMode();
+    hasSeenOnboarding = await _service.getHasSeenOnboarding();
     _loaded = true;
+    notifyListeners();
+  }
+
+  Future<void> completeOnboarding() async {
+    hasSeenOnboarding = true;
+    await _service.setHasSeenOnboarding(true);
     notifyListeners();
   }
 

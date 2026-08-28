@@ -75,9 +75,9 @@ class DiaryViewScreen extends StatelessWidget {
         final feelingNotes = entry.notes
             .where((n) => n.category == kNoteCategoryFeeling)
             .toList();
-        final entryBackgroundId = feelingNotes.isNotEmpty
-            ? feelingNotes.first.backgroundId
-            : null;
+        final entryBackgroundId =
+            (feelingNotes.isNotEmpty ? feelingNotes.first.backgroundId : null) ??
+            textStyleDefaults.backgroundId;
 
         return Scaffold(
           extendBodyBehindAppBar: true,

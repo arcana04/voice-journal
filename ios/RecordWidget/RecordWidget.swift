@@ -35,6 +35,15 @@ struct RecordWidgetEntryView: View {
             }
         case .accessoryInline:
             Label("録音を開始", systemImage: "mic.fill")
+        case .systemSmall:
+            VStack(spacing: 10) {
+                Image(systemName: "mic.circle.fill")
+                    .font(.system(size: 40))
+                Text("録音を開始")
+                    .font(.headline)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .widgetBackground()
         default:
             HStack(spacing: 8) {
                 Image(systemName: "mic.fill")
@@ -42,6 +51,22 @@ struct RecordWidgetEntryView: View {
                 Text("録音を開始")
                     .font(.headline)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .widgetBackground()
+        }
+    }
+}
+
+private extension View {
+    /// ホーム画面ウィジェット（systemSmall等）はiOS 17以降 `containerBackground` が必須。
+    /// ロック画面用ファミリー（accessory系）には適用されない分岐なので、この拡張は
+    /// systemSmall/systemMedium等でのみ呼ばれる想定。
+    @ViewBuilder
+    func widgetBackground() -> some View {
+        if #available(iOS 17.0, *) {
+            self.containerBackground(.fill.tertiary, for: .widget)
+        } else {
+            self.padding().background(Color(.systemBackground))
         }
     }
 }
@@ -56,6 +81,9 @@ struct RecordWidget: Widget {
         }
         .configurationDisplayName("VoiceJournal")
         .description("タップで録音をすぐに開始します。")
-        .supportedFamilies([.accessoryCircular, .accessoryRectangular, .accessoryInline])
+        .supportedFamilies([
+            .accessoryCircular, .accessoryRectangular, .accessoryInline,
+            .systemSmall,
+        ])
     }
 }

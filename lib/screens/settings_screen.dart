@@ -149,14 +149,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             const Divider(height: 32),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.insights_outlined),
-              title: Text(l10n.weeklyReportSettingsTitle),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const WeeklyReportScreen()),
-              ),
+            Consumer<SubscriptionStore>(
+              builder: (context, subscription, _) {
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.insights_outlined),
+                  title: Text(l10n.weeklyReportSettingsTitle),
+                  trailing: subscription.isPro
+                      ? const Icon(Icons.chevron_right)
+                      : const Icon(Icons.lock_outline, size: 18),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const WeeklyReportScreen()),
+                  ),
+                );
+              },
             ),
             const Divider(height: 32),
             Text(l10n.planSectionTitle, style: theme.textTheme.labelLarge),

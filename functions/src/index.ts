@@ -84,6 +84,7 @@ const MESSAGES: Record<
     noText: string;
     transcriptionEmpty: string;
     quotaExceeded: (limit: number) => string;
+    proRequired: string;
     transcriptionFailed: (body: string) => string;
     analysisFailed: (body: string) => string;
     unexpectedError: (message: string) => string;
@@ -96,6 +97,7 @@ const MESSAGES: Record<
     transcriptionEmpty: "音声を認識できませんでした。",
     quotaExceeded: (limit) =>
       `本日の無料利用回数（${limit}回）の上限に達しました。また明日お試しください。`,
+    proRequired: "この機能はProプラン限定です。",
     transcriptionFailed: (body) => `文字起こしに失敗しました: ${body}`,
     analysisFailed: (body) => `AI解析に失敗しました: ${body}`,
     unexpectedError: (message) => `処理中に予期しないエラーが発生しました: ${message}`,
@@ -107,6 +109,7 @@ const MESSAGES: Record<
     transcriptionEmpty: "Couldn't recognize any speech in the recording.",
     quotaExceeded: (limit) =>
       `You've reached today's free limit of ${limit} recordings. Please try again tomorrow.`,
+    proRequired: "This feature is only available on the Pro plan.",
     transcriptionFailed: (body) => `Transcription failed: ${body}`,
     analysisFailed: (body) => `AI analysis failed: ${body}`,
     unexpectedError: (message) =>
@@ -957,8 +960,8 @@ interface AskKnowledgeBaseRequest {
   locale?: string;
 }
 
-// NOTE: 有料プラン限定にする予定だが、課金基盤（RevenueCat等）が未実装のため
-// 現状は認証済みユーザーなら誰でも呼び出せる。課金基盤が入り次第ゲートを追加する。
+// Proプラン限定機能。課金基盤（RevenueCat + revenueCatWebhook）が反映した
+// users/{uid}.isPro を見て、非Proは弾く。
 export const askKnowledgeBase = onCall(
   { secrets: [openAiApiKey], timeoutSeconds: 60, memory: "256MiB" },
   async (request) => {
@@ -968,6 +971,9 @@ export const askKnowledgeBase = onCall(
     const uid = request.auth?.uid;
     if (!uid) {
       throw new HttpsError("unauthenticated", MESSAGES[loc].authRequired);
+    }
+    if (!(await isProUser(uid))) {
+      throw new HttpsError("permission-denied", MESSAGES[loc].proRequired);
     }
     if (!question || !question.trim()) {
       throw new HttpsError("invalid-argument", MESSAGES[loc].noText);
@@ -1092,8 +1098,8 @@ interface GenerateWeeklyReportRequest {
   locale?: string;
 }
 
-// NOTE: 有料プラン限定にする予定だが、課金基盤（RevenueCat等）が未実装のため
-// 現状は認証済みユーザーなら誰でも呼び出せる。課金基盤が入り次第ゲートを追加する。
+// Proプラン限定機能。課金基盤（RevenueCat + revenueCatWebhook）が反映した
+// users/{uid}.isPro を見て、非Proは弾く。
 export const generateWeeklyReport = onCall(
   { secrets: [openAiApiKey], timeoutSeconds: 60, memory: "256MiB" },
   async (request) => {
@@ -1103,6 +1109,9 @@ export const generateWeeklyReport = onCall(
     const uid = request.auth?.uid;
     if (!uid) {
       throw new HttpsError("unauthenticated", MESSAGES[loc].authRequired);
+    }
+    if (!(await isProUser(uid))) {
+      throw new HttpsError("permission-denied", MESSAGES[loc].proRequired);
     }
 
     try {

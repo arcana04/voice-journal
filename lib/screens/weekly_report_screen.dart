@@ -8,8 +8,10 @@ import '../models/journal_entry.dart';
 import '../models/weekly_report.dart';
 import '../services/backend_service.dart';
 import '../state/journal_store.dart';
+import '../state/subscription_store.dart';
 import '../utils/journal_context_format.dart';
 import '../widgets/app_background_image.dart';
+import '../widgets/pro_feature_gate.dart';
 
 class WeeklyReportScreen extends StatefulWidget {
   const WeeklyReportScreen({super.key});
@@ -35,7 +37,10 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
     super.initState();
     _weekEnd = DateTime.now();
     _weekStart = _weekEnd.subtract(const Duration(days: 7));
-    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (context.read<SubscriptionStore>().isPro) _load();
+    });
   }
 
   Future<void> _load() async {
@@ -96,6 +101,17 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
     final locale = Localizations.localeOf(context).toString();
     final dateRange =
         '${DateFormat.MMMd(locale).format(_weekStart)} – ${DateFormat.MMMd(locale).format(_weekEnd)}';
+    final isPro = context.watch<SubscriptionStore>().isPro;
+
+    if (!isPro) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.weeklyReportTitle)),
+        body: ProFeatureGate(
+          title: l10n.weeklyReportTitle,
+          description: l10n.weeklyReportProLockedDescription,
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(

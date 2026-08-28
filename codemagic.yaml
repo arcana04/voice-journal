@@ -71,7 +71,8 @@ workflows:
         script: |
           flutter build ipa --release \
             --build-number=$NEXT_BUILD_NUMBER \
-            --export-options-plist=/Users/builder/export_options.plist
+            --export-options-plist=/Users/builder/export_options.plist \
+            --dart-define=REVENUECAT_IOS_API_KEY=$REVENUECAT_IOS_API_KEY
     artifacts:
       - build/ios/ipa/*.ipa
       - build/ios/xcarchive

@@ -10,9 +10,13 @@ import '../models/diary_background.dart';
 import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
+import '../state/subscription_store.dart';
 import '../state/text_style_store.dart';
+import '../utils/custom_background_picker.dart';
 import '../utils/note_text_style.dart';
+import '../widgets/diary_background_tile.dart';
 import '../widgets/diary_screen_background.dart';
+import '../widgets/icon_button_style.dart';
 import '../widgets/media_gallery.dart';
 import '../widgets/scrim_text.dart';
 
@@ -73,7 +77,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
               : null)
         : defaults.textColor;
     _fontScale = styleSource?.fontScale ?? defaults.fontScale;
-    _backgroundId = styleSource?.backgroundId;
+    _backgroundId = styleSource?.backgroundId ?? defaults.backgroundId;
 
     return _drafts = feelingNotes.map((n) => _NoteDraft(n)).toList();
   }
@@ -109,11 +113,15 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
     if (mounted) Navigator.of(context).pop();
   }
 
-  Future<void> _pickMedia(JournalStore store, JournalEntry entry) async {
+  /// 写真と動画をまとめて選ばせる[ImagePicker.pickMultipleMedia]は、混在メディア
+  /// 対応のAndroidフォトピッカーが使えない端末では汎用ファイルブラウザ（Filesアプリ）
+  /// にフォールバックしてしまう。写真・動画を別々に選ばせる（[pickMultiImage]/
+  /// [pickVideo]）ことで、写真選択は常にグリッド表示のフォトピッカーが使われる。
+  Future<void> _pickImages(JournalStore store, JournalEntry entry) async {
     final picker = ImagePicker();
     List<XFile> picked;
     try {
-      picked = await picker.pickMultipleMedia(imageQuality: 85);
+      picked = await picker.pickMultiImage(imageQuality: 85);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -130,6 +138,24 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
     );
   }
 
+  Future<void> _pickVideo(JournalStore store, JournalEntry entry) async {
+    final picker = ImagePicker();
+    XFile? picked;
+    try {
+      picked = await picker.pickVideo(source: ImageSource.gallery);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.mediaPickFailed('$e')),
+        ),
+      );
+      return;
+    }
+    if (picked == null) return;
+    await store.addMediaToEntry(entry, [File(picked.path)]);
+  }
+
   Future<void> _openMediaSheet(JournalStore store, JournalEntry entry) async {
     final l10n = AppLocalizations.of(context)!;
     await showModalBottomSheet<void>(
@@ -140,10 +166,18 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: Text(l10n.pickFromLibrary),
+              title: Text(l10n.pickPhotosFromLibrary),
               onTap: () {
                 Navigator.of(sheetContext).pop();
-                _pickMedia(store, entry);
+                _pickImages(store, entry);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.videocam_outlined),
+              title: Text(l10n.pickVideoFromLibrary),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                _pickVideo(store, entry);
               },
             ),
           ],
@@ -168,12 +202,30 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  l10n.backgroundSheetTitle,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.backgroundSheetTitle,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.star_border),
+                      tooltip: l10n.setAsDefaultTooltip,
+                      onPressed: () {
+                        context.read<TextStyleStore>().setDefaultBackground(
+                          _backgroundId,
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.setAsDefaultSnackbar)),
+                        );
+                      },
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 Flexible(
@@ -183,7 +235,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                     crossAxisSpacing: 12,
                     childAspectRatio: 0.8,
                     children: [
-                      _DiaryBackgroundTile(
+                      DiaryBackgroundTile(
                         label: l10n.backgroundNone,
                         selected: _backgroundId == null,
                         onTap: () {
@@ -196,7 +248,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                         ),
                       ),
                       for (final background in DiaryBackground.values)
-                        _DiaryBackgroundTile(
+                        DiaryBackgroundTile(
                           label: background.labelFor(l10n),
                           selected: _backgroundId == background.id,
                           onTap: () {
@@ -208,6 +260,13 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                             fit: BoxFit.cover,
                           ),
                         ),
+                      AddCustomBackgroundTile(
+                        isPro: context.read<SubscriptionStore>().isPro,
+                        onTap: () => pickCustomBackground(
+                          sheetContext,
+                          onPicked: (id) => setState(() => _backgroundId = id),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -497,9 +556,11 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
             elevation: 0,
             actions: [
               TextButton(
+                style: pressableIconButtonStyle(context),
                 onPressed: () => _save(store, entry),
                 child: Text(AppLocalizations.of(context)!.save),
               ),
+              const SizedBox(width: 8),
             ],
           ),
           bottomNavigationBar: _buildBottomToolbar(store, entry),
@@ -730,67 +791,6 @@ class _EmotionTile extends StatelessWidget {
           const SizedBox(height: 4),
           Text(label, style: theme.textTheme.labelSmall),
         ],
-      ),
-    );
-  }
-}
-
-class _DiaryBackgroundTile extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final Widget child;
-
-  const _DiaryBackgroundTile({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    // 画像を見て選ぶ形式にするため、見出しテキストは表示しない
-    // （読み上げ用のラベルとしてのみ[label]を使う）。
-    return Semantics(
-      label: label,
-      selected: selected,
-      button: true,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Container(
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: selected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.outlineVariant,
-                  width: selected ? 2 : 1,
-                ),
-              ),
-              child: child,
-            ),
-            if (selected)
-              Positioned(
-                top: 6,
-                right: 6,
-                child: CircleAvatar(
-                  radius: 11,
-                  backgroundColor: theme.colorScheme.primary,
-                  child: Icon(
-                    Icons.check,
-                    size: 14,
-                    color: theme.colorScheme.onPrimary,
-                  ),
-                ),
-              ),
-          ],
-        ),
       ),
     );
   }

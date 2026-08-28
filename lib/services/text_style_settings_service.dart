@@ -5,6 +5,7 @@ class TextStyleSettingsService {
   static const _fontFamilyIndexPref = 'text_style_font_family_index';
   static const _textColorPref = 'text_style_text_color';
   static const _fontScalePref = 'text_style_font_scale';
+  static const _backgroundIdPref = 'text_style_background_id';
 
   Future<int> getFontFamilyIndex() async {
     final prefs = await SharedPreferences.getInstance();
@@ -34,6 +35,20 @@ class TextStyleSettingsService {
       await prefs.remove(_textColorPref);
     } else {
       await prefs.setInt(_textColorPref, textColor.toARGB32());
+    }
+  }
+
+  Future<String?> getBackgroundId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_backgroundIdPref);
+  }
+
+  Future<void> setBackgroundId(String? backgroundId) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (backgroundId == null) {
+      await prefs.remove(_backgroundIdPref);
+    } else {
+      await prefs.setString(_backgroundIdPref, backgroundId);
     }
   }
 }

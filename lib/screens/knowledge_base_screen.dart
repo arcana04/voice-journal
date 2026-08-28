@@ -4,8 +4,10 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../services/backend_service.dart';
 import '../state/journal_store.dart';
+import '../state/subscription_store.dart';
 import '../utils/journal_context_format.dart';
 import '../widgets/app_background_image.dart';
+import '../widgets/pro_feature_gate.dart';
 import '../widgets/scrim_text.dart';
 
 class _ChatMessage {
@@ -96,6 +98,16 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isPro = context.watch<SubscriptionStore>().isPro;
+
+    if (!isPro) {
+      return Scaffold(
+        body: ProFeatureGate(
+          title: l10n.knowledgeBaseTitle,
+          description: l10n.knowledgeBaseProLockedDescription,
+        ),
+      );
+    }
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
