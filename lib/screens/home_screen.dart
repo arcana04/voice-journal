@@ -208,6 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final text = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
+      showDragHandle: true,
       builder: (context) => const _TextComposerSheet(),
     );
     if (text == null || text.trim().isEmpty) return;
@@ -332,25 +333,45 @@ class _HomeScreenState extends State<HomeScreen> {
     bool showUpgrade = false,
   }) {
     final l10n = AppLocalizations.of(context)!;
+    const radius = 24.0;
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(title),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
         content: SingleChildScrollView(child: Text(message)),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
           if (showUpgrade)
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(radius),
+                ),
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(radius),
+              ),
+            ),
+            onPressed: () {
+              Navigator.of(context).pop();
+              if (showUpgrade) {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const PaywallScreen()),
                 );
-              },
-              child: Text(l10n.planUpgrade),
-            ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+              }
+            },
+            child: Text(showUpgrade ? l10n.planUpgrade : 'OK'),
           ),
         ],
       ),
@@ -606,11 +627,13 @@ class _TextComposerSheetState extends State<_TextComposerSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final radius = BorderRadius.circular(16);
     return Padding(
       padding: EdgeInsets.only(
         left: 20,
         right: 20,
-        top: 20,
+        top: 4,
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
       ),
       child: Column(
@@ -619,14 +642,16 @@ class _TextComposerSheetState extends State<_TextComposerSheet> {
         children: [
           Text(
             l10n.textComposerTitle,
-            style: Theme.of(context).textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             l10n.textComposerDescription,
-            style: Theme.of(context).textTheme.bodySmall
-                ?.copyWith(color: Theme.of(context).colorScheme.outline),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.outline,
+            ),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -636,16 +661,37 @@ class _TextComposerSheetState extends State<_TextComposerSheet> {
             maxLines: 8,
             textInputAction: TextInputAction.newline,
             decoration: InputDecoration(
-              border: const OutlineInputBorder(),
+              filled: true,
+              fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.4,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: radius,
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: radius,
+                borderSide: BorderSide(
+                  color: theme.colorScheme.primary,
+                  width: 2,
+                ),
+              ),
               hintText: l10n.textComposerHint,
             ),
           ),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            child: FilledButton(
+            child: FilledButton.icon(
               onPressed: _submit,
-              child: Text(l10n.textComposerSubmit),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              icon: const Icon(Icons.auto_awesome_rounded, size: 18),
+              label: Text(l10n.textComposerSubmit),
             ),
           ),
         ],

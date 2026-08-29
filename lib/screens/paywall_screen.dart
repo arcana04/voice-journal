@@ -4,6 +4,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/legal_links.dart';
+import '../config/theme_colors.dart';
 import '../l10n/app_localizations.dart';
 import '../services/purchase_service.dart';
 import '../state/subscription_store.dart';
@@ -456,10 +457,11 @@ class _Badge extends StatelessWidget {
   }
 }
 
-/// [_BenefitCard]の各行で使うアクセントカラー。アプリ全体のテーマ（青系シード）
-/// とは独立して、機能ごとに見分けやすい色を割り当てるための固定パレット。
+/// [_BenefitCard]の各行で使うアクセントカラー。indigoはアプリ全体のブランド
+/// カラー（[kAppAccentColor]）そのもので、他の色は機能ごとに見分けやすくする
+/// ための固定パレット。
 class _BenefitColors {
-  static const indigo = Color(0xFF6C5DD3);
+  static const indigo = kAppAccentColor;
   static const rose = Color(0xFFE84393);
   static const green = Color(0xFF13A67D);
   static const amber = Color(0xFFE2952F);

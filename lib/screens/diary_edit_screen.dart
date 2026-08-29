@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../config/theme_colors.dart';
 import '../l10n/app_localizations.dart';
 import '../models/diary_background.dart';
 import '../models/emotion_tag.dart';
@@ -752,7 +753,7 @@ class _ToolbarButton extends StatelessWidget {
 /// [_SettingsColors]（settings_screen.dart）・[_BenefitColors]（paywall_screen.dart）
 /// と同系統の配色にして、アプリ全体で統一感を持たせている。
 class _EditorColors {
-  static const indigo = Color(0xFF6C5DD3);
+  static const indigo = kAppAccentColor;
   static const amber = Color(0xFFE2952F);
   static const green = Color(0xFF13A67D);
 }

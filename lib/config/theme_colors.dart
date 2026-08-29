@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// 録音ボタン・波形アニメーションに使う、テーマから独立した鮮やかな青。
-/// Material3のシードカラーから自動生成される`colorScheme.primary`は
-/// トーンがやや落ち着くため、この2箇所だけは明示的な色を使う。
-const Color kRecordAccentColor = Color(0xFF2962FF);
+/// アプリ全体のブランドカラー（インディゴ）。[ColorScheme.fromSeed]のシードにも
+/// 使う唯一のソース（[VoiceJournalApp]参照）。
+const Color kAppAccentColor = Color(0xFF6C5DD3);
+
+/// 録音ボタン・波形アニメーションに使う色。Material3のシードカラーから自動生成
+/// される`colorScheme.primary`はトーンがやや落ち着くため、この2箇所だけは
+/// ブランドカラーそのもの（[kAppAccentColor]）を明示的に使う。
+const Color kRecordAccentColor = kAppAccentColor;

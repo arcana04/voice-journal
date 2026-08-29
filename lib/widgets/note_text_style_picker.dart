@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../config/theme_colors.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/note_text_style.dart';
 
@@ -9,7 +10,7 @@ import '../utils/note_text_style.dart';
 /// ほぼ同じビルダーコードが重複していたのをまとめたもの。選択状態の保存先は
 /// コールバック経由で呼び出し側に任せる。
 class NoteTextStylePicker extends StatelessWidget {
-  static const _accent = Color(0xFF6C5DD3);
+  static const _accent = kAppAccentColor;
 
   /// フォントスタイルカードの背景に使う、順に巡回させるパステルカラー。
   static const _cardTints = [

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/legal_links.dart';
+import '../config/theme_colors.dart';
 import '../l10n/app_localizations.dart';
 import '../services/reminder_service.dart';
 import '../state/account_store.dart';
@@ -341,10 +342,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-/// 設定画面の各カード内で使うアクセントカラー。[_BenefitColors]（paywall_screen.dart）
-/// と同系統の配色にして、Proプラン画面との統一感を持たせている。
+/// 設定画面の各カード内で使うアクセントカラー。indigoはアプリ全体のブランド
+/// カラー（[kAppAccentColor]）そのもので、他の色は[_BenefitColors]
+/// （paywall_screen.dart）と同系統にしてProプラン画面との統一感を持たせている。
 class _SettingsColors {
-  static const indigo = Color(0xFF6C5DD3);
+  static const indigo = kAppAccentColor;
   static const green = Color(0xFF13A67D);
   static const blue = Color(0xFF3B82F6);
   static const amber = Color(0xFFE2952F);
