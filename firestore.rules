@@ -5,11 +5,18 @@ service cloud.firestore {
     // Text-only cloud backup/restore for signed-in (non-anonymous) users.
     // Attachments (images/videos) sync separately via Firebase Storage
     // (see storage.rules) — Pro-gated, not tracked as a field on this doc.
+    //
+    // 'embedding'/'embedding_source_hash' are written server-side only (the
+    // onEntryWritten Cloud Function, via the Admin SDK, which bypasses these
+    // rules) for the knowledge-base chat's embedding search. They're listed
+    // here only so a client's merge-write doesn't get rejected once those
+    // fields already exist on the doc — the client itself never sets them.
     match /users/{uid}/entries/{entryId} {
       allow read, delete: if request.auth != null && request.auth.uid == uid;
       allow create, update: if request.auth != null && request.auth.uid == uid
         && request.resource.data.keys().hasOnly(
-             ['summary', 'created_at', 'comfort_message', 'emotion', 'tasks', 'notes']
+             ['summary', 'created_at', 'comfort_message', 'emotion', 'tasks', 'notes',
+              'embedding', 'embedding_source_hash']
            )
         && request.resource.data.summary is string
         && request.resource.data.summary.size() < 2000

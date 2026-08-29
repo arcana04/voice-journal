@@ -80,7 +80,8 @@ class _IdeaScreenState extends State<IdeaScreen> {
                                 IdeaEditScreen(entryId: entry.id!),
                           ),
                         ),
-                        onDelete: () => store.deleteEntry(entry),
+                        onDelete: () =>
+                            store.deleteNotesFromEntry(entry, ideas),
                       );
                     },
                   ),

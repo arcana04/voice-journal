@@ -9,11 +9,11 @@ import '../state/journal_store.dart';
 import '../state/subscription_store.dart';
 import '../state/text_style_store.dart';
 import '../utils/custom_background_picker.dart';
-import '../utils/note_text_style.dart';
 import '../widgets/app_background_image.dart';
 import '../widgets/diary_background_tile.dart';
 import '../widgets/diary_entry_card.dart';
 import '../widgets/icon_button_style.dart';
+import '../widgets/note_text_style_picker.dart';
 import '../widgets/scrim_text.dart';
 import 'diary_view_screen.dart';
 
@@ -25,13 +25,8 @@ class DiaryScreen extends StatefulWidget {
 }
 
 class _DiaryScreenState extends State<DiaryScreen> {
-  final Map<int, GlobalKey> _itemKeys = {};
-
-  late DateTime _visibleMonth = DateTime(
-    DateTime.now().year,
-    DateTime.now().month,
-  );
-  DateTime? _pendingScrollDate;
+  late DateTime _selectedDate = _dateOnly(DateTime.now());
+  late DateTime _weekStart = _weekStartFor(_selectedDate);
 
   @override
   void initState() {
@@ -41,8 +36,38 @@ class _DiaryScreenState extends State<DiaryScreen> {
     });
   }
 
-  GlobalKey _keyFor(int entryId) =>
-      _itemKeys.putIfAbsent(entryId, () => GlobalKey());
+  static DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  /// その日を含む週の月曜日（週の先頭）を返す。
+  static DateTime _weekStartFor(DateTime date) =>
+      date.subtract(Duration(days: date.weekday - 1));
+
+  void _selectDate(DateTime date) {
+    setState(() {
+      _selectedDate = _dateOnly(date);
+      _weekStart = _weekStartFor(_selectedDate);
+    });
+  }
+
+  void _shiftWeek(int weeks) {
+    setState(() {
+      _weekStart = _weekStart.add(Duration(days: 7 * weeks));
+      _selectedDate = _weekStart;
+    });
+  }
+
+  void _shiftDay(int days) => _selectDate(_selectedDate.add(Duration(days: days)));
+
+  Future<void> _pickDate(BuildContext context) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked == null) return;
+    _selectDate(picked);
+  }
 
   /// AIが新しい日記を作るたびに毎回同じ文字スタイル・背景を選び直す手間を
   /// なくすため、日記一覧の上から直接デフォルトを設定できるようにする画面。
@@ -62,108 +87,6 @@ class _DiaryScreenState extends State<DiaryScreen> {
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
             child: Consumer<TextStyleStore>(
               builder: (context, defaults, _) {
-                Widget sizeOption(String label, double scale) {
-                  final selected = defaults.fontScale == scale;
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () => defaults.setDefault(
-                        fontFamilyIndex: defaults.fontFamilyIndex,
-                        textColor: defaults.textColor,
-                        fontScale: scale,
-                      ),
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? Colors.blue.withValues(alpha: 0.12)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: selected
-                                ? Colors.blue
-                                : Colors.grey.withValues(alpha: 0.4),
-                          ),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          label,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: selected ? Colors.blue : Colors.grey,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }
-
-                Widget colorOption(Color? color) {
-                  final selected = defaults.textColor == color;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: GestureDetector(
-                      onTap: () => defaults.setDefault(
-                        fontFamilyIndex: defaults.fontFamilyIndex,
-                        textColor: color,
-                        fontScale: defaults.fontScale,
-                      ),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: color ?? Colors.transparent,
-                          border: Border.all(
-                            color: selected
-                                ? Colors.blue
-                                : Colors.grey.withValues(alpha: 0.4),
-                            width: selected ? 2 : 1,
-                          ),
-                        ),
-                        child: color == null
-                            ? Icon(
-                                Icons.block,
-                                size: 18,
-                                color: Colors.grey.withValues(alpha: 0.6),
-                              )
-                            : null,
-                      ),
-                    ),
-                  );
-                }
-
-                Widget fontOption(int index) {
-                  final option = noteFontOptions[index];
-                  final selected = defaults.fontFamilyIndex == index;
-                  final label = option.labelFor(l10n);
-                  return GestureDetector(
-                    onTap: () => defaults.setDefault(
-                      fontFamilyIndex: index,
-                      textColor: defaults.textColor,
-                      fontScale: defaults.fontScale,
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: selected
-                            ? Colors.blue.withValues(alpha: 0.08)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: selected
-                              ? Colors.blue
-                              : Colors.grey.withValues(alpha: 0.4),
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        label,
-                        style: option.apply(const TextStyle(fontSize: 15)),
-                      ),
-                    ),
-                  );
-                }
-
                 return SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -201,37 +124,25 @@ class _DiaryScreenState extends State<DiaryScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          sizeOption('H1', 1.5),
-                          sizeOption('H2', 1.25),
-                          sizeOption('H3', 1.0),
-                          sizeOption('H4', 0.85),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        height: 40,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children: [
-                            for (final color in noteTextColorOptions)
-                              colorOption(color),
-                          ],
+                      NoteTextStylePicker(
+                        fontFamilyIndex: defaults.fontFamilyIndex,
+                        textColor: defaults.textColor,
+                        fontScale: defaults.fontScale,
+                        onFontScaleChanged: (scale) => defaults.setDefault(
+                          fontFamilyIndex: defaults.fontFamilyIndex,
+                          textColor: defaults.textColor,
+                          fontScale: scale,
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: 2.6,
-                        children: [
-                          for (var i = 0; i < noteFontOptions.length; i++)
-                            fontOption(i),
-                        ],
+                        onTextColorChanged: (color) => defaults.setDefault(
+                          fontFamilyIndex: defaults.fontFamilyIndex,
+                          textColor: color,
+                          fontScale: defaults.fontScale,
+                        ),
+                        onFontFamilyIndexChanged: (index) => defaults.setDefault(
+                          fontFamilyIndex: index,
+                          textColor: defaults.textColor,
+                          fontScale: defaults.fontScale,
+                        ),
                       ),
                       const SizedBox(height: 28),
                       Text(
@@ -293,50 +204,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
   bool _isSameDate(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
-  Future<void> _pickDate(BuildContext context) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _visibleMonth,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-    );
-    if (picked == null) return;
-    setState(() {
-      _visibleMonth = DateTime(picked.year, picked.month);
-      _pendingScrollDate = picked;
-    });
-  }
-
-  void _scheduleScrollIfNeeded(List<JournalEntry> diaryEntries) {
-    final target = _pendingScrollDate;
-    if (target == null) return;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      JournalEntry? match;
-      for (final e in diaryEntries) {
-        if (_isSameDate(e.createdAt, target)) {
-          match = e;
-          break;
-        }
-      }
-      if (match != null) {
-        final ctx = _keyFor(match.id!).currentContext;
-        if (ctx != null) {
-          Scrollable.ensureVisible(
-            ctx,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            alignment: 0.0,
-          );
-        }
-      }
-      if (mounted) setState(() => _pendingScrollDate = null);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context).toString();
     return Scaffold(
       body: Stack(
         children: [
@@ -349,18 +219,20 @@ class _DiaryScreenState extends State<DiaryScreen> {
                 if (store.loading && store.entries.isEmpty) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                final diaryEntries = store.entries
+                final allDiaryEntries = store.entries
                     .where(
-                      (e) =>
-                          e.notes.any(
-                            (n) => n.category == kNoteCategoryFeeling,
-                          ) &&
-                          e.createdAt.year == _visibleMonth.year &&
-                          e.createdAt.month == _visibleMonth.month,
+                      (e) => e.notes.any(
+                        (n) => n.category == kNoteCategoryFeeling,
+                      ),
                     )
                     .toList();
-
-                _scheduleScrollIfNeeded(diaryEntries);
+                final dayEntries =
+                    allDiaryEntries
+                        .where((e) => _isSameDate(e.createdAt, _selectedDate))
+                        .toList()
+                      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+                bool hasEntry(DateTime day) =>
+                    allDiaryEntries.any((e) => _isSameDate(e.createdAt, day));
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,22 +241,28 @@ class _DiaryScreenState extends State<DiaryScreen> {
                       padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
                       child: Row(
                         children: [
-                          Expanded(
-                            child: ScrimText(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
-                              ),
-                              child: Text(
-                                DateFormat.yMMMM(
-                                  Localizations.localeOf(context).toString(),
-                                ).format(_visibleMonth),
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w700),
-                              ),
+                          ScrimText(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            child: Text(
+                              '${DateFormat.MMMd(locale).format(_selectedDate)}'
+                              '(${DateFormat.E(locale).format(_selectedDate)})',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w700),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const Spacer(),
+                          IconButton(
+                            icon: const Icon(Icons.calendar_month_outlined),
+                            tooltip: AppLocalizations.of(
+                              context,
+                            )!.diaryPickDateTooltip,
+                            style: pressableIconButtonStyle(context),
+                            onPressed: () => _pickDate(context),
+                          ),
+                          const SizedBox(width: 4),
                           IconButton(
                             icon: const Icon(Icons.star_border),
                             tooltip: AppLocalizations.of(
@@ -397,26 +275,45 @@ class _DiaryScreenState extends State<DiaryScreen> {
                         ],
                       ),
                     ),
+                    _WeekStrip(
+                      weekStart: _weekStart,
+                      selectedDate: _selectedDate,
+                      locale: locale,
+                      hasEntry: hasEntry,
+                      onSelectDate: _selectDate,
+                      onPreviousWeek: () => _shiftWeek(-1),
+                      onNextWeek: () => _shiftWeek(1),
+                    ),
                     Expanded(
-                      child: diaryEntries.isEmpty
-                          ? Center(
-                              child: ScrimText(
-                                child: Text(
-                                  AppLocalizations.of(context)!.diaryMonthEmpty,
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.bodyMedium,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onHorizontalDragEnd: (details) {
+                          final velocity = details.primaryVelocity ?? 0;
+                          if (velocity < -200) {
+                            _shiftDay(1);
+                          } else if (velocity > 200) {
+                            _shiftDay(-1);
+                          }
+                        },
+                        child: dayEntries.isEmpty
+                            ? Center(
+                                child: ScrimText(
+                                  child: Text(
+                                    AppLocalizations.of(context)!.diaryDayEmpty,
+                                    textAlign: TextAlign.center,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                  ),
                                 ),
-                              ),
-                            )
-                          : RefreshIndicator(
-                              onRefresh: store.load,
-                              child: ListView(
-                                padding: const EdgeInsets.fromLTRB(0, 8, 0, 96),
-                                children: [
-                                  for (final entry in diaryEntries)
-                                    KeyedSubtree(
-                                      key: _keyFor(entry.id!),
-                                      child: DiaryEntryCard(
+                              )
+                            : RefreshIndicator(
+                                onRefresh: store.load,
+                                child: ListView(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(0, 8, 0, 96),
+                                  children: [
+                                    for (final entry in dayEntries)
+                                      DiaryEntryCard(
                                         entry: entry,
                                         onTap: () => Navigator.of(context).push(
                                           MaterialPageRoute(
@@ -426,24 +323,183 @@ class _DiaryScreenState extends State<DiaryScreen> {
                                           ),
                                         ),
                                       ),
-                                    ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
+                      ),
                     ),
                   ],
                 );
               },
             ),
           ),
-          Positioned(
-            left: 16,
-            bottom: 120,
-            child: FloatingActionButton(
-              heroTag: 'diary_calendar_fab',
-              onPressed: () => _pickDate(context),
-              child: const Icon(Icons.calendar_month_outlined),
+        ],
+      ),
+    );
+  }
+}
+
+/// 月曜始まりの週を横一列で表示し、日付をタップして選択できるバー。
+/// 日記のある日には下に小さなドットを表示する。
+class _WeekStrip extends StatelessWidget {
+  final DateTime weekStart;
+  final DateTime selectedDate;
+  final String locale;
+  final bool Function(DateTime day) hasEntry;
+  final ValueChanged<DateTime> onSelectDate;
+  final VoidCallback onPreviousWeek;
+  final VoidCallback onNextWeek;
+
+  const _WeekStrip({
+    required this.weekStart,
+    required this.selectedDate,
+    required this.locale,
+    required this.hasEntry,
+    required this.onSelectDate,
+    required this.onPreviousWeek,
+    required this.onNextWeek,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final today = DateTime.now();
+
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onHorizontalDragEnd: (details) {
+        final velocity = details.primaryVelocity ?? 0;
+        if (velocity < -200) {
+          onNextWeek();
+        } else if (velocity > 200) {
+          onPreviousWeek();
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface.withValues(alpha: 0.9),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
+          ],
+        ),
+        child: Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left, size: 20),
+              visualDensity: VisualDensity.compact,
+              tooltip: AppLocalizations.of(context)!.diaryPreviousWeekTooltip,
+              onPressed: onPreviousWeek,
+            ),
+            for (var i = 0; i < 7; i++)
+              Expanded(
+                child: Builder(
+                  builder: (_) {
+                    final day = weekStart.add(Duration(days: i));
+                    return _DayCell(
+                      day: day,
+                      locale: locale,
+                      selected:
+                          day.year == selectedDate.year &&
+                          day.month == selectedDate.month &&
+                          day.day == selectedDate.day,
+                      isToday:
+                          day.year == today.year &&
+                          day.month == today.month &&
+                          day.day == today.day,
+                      hasEntry: hasEntry(day),
+                      onTap: () => onSelectDate(day),
+                    );
+                  },
+                ),
+              ),
+            IconButton(
+              icon: const Icon(Icons.chevron_right, size: 20),
+              visualDensity: VisualDensity.compact,
+              tooltip: AppLocalizations.of(context)!.diaryNextWeekTooltip,
+              onPressed: onNextWeek,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DayCell extends StatelessWidget {
+  final DateTime day;
+  final String locale;
+  final bool selected;
+  final bool isToday;
+  final bool hasEntry;
+  final VoidCallback onTap;
+
+  const _DayCell({
+    required this.day,
+    required this.locale,
+    required this.selected,
+    required this.isToday,
+    required this.hasEntry,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            DateFormat.E(locale).format(day),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Container(
+            width: 32,
+            height: 32,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: selected
+                  ? theme.colorScheme.primary
+                  : Colors.transparent,
+              border: !selected && isToday
+                  ? Border.all(color: theme.colorScheme.primary, width: 1.5)
+                  : null,
+            ),
+            child: Text(
+              '${day.day}',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: selected
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          SizedBox(
+            width: 6,
+            height: 6,
+            child: hasEntry
+                ? DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: theme.colorScheme.primary,
+                    ),
+                  )
+                : null,
           ),
         ],
       ),

@@ -134,6 +134,10 @@
   "accountSignInWithApple": "Sign in with Apple",
   "accountSignOutButton": "Sign out",
   "accountRestoreButton": "Restore from cloud",
+  "syncErrorBannerMessage": "Some data failed to sync",
+  "syncErrorBannerAction": "Check",
+  "loadErrorBannerMessage": "Failed to load your data",
+  "loadErrorBannerAction": "Retry",
   "accountSyncingMessage": "Syncing…",
   "accountSyncCompleteTitle": "Done",
   "accountSyncCompleteMessage": "Sync complete.",
@@ -202,7 +206,10 @@
   "add": "Add",
   "customDictionaryEmpty": "No words registered yet",
 
-  "diaryMonthEmpty": "No diary entries this month",
+  "diaryDayEmpty": "No diary entries this day",
+  "diaryPickDateTooltip": "Pick a date",
+  "diaryPreviousWeekTooltip": "Previous week",
+  "diaryNextWeekTooltip": "Next week",
 
   "fontStandard": "Standard",
   "fontMincho": "Serif",

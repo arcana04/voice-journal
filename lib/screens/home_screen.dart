@@ -519,7 +519,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   top: 4,
                   left: 4,
                   child: IconButton(
-                    icon: const Icon(Icons.settings_outlined),
+                    icon: const Icon(Icons.settings_outlined, size: 32),
                     tooltip: l10n.settingsTooltip,
                     style: pressableIconButtonStyle(context),
                     onPressed: () => Navigator.of(context).push(

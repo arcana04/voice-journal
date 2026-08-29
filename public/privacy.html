@@ -24,7 +24,7 @@
 
 <section id="ja">
 <h1>プライバシーポリシー</h1>
-<p class="updated">最終更新日: 2026年8月28日</p>
+<p class="updated">最終更新日: 2026年8月29日</p>
 
 <p>VoiceJournal（つぶやきAIメモ、以下「本アプリ」）は、ユーザーのプライバシーを尊重し、以下の方針に基づいて情報を取り扱います。</p>
 
@@ -32,7 +32,7 @@
 <table>
 <tr><th>情報の種類</th><th>内容・取得タイミング</th></tr>
 <tr><td>音声データ</td><td>録音時にサーバーへ送信し、文字起こしのために一時的に処理します。処理完了後、音声データ自体はサーバーに保存されず破棄されます。</td></tr>
-<tr><td>記録内容（日記・アイデア・タスクのテキスト）</td><td>端末内に保存されます。メールアカウントでログインした場合は、バックアップのためクラウド（Firestore）にも保存されます。</td></tr>
+<tr><td>記録内容（日記・アイデア・タスクのテキスト）</td><td>端末内に保存されます。メールアカウントでログインした場合は、バックアップのためクラウド（Firestore）にも保存されます。あわせて、AIによる横断検索（相談機能）のため、記録テキストから生成した数値ベクトル（embedding）もクラウドに保存される場合があります。このベクトルから元の文章を直接読み取ることはできませんが、元の記録を削除すると同時に削除されます。</td></tr>
 <tr><td>写真・動画</td><td>端末内にのみ保存され、サーバーには送信されません。</td></tr>
 <tr><td>メールアドレス</td><td>任意でアカウントを作成した場合のみ、認証のために取得します。</td></tr>
 <tr><td>購入・サブスクリプション情報</td><td>Proプラン purchases のステータス管理のため、決済処理はApp Store／Google Playおよび決済管理サービス（RevenueCat）を通じて行われます。</td></tr>
@@ -50,7 +50,7 @@
 <h2>3. 第三者への提供・委託先</h2>
 <p>本アプリは、サービス提供のために以下の外部サービスを利用しています。取得した情報の処理を委託する場合があります。</p>
 <ul>
-  <li><strong>OpenAI</strong>（音声の文字起こし・AIによる分類/要約/チャット回答の生成のため、音声データおよび記録テキストを送信します）</li>
+  <li><strong>OpenAI</strong>（音声の文字起こし・AIによる分類/要約/チャット回答の生成、および記録テキストの数値ベクトル化（embedding、AI横断検索のため）のため、音声データおよび記録テキストを送信します）</li>
   <li><strong>Google Firebase / Google Cloud Platform</strong>（認証、データベース、サーバーレス関数の実行基盤として使用します）</li>
   <li><strong>RevenueCat</strong>（サブスクリプションの購入状態管理のため使用します）</li>
 </ul>
@@ -74,7 +74,7 @@
 
 <section id="en" class="en">
 <h1>Privacy Policy</h1>
-<p class="updated">Last updated: August 28, 2026</p>
+<p class="updated">Last updated: August 29, 2026</p>
 
 <p>VoiceJournal (the "App") respects your privacy. This policy explains what information we collect and how we use it.</p>
 
@@ -82,7 +82,7 @@
 <table>
 <tr><th>Type</th><th>Details / When Collected</th></tr>
 <tr><td>Voice recordings</td><td>Sent to our server when you record, and processed temporarily for transcription. The audio itself is discarded after processing and not stored on our servers.</td></tr>
-<tr><td>Entry content (diary, ideas, tasks)</td><td>Stored on your device. If you sign in with an email account, it is also stored in the cloud (Firestore) for backup.</td></tr>
+<tr><td>Entry content (diary, ideas, tasks)</td><td>Stored on your device. If you sign in with an email account, it is also stored in the cloud (Firestore) for backup. For the cross-entry AI search feature, a numeric vector representation (embedding) generated from your entry text may also be stored in the cloud. The original text cannot be reconstructed directly from this vector, and it is deleted whenever the underlying entry is deleted.</td></tr>
 <tr><td>Photos & videos</td><td>Stored on your device only; never sent to our servers.</td></tr>
 <tr><td>Email address</td><td>Collected only if you choose to create an account, for authentication.</td></tr>
 <tr><td>Purchase / subscription status</td><td>Managed for Pro plan entitlement. Payment is processed by the App Store / Google Play and subscription status is managed via RevenueCat.</td></tr>
@@ -100,7 +100,7 @@
 <h2>3. Third-Party Services</h2>
 <p>We use the following third-party services to provide the App, and may share data with them as processors:</p>
 <ul>
-  <li><strong>OpenAI</strong> (audio and entry text are sent for transcription and AI classification/summarization/chat)</li>
+  <li><strong>OpenAI</strong> (audio and entry text are sent for transcription, AI classification/summarization/chat, and generating numeric vector embeddings of entry text for cross-entry AI search)</li>
   <li><strong>Google Firebase / Google Cloud Platform</strong> (authentication, database, and serverless function infrastructure)</li>
   <li><strong>RevenueCat</strong> (subscription purchase status management)</li>
 </ul>

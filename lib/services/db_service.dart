@@ -40,6 +40,14 @@ class DbService {
     return openDatabase(
       path,
       version: 15,
+      // tasks/notes/entry_imagesはON DELETE CASCADEをスキーマに宣言しているが、
+      // SQLiteは外部キー制約自体をデフォルトで無効にしており、接続のたびに
+      // 明示的に有効化しないとその宣言は一切効かない（各deleteメソッドが手動で
+      // 子テーブルを削除しているのはそのため）。ここで有効化することで、
+      // スキーマの宣言どおりに実際にカスケード削除されるようにする。
+      onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE entries (
@@ -299,45 +307,52 @@ class DbService {
     );
   }
 
+  /// [rows]を`entry_id`ごとにグループ分けする。呼び出し元がorderByで指定した
+  /// 並び順は、各グループ内での相対順序としてそのまま保たれる。
+  Map<int, List<Map<String, Object?>>> _groupByEntryId(
+    List<Map<String, Object?>> rows,
+  ) {
+    final byEntry = <int, List<Map<String, Object?>>>{};
+    for (final row in rows) {
+      (byEntry[row['entry_id'] as int] ??= []).add(row);
+    }
+    return byEntry;
+  }
+
+  /// エントリ1件ごとにtasks/notes/entry_imagesを逐次クエリするとエントリ数分
+  /// だけ往復が発生する（N+1）ため、テーブルごとに1回ずつ全件取得してから
+  /// entry_idでグループ分けする方式に変えている。
   Future<List<JournalEntry>> fetchEntries() async {
     final db = await _database;
     final entryRows = await db.query('entries', orderBy: 'created_at DESC');
+    if (entryRows.isEmpty) return [];
 
-    final entries = <JournalEntry>[];
-    for (final row in entryRows) {
-      final entryId = row['id'] as int;
-      final taskRows = await db.query(
-        'tasks',
-        where: 'entry_id = ?',
-        whereArgs: [entryId],
-      );
-      final noteRows = await db.query(
-        'notes',
-        where: 'entry_id = ?',
-        whereArgs: [entryId],
-      );
-      final imageRows = await db.query(
-        'entry_images',
-        where: 'entry_id = ?',
-        whereArgs: [entryId],
-        orderBy: 'sort_order ASC',
-      );
+    final tasksByEntry = _groupByEntryId(await db.query('tasks'));
+    final notesByEntry = _groupByEntryId(await db.query('notes'));
+    final imagesByEntry = _groupByEntryId(
+      await db.query('entry_images', orderBy: 'sort_order ASC'),
+    );
 
-      entries.add(
+    return [
+      for (final row in entryRows)
         JournalEntry(
-          id: entryId,
+          id: row['id'] as int,
           remoteId: row['remote_id'] as String?,
           createdAt: DateTime.parse(row['created_at'] as String),
           summary: row['summary'] as String,
-          tasks: taskRows.map(TaskItem.fromMap).toList(),
-          notes: noteRows.map(NoteItem.fromMap).toList(),
+          tasks: (tasksByEntry[row['id'] as int] ?? const [])
+              .map(TaskItem.fromMap)
+              .toList(),
+          notes: (notesByEntry[row['id'] as int] ?? const [])
+              .map(NoteItem.fromMap)
+              .toList(),
           comfortMessage: row['comfort_message'] as String?,
           emotion: EmotionTag.fromId(row['emotion'] as String?),
-          imagePaths: imageRows.map((r) => r['path'] as String).toList(),
+          imagePaths: (imagesByEntry[row['id'] as int] ?? const [])
+              .map((r) => r['path'] as String)
+              .toList(),
         ),
-      );
-    }
-    return entries;
+    ];
   }
 
   /// [paths] を entryId のエントリに追加で紐付ける（既存の枚数の続きの並び順で）。
@@ -515,6 +530,30 @@ class DbService {
       whereArgs: [entryId],
     );
     await db.delete('entries', where: 'id = ?', whereArgs: [entryId]);
+  }
+
+  /// entry単位ではなく、指定したnoteだけを削除する（日記/アイデア個別削除用）。
+  Future<void> deleteNotes(List<int> noteIds) async {
+    if (noteIds.isEmpty) return;
+    final db = await _database;
+    final placeholders = List.filled(noteIds.length, '?').join(',');
+    await db.delete(
+      'notes',
+      where: 'id IN ($placeholders)',
+      whereArgs: noteIds,
+    );
+  }
+
+  /// entry単位ではなく、指定したtaskだけを削除する（タスク個別削除用）。
+  Future<void> deleteTasks(List<int> taskIds) async {
+    if (taskIds.isEmpty) return;
+    final db = await _database;
+    final placeholders = List.filled(taskIds.length, '?').join(',');
+    await db.delete(
+      'tasks',
+      where: 'id IN ($placeholders)',
+      whereArgs: taskIds,
+    );
   }
 
   /// [weekKey]（週の月曜日の日付、例: '2026-08-24'）で upsert する。同じ週に

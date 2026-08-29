@@ -206,7 +206,8 @@ class _TaskScreenState extends State<TaskScreen> {
                                             TaskEditScreen(entryId: entry.id!),
                                       ),
                                     ),
-                                    onDelete: () => store.deleteEntry(entry),
+                                    onDelete: () =>
+                                        store.deleteTasksFromEntry(entry, tasks),
                                   );
                                 },
                               ),

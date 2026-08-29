@@ -758,6 +758,30 @@ abstract class AppLocalizations {
   /// **'Restore from cloud'**
   String get accountRestoreButton;
 
+  /// No description provided for @syncErrorBannerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Some data failed to sync'**
+  String get syncErrorBannerMessage;
+
+  /// No description provided for @syncErrorBannerAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Check'**
+  String get syncErrorBannerAction;
+
+  /// No description provided for @loadErrorBannerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load your data'**
+  String get loadErrorBannerMessage;
+
+  /// No description provided for @loadErrorBannerAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get loadErrorBannerAction;
+
   /// No description provided for @accountSyncingMessage.
   ///
   /// In en, this message translates to:
@@ -1118,11 +1142,29 @@ abstract class AppLocalizations {
   /// **'No words registered yet'**
   String get customDictionaryEmpty;
 
-  /// No description provided for @diaryMonthEmpty.
+  /// No description provided for @diaryDayEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No diary entries this month'**
-  String get diaryMonthEmpty;
+  /// **'No diary entries this day'**
+  String get diaryDayEmpty;
+
+  /// No description provided for @diaryPickDateTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date'**
+  String get diaryPickDateTooltip;
+
+  /// No description provided for @diaryPreviousWeekTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous week'**
+  String get diaryPreviousWeekTooltip;
+
+  /// No description provided for @diaryNextWeekTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Next week'**
+  String get diaryNextWeekTooltip;
 
   /// No description provided for @fontStandard.
   ///

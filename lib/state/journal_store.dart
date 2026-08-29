@@ -27,17 +27,55 @@ class JournalStore extends ChangeNotifier {
   bool loading = false;
   bool _syncing = false;
 
+  /// 直近の[load]呼び出しが失敗した場合のエラー内容。成功すればnullに戻る。
+  /// UIはこれを見て、末永く回り続けるローディング表示を防いだり、エラーを
+  /// 表示したりする（[RootScreen]が全タブ共通で表示する）。
+  String? loadError;
+
+  /// 直近のクラウド同期（テキスト/写真・動画）操作のいずれかが失敗したかどうか。
+  /// バックグラウンドで自動的に再試行することはないため、UIに常時見えるよう
+  /// [RootScreen]が案内バナーを出す（静かに失敗して気づかれない状態を避ける狙い）。
+  bool syncError = false;
+
+  /// [_cloudSync]/[_mediaSync]の各操作はfire-and-forgetで呼ぶが、成否だけは
+  /// [syncError]に反映してUIに見えるようにする。
+  void _trackSync(Future<bool> future) {
+    unawaited(
+      future.then((success) {
+        if (syncError == !success) return;
+        syncError = !success;
+        notifyListeners();
+      }),
+    );
+  }
+
   Future<void> load() async {
     loading = true;
+    loadError = null;
     notifyListeners();
-    entries = await _db.fetchEntries();
-    loading = false;
-    notifyListeners();
-    // 端末の再起動やアプリ再インストールでOS側のスケジュールが失われていても、
-    // 未完了かつ未来のリマインダーを起動のたびに再登録して復元する。Android では
-    // これに加えて WorkManager 経由でも定期的に同じ復元処理を行う
-    // （[reminderCallbackDispatcher]）ため、再起動後アプリを開かなくても復元される。
-    unawaited(_reminders.rescheduleAllPending());
+    try {
+      entries = await _db.fetchEntries();
+      // 端末の再起動やアプリ再インストールでOS側のスケジュールが失われていても、
+      // 未完了かつ未来のリマインダーを起動のたびに再登録して復元する。Android では
+      // これに加えて WorkManager 経由でも定期的に同じ復元処理を行う
+      // （[reminderCallbackDispatcher]）ため、再起動後アプリを開かなくても復元される。
+      unawaited(_reminders.rescheduleAllPending());
+    } catch (e) {
+      loadError = e.toString();
+      debugPrint('journal load failed: $e');
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
+  }
+
+  /// 指定idのエントリを[entries]から探す。複数画面（編集画面など）で
+  /// 同じ線形探索が重複していたのをまとめたもの。
+  JournalEntry? findById(int id) {
+    for (final entry in entries) {
+      if (entry.id == id) return entry;
+    }
+    return null;
   }
 
   /// 連携先カレンダーが選ばれていれば、タスクの状態に合わせて予定を作成・更新・
@@ -113,7 +151,7 @@ class JournalStore extends ChangeNotifier {
     entries.insert(0, finalEntry);
     notifyListeners();
     if (!skipCloudPush) {
-      unawaited(_cloudSync.pushEntry(finalEntry));
+      _trackSync(_cloudSync.pushEntry(finalEntry));
     }
     return finalEntry;
   }
@@ -155,7 +193,7 @@ class JournalStore extends ChangeNotifier {
     }).toList();
     entries[index] = entries[index].copyWith(tasks: updatedTasks);
     notifyListeners();
-    unawaited(_cloudSync.pushEntry(entries[index]));
+    _trackSync(_cloudSync.pushEntry(entries[index]));
   }
 
   Future<void> deleteEntry(JournalEntry entry, {bool canSyncMedia = false}) async {
@@ -172,10 +210,103 @@ class JournalStore extends ChangeNotifier {
     await _db.deleteEntry(entry.id!);
     entries.removeWhere((e) => e.id == entry.id);
     notifyListeners();
-    unawaited(_cloudSync.deleteEntry(entry.remoteId));
+    _trackSync(_cloudSync.deleteEntry(entry.remoteId));
     if (canSyncMedia) {
-      unawaited(_mediaSync.deleteAllMedia(entry.remoteId));
+      _trackSync(_mediaSync.deleteAllMedia(entry.remoteId));
     }
+  }
+
+  /// entry丸ごとではなく、指定したnote（同じカテゴリの内容）だけを削除する。
+  /// 日記・アイデアの削除ボタンから使う——1回の録音がタスク・日記・アイデアに
+  /// 同時に仕分けられることがあるため、削除操作が他カテゴリの内容まで
+  /// 巻き込まないようにするための単位。[alsoDeleteImages]は日記側の削除だけ
+  /// trueで渡す——写真・動画添付は日記編集画面からしか行えず、概念上「日記側の
+  /// 付属物」であるため。削除後にentryがタスク・note・画像すべて空になったら、
+  /// 空のentryを残さずentry自体を削除する（[_replaceOrDeleteIfEmpty]）。
+  Future<void> deleteNotesFromEntry(
+    JournalEntry entry,
+    List<NoteItem> notes, {
+    bool alsoDeleteImages = false,
+    bool canSyncMedia = false,
+  }) async {
+    if (entry.id == null || notes.isEmpty) return;
+
+    if (alsoDeleteImages) {
+      final current = entries.firstWhere(
+        (e) => e.id == entry.id,
+        orElse: () => entry,
+      );
+      for (final path in List<String>.from(current.imagePaths)) {
+        await removeMediaFromEntry(entry, path, canSyncMedia: canSyncMedia);
+      }
+    }
+
+    final removedIds = notes.map((n) => n.id).whereType<int>().toSet();
+    if (removedIds.isEmpty) return;
+    await _db.deleteNotes(removedIds.toList());
+
+    final index = entries.indexWhere((e) => e.id == entry.id);
+    if (index == -1) return;
+    final updated = entries[index].copyWith(
+      notes: entries[index].notes
+          .where((n) => !removedIds.contains(n.id))
+          .toList(),
+    );
+    await _replaceOrDeleteIfEmpty(index, updated, canSyncMedia: canSyncMedia);
+  }
+
+  /// entry丸ごとではなく、指定したtaskだけを削除する
+  /// （[deleteNotesFromEntry]のタスク版）。カレンダー予定・通知も片付ける。
+  Future<void> deleteTasksFromEntry(
+    JournalEntry entry,
+    List<TaskItem> tasks, {
+    bool canSyncMedia = false,
+  }) async {
+    if (entry.id == null || tasks.isEmpty) return;
+    for (final task in tasks) {
+      if (task.id != null && task.notifyAt != null) {
+        await _reminders.cancelTaskReminder(task.id!);
+      }
+      await _deleteTaskCalendarEvent(task);
+    }
+
+    final removedIds = tasks.map((t) => t.id).whereType<int>().toSet();
+    if (removedIds.isEmpty) return;
+    await _db.deleteTasks(removedIds.toList());
+
+    final index = entries.indexWhere((e) => e.id == entry.id);
+    if (index == -1) return;
+    final updated = entries[index].copyWith(
+      tasks: entries[index].tasks
+          .where((t) => !removedIds.contains(t.id))
+          .toList(),
+    );
+    await _replaceOrDeleteIfEmpty(index, updated, canSyncMedia: canSyncMedia);
+  }
+
+  /// [deleteNotesFromEntry]/[deleteTasksFromEntry]共通の後始末: 更新後の
+  /// entryがタスク・note・画像すべて空になったら、空のentryを残さず削除する。
+  /// そうでなければ通常どおり更新してクラウドへpushする。
+  Future<void> _replaceOrDeleteIfEmpty(
+    int index,
+    JournalEntry updated, {
+    required bool canSyncMedia,
+  }) async {
+    if (updated.tasks.isEmpty &&
+        updated.notes.isEmpty &&
+        updated.imagePaths.isEmpty) {
+      await _db.deleteEntry(updated.id!);
+      entries.removeAt(index);
+      notifyListeners();
+      _trackSync(_cloudSync.deleteEntry(updated.remoteId));
+      if (canSyncMedia) {
+        _trackSync(_mediaSync.deleteAllMedia(updated.remoteId));
+      }
+      return;
+    }
+    entries[index] = updated;
+    notifyListeners();
+    _trackSync(_cloudSync.pushEntry(updated));
   }
 
   /// 写真・動画のファイルを entry に追加する。[canSyncMedia]なら、Firebase Storageへの
@@ -199,7 +330,7 @@ class JournalStore extends ChangeNotifier {
     );
     notifyListeners();
     if (canSyncMedia) {
-      unawaited(
+      _trackSync(
         _mediaSync.uploadPendingMedia(
           entryId: entry.id!,
           remoteId: entry.remoteId,
@@ -223,7 +354,7 @@ class JournalStore extends ChangeNotifier {
     );
     notifyListeners();
     if (canSyncMedia) {
-      unawaited(_mediaSync.deleteMedia(entry.remoteId, path));
+      _trackSync(_mediaSync.deleteMedia(entry.remoteId, path));
     }
   }
 
@@ -247,7 +378,7 @@ class JournalStore extends ChangeNotifier {
     }).toList();
     entries[index] = entries[index].copyWith(notes: updatedNotes);
     notifyListeners();
-    unawaited(_cloudSync.pushEntry(entries[index]));
+    _trackSync(_cloudSync.pushEntry(entries[index]));
   }
 
   Future<void> updateNoteStyle(
@@ -281,7 +412,7 @@ class JournalStore extends ChangeNotifier {
     }).toList();
     entries[index] = entries[index].copyWith(notes: updatedNotes);
     notifyListeners();
-    unawaited(_cloudSync.pushEntry(entries[index]));
+    _trackSync(_cloudSync.pushEntry(entries[index]));
   }
 
   Future<void> updateEntryEmotion(
@@ -297,7 +428,7 @@ class JournalStore extends ChangeNotifier {
       clearEmotion: emotion == null,
     );
     notifyListeners();
-    unawaited(_cloudSync.pushEntry(entries[index]));
+    _trackSync(_cloudSync.pushEntry(entries[index]));
   }
 
   Future<void> updateTaskTitle(
@@ -333,7 +464,7 @@ class JournalStore extends ChangeNotifier {
     }).toList();
     entries[index] = entries[index].copyWith(tasks: updatedTasks);
     notifyListeners();
-    unawaited(_cloudSync.pushEntry(entries[index]));
+    _trackSync(_cloudSync.pushEntry(entries[index]));
   }
 
   /// タスクの「開始・終了時間」（カレンダー同期用）を更新する。プッシュ通知の
@@ -384,7 +515,7 @@ class JournalStore extends ChangeNotifier {
       }).toList();
       entries[index] = entries[index].copyWith(tasks: updatedTasks);
       notifyListeners();
-      unawaited(_cloudSync.pushEntry(entries[index]));
+      _trackSync(_cloudSync.pushEntry(entries[index]));
     }
   }
 
@@ -416,7 +547,7 @@ class JournalStore extends ChangeNotifier {
       }).toList();
       entries[index] = entries[index].copyWith(tasks: updatedTasks);
       notifyListeners();
-      unawaited(_cloudSync.pushEntry(entries[index]));
+      _trackSync(_cloudSync.pushEntry(entries[index]));
     }
   }
 
@@ -428,37 +559,45 @@ class JournalStore extends ChangeNotifier {
   Future<void> fullSync({bool canSyncMedia = false}) async {
     if (_syncing) return;
     _syncing = true;
+    var success = true;
     try {
       for (final entry in entries) {
-        await _cloudSync.pushEntry(entry);
+        if (!await _cloudSync.pushEntry(entry)) success = false;
         if (canSyncMedia && entry.id != null) {
-          await _mediaSync.uploadPendingMedia(
+          final uploaded = await _mediaSync.uploadPendingMedia(
             entryId: entry.id!,
             remoteId: entry.remoteId,
           );
+          if (!uploaded) success = false;
         }
       }
       final remoteEntries = await _cloudSync.fetchAll();
-      final localRemoteIds = entries
-          .map((e) => e.remoteId)
-          .whereType<String>()
-          .toSet();
-      for (final remote in remoteEntries) {
-        if (remote.remoteId == null ||
-            localRemoteIds.contains(remote.remoteId)) {
-          continue;
-        }
-        final saved = await addEntry(remote, skipCloudPush: true);
-        if (canSyncMedia && saved.id != null) {
-          await _mediaSync.downloadMissingMedia(
-            entryId: saved.id!,
-            remoteId: saved.remoteId,
-            localPaths: saved.imagePaths,
-          );
+      if (remoteEntries == null) {
+        success = false;
+      } else {
+        final localRemoteIds = entries
+            .map((e) => e.remoteId)
+            .whereType<String>()
+            .toSet();
+        for (final remote in remoteEntries) {
+          if (remote.remoteId == null ||
+              localRemoteIds.contains(remote.remoteId)) {
+            continue;
+          }
+          final saved = await addEntry(remote, skipCloudPush: true);
+          if (canSyncMedia && saved.id != null) {
+            final downloaded = await _mediaSync.downloadMissingMedia(
+              entryId: saved.id!,
+              remoteId: saved.remoteId,
+              localPaths: saved.imagePaths,
+            );
+            if (!downloaded) success = false;
+          }
         }
       }
     } finally {
       _syncing = false;
+      syncError = !success;
       await load();
     }
   }

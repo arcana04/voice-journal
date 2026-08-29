@@ -93,13 +93,16 @@ class MediaSyncService {
   }
 
   /// [entryId]のまだアップロードしていない添付ファイルをStorageへ送る。
-  Future<void> uploadPendingMedia({
+  /// 戻り値はUIへの同期状態表示（[JournalStore.syncError]）に使う成否フラグ
+  /// （1件でもアップロードに失敗すればfalse）。
+  Future<bool> uploadPendingMedia({
     required int entryId,
     required String? remoteId,
   }) async {
     final folder = _mediaFolder(remoteId);
-    if (folder == null) return;
+    if (folder == null) return true;
     final pending = await DbService.instance.getUnuploadedImagePaths(entryId);
+    var success = true;
     for (final path in pending) {
       try {
         final bytes = await _prepareBytesForUpload(path);
@@ -108,51 +111,58 @@ class MediaSyncService {
         await DbService.instance.markImageUploaded(path);
       } catch (e) {
         debugPrint('media upload failed: $e');
+        success = false;
       }
     }
+    return success;
   }
 
-  Future<void> deleteMedia(String? remoteId, String path) async {
+  Future<bool> deleteMedia(String? remoteId, String path) async {
     final folder = _mediaFolder(remoteId);
-    if (folder == null) return;
+    if (folder == null) return true;
     try {
       await folder.child(p.basename(path)).delete();
+      return true;
     } catch (e) {
       debugPrint('media delete failed: $e');
+      return false;
     }
   }
 
-  Future<void> deleteAllMedia(String? remoteId) async {
+  Future<bool> deleteAllMedia(String? remoteId) async {
     final folder = _mediaFolder(remoteId);
-    if (folder == null) return;
+    if (folder == null) return true;
     try {
       final list = await folder.listAll();
       for (final item in list.items) {
         await item.delete();
       }
+      return true;
     } catch (e) {
       debugPrint('media delete-all failed: $e');
+      return false;
     }
   }
 
   /// クラウド上にあってこの端末にまだ無い添付ファイルをダウンロードし、
   /// entry_imagesへ追加登録する。[fullSync]で新しく取り込んだエントリに使う。
-  Future<void> downloadMissingMedia({
+  Future<bool> downloadMissingMedia({
     required int entryId,
     required String? remoteId,
     required List<String> localPaths,
   }) async {
     final folder = _mediaFolder(remoteId);
-    if (folder == null) return;
+    if (folder == null) return true;
     final localFileNames = localPaths.map(p.basename).toSet();
     List<Reference> remoteItems;
     try {
       remoteItems = (await folder.listAll()).items;
     } catch (e) {
       debugPrint('media list failed: $e');
-      return;
+      return false;
     }
     final newPaths = <String>[];
+    var success = true;
     for (final ref in remoteItems) {
       if (localFileNames.contains(ref.name)) continue;
       try {
@@ -162,12 +172,14 @@ class MediaSyncService {
         newPaths.add(localPath);
       } catch (e) {
         debugPrint('media download failed: $e');
+        success = false;
       }
     }
-    if (newPaths.isEmpty) return;
+    if (newPaths.isEmpty) return success;
     await DbService.instance.addImages(entryId, newPaths);
     for (final path in newPaths) {
       await DbService.instance.markImageUploaded(path);
     }
+    return success;
   }
 }

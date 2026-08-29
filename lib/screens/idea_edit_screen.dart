@@ -33,13 +33,6 @@ class IdeaEditScreen extends StatefulWidget {
 class _IdeaEditScreenState extends State<IdeaEditScreen> {
   List<_IdeaDraft>? _drafts;
 
-  JournalEntry? _findEntry(JournalStore store) {
-    for (final e in store.entries) {
-      if (e.id == widget.entryId) return e;
-    }
-    return null;
-  }
-
   List<_IdeaDraft> _ensureDrafts(JournalEntry entry) {
     return _drafts ??= entry.notes
         .where((n) => n.category == kNoteCategoryIdea)
@@ -74,7 +67,7 @@ class _IdeaEditScreenState extends State<IdeaEditScreen> {
   Widget build(BuildContext context) {
     return Consumer<JournalStore>(
       builder: (context, store, _) {
-        final entry = _findEntry(store);
+        final entry = store.findById(widget.entryId);
         if (entry == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (Navigator.of(context).canPop()) Navigator.of(context).pop();

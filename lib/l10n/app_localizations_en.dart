@@ -375,6 +375,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountRestoreButton => 'Restore from cloud';
 
   @override
+  String get syncErrorBannerMessage => 'Some data failed to sync';
+
+  @override
+  String get syncErrorBannerAction => 'Check';
+
+  @override
+  String get loadErrorBannerMessage => 'Failed to load your data';
+
+  @override
+  String get loadErrorBannerAction => 'Retry';
+
+  @override
   String get accountSyncingMessage => 'Syncing…';
 
   @override
@@ -578,7 +590,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customDictionaryEmpty => 'No words registered yet';
 
   @override
-  String get diaryMonthEmpty => 'No diary entries this month';
+  String get diaryDayEmpty => 'No diary entries this day';
+
+  @override
+  String get diaryPickDateTooltip => 'Pick a date';
+
+  @override
+  String get diaryPreviousWeekTooltip => 'Previous week';
+
+  @override
+  String get diaryNextWeekTooltip => 'Next week';
 
   @override
   String get fontStandard => 'Standard';

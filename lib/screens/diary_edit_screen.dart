@@ -18,6 +18,7 @@ import '../widgets/diary_background_tile.dart';
 import '../widgets/diary_screen_background.dart';
 import '../widgets/icon_button_style.dart';
 import '../widgets/media_gallery.dart';
+import '../widgets/note_text_style_picker.dart';
 import '../widgets/scrim_text.dart';
 
 class _NoteDraft {
@@ -52,12 +53,6 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
   late Color? _textColor;
   String? _backgroundId;
 
-  JournalEntry? _findEntry(JournalStore store) {
-    for (final e in store.entries) {
-      if (e.id == widget.entryId) return e;
-    }
-    return null;
-  }
 
   List<_NoteDraft> _ensureDrafts(JournalEntry entry) {
     final existing = _drafts;
@@ -330,105 +325,6 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (sheetContext, setSheetState) {
-            Widget sizeOption(String label, double scale) {
-              final selected = _fontScale == scale;
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() => _fontScale = scale);
-                    setSheetState(() {});
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? Colors.blue.withValues(alpha: 0.12)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: selected
-                            ? Colors.blue
-                            : Colors.grey.withValues(alpha: 0.4),
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: selected ? Colors.blue : Colors.grey,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }
-
-            Widget colorOption(Color? color) {
-              final selected = _textColor == color;
-              return Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() => _textColor = color);
-                    setSheetState(() {});
-                  },
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: color ?? Colors.transparent,
-                      border: Border.all(
-                        color: selected
-                            ? Colors.blue
-                            : Colors.grey.withValues(alpha: 0.4),
-                        width: selected ? 2 : 1,
-                      ),
-                    ),
-                    child: color == null
-                        ? Icon(
-                            Icons.block,
-                            size: 18,
-                            color: Colors.grey.withValues(alpha: 0.6),
-                          )
-                        : null,
-                  ),
-                ),
-              );
-            }
-
-            Widget fontOption(int index) {
-              final option = noteFontOptions[index];
-              final selected = _fontFamilyIndex == index;
-              final label = option.labelFor(AppLocalizations.of(context)!);
-              return GestureDetector(
-                onTap: () {
-                  setState(() => _fontFamilyIndex = index);
-                  setSheetState(() {});
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? Colors.blue.withValues(alpha: 0.08)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: selected
-                          ? Colors.blue
-                          : Colors.grey.withValues(alpha: 0.4),
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    label,
-                    style: option.apply(const TextStyle(fontSize: 15)),
-                  ),
-                ),
-              );
-            }
-
             return SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -455,37 +351,22 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                           ),
                         ],
                       ),
-                      Row(
-                        children: [
-                          sizeOption('H1', 1.5),
-                          sizeOption('H2', 1.25),
-                          sizeOption('H3', 1.0),
-                          sizeOption('H4', 0.85),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        height: 40,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children: [
-                            for (final color in noteTextColorOptions)
-                              colorOption(color),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: 2.6,
-                        children: [
-                          for (var i = 0; i < noteFontOptions.length; i++)
-                            fontOption(i),
-                        ],
+                      NoteTextStylePicker(
+                        fontFamilyIndex: _fontFamilyIndex,
+                        textColor: _textColor,
+                        fontScale: _fontScale,
+                        onFontScaleChanged: (scale) {
+                          setState(() => _fontScale = scale);
+                          setSheetState(() {});
+                        },
+                        onTextColorChanged: (color) {
+                          setState(() => _textColor = color);
+                          setSheetState(() {});
+                        },
+                        onFontFamilyIndexChanged: (index) {
+                          setState(() => _fontFamilyIndex = index);
+                          setSheetState(() {});
+                        },
                       ),
                     ],
                   ),
@@ -502,7 +383,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
   Widget build(BuildContext context) {
     return Consumer<JournalStore>(
       builder: (context, store, _) {
-        final entry = _findEntry(store);
+        final entry = store.findById(widget.entryId);
         if (entry == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (Navigator.of(context).canPop()) Navigator.of(context).pop();

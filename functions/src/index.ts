@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -9,6 +10,7 @@ import { getAuth } from "firebase-admin/auth";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
+import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions/v2";
 import ffmpegPath from "ffmpeg-static";
@@ -126,13 +128,17 @@ function buildNotesStyleSection(level: SummaryLevel): string {
 tasksと同様に、内容を要点だけに絞って短くまとめてください。
 - 言い淀みや重複表現だけでなく、瑣末な描写や繰り返しの説明も削って構いません。
 - 1つのnoteにつき1〜2文程度を目安に、核心の出来事・思いつき・感情だけを簡潔にまとめてください。
-- 一人称視点（「〜と感じた」「〜だった」など）は保ってください。`;
+- 一人称視点（「〜と感じた」「〜だった」など）は保ってください。
+- 話者が言っていない人物・出来事・感情・詳細を勝手に付け足してはいけません。要約は「削る」ことであり「足す」ことではありません。
+${FABRICATION_EXAMPLE}`;
     case "standard":
       return `【notesの本文（content）の書き方：標準】
 tasksほど短くはせず、日記らしい自然な文章の長さは保ちつつ、冗長な繰り返しや脱線は整理してください。
 - 感情の手がかりになる言葉、固有名詞、印象的な言い回しはできるだけ残してください。ただし発言をそのまま書き起こす必要はなく、読みやすいよう軽く整えて構いません。
 - 客観的な三人称ではなく、話者自身の一人称視点（「〜と感じた」「〜だった」など）で自然な日記の文体にしてください。
-- 感情が動いた場面では、不自然にならない範囲で「！」も使ってください。`;
+- 感情が動いた場面では、不自然にならない範囲で「！」も使ってください。
+- 「日記らしい長さ」はあくまで文章の整え方の目安であり、分量を埋めることを目的に、話者が言っていない人物・出来事・感情・詳細を付け足してはいけません。入力が「BBQに行った」のように一言だけなら、contentも一言〜一文程度の短さのままで構いません。存在しない情報を書き足すくらいなら、短いままにしてください。
+${FABRICATION_EXAMPLE}`;
     case "preserve":
     default:
       return `【notesの本文（content）の書き方：原型重視】
@@ -140,9 +146,19 @@ tasksとは違い、notesは要約・圧縮しないでください。
 - 話者が語った「生の感情」「独特な言い回し」「情景の描写」「具体的な固有名詞」は、できる限り削除せずそのまま残してください。要点だけを抜き出した短い要約にはしないでください。
 - 取り除いてよいのは言い淀み（「えっと」「あー」など）と同じ内容の重複表現だけです。それ以外は発言の内容・順序・粒度を保ったまま、読みやすい文章に整える（整文する）程度にとどめてください。
 - 客観的な三人称の説明文にはせず、話者自身の一人称視点（「〜と感じた」「〜だった」「〜かもしれない」など）で、自然な日記の文体にリライトしてください。
-- 感情が高ぶった場面や驚き・嬉しさなどは、不自然にならない範囲で「！」も使い、実際に喋っていたときの自然なトーンを残してください。`;
+- 感情が高ぶった場面や驚き・嬉しさなどは、不自然にならない範囲で「！」も使い、実際に喋っていたときの自然なトーンを残してください。
+- 話者が言っていない人物・出来事・感情・詳細を勝手に付け足してはいけません。入力が短ければ、整えた後のcontentも短いままで構いません。
+${FABRICATION_EXAMPLE}`;
   }
 }
+
+/** 3段階すべての要約度に共通で埋め込む、捏造禁止の具体例。抽象的な指示だけでは
+ * gpt-4o-miniが短い入力を「日記らしく」しようとして人物や情景を作り話することが
+ * 実際にあったため（原型重視モードでも発生）、実例で強く釘を刺す。 */
+const FABRICATION_EXAMPLE = `【具体例（この通りにすること）】
+入力: 「花火が楽しかった」
+- 正しい出力例: 「花火が楽しかった。」（一人称に整える程度の軽微な変更にとどめる）
+- 絶対にしてはいけない出力例: 「花火を見ている時間が本当に楽しかった。夜空に美しい花火が広がるのが印象的で、みんなでワイワイできた。」（「みんなで」など、話者が一言も言っていない人物・情景を捏造しており違反）`;
 
 function buildNotesStyleSectionEn(level: SummaryLevel): string {
   switch (level) {
@@ -151,13 +167,17 @@ function buildNotesStyleSectionEn(level: SummaryLevel): string {
 Just like tasks, boil this down to only the essentials.
 - You may cut not just filler and repeated phrases, but also minor descriptions and redundant explanations.
 - Aim for about 1-2 sentences per note, covering only the core event, idea, or feeling.
-- Keep the first-person point of view ("I felt...", "It was...").`;
+- Keep the first-person point of view ("I felt...", "It was...").
+- Never invent people, events, feelings, or details the speaker didn't say. Summarizing means cutting, never adding.
+${FABRICATION_EXAMPLE_EN}`;
     case "standard":
       return `[How to write the note body ("content"): standard]
 Don't shorten it as much as a task, but keep a natural diary-entry length while tidying up redundant repetition or tangents.
 - Keep emotional cues, names, and memorable phrasing where you can. You don't need to transcribe verbatim — light editing for readability is fine.
 - Write in the speaker's own first-person voice ("I felt...", "It was...."), not an objective third-person description.
-- Where the emotion is high, it's fine to use "!" if it doesn't feel forced.`;
+- Where the emotion is high, it's fine to use "!" if it doesn't feel forced.
+- "Natural diary-entry length" is only a guide for tidying prose — never invent people, events, feelings, or details the speaker didn't say just to fill out the length. If the input is only a short phrase like "went to a BBQ", the content can stay just as short — a short-but-accurate note is always better than a longer one with fabricated details.
+${FABRICATION_EXAMPLE_EN}`;
     case "preserve":
     default:
       return `[How to write the note body ("content"): preserve original]
@@ -165,9 +185,19 @@ Unlike tasks, do not summarize or compress notes.
 - Keep the speaker's raw emotion, distinctive phrasing, scene description, and specific names as intact as possible. Do not reduce it to a short summary of just the key points.
 - The only things you may remove are filler words (like "um", "uh") and exact repeated phrases. Otherwise, keep the content, order, and level of detail, only lightly tidying the prose for readability.
 - Rewrite it in the speaker's own first-person voice ("I felt...", "It was...", "Maybe I..."), not an objective third-person account.
-- Where there's excitement, surprise, or joy, it's fine to use "!" to keep the natural tone of how it was actually said.`;
+- Where there's excitement, surprise, or joy, it's fine to use "!" to keep the natural tone of how it was actually said.
+- Never invent people, events, feelings, or details the speaker didn't say. If the input is short, the tidied content can stay just as short.
+${FABRICATION_EXAMPLE_EN}`;
   }
 }
+
+/** Same fabrication-prevention example as the Japanese prompt, in English —
+ * abstract rules alone weren't reliably followed by gpt-4o-mini for very
+ * short inputs, so a concrete example is included at every summary level. */
+const FABRICATION_EXAMPLE_EN = `[Concrete example — follow this exactly]
+Input: "the fireworks were fun"
+- Correct output: "The fireworks were fun." (only lightly tidied into first person, nothing added)
+- Never output something like: "Watching the fireworks was such a genuinely fun time. The way they lit up the night sky was so striking, and having everyone there together made it even better." (inventing people like "everyone" and scene details the speaker never said is a violation)`;
 
 function buildDiaryStyleSection(style: DiaryStyle): string {
   const guardrails = `【文体についての厳守事項（必ず守ること）】
@@ -812,6 +842,8 @@ async function structure(
     },
     body: JSON.stringify({
       model: "gpt-4o-mini",
+      // 事実の捏造を減らすため低めに設定（文体の指定はプロンプト側の指示で十分効く）。
+      temperature: 0.3,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: systemPrompt },
@@ -1008,6 +1040,154 @@ async function answerKnowledgeBaseQuestion(
   return data.choices[0].message.content.trim();
 }
 
+const EMBEDDING_MODEL = "text-embedding-3-small";
+/** 相談機能の埋め込み検索で、質問に近い順に何件のエントリをコンテキストへ
+ * 渡すか。多すぎるとコスト・精度が悪化し、少なすぎると見落としが増える。 */
+const KNOWLEDGE_BASE_TOP_K = 15;
+
+async function embedText(apiKey: string, text: string): Promise<number[]> {
+  const response = await fetch("https://api.openai.com/v1/embeddings", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ model: EMBEDDING_MODEL, input: text }),
+  });
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`embeddings API failed: ${body}`);
+  }
+  const data = (await response.json()) as { data: { embedding: number[] }[] };
+  return data.data[0].embedding;
+}
+
+function cosineSimilarity(a: number[], b: number[]): number {
+  let dot = 0;
+  let normA = 0;
+  let normB = 0;
+  const len = Math.min(a.length, b.length);
+  for (let i = 0; i < len; i++) {
+    dot += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  if (normA === 0 || normB === 0) return 0;
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+/** Firestore上のentryドキュメント1件分を、埋め込み対象のプレーンテキストに変換する。 */
+function entryDocToEmbeddingText(data: FirebaseFirestore.DocumentData): string {
+  const parts: string[] = [];
+  if (typeof data.summary === "string" && data.summary.trim()) {
+    parts.push(data.summary.trim());
+  }
+  for (const note of (data.notes ?? []) as { title?: string; content?: string }[]) {
+    if (note.title) parts.push(note.title);
+    if (note.content) parts.push(note.content);
+  }
+  for (const task of (data.tasks ?? []) as { title?: string }[]) {
+    if (task.title) parts.push(task.title);
+  }
+  return parts.join("\n").trim();
+}
+
+/** Firestore上のentryドキュメント一覧を、クライアント側の
+ * lib/utils/journal_context_format.dart（formatEntriesAsContext）とほぼ同じ
+ * 「日付つきプレーンテキスト」形式に整形する。AIが慣れた形式を保つ狙い。 */
+function formatFirestoreEntriesAsContext(
+  docs: FirebaseFirestore.DocumentData[],
+  locale: Locale
+): string {
+  const dateFormatter = new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ja-JP", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const taskLabel = locale === "en" ? "Task" : "タスク";
+  const doneMark = locale === "en" ? "(done) " : "(完了) ";
+  const lines: string[] = [];
+
+  for (const data of docs) {
+    const createdAt = new Date(data.created_at ?? "");
+    lines.push(
+      `■ ${Number.isNaN(createdAt.getTime()) ? "" : dateFormatter.format(createdAt)}`
+    );
+    for (const note of (data.notes ?? []) as {
+      category?: string;
+      title?: string;
+      content?: string;
+    }[]) {
+      const label =
+        locale === "en"
+          ? note.category === "アイデア"
+            ? "Idea"
+            : "Feeling"
+          : (note.category ?? "");
+      const title = note.title ? `${note.title}: ` : "";
+      lines.push(`[${label}] ${title}${note.content ?? ""}`);
+    }
+    for (const task of (data.tasks ?? []) as {
+      title?: string;
+      done?: number | boolean;
+    }[]) {
+      const done = task.done === 1 || task.done === true;
+      lines.push(`[${taskLabel}] ${done ? doneMark : ""}${task.title ?? ""}`);
+    }
+    lines.push("");
+  }
+  return lines.join("\n");
+}
+
+/**
+ * 相談機能（第二の脳）用のコンテキスト取得。アカウント同期済み（Firestoreに
+ * entriesがある）ユーザーには埋め込み検索で質問に近い記録だけを絞り込んで渡し、
+ * メモ量が増えてもコンテキスト長・コストが際限なく膨らまないようにする。
+ * 同期していない（匿名）ユーザーや、埋め込みがまだ1件も無い場合は、クライアント
+ * から渡された全件詰め込みコンテキストにフォールバックする
+ * （[[project_voicejournal_knowledge_base_chat]]のMVP方式）。
+ */
+async function buildKnowledgeBaseContext(
+  apiKey: string,
+  uid: string,
+  question: string,
+  fallbackContext: string,
+  locale: Locale
+): Promise<string> {
+  try {
+    const snapshot = await getFirestore()
+      .collection("users")
+      .doc(uid)
+      .collection("entries")
+      .get();
+    if (snapshot.empty) return fallbackContext;
+
+    const withEmbeddings = snapshot.docs
+      .map((doc) => doc.data())
+      .filter(
+        (data): data is FirebaseFirestore.DocumentData & { embedding: number[] } =>
+          Array.isArray(data.embedding) && data.embedding.length > 0
+      );
+    if (withEmbeddings.length === 0) return fallbackContext;
+
+    const questionEmbedding = await embedText(apiKey, question);
+    const ranked = withEmbeddings
+      .map((data) => ({
+        data,
+        score: cosineSimilarity(questionEmbedding, data.embedding),
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, KNOWLEDGE_BASE_TOP_K)
+      .map((r) => r.data);
+
+    return formatFirestoreEntriesAsContext(ranked, locale);
+  } catch (err) {
+    // 埋め込み検索が失敗しても機能自体は落とさず、全件詰め込みで回答を継続する。
+    logger.error("buildKnowledgeBaseContext embedding search failed, falling back", err);
+    return fallbackContext;
+  }
+}
+
 interface AskKnowledgeBaseRequest {
   question: string;
   context?: string;
@@ -1035,10 +1215,17 @@ export const askKnowledgeBase = onCall(
 
     try {
       const apiKey = openAiApiKey.value();
+      const effectiveContext = await buildKnowledgeBaseContext(
+        apiKey,
+        uid,
+        question.trim(),
+        (context ?? "").trim(),
+        loc
+      );
       const answer = await answerKnowledgeBaseQuestion(
         apiKey,
         question.trim(),
-        (context ?? "").trim(),
+        effectiveContext,
         loc
       );
       return { answer };
@@ -1049,6 +1236,36 @@ export const askKnowledgeBase = onCall(
       logger.error("askKnowledgeBase unexpected error", err);
       const message = err instanceof Error ? err.message : String(err);
       throw new HttpsError("unavailable", MESSAGES[loc].unexpectedError(message));
+    }
+  }
+);
+
+/**
+ * users/{uid}/entries/{entryId} への書き込みをトリガーに、相談機能（第二の脳）の
+ * 埋め込み検索用ベクトルを裏側で計算してentryドキュメントに書き戻す。書き戻し
+ * 自体が再度このトリガーを起動するが、embedding_source_hashで内容が変わって
+ * いなければ即座にスキップするため無限ループにはならない。
+ * ベストエフォート処理: 失敗してもクラウド同期自体は妨げない（埋め込みが
+ * 無い/一部のエントリだけでも、buildKnowledgeBaseContextが安全に動作する）。
+ */
+export const onEntryWritten = onDocumentWritten(
+  { document: "users/{uid}/entries/{entryId}", secrets: [openAiApiKey] },
+  async (event) => {
+    const after = event.data?.after;
+    if (!after || !after.exists) return; // 削除された場合は何もしない
+
+    const data = after.data() ?? {};
+    const text = entryDocToEmbeddingText(data);
+    if (!text) return;
+
+    const hash = createHash("sha256").update(text).digest("hex");
+    if (data.embedding_source_hash === hash) return; // 内容未変更（自分の書き戻し含む）
+
+    try {
+      const embedding = await embedText(openAiApiKey.value(), text);
+      await after.ref.update({ embedding, embedding_source_hash: hash });
+    } catch (err) {
+      logger.error("onEntryWritten embedding failed", err);
     }
   }
 );

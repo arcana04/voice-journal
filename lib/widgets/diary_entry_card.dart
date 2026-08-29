@@ -21,7 +21,7 @@ class DiaryEntryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context).toString();
     final day = DateFormat('d', locale).format(entry.createdAt);
-    final monthLabel = DateFormat.MMM(locale).format(entry.createdAt);
+    final timeLabel = DateFormat.Hm(locale).format(entry.createdAt);
 
     return InkWell(
       onTap: onTap,
@@ -60,13 +60,13 @@ class DiaryEntryCard extends StatelessWidget {
                         height: 1,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 8),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text(
-                        monthLabel,
+                        timeLabel,
                         style: theme.textTheme.labelLarge?.copyWith(
-                          color: theme.colorScheme.primary,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),

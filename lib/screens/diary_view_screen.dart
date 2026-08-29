@@ -20,13 +20,6 @@ class DiaryViewScreen extends StatelessWidget {
 
   const DiaryViewScreen({super.key, required this.entryId});
 
-  JournalEntry? _findEntry(JournalStore store) {
-    for (final e in store.entries) {
-      if (e.id == entryId) return e;
-    }
-    return null;
-  }
-
   Future<void> _confirmDelete(
     BuildContext context,
     JournalStore store,
@@ -52,7 +45,18 @@ class DiaryViewScreen extends StatelessWidget {
       ),
     );
     if (confirmed != true) return;
-    await store.deleteEntry(entry, canSyncMedia: canSyncMedia);
+    // このentryにアイデア・タスクの内容も混ざっている場合はそれらを残し、
+    // 日記（感情ログ）のnoteと写真・動画（日記編集画面からしか付けられない
+    // ため日記側の付属物として扱う）だけを削除する。
+    final feelingNotes = entry.notes
+        .where((n) => n.category == kNoteCategoryFeeling)
+        .toList();
+    await store.deleteNotesFromEntry(
+      entry,
+      feelingNotes,
+      alsoDeleteImages: true,
+      canSyncMedia: canSyncMedia,
+    );
     if (context.mounted) Navigator.of(context).pop();
   }
 
@@ -60,7 +64,7 @@ class DiaryViewScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<JournalStore>(
       builder: (context, store, _) {
-        final entry = _findEntry(store);
+        final entry = store.findById(entryId);
         if (entry == null) {
           // 編集画面から削除された場合など。
           WidgetsBinding.instance.addPostFrameCallback((_) {

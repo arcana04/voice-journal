@@ -362,6 +362,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get accountRestoreButton => 'クラウドから復元';
 
   @override
+  String get syncErrorBannerMessage => '一部のデータの同期に失敗しました';
+
+  @override
+  String get syncErrorBannerAction => '確認する';
+
+  @override
+  String get loadErrorBannerMessage => 'データの読み込みに失敗しました';
+
+  @override
+  String get loadErrorBannerAction => '再試行';
+
+  @override
   String get accountSyncingMessage => '同期中です…';
 
   @override
@@ -549,7 +561,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get customDictionaryEmpty => '登録された単語はまだありません';
 
   @override
-  String get diaryMonthEmpty => 'この月の日記・感想はありません';
+  String get diaryDayEmpty => 'この日の日記・感想はありません';
+
+  @override
+  String get diaryPickDateTooltip => '日付を選択';
+
+  @override
+  String get diaryPreviousWeekTooltip => '前の週';
+
+  @override
+  String get diaryNextWeekTooltip => '次の週';
 
   @override
   String get fontStandard => '標準';

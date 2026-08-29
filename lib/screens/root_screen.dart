@@ -4,9 +4,11 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../services/deep_link_service.dart';
 import '../services/reminder_service.dart';
+import '../state/journal_store.dart';
 import '../state/record_trigger_store.dart';
 import '../state/subscription_store.dart';
 import '../widgets/floating_nav_bar.dart';
+import 'account_screen.dart';
 import 'diary_screen.dart';
 import 'home_screen.dart';
 import 'idea_screen.dart';
@@ -81,7 +83,34 @@ class _RootScreenState extends State<RootScreen> {
 
     return Scaffold(
       extendBody: true,
-      body: IndexedStack(index: _index, children: _screens),
+      body: Column(
+        children: [
+          Consumer<JournalStore>(
+            builder: (context, store, _) {
+              if (store.loadError != null) {
+                return _StatusBanner(
+                  icon: Icons.error_outline,
+                  message: l10n.loadErrorBannerMessage,
+                  actionLabel: l10n.loadErrorBannerAction,
+                  onAction: store.load,
+                );
+              }
+              if (store.syncError) {
+                return _StatusBanner(
+                  icon: Icons.cloud_off,
+                  message: l10n.syncErrorBannerMessage,
+                  actionLabel: l10n.syncErrorBannerAction,
+                  onAction: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AccountScreen()),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          Expanded(child: IndexedStack(index: _index, children: _screens)),
+        ],
+      ),
       bottomNavigationBar: FloatingNavBar(
         selectedIndex: _index,
         onDestinationSelected: (value) => setState(() => _index = value),
@@ -112,6 +141,58 @@ class _RootScreenState extends State<RootScreen> {
             label: l10n.navKnowledgeBase,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// クラウド同期失敗・データ読み込み失敗を、タブに関わらず常に見える形で
+/// 知らせる細いバナー。それまでこの手の失敗はdebugPrintで握りつぶされ、
+/// ユーザーからは一切見えなかった。
+class _StatusBanner extends StatelessWidget {
+  final IconData icon;
+  final String message;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  const _StatusBanner({
+    required this.icon,
+    required this.message,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SafeArea(
+      bottom: false,
+      child: Material(
+        color: theme.colorScheme.errorContainer,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: theme.colorScheme.onErrorContainer),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  message,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onErrorContainer,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: onAction,
+                style: TextButton.styleFrom(
+                  foregroundColor: theme.colorScheme.onErrorContainer,
+                ),
+                child: Text(actionLabel),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -61,28 +61,39 @@ class CloudSyncService {
     );
   }
 
-  Future<void> pushEntry(JournalEntry entry) async {
+  /// 戻り値はUIへの同期状態表示（[JournalStore.syncError]）に使う成否フラグ。
+  /// 匿名ユーザーなど「そもそも同期対象外」の場合は失敗ではないので`true`を返す。
+  Future<bool> pushEntry(JournalEntry entry) async {
     final collection = _collection;
     final remoteId = entry.remoteId;
-    if (collection == null || remoteId == null) return;
+    if (collection == null || remoteId == null) return true;
     try {
-      await collection.doc(remoteId).set(_entryToFirestoreMap(entry));
+      // merge:true でないと、この端末が知らないフィールド（サーバー側で計算される
+      // 相談機能の埋め込みベクトルなど）を毎回の同期で消してしまう。
+      await collection
+          .doc(remoteId)
+          .set(_entryToFirestoreMap(entry), SetOptions(merge: true));
+      return true;
     } catch (e) {
       debugPrint('cloud sync push failed: $e');
+      return false;
     }
   }
 
-  Future<void> deleteEntry(String? remoteId) async {
+  Future<bool> deleteEntry(String? remoteId) async {
     final collection = _collection;
-    if (collection == null || remoteId == null) return;
+    if (collection == null || remoteId == null) return true;
     try {
       await collection.doc(remoteId).delete();
+      return true;
     } catch (e) {
       debugPrint('cloud sync delete failed: $e');
+      return false;
     }
   }
 
-  Future<List<JournalEntry>> fetchAll() async {
+  /// nullは取得失敗（UIへの同期状態表示に使う）、空リストは「同期対象0件」を表す。
+  Future<List<JournalEntry>?> fetchAll() async {
     final collection = _collection;
     if (collection == null) return [];
     try {
@@ -92,7 +103,7 @@ class CloudSyncService {
           .toList();
     } catch (e) {
       debugPrint('cloud sync fetch failed: $e');
-      return [];
+      return null;
     }
   }
 }
