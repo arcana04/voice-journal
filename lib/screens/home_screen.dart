@@ -554,6 +554,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert),
                     style: pressableIconButtonStyle(context),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    padding: EdgeInsets.zero,
                     onSelected: (value) {
                       if (value == 'dictionary') {
                         Navigator.of(context).push(
@@ -565,12 +569,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         showModalBottomSheet<void>(
                           context: context,
                           isScrollControlled: true,
+                          showDragHandle: true,
                           builder: (_) => const _SummaryLevelSheet(),
                         );
                       } else if (value == 'diaryStyle') {
                         showModalBottomSheet<void>(
                           context: context,
                           isScrollControlled: true,
+                          showDragHandle: true,
                           builder: (_) => const _DiaryStyleSheet(),
                         );
                       }
@@ -578,15 +584,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemBuilder: (context) => [
                       PopupMenuItem(
                         value: 'dictionary',
-                        child: Text(l10n.menuCustomDictionary),
+                        height: 56,
+                        child: _MenuRow(
+                          icon: Icons.edit_outlined,
+                          label: l10n.menuCustomDictionary,
+                        ),
                       ),
                       PopupMenuItem(
                         value: 'summaryLevel',
-                        child: Text(l10n.menuSummaryLevel),
+                        height: 56,
+                        child: _MenuRow(
+                          icon: Icons.auto_awesome_outlined,
+                          label: l10n.menuSummaryLevel,
+                        ),
                       ),
                       PopupMenuItem(
                         value: 'diaryStyle',
-                        child: Text(l10n.menuDiaryStyle),
+                        height: 56,
+                        child: _MenuRow(
+                          icon: Icons.text_fields_rounded,
+                          label: l10n.menuDiaryStyle,
+                        ),
                       ),
                     ],
                   ),
@@ -692,6 +710,34 @@ class _TextComposerSheetState extends State<_TextComposerSheet> {
               ),
               icon: const Icon(Icons.auto_awesome_rounded, size: 18),
               label: Text(l10n.textComposerSubmit),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 録音画面右上の「︙」メニュー（カスタム辞書／AIの要約度／日記の文体）の1行分。
+class _MenuRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _MenuRow({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 16),
+          Text(
+            label,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
