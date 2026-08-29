@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.WRITE_CALENDAR"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <!-- flutter_compress: 動画圧縮はアプリがフォアグラウンドの間だけ行う想定
          （MediaSyncService側でkeepAliveInBackground: falseを指定）なので、
          Play Console側で申請書＋デモ動画が必要になる「dataSync」特殊種別の
@@ -45,6 +46,25 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- flutter_local_notifications: zonedScheduleで登録したアラームが発火した際に
+             実際の通知を組み立てて表示するレシーバー。プラグイン自身のマニフェストには
+             含まれておらず、アプリ側で明示的に宣言する必要がある（無いとAlarmManagerには
+             登録されるが、発火時にブロードキャストの届け先が見つからず握りつぶされ、
+             通知が一切表示されない）。 -->
+        <receiver android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <!-- 端末再起動・アプリ更新でOS側のAlarmManager登録が消えた際に、プラグインが
+             自身で保持しているスケジュール情報から再登録するためのレシーバー。
+             JournalStore側のWorkManager経由の復元（reminderCallbackDispatcher）とは
+             別経路の保険。 -->
+        <receiver android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

@@ -285,7 +285,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get darkModeTitle => 'Dark mode';
 
   @override
+  String get darkModeSubtitle => 'Switch to an easier-on-the-eyes look';
+
+  @override
+  String get settingsProBadge => 'Pro only';
+
+  @override
   String get integrationsSettingsTitle => 'Integrations';
+
+  @override
+  String get integrationsCalendarRowTitle => 'Calendar integration';
 
   @override
   String get integrationsScreenTitle => 'Integrations';
@@ -328,6 +337,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appBackgroundSettingsTitle => 'Background';
+
+  @override
+  String get appBackgroundSettingsSubtitle => 'Choose the app\'s background';
 
   @override
   String get appBackgroundScreenTitle => 'Choose a background';
@@ -452,6 +464,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSectionTitle => 'Plan';
 
   @override
+  String get planCurrentTitle => 'Current plan';
+
+  @override
   String get planProTitle => 'Pro plan';
 
   @override
@@ -475,35 +490,86 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallTitle => 'Pro plan';
 
   @override
-  String get paywallHeadline => 'Go Pro for more room to talk';
+  String get paywallSectionTitle => 'What Pro unlocks';
 
   @override
-  String get paywallBenefitDuration =>
-      'Record up to 15 minutes at a time (60 seconds on the free plan)';
+  String get paywallSectionSubtitle => 'Unlimited access to every Pro feature';
 
   @override
-  String get paywallBenefitCount =>
-      'Record up to 30 times a day (3 times on the free plan)';
+  String get paywallBenefitDurationTitle => 'Longer recordings';
 
   @override
-  String get paywallBenefitDiaryStyle =>
-      '9 diary writing styles to choose from (standard only on the free plan)';
+  String get paywallBenefitDurationBefore => '60 sec';
 
   @override
-  String get paywallBenefitCustomBackground =>
-      'Use your own photos as diary backgrounds';
+  String get paywallBenefitDurationAfter => '15 min';
 
   @override
-  String get paywallBenefitMediaSync =>
-      'Cloud backup for photos and videos attached to entries (monthly/annual plans only — not included with the lifetime plan)';
+  String get paywallBenefitDurationDesc =>
+      'Talk as long as you need without losing the details';
 
   @override
-  String get paywallBenefitKnowledgeBase =>
-      'Ask AI questions across all your past entries in \"Ask\"';
+  String get paywallBenefitCountTitle => 'More uses per day';
 
   @override
-  String get paywallBenefitWeeklyReport =>
-      'Get an AI-written Weekly Brain Report looking back on your week';
+  String get paywallBenefitCountBefore => '3 / day';
+
+  @override
+  String get paywallBenefitCountAfter => '30 / day';
+
+  @override
+  String get paywallBenefitCountDesc =>
+      'Capture every thought, whenever it strikes';
+
+  @override
+  String get paywallBenefitDiaryStyleTitle => 'Choose your diary style';
+
+  @override
+  String get paywallBenefitDiaryStyleBefore => 'Standard only';
+
+  @override
+  String get paywallBenefitDiaryStyleAfter => 'All 9 styles';
+
+  @override
+  String get paywallBenefitDiaryStyleDesc =>
+      'Match the tone to your mood or moment';
+
+  @override
+  String get paywallBenefitCustomBackgroundTitle => 'Add ';
+
+  @override
+  String get paywallBenefitCustomBackgroundHighlight => 'your own photo';
+
+  @override
+  String get paywallBenefitCustomBackgroundDesc =>
+      'Make every entry feel like yours';
+
+  @override
+  String get paywallBenefitKnowledgeBaseHighlight => 'Ask (second brain)';
+
+  @override
+  String get paywallBenefitKnowledgeBaseSuffix => ' is unlocked';
+
+  @override
+  String get paywallBenefitKnowledgeBaseDesc =>
+      'AI digs through everything you\'ve recorded to help';
+
+  @override
+  String get paywallBenefitWeeklyReportTitle => 'Weekly Brain Report';
+
+  @override
+  String get paywallBenefitWeeklyReportDesc =>
+      'AI reads your week and delivers the highlights';
+
+  @override
+  String get paywallBenefitMediaSyncTitle => 'Cloud photo & video sync';
+
+  @override
+  String get paywallBenefitMediaSyncDesc =>
+      'Keep your memories safely backed up';
+
+  @override
+  String get paywallBenefitMediaSyncBadge => 'Monthly / annual plans only';
 
   @override
   String get paywallUnavailable =>
@@ -664,7 +730,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pickPhotosFromLibrary => 'Choose photos';
 
   @override
+  String get pickPhotosFromLibrarySubtitle =>
+      'Pick photos from your library to add';
+
+  @override
   String get pickVideoFromLibrary => 'Choose a video';
+
+  @override
+  String get pickVideoFromLibrarySubtitle =>
+      'Pick a video from your library to add';
 
   @override
   String get backgroundSheetTitle => 'Background';
@@ -728,6 +802,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fontSheetTitle => 'Font';
+
+  @override
+  String get fontSheetSizeLabel => 'Heading size';
+
+  @override
+  String get fontSheetColorLabel => 'Text color';
+
+  @override
+  String get fontSheetStyleLabel => 'Font style';
 
   @override
   String get closeTooltip => 'Close';
@@ -946,7 +1029,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Chatting across all your entries is a Pro feature. Upgrade to unlock it.';
 
   @override
-  String get weeklyReportSettingsTitle => 'Weekly report';
+  String get weeklyReportSettingsTitle => 'Weekly Brain Report';
+
+  @override
+  String get weeklyReportSettingsSubtitle => 'Delivered every week';
 
   @override
   String get weeklyReportTitle => 'Weekly Brain Report';

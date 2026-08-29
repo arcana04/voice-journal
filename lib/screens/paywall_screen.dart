@@ -101,32 +101,104 @@ class _PaywallScreenState extends State<PaywallScreen> {
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
               children: [
-                Text(l10n.paywallHeadline, style: theme.textTheme.headlineSmall),
-                const SizedBox(height: 16),
-                _BenefitRow(
-                  icon: Icons.mic_outlined,
-                  text: l10n.paywallBenefitDuration,
+                _PaywallSectionHeader(
+                  title: l10n.paywallSectionTitle,
+                  subtitle: l10n.paywallSectionSubtitle,
                 ),
-                _BenefitRow(icon: Icons.repeat, text: l10n.paywallBenefitCount),
-                _BenefitRow(
-                  icon: Icons.auto_stories_outlined,
-                  text: l10n.paywallBenefitDiaryStyle,
+                const SizedBox(height: 20),
+                _BenefitCard(
+                  index: 1,
+                  icon: Icons.mic_rounded,
+                  color: _BenefitColors.indigo,
+                  title: Text(l10n.paywallBenefitDurationTitle),
+                  valueBefore: l10n.paywallBenefitDurationBefore,
+                  valueAfter: l10n.paywallBenefitDurationAfter,
+                  description: l10n.paywallBenefitDurationDesc,
                 ),
-                _BenefitRow(
-                  icon: Icons.image_outlined,
-                  text: l10n.paywallBenefitCustomBackground,
+                _BenefitCard(
+                  index: 2,
+                  icon: Icons.all_inclusive_rounded,
+                  color: _BenefitColors.rose,
+                  title: Text(l10n.paywallBenefitCountTitle),
+                  valueBefore: l10n.paywallBenefitCountBefore,
+                  valueAfter: l10n.paywallBenefitCountAfter,
+                  description: l10n.paywallBenefitCountDesc,
                 ),
-                _BenefitRow(
-                  icon: Icons.cloud_upload_outlined,
-                  text: l10n.paywallBenefitMediaSync,
+                _BenefitCard(
+                  index: 3,
+                  icon: Icons.auto_awesome_rounded,
+                  color: _BenefitColors.indigo,
+                  title: Text(l10n.paywallBenefitDiaryStyleTitle),
+                  valueBefore: l10n.paywallBenefitDiaryStyleBefore,
+                  valueAfter: l10n.paywallBenefitDiaryStyleAfter,
+                  description: l10n.paywallBenefitDiaryStyleDesc,
                 ),
-                _BenefitRow(
-                  icon: Icons.psychology_outlined,
-                  text: l10n.paywallBenefitKnowledgeBase,
+                _BenefitCard(
+                  index: 4,
+                  icon: Icons.image_rounded,
+                  color: _BenefitColors.green,
+                  title: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(text: l10n.paywallBenefitCustomBackgroundTitle),
+                        TextSpan(
+                          text: l10n.paywallBenefitCustomBackgroundHighlight,
+                          style: TextStyle(
+                            color: _BenefitColors.green,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  description: l10n.paywallBenefitCustomBackgroundDesc,
                 ),
-                _BenefitRow(
-                  icon: Icons.insights_outlined,
-                  text: l10n.paywallBenefitWeeklyReport,
+                _BenefitCard(
+                  index: 5,
+                  icon: Icons.chat_bubble_rounded,
+                  color: _BenefitColors.indigo,
+                  title: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: l10n.paywallBenefitKnowledgeBaseHighlight,
+                          style: TextStyle(
+                            color: _BenefitColors.indigo,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        TextSpan(text: l10n.paywallBenefitKnowledgeBaseSuffix),
+                      ],
+                    ),
+                  ),
+                  description: l10n.paywallBenefitKnowledgeBaseDesc,
+                ),
+                _BenefitCard(
+                  index: 6,
+                  icon: Icons.bar_chart_rounded,
+                  color: _BenefitColors.amber,
+                  title: Text(
+                    l10n.paywallBenefitWeeklyReportTitle,
+                    style: TextStyle(
+                      color: _BenefitColors.amber,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  description: l10n.paywallBenefitWeeklyReportDesc,
+                ),
+                _BenefitCard(
+                  index: 7,
+                  icon: Icons.cloud_upload_rounded,
+                  color: _BenefitColors.blue,
+                  title: Text(
+                    l10n.paywallBenefitMediaSyncTitle,
+                    style: TextStyle(
+                      color: _BenefitColors.blue,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  description: l10n.paywallBenefitMediaSyncDesc,
+                  badge: l10n.paywallBenefitMediaSyncBadge,
                 ),
                 const SizedBox(height: 28),
                 if (packages.isEmpty)
@@ -384,22 +456,228 @@ class _Badge extends StatelessWidget {
   }
 }
 
-class _BenefitRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
+/// [_BenefitCard]の各行で使うアクセントカラー。アプリ全体のテーマ（青系シード）
+/// とは独立して、機能ごとに見分けやすい色を割り当てるための固定パレット。
+class _BenefitColors {
+  static const indigo = Color(0xFF6C5DD3);
+  static const rose = Color(0xFFE84393);
+  static const green = Color(0xFF13A67D);
+  static const amber = Color(0xFFE2952F);
+  static const blue = Color(0xFF3B82F6);
+}
 
-  const _BenefitRow({required this.icon, required this.text});
+class _PaywallSectionHeader extends StatelessWidget {
+  final String title;
+  final String subtitle;
+
+  const _PaywallSectionHeader({required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('👑', style: TextStyle(fontSize: 26)),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                title,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(
+            color: _BenefitColors.indigo.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            subtitle,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: _BenefitColors.indigo,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Proプランの機能一覧を「番号バッジ＋アイコン＋タイトル＋Before→After（任意）＋
+/// 説明文」のカードとして見せる。番号バッジはアイコンの左上に重ねて配置する。
+class _BenefitCard extends StatelessWidget {
+  final int index;
+  final IconData icon;
+  final Color color;
+  final Widget title;
+  final String? valueBefore;
+  final String? valueAfter;
+  final String description;
+  final String? badge;
+
+  const _BenefitCard({
+    required this.index,
+    required this.icon,
+    required this.color,
+    required this.title,
+    this.valueBefore,
+    this.valueAfter,
+    required this.description,
+    this.badge,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final numberLabel = index.toString().padLeft(2, '0');
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.fromLTRB(16, 18, 12, 18),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: theme.colorScheme.primary),
-          const SizedBox(width: 12),
-          Expanded(child: Text(text, style: theme.textTheme.bodyLarge)),
+          SizedBox(
+            width: 56,
+            height: 56,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.13),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(icon, color: color, size: 26),
+                ),
+                Positioned(
+                  top: -8,
+                  left: -8,
+                  child: Container(
+                    width: 26,
+                    height: 26,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: theme.colorScheme.surface,
+                        width: 2,
+                      ),
+                    ),
+                    child: Text(
+                      numberLabel,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DefaultTextStyle.merge(
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    height: 1.25,
+                  ),
+                  child: title,
+                ),
+                if (valueBefore != null && valueAfter != null) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        valueBefore!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.outline,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 16,
+                          color: theme.colorScheme.outline,
+                        ),
+                      ),
+                      Text(
+                        valueAfter!,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: color,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 6),
+                Text(
+                  description,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.outline,
+                    height: 1.35,
+                  ),
+                ),
+                if (badge != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      badge!,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Icon(
+            Icons.chevron_right_rounded,
+            color: theme.colorScheme.outlineVariant,
+          ),
         ],
       ),
     );

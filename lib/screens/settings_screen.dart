@@ -10,7 +10,6 @@ import '../l10n/app_localizations.dart';
 import '../services/reminder_service.dart';
 import '../state/account_store.dart';
 import '../state/apple_reminders_store.dart';
-import '../state/background_store.dart';
 import '../state/calendar_store.dart';
 import '../state/settings_store.dart';
 import '../state/subscription_store.dart';
@@ -81,7 +80,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -90,239 +88,524 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
           children: [
-            Text(l10n.displaySectionTitle, style: theme.textTheme.labelLarge),
-            const SizedBox(height: 8),
-            Consumer<SettingsStore>(
-              builder: (context, settings, _) {
-                return SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  secondary: Icon(
-                    settings.darkMode
-                        ? Icons.dark_mode_outlined
-                        : Icons.light_mode_outlined,
-                  ),
-                  title: Text(l10n.darkModeTitle),
-                  value: settings.darkMode,
-                  onChanged: (value) =>
-                      context.read<SettingsStore>().setDarkMode(value),
-                );
-              },
-            ),
-            Consumer<BackgroundStore>(
-              builder: (context, backgroundStore, _) {
-                final selected = backgroundStore.selected;
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      selected.asset,
-                      width: 44,
-                      height: 44,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  title: Text(l10n.appBackgroundSettingsTitle),
-                  trailing: const Icon(Icons.chevron_right),
+            _SectionLabel(l10n.displaySectionTitle),
+            const SizedBox(height: 10),
+            _SettingsCard(
+              children: [
+                Consumer<SettingsStore>(
+                  builder: (context, settings, _) {
+                    return _SettingsTile(
+                      icon: settings.darkMode
+                          ? Icons.dark_mode_rounded
+                          : Icons.light_mode_rounded,
+                      color: _SettingsColors.amber,
+                      title: l10n.darkModeTitle,
+                      subtitle: l10n.darkModeSubtitle,
+                      trailing: Switch(
+                        value: settings.darkMode,
+                        onChanged: (value) =>
+                            context.read<SettingsStore>().setDarkMode(value),
+                      ),
+                    );
+                  },
+                ),
+                _SettingsTile(
+                  icon: Icons.image_rounded,
+                  color: _SettingsColors.indigo,
+                  title: l10n.appBackgroundSettingsTitle,
+                  subtitle: l10n.appBackgroundSettingsSubtitle,
+                  trailing: const _ChevronIcon(),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => const BackgroundSelectScreen(),
                     ),
                   ),
-                );
-              },
+                ),
+              ],
             ),
-            const Divider(height: 32),
-            Text(
-              l10n.integrationsSettingsTitle,
-              style: theme.textTheme.labelLarge,
-            ),
-            const SizedBox(height: 8),
-            Consumer<CalendarStore>(
-              builder: (context, calendarStore, _) {
-                final name = calendarStore.selectedCalendarName;
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.event_outlined),
-                  title: Text(l10n.integrationsSettingsTitle),
-                  subtitle: Text(
-                    calendarStore.selectedCalendarId == null
-                        ? l10n.integrationsOff
-                        : (name ?? l10n.integrationsOff),
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const IntegrationSelectScreen(),
-                    ),
-                  ),
-                );
-              },
-            ),
-            if (Platform.isIOS)
-              Consumer<AppleRemindersStore>(
-                builder: (context, remindersStore, _) {
-                  final name = remindersStore.selectedListName;
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.checklist_outlined),
-                    title: Text(l10n.appleRemindersSettingsTitle),
-                    subtitle: Text(
-                      remindersStore.selectedListId == null
+            const SizedBox(height: 24),
+            _SectionLabel(l10n.integrationsSettingsTitle),
+            const SizedBox(height: 10),
+            _SettingsCard(
+              children: [
+                Consumer<CalendarStore>(
+                  builder: (context, calendarStore, _) {
+                    final name = calendarStore.selectedCalendarName;
+                    return _SettingsTile(
+                      icon: Icons.event_rounded,
+                      color: _SettingsColors.indigo,
+                      title: l10n.integrationsCalendarRowTitle,
+                      subtitle: calendarStore.selectedCalendarId == null
                           ? l10n.integrationsOff
                           : (name ?? l10n.integrationsOff),
-                    ),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const AppleRemindersSelectScreen(),
+                      trailing: const _ChevronIcon(),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const IntegrationSelectScreen(),
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
-            const Divider(height: 32),
+                    );
+                  },
+                ),
+                if (Platform.isIOS)
+                  Consumer<AppleRemindersStore>(
+                    builder: (context, remindersStore, _) {
+                      final name = remindersStore.selectedListName;
+                      return _SettingsTile(
+                        icon: Icons.checklist_rounded,
+                        color: _SettingsColors.green,
+                        title: l10n.appleRemindersSettingsTitle,
+                        subtitle: remindersStore.selectedListId == null
+                            ? l10n.integrationsOff
+                            : (name ?? l10n.integrationsOff),
+                        trailing: const _ChevronIcon(),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const AppleRemindersSelectScreen(),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
             Consumer<SubscriptionStore>(
               builder: (context, subscription, _) {
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.insights_outlined),
-                  title: Text(l10n.weeklyReportSettingsTitle),
-                  trailing: subscription.isPro
-                      ? const Icon(Icons.chevron_right)
-                      : const Icon(Icons.lock_outline, size: 18),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const WeeklyReportScreen()),
+                return _HighlightCard(
+                  color: _SettingsColors.amber,
+                  child: _SettingsTile(
+                    icon: Icons.workspace_premium_rounded,
+                    color: _SettingsColors.amber,
+                    title: l10n.weeklyReportSettingsTitle,
+                    subtitle: l10n.weeklyReportSettingsSubtitle,
+                    badge: subscription.isPro
+                        ? null
+                        : _Pill(
+                            text: l10n.settingsProBadge,
+                            color: _SettingsColors.amber,
+                          ),
+                    trailing: subscription.isPro
+                        ? const _ChevronIcon()
+                        : Icon(
+                            Icons.lock_rounded,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const WeeklyReportScreen(),
+                      ),
+                    ),
                   ),
                 );
               },
             ),
-            const Divider(height: 32),
-            Text(l10n.planSectionTitle, style: theme.textTheme.labelLarge),
-            const SizedBox(height: 8),
+            const SizedBox(height: 24),
+            _SectionLabel(l10n.planSectionTitle),
+            const SizedBox(height: 10),
             Consumer<SubscriptionStore>(
               builder: (context, subscription, _) {
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    subscription.isPro
-                        ? Icons.workspace_premium
-                        : Icons.workspace_premium_outlined,
-                  ),
-                  title: Text(
-                    subscription.isPro ? l10n.planProTitle : l10n.planFreeTitle,
-                  ),
-                  subtitle: Text(
-                    subscription.isPro
-                        ? l10n.planProSubtitle
-                        : l10n.planFreeSubtitle,
-                  ),
-                  trailing: subscription.isPro
-                      ? TextButton(
-                          onPressed: () => AppSettings.openAppSettings(
-                            type: AppSettingsType.subscriptions,
-                          ),
-                          child: Text(l10n.planManage),
-                        )
-                      : FilledButton(
-                          onPressed: () => Navigator.of(context).push(
+                return _SettingsCard(
+                  children: [
+                    _SettingsTile(
+                      icon: Icons.star_rounded,
+                      color: _SettingsColors.rose,
+                      title: l10n.planCurrentTitle,
+                      badge: _Pill(
+                        text: subscription.isPro
+                            ? l10n.planProTitle
+                            : l10n.planFreeTitle,
+                        color: _SettingsColors.rose,
+                      ),
+                      subtitle: subscription.isPro
+                          ? l10n.planProSubtitle
+                          : l10n.planFreeSubtitle,
+                      trailing: subscription.isPro
+                          ? TextButton(
+                              onPressed: () => AppSettings.openAppSettings(
+                                type: AppSettingsType.subscriptions,
+                              ),
+                              child: Text(l10n.planManage),
+                            )
+                          : null,
+                    ),
+                    if (!subscription.isPro)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                        child: _UpgradeButton(
+                          label: l10n.planUpgrade,
+                          onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => const PaywallScreen(),
                             ),
                           ),
-                          child: Text(l10n.planUpgrade),
                         ),
+                      ),
+                  ],
                 );
               },
             ),
-            const Divider(height: 32),
-            Text(l10n.accountSectionTitle, style: theme.textTheme.labelLarge),
-            const SizedBox(height: 8),
-            Consumer<AccountStore>(
-              builder: (context, account, _) {
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    account.isSignedIn
-                        ? Icons.cloud_done_outlined
-                        : Icons.cloud_off_outlined,
-                  ),
-                  title: Text(
-                    account.isSignedIn
-                        ? l10n.accountSignedInAs(account.displayLabel)
-                        : l10n.accountNotSignedIn,
-                  ),
-                  subtitle: account.isSignedIn
-                      ? null
-                      : Text(l10n.accountNotSignedInDescription),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const AccountScreen()),
-                  ),
-                );
-              },
+            const SizedBox(height: 24),
+            _SectionLabel(l10n.accountSectionTitle),
+            const SizedBox(height: 10),
+            _SettingsCard(
+              children: [
+                Consumer<AccountStore>(
+                  builder: (context, account, _) {
+                    return _SettingsTile(
+                      icon: account.isSignedIn
+                          ? Icons.cloud_done_rounded
+                          : Icons.cloud_off_rounded,
+                      color: _SettingsColors.blue,
+                      title: account.isSignedIn
+                          ? l10n.accountSignedInAs(account.displayLabel)
+                          : l10n.accountNotSignedIn,
+                      subtitle: account.isSignedIn
+                          ? null
+                          : l10n.accountNotSignedInDescription,
+                      trailing: const _ChevronIcon(),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const AccountScreen()),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
-            const Divider(height: 32),
-            Text(
-              l10n.notificationSectionTitle,
-              style: theme.textTheme.labelLarge,
+            const SizedBox(height: 24),
+            _SectionLabel(l10n.notificationSectionTitle),
+            const SizedBox(height: 10),
+            _SettingsCard(
+              children: [
+                FutureBuilder<bool>(
+                  future: _notificationFuture,
+                  builder: (context, snapshot) {
+                    final granted = snapshot.data ?? false;
+                    final loading =
+                        snapshot.connectionState == ConnectionState.waiting;
+                    return _SettingsTile(
+                      icon: granted
+                          ? Icons.notifications_active_rounded
+                          : Icons.notifications_off_rounded,
+                      color: _SettingsColors.amber,
+                      title: l10n.reminderNotificationsTitle,
+                      subtitle: loading
+                          ? l10n.notificationCheckingStatus
+                          : granted
+                          ? l10n.notificationGranted
+                          : l10n.notificationDenied,
+                      trailing: loading || granted
+                          ? null
+                          : TextButton(
+                              onPressed: _requestNotificationPermission,
+                              child: Text(l10n.allow),
+                            ),
+                    );
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            FutureBuilder<bool>(
-              future: _notificationFuture,
-              builder: (context, snapshot) {
-                final granted = snapshot.data ?? false;
-                final loading =
-                    snapshot.connectionState == ConnectionState.waiting;
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    granted
-                        ? Icons.notifications_active_outlined
-                        : Icons.notifications_off_outlined,
-                  ),
-                  title: Text(l10n.reminderNotificationsTitle),
-                  subtitle: Text(
-                    loading
-                        ? l10n.notificationCheckingStatus
-                        : granted
-                        ? l10n.notificationGranted
-                        : l10n.notificationDenied,
-                  ),
-                  trailing: loading || granted
-                      ? null
-                      : TextButton(
-                          onPressed: _requestNotificationPermission,
-                          child: Text(l10n.allow),
-                        ),
-                );
-              },
-            ),
-            const Divider(height: 32),
-            Text(l10n.supportSectionTitle, style: theme.textTheme.labelLarge),
-            const SizedBox(height: 8),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.description_outlined),
-              title: Text(l10n.paywallTerms),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _openUrl(LegalLinks.termsOfServiceUrl),
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.privacy_tip_outlined),
-              title: Text(l10n.paywallPrivacy),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _openUrl(LegalLinks.privacyPolicyUrl),
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.mail_outline),
-              title: Text(l10n.contactSupportTitle),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _contactSupport(l10n),
+            const SizedBox(height: 24),
+            _SectionLabel(l10n.supportSectionTitle),
+            const SizedBox(height: 10),
+            _SettingsCard(
+              children: [
+                _SettingsTile(
+                  icon: Icons.description_rounded,
+                  color: _SettingsColors.blue,
+                  title: l10n.paywallTerms,
+                  trailing: const _ChevronIcon(),
+                  onTap: () => _openUrl(LegalLinks.termsOfServiceUrl),
+                ),
+                _SettingsTile(
+                  icon: Icons.privacy_tip_rounded,
+                  color: _SettingsColors.green,
+                  title: l10n.paywallPrivacy,
+                  trailing: const _ChevronIcon(),
+                  onTap: () => _openUrl(LegalLinks.privacyPolicyUrl),
+                ),
+                _SettingsTile(
+                  icon: Icons.mail_rounded,
+                  color: _SettingsColors.indigo,
+                  title: l10n.contactSupportTitle,
+                  trailing: const _ChevronIcon(),
+                  onTap: () => _contactSupport(l10n),
+                ),
+              ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 設定画面の各カード内で使うアクセントカラー。[_BenefitColors]（paywall_screen.dart）
+/// と同系統の配色にして、Proプラン画面との統一感を持たせている。
+class _SettingsColors {
+  static const indigo = Color(0xFF6C5DD3);
+  static const green = Color(0xFF13A67D);
+  static const blue = Color(0xFF3B82F6);
+  static const amber = Color(0xFFE2952F);
+  static const rose = Color(0xFFE84393);
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: _SettingsColors.indigo,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+/// 設定項目をまとめる白背景の角丸カード。子要素の間に薄い区切り線を自動で入れる。
+class _SettingsCard extends StatelessWidget {
+  final List<Widget> children;
+
+  const _SettingsCard({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0)
+              Divider(
+                height: 1,
+                indent: 74,
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+            children[i],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// [WeeklyReportScreen]への導線をProの目玉機能として目立たせるための、
+/// アクセントカラーのうっすらした縁取り＋グロー付きカード。
+class _HighlightCard extends StatelessWidget {
+  final Color color;
+  final Widget child;
+
+  const _HighlightCard({required this.color, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withValues(alpha: 0.45)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.18),
+            blurRadius: 16,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: child,
+    );
+  }
+}
+
+class _ChevronIcon extends StatelessWidget {
+  const _ChevronIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return Icon(
+      Icons.chevron_right_rounded,
+      color: Theme.of(context).colorScheme.outlineVariant,
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  final String text;
+  final Color color;
+
+  const _Pill({required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+/// 設定カード1行分。アイコンチップ＋タイトル（＋任意のバッジ）＋説明文＋trailingの形。
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String? subtitle;
+  final Widget? badge;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  const _SettingsTile({
+    required this.icon,
+    required this.color,
+    required this.title,
+    this.subtitle,
+    this.badge,
+    this.trailing,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(icon, color: color, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            title,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (badge != null) ...[
+                          const SizedBox(width: 8),
+                          badge!,
+                        ],
+                      ],
+                    ),
+                    if (subtitle != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          subtitle!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.outline,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (trailing != null) ...[const SizedBox(width: 8), trailing!],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// プラン行の下に表示する、グラデーション付きの全幅アップグレードボタン。
+class _UpgradeButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _UpgradeButton({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [_SettingsColors.indigo, Color(0xFF8B5CF6)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.workspace_premium_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

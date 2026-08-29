@@ -154,12 +154,13 @@ class _DiaryScreenState extends State<DiaryScreen> {
                       ),
                       const SizedBox(height: 12),
                       GridView.count(
-                        crossAxisCount: 3,
+                        crossAxisCount: 4,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         mainAxisSpacing: 12,
                         crossAxisSpacing: 12,
-                        childAspectRatio: 0.8,
+                        // 背景画像の実サイズ（841x1870）に合わせた比率。
+                        childAspectRatio: 841 / 1870,
                         children: [
                           DiaryBackgroundTile(
                             label: l10n.backgroundNone,

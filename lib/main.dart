@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -22,6 +24,19 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // botや自動化ツールがアプリを介さず直接Cloud Functions/Firestore/Storageを
+  // 叩くのを防ぐApp Check。debugビルドではストア審査用の実証明書（Play
+  // Integrity/App Attest）が使えないため、debugトークン方式にフォールバックする
+  // （Firebaseコンソール側でのプロバイダ登録・デバッグトークン登録が別途必要）。
+  // Cloud Functions側は現状まだenforceAppCheckを有効化しておらず、まずは
+  // コンソールのApp Checkメトリクスで正規トラフィックの割合を確認してから
+  // 段階的に強制する方針（[[project_voicejournal_status]]参照）。
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: kDebugMode
+        ? AndroidProvider.debug
+        : AndroidProvider.playIntegrity,
+    appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
+  );
   await ReminderService.instance.initialize();
   if (Platform.isAndroid) {
     // flutter_local_notificationsのAlarmManagerベースの通知は端末再起動で失われる。

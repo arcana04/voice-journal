@@ -590,11 +590,29 @@ abstract class AppLocalizations {
   /// **'Dark mode'**
   String get darkModeTitle;
 
+  /// No description provided for @darkModeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to an easier-on-the-eyes look'**
+  String get darkModeSubtitle;
+
+  /// No description provided for @settingsProBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro only'**
+  String get settingsProBadge;
+
   /// No description provided for @integrationsSettingsTitle.
   ///
   /// In en, this message translates to:
   /// **'Integrations'**
   String get integrationsSettingsTitle;
+
+  /// No description provided for @integrationsCalendarRowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar integration'**
+  String get integrationsCalendarRowTitle;
 
   /// No description provided for @integrationsScreenTitle.
   ///
@@ -667,6 +685,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Background'**
   String get appBackgroundSettingsTitle;
+
+  /// No description provided for @appBackgroundSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the app\'s background'**
+  String get appBackgroundSettingsSubtitle;
 
   /// No description provided for @appBackgroundScreenTitle.
   ///
@@ -896,6 +920,12 @@ abstract class AppLocalizations {
   /// **'Plan'**
   String get planSectionTitle;
 
+  /// No description provided for @planCurrentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current plan'**
+  String get planCurrentTitle;
+
   /// No description provided for @planProTitle.
   ///
   /// In en, this message translates to:
@@ -938,53 +968,155 @@ abstract class AppLocalizations {
   /// **'Pro plan'**
   String get paywallTitle;
 
-  /// No description provided for @paywallHeadline.
+  /// No description provided for @paywallSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Go Pro for more room to talk'**
-  String get paywallHeadline;
+  /// **'What Pro unlocks'**
+  String get paywallSectionTitle;
 
-  /// No description provided for @paywallBenefitDuration.
+  /// No description provided for @paywallSectionSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Record up to 15 minutes at a time (60 seconds on the free plan)'**
-  String get paywallBenefitDuration;
+  /// **'Unlimited access to every Pro feature'**
+  String get paywallSectionSubtitle;
 
-  /// No description provided for @paywallBenefitCount.
+  /// No description provided for @paywallBenefitDurationTitle.
   ///
   /// In en, this message translates to:
-  /// **'Record up to 30 times a day (3 times on the free plan)'**
-  String get paywallBenefitCount;
+  /// **'Longer recordings'**
+  String get paywallBenefitDurationTitle;
 
-  /// No description provided for @paywallBenefitDiaryStyle.
+  /// No description provided for @paywallBenefitDurationBefore.
   ///
   /// In en, this message translates to:
-  /// **'9 diary writing styles to choose from (standard only on the free plan)'**
-  String get paywallBenefitDiaryStyle;
+  /// **'60 sec'**
+  String get paywallBenefitDurationBefore;
 
-  /// No description provided for @paywallBenefitCustomBackground.
+  /// No description provided for @paywallBenefitDurationAfter.
   ///
   /// In en, this message translates to:
-  /// **'Use your own photos as diary backgrounds'**
-  String get paywallBenefitCustomBackground;
+  /// **'15 min'**
+  String get paywallBenefitDurationAfter;
 
-  /// No description provided for @paywallBenefitMediaSync.
+  /// No description provided for @paywallBenefitDurationDesc.
   ///
   /// In en, this message translates to:
-  /// **'Cloud backup for photos and videos attached to entries (monthly/annual plans only — not included with the lifetime plan)'**
-  String get paywallBenefitMediaSync;
+  /// **'Talk as long as you need without losing the details'**
+  String get paywallBenefitDurationDesc;
 
-  /// No description provided for @paywallBenefitKnowledgeBase.
+  /// No description provided for @paywallBenefitCountTitle.
   ///
   /// In en, this message translates to:
-  /// **'Ask AI questions across all your past entries in \"Ask\"'**
-  String get paywallBenefitKnowledgeBase;
+  /// **'More uses per day'**
+  String get paywallBenefitCountTitle;
 
-  /// No description provided for @paywallBenefitWeeklyReport.
+  /// No description provided for @paywallBenefitCountBefore.
   ///
   /// In en, this message translates to:
-  /// **'Get an AI-written Weekly Brain Report looking back on your week'**
-  String get paywallBenefitWeeklyReport;
+  /// **'3 / day'**
+  String get paywallBenefitCountBefore;
+
+  /// No description provided for @paywallBenefitCountAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'30 / day'**
+  String get paywallBenefitCountAfter;
+
+  /// No description provided for @paywallBenefitCountDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture every thought, whenever it strikes'**
+  String get paywallBenefitCountDesc;
+
+  /// No description provided for @paywallBenefitDiaryStyleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your diary style'**
+  String get paywallBenefitDiaryStyleTitle;
+
+  /// No description provided for @paywallBenefitDiaryStyleBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard only'**
+  String get paywallBenefitDiaryStyleBefore;
+
+  /// No description provided for @paywallBenefitDiaryStyleAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'All 9 styles'**
+  String get paywallBenefitDiaryStyleAfter;
+
+  /// No description provided for @paywallBenefitDiaryStyleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Match the tone to your mood or moment'**
+  String get paywallBenefitDiaryStyleDesc;
+
+  /// No description provided for @paywallBenefitCustomBackgroundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add '**
+  String get paywallBenefitCustomBackgroundTitle;
+
+  /// No description provided for @paywallBenefitCustomBackgroundHighlight.
+  ///
+  /// In en, this message translates to:
+  /// **'your own photo'**
+  String get paywallBenefitCustomBackgroundHighlight;
+
+  /// No description provided for @paywallBenefitCustomBackgroundDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Make every entry feel like yours'**
+  String get paywallBenefitCustomBackgroundDesc;
+
+  /// No description provided for @paywallBenefitKnowledgeBaseHighlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask (second brain)'**
+  String get paywallBenefitKnowledgeBaseHighlight;
+
+  /// No description provided for @paywallBenefitKnowledgeBaseSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **' is unlocked'**
+  String get paywallBenefitKnowledgeBaseSuffix;
+
+  /// No description provided for @paywallBenefitKnowledgeBaseDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'AI digs through everything you\'ve recorded to help'**
+  String get paywallBenefitKnowledgeBaseDesc;
+
+  /// No description provided for @paywallBenefitWeeklyReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Brain Report'**
+  String get paywallBenefitWeeklyReportTitle;
+
+  /// No description provided for @paywallBenefitWeeklyReportDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'AI reads your week and delivers the highlights'**
+  String get paywallBenefitWeeklyReportDesc;
+
+  /// No description provided for @paywallBenefitMediaSyncTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud photo & video sync'**
+  String get paywallBenefitMediaSyncTitle;
+
+  /// No description provided for @paywallBenefitMediaSyncDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your memories safely backed up'**
+  String get paywallBenefitMediaSyncDesc;
+
+  /// No description provided for @paywallBenefitMediaSyncBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly / annual plans only'**
+  String get paywallBenefitMediaSyncBadge;
 
   /// No description provided for @paywallUnavailable.
   ///
@@ -1280,11 +1412,23 @@ abstract class AppLocalizations {
   /// **'Choose photos'**
   String get pickPhotosFromLibrary;
 
+  /// No description provided for @pickPhotosFromLibrarySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick photos from your library to add'**
+  String get pickPhotosFromLibrarySubtitle;
+
   /// No description provided for @pickVideoFromLibrary.
   ///
   /// In en, this message translates to:
   /// **'Choose a video'**
   String get pickVideoFromLibrary;
+
+  /// No description provided for @pickVideoFromLibrarySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a video from your library to add'**
+  String get pickVideoFromLibrarySubtitle;
 
   /// No description provided for @backgroundSheetTitle.
   ///
@@ -1411,6 +1555,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Font'**
   String get fontSheetTitle;
+
+  /// No description provided for @fontSheetSizeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Heading size'**
+  String get fontSheetSizeLabel;
+
+  /// No description provided for @fontSheetColorLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Text color'**
+  String get fontSheetColorLabel;
+
+  /// No description provided for @fontSheetStyleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Font style'**
+  String get fontSheetStyleLabel;
 
   /// No description provided for @closeTooltip.
   ///
@@ -1823,8 +1985,14 @@ abstract class AppLocalizations {
   /// No description provided for @weeklyReportSettingsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Weekly report'**
+  /// **'Weekly Brain Report'**
   String get weeklyReportSettingsTitle;
+
+  /// No description provided for @weeklyReportSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered every week'**
+  String get weeklyReportSettingsSubtitle;
 
   /// No description provided for @weeklyReportTitle.
   ///

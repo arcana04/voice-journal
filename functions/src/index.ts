@@ -24,6 +24,14 @@ const openAiApiKey = defineSecret("OPENAI_API_KEY");
 // この値を設定する（なりすましPOST防止）。
 const revenueCatWebhookSecret = defineSecret("REVENUECAT_WEBHOOK_SECRET");
 
+/** App Check未検証のリクエストを拒否するかどうか。クライアント側
+ * （lib/main.dartのFirebaseAppCheck.instance.activate）は既に有効化済みだが、
+ * Play Integrity/App Attestの本番プロバイダ登録などFirebaseコンソール側の設定が
+ * 完了し、コンソールのApp Checkメトリクスで正規トラフィックがほぼ100%
+ * トークン付きになっていることを確認するまでは、trueにして正規ユーザーを
+ * 誤ってブロックしないようfalseのままにしておく。 */
+const APP_CHECK_ENFORCED = false;
+
 const FREE_DAILY_LIMIT = 3;
 const PRO_DAILY_LIMIT = 30;
 /** RevenueCatダッシュボードで作成する「Pro」プランのエンタイトルメントID。クライアント側
@@ -529,19 +537,22 @@ async function consumeDailyQuota(uid: string, locale: Locale): Promise<void> {
   });
 }
 
-export const getUsageStatus = onCall(async (request) => {
-  const uid = request.auth?.uid;
-  if (!uid) {
-    throw new HttpsError("unauthenticated", "認証が必要です。");
+export const getUsageStatus = onCall(
+  { enforceAppCheck: APP_CHECK_ENFORCED },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", "認証が必要です。");
+    }
+
+    const db = getFirestore();
+    const usageRef = db.collection("usage").doc(`${uid}_${jstDateString()}`);
+    const [snap, limit] = await Promise.all([usageRef.get(), dailyLimitFor(uid)]);
+    const used = (snap.data()?.count as number | undefined) ?? 0;
+
+    return { used, limit };
   }
-
-  const db = getFirestore();
-  const usageRef = db.collection("usage").doc(`${uid}_${jstDateString()}`);
-  const [snap, limit] = await Promise.all([usageRef.get(), dailyLimitFor(uid)]);
-  const used = (snap.data()?.count as number | undefined) ?? 0;
-
-  return { used, limit };
-});
+);
 
 /**
  * ユーザーの写真・動画（users/{uid}/entries/*\/media/*）のストレージクラスを
@@ -908,7 +919,12 @@ interface ProcessVoiceMemoRequest {
 export const processVoiceMemo = onCall(
   // Proプランは録音15分まで許可するため、ffmpeg処理・Whisper転写の時間を見込んで
   // 通常より長めのタイムアウト・メモリを確保する。
-  { secrets: [openAiApiKey], timeoutSeconds: 300, memory: "2GiB" },
+  {
+    secrets: [openAiApiKey],
+    timeoutSeconds: 300,
+    memory: "2GiB",
+    enforceAppCheck: APP_CHECK_ENFORCED,
+  },
   async (request) => {
     const { audioBase64, mimeType, customWords, summaryLevel, diaryStyle, locale } =
       (request.data ?? {}) as ProcessVoiceMemoRequest;
@@ -1197,7 +1213,12 @@ interface AskKnowledgeBaseRequest {
 // Proプラン限定機能。課金基盤（RevenueCat + revenueCatWebhook）が反映した
 // users/{uid}.isPro を見て、非Proは弾く。
 export const askKnowledgeBase = onCall(
-  { secrets: [openAiApiKey], timeoutSeconds: 60, memory: "256MiB" },
+  {
+    secrets: [openAiApiKey],
+    timeoutSeconds: 60,
+    memory: "256MiB",
+    enforceAppCheck: APP_CHECK_ENFORCED,
+  },
   async (request) => {
     const { question, context, locale } = (request.data ?? {}) as AskKnowledgeBaseRequest;
     const loc = normalizeLocale(locale);
@@ -1389,7 +1410,12 @@ interface GenerateWeeklyReportRequest {
 // Proプラン限定機能。課金基盤（RevenueCat + revenueCatWebhook）が反映した
 // users/{uid}.isPro を見て、非Proは弾く。
 export const generateWeeklyReport = onCall(
-  { secrets: [openAiApiKey], timeoutSeconds: 60, memory: "256MiB" },
+  {
+    secrets: [openAiApiKey],
+    timeoutSeconds: 60,
+    memory: "256MiB",
+    enforceAppCheck: APP_CHECK_ENFORCED,
+  },
   async (request) => {
     const { context, emotionBreakdown, locale } =
       (request.data ?? {}) as GenerateWeeklyReportRequest;
@@ -1431,7 +1457,12 @@ interface ProcessTextMemoRequest {
 }
 
 export const processTextMemo = onCall(
-  { secrets: [openAiApiKey], timeoutSeconds: 60, memory: "256MiB" },
+  {
+    secrets: [openAiApiKey],
+    timeoutSeconds: 60,
+    memory: "256MiB",
+    enforceAppCheck: APP_CHECK_ENFORCED,
+  },
   async (request) => {
     const { text, summaryLevel, diaryStyle, locale } =
       (request.data ?? {}) as ProcessTextMemoRequest;

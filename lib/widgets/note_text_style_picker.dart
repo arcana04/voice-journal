@@ -9,6 +9,18 @@ import '../utils/note_text_style.dart';
 /// ほぼ同じビルダーコードが重複していたのをまとめたもの。選択状態の保存先は
 /// コールバック経由で呼び出し側に任せる。
 class NoteTextStylePicker extends StatelessWidget {
+  static const _accent = Color(0xFF6C5DD3);
+
+  /// フォントスタイルカードの背景に使う、順に巡回させるパステルカラー。
+  static const _cardTints = [
+    Color(0xFFEDE7FB),
+    Color(0xFFFBF3DA),
+    Color(0xFFE1EEFC),
+    Color(0xFFFCE4EC),
+    Color(0xFFE0F5EC),
+    Color(0xFFFCEADD),
+  ];
+
   final int fontFamilyIndex;
   final Color? textColor;
   final double fontScale;
@@ -26,6 +38,16 @@ class NoteTextStylePicker extends StatelessWidget {
     required this.onFontFamilyIndexChanged,
   });
 
+  Widget _sectionLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Text(
+        text,
+        style: const TextStyle(color: _accent, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+
   Widget _sizeOption(String label, double scale) {
     final selected = fontScale == scale;
     return Expanded(
@@ -33,22 +55,22 @@ class NoteTextStylePicker extends StatelessWidget {
         onTap: () => onFontScaleChanged(scale),
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 4),
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: selected
-                ? Colors.blue.withValues(alpha: 0.12)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            color: selected ? _accent.withValues(alpha: 0.12) : Colors.black
+                .withValues(alpha: 0.035),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: selected ? Colors.blue : Colors.grey.withValues(alpha: 0.4),
+              color: selected ? _accent : Colors.transparent,
+              width: 2,
             ),
           ),
           alignment: Alignment.center,
           child: Text(
             label,
             style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: selected ? Colors.blue : Colors.grey,
+              fontWeight: FontWeight.w800,
+              color: selected ? _accent : Colors.grey.shade600,
             ),
           ),
         ),
@@ -59,22 +81,34 @@ class NoteTextStylePicker extends StatelessWidget {
   Widget _colorOption(Color? color) {
     final selected = textColor == color;
     return Padding(
-      padding: const EdgeInsets.only(right: 10),
+      padding: const EdgeInsets.only(right: 12),
       child: GestureDetector(
         onTap: () => onTextColorChanged(color),
         child: Container(
-          width: 36,
-          height: 36,
+          width: 38,
+          height: 38,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: color ?? Colors.transparent,
             border: Border.all(
-              color: selected ? Colors.blue : Colors.grey.withValues(alpha: 0.4),
-              width: selected ? 2 : 1,
+              color: selected ? _accent : Colors.grey.withValues(alpha: 0.35),
+              width: selected ? 3 : 1,
             ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: _accent.withValues(alpha: 0.35),
+                      blurRadius: 6,
+                    ),
+                  ]
+                : null,
           ),
           child: color == null
-              ? Icon(Icons.block, size: 18, color: Colors.grey.withValues(alpha: 0.6))
+              ? Icon(
+                  Icons.block,
+                  size: 18,
+                  color: Colors.grey.withValues(alpha: 0.6),
+                )
               : null,
         ),
       ),
@@ -85,30 +119,58 @@ class NoteTextStylePicker extends StatelessWidget {
     final option = noteFontOptions[index];
     final selected = fontFamilyIndex == index;
     final label = option.labelFor(AppLocalizations.of(context)!);
+    final tint = _cardTints[index % _cardTints.length];
     return GestureDetector(
       onTap: () => onFontFamilyIndexChanged(index),
-      child: Container(
-        decoration: BoxDecoration(
-          color: selected
-              ? Colors.blue.withValues(alpha: 0.08)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: selected ? Colors.blue : Colors.grey.withValues(alpha: 0.4),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: tint,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: selected ? _accent : Colors.transparent,
+                width: 2,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: option.apply(
+                const TextStyle(fontSize: 15, color: Colors.black87),
+              ),
+            ),
           ),
-        ),
-        alignment: Alignment.center,
-        child: Text(label, style: option.apply(const TextStyle(fontSize: 15))),
+          if (selected)
+            Positioned(
+              top: -6,
+              right: -6,
+              child: Container(
+                width: 22,
+                height: 22,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: _accent,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: const Icon(Icons.check, size: 13, color: Colors.white),
+              ),
+            ),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _sectionLabel(l10n.fontSheetSizeLabel),
         Row(
           children: [
             _sizeOption('H1', 1.5),
@@ -117,24 +179,29 @@ class NoteTextStylePicker extends StatelessWidget {
             _sizeOption('H4', 0.85),
           ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 22),
+        _sectionLabel(l10n.fontSheetColorLabel),
         SizedBox(
-          height: 40,
+          height: 42,
           child: ListView(
             scrollDirection: Axis.horizontal,
-            children: [for (final color in noteTextColorOptions) _colorOption(color)],
+            children: [
+              for (final color in noteTextColorOptions) _colorOption(color),
+            ],
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 22),
+        _sectionLabel(l10n.fontSheetStyleLabel),
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: 2.6,
+          mainAxisSpacing: 14,
+          crossAxisSpacing: 12,
+          childAspectRatio: 2.4,
           children: [
-            for (var i = 0; i < noteFontOptions.length; i++) _fontOption(context, i),
+            for (var i = 0; i < noteFontOptions.length; i++)
+              _fontOption(context, i),
           ],
         ),
       ],

@@ -160,27 +160,36 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
     final l10n = AppLocalizations.of(context)!;
     await showModalBottomSheet<void>(
       context: context,
+      showDragHandle: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: Text(l10n.pickPhotosFromLibrary),
-              onTap: () {
-                Navigator.of(sheetContext).pop();
-                _pickImages(store, entry);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.videocam_outlined),
-              title: Text(l10n.pickVideoFromLibrary),
-              onTap: () {
-                Navigator.of(sheetContext).pop();
-                _pickVideo(store, entry);
-              },
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _MediaSheetOption(
+                icon: Icons.image_outlined,
+                color: _EditorColors.amber,
+                title: l10n.pickPhotosFromLibrary,
+                subtitle: l10n.pickPhotosFromLibrarySubtitle,
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  _pickImages(store, entry);
+                },
+              ),
+              const SizedBox(height: 12),
+              _MediaSheetOption(
+                icon: Icons.videocam_outlined,
+                color: _EditorColors.indigo,
+                title: l10n.pickVideoFromLibrary,
+                subtitle: l10n.pickVideoFromLibrarySubtitle,
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  _pickVideo(store, entry);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -191,13 +200,14 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      showDragHandle: true,
       builder: (sheetContext) => SafeArea(
         child: ConstrainedBox(
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(sheetContext).size.height * 0.85,
           ),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,17 +215,20 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                 Text(
                   l10n.backgroundSheetTitle,
                   style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 20,
                   ),
                 ),
                 const SizedBox(height: 12),
                 Flexible(
                   child: GridView.count(
-                    crossAxisCount: 3,
+                    crossAxisCount: 4,
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    childAspectRatio: 0.8,
+                    // 背景画像の実サイズ（841x1870）に合わせた比率。以前は0.8で、
+                    // 実際は縦長の画像を横長のタイルにcoverで収めていたため上下が
+                    // 大きく見切れていた。これで画像全体がクロップされずに見える。
+                    childAspectRatio: 841 / 1870,
                     children: [
                       DiaryBackgroundTile(
                         label: l10n.backgroundNone,
@@ -224,9 +237,27 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                           setState(() => _backgroundId = null);
                           Navigator.of(sheetContext).pop();
                         },
-                        child: const ColoredBox(
-                          color: Color(0x11000000),
-                          child: Icon(Icons.block, color: Colors.grey),
+                        child: Container(
+                          color: _EditorColors.indigo.withValues(alpha: 0.08),
+                          alignment: Alignment.center,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.image_not_supported_outlined,
+                                color: _EditorColors.indigo,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                l10n.backgroundNone,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: _EditorColors.indigo,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       for (final background in DiaryBackground.values)
@@ -265,9 +296,10 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      showDragHandle: true,
       builder: (sheetContext) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,8 +307,8 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
               Text(
                 l10n.emotionSheetTitle,
                 style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
                 ),
               ),
               const SizedBox(height: 12),
@@ -322,12 +354,13 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      showDragHandle: true,
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (sheetContext, setSheetState) {
             return SafeArea(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -339,18 +372,23 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                             child: Text(
                               AppLocalizations.of(context)!.fontSheetTitle,
                               style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 20,
                               ),
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.check),
-                            tooltip: AppLocalizations.of(context)!.closeTooltip,
-                            onPressed: () => Navigator.of(sheetContext).pop(),
+                          Material(
+                            color: _EditorColors.indigo.withValues(alpha: 0.1),
+                            shape: const CircleBorder(),
+                            child: IconButton(
+                              icon: Icon(Icons.check, color: _EditorColors.indigo),
+                              tooltip: AppLocalizations.of(context)!.closeTooltip,
+                              onPressed: () => Navigator.of(sheetContext).pop(),
+                            ),
                           ),
                         ],
                       ),
+                      const SizedBox(height: 4),
                       NoteTextStylePicker(
                         fontFamilyIndex: _fontFamilyIndex,
                         textColor: _textColor,
@@ -519,30 +557,47 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
   }
 
   Widget _buildBottomToolbar(JournalStore store, JournalEntry entry) {
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _ToolbarButton(
-              icon: Icons.add_photo_alternate_outlined,
-              label: l10n.toolbarMedia,
-              onTap: () => _openMediaSheet(store, entry),
-            ),
-            _ToolbarButton(
-              icon: Icons.wallpaper_outlined,
-              label: l10n.toolbarBackground,
-              onTap: _openBackgroundSheet,
-            ),
-            _ToolbarButton(
-              icon: Icons.text_fields,
-              label: l10n.toolbarText,
-              onTap: _openTextStyleSheet,
-            ),
-          ],
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _ToolbarButton(
+                icon: Icons.add_photo_alternate_rounded,
+                color: _EditorColors.indigo,
+                label: l10n.toolbarMedia,
+                onTap: () => _openMediaSheet(store, entry),
+              ),
+              _ToolbarButton(
+                icon: Icons.wallpaper_rounded,
+                color: _EditorColors.green,
+                label: l10n.toolbarBackground,
+                onTap: _openBackgroundSheet,
+              ),
+              _ToolbarButton(
+                icon: Icons.text_fields_rounded,
+                color: _EditorColors.amber,
+                label: l10n.toolbarText,
+                onTap: _openTextStyleSheet,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -648,11 +703,13 @@ class _EmotionTile extends StatelessWidget {
 
 class _ToolbarButton extends StatelessWidget {
   final IconData icon;
+  final Color color;
   final String label;
   final VoidCallback onTap;
 
   const _ToolbarButton({
     required this.icon,
+    required this.color,
     required this.label,
     required this.onTap,
   });
@@ -661,17 +718,117 @@ class _ToolbarButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: theme.colorScheme.onSurfaceVariant),
-            const SizedBox(height: 2),
-            Text(label, style: theme.textTheme.labelSmall),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Icon(icon, color: color),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 日記編集画面のボトムシート群（写真・動画・背景・フォント）で使うアクセントカラー。
+/// [_SettingsColors]（settings_screen.dart）・[_BenefitColors]（paywall_screen.dart）
+/// と同系統の配色にして、アプリ全体で統一感を持たせている。
+class _EditorColors {
+  static const indigo = Color(0xFF6C5DD3);
+  static const amber = Color(0xFFE2952F);
+  static const green = Color(0xFF13A67D);
+}
+
+/// 「写真を選択」「動画を選択」シートの1行分。丸いアイコンチップ＋タイトル＋
+/// 説明文＋丸背景のchevronという、設定画面のカードと揃えたビジュアル。
+class _MediaSheetOption extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _MediaSheetOption({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: color.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, color: color, size: 26),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.outline,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(Icons.chevron_right_rounded, color: color),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -272,7 +272,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get darkModeTitle => 'ダークモード';
 
   @override
+  String get darkModeSubtitle => '目にやさしい表示に切り替えます';
+
+  @override
+  String get settingsProBadge => 'Pro限定';
+
+  @override
   String get integrationsSettingsTitle => '連携';
+
+  @override
+  String get integrationsCalendarRowTitle => '連携カレンダー';
 
   @override
   String get integrationsScreenTitle => '連携';
@@ -315,6 +324,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get appBackgroundSettingsTitle => '背景';
+
+  @override
+  String get appBackgroundSettingsSubtitle => 'アプリの背景を選択';
 
   @override
   String get appBackgroundScreenTitle => '背景を選択';
@@ -436,6 +448,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get planSectionTitle => 'プラン';
 
   @override
+  String get planCurrentTitle => '現在のプラン';
+
+  @override
   String get planProTitle => 'Proプラン';
 
   @override
@@ -457,29 +472,79 @@ class AppLocalizationsJa extends AppLocalizations {
   String get paywallTitle => 'Proプラン';
 
   @override
-  String get paywallHeadline => 'もっと自由に話せるProプラン';
+  String get paywallSectionTitle => 'Proプランでできること';
 
   @override
-  String get paywallBenefitDuration => '1回の録音が最大15分に（無料版は60秒）';
+  String get paywallSectionSubtitle => 'すべてのPro機能が使い放題';
 
   @override
-  String get paywallBenefitCount => '1日30回まで録音可能に（無料版は3回）';
+  String get paywallBenefitDurationTitle => '録音時間が長く';
 
   @override
-  String get paywallBenefitDiaryStyle => '日記の文体が9種類に（無料版は標準のみ）';
+  String get paywallBenefitDurationBefore => '60秒';
 
   @override
-  String get paywallBenefitCustomBackground => '日記の背景に自分の写真を使える';
+  String get paywallBenefitDurationAfter => '15分';
 
   @override
-  String get paywallBenefitMediaSync =>
-      '日記に添付した写真・動画もクラウドにバックアップ（月額/年額プラン限定・買い切りプランは対象外）';
+  String get paywallBenefitDurationDesc => 'じっくり話せて、細かいニュアンスも逃さない';
 
   @override
-  String get paywallBenefitKnowledgeBase => '「相談」でこれまでの記録を横断してAIに質問できる';
+  String get paywallBenefitCountTitle => '1日の利用回数が多く';
 
   @override
-  String get paywallBenefitWeeklyReport => '週刊脳内レポートでAIが1週間分の記録を振り返ってくれる';
+  String get paywallBenefitCountBefore => '3回';
+
+  @override
+  String get paywallBenefitCountAfter => '30回';
+
+  @override
+  String get paywallBenefitCountDesc => '思いついた時に、いつでもたくさん使える';
+
+  @override
+  String get paywallBenefitDiaryStyleTitle => '日記の文体が選べる';
+
+  @override
+  String get paywallBenefitDiaryStyleBefore => '標準のみ';
+
+  @override
+  String get paywallBenefitDiaryStyleAfter => '全9種';
+
+  @override
+  String get paywallBenefitDiaryStyleDesc => '気分やシーンに合わせて、ぴったりの文体で書ける';
+
+  @override
+  String get paywallBenefitCustomBackgroundTitle => '日記背景に';
+
+  @override
+  String get paywallBenefitCustomBackgroundHighlight => '自分の画像を追加';
+
+  @override
+  String get paywallBenefitCustomBackgroundDesc => 'お気に入りの写真で、あなただけの特別な日記に';
+
+  @override
+  String get paywallBenefitKnowledgeBaseHighlight => '相談（第二の脳）';
+
+  @override
+  String get paywallBenefitKnowledgeBaseSuffix => 'が使える';
+
+  @override
+  String get paywallBenefitKnowledgeBaseDesc => '過去の記録を横断して、AIが深くサポート';
+
+  @override
+  String get paywallBenefitWeeklyReportTitle => '週刊脳内レポート';
+
+  @override
+  String get paywallBenefitWeeklyReportDesc => '毎週あなたの心の傾向をAIが分析・お届け';
+
+  @override
+  String get paywallBenefitMediaSyncTitle => '写真・動画のクラウド同期';
+
+  @override
+  String get paywallBenefitMediaSyncDesc => '大切な思い出を、安全にバックアップ';
+
+  @override
+  String get paywallBenefitMediaSyncBadge => '月額・年額プラン限定';
 
   @override
   String get paywallUnavailable => '現在プランを取得できません。しばらくしてからもう一度お試しください。';
@@ -635,7 +700,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pickPhotosFromLibrary => '写真を選択';
 
   @override
+  String get pickPhotosFromLibrarySubtitle => 'アルバムから写真を選んで追加できます';
+
+  @override
   String get pickVideoFromLibrary => '動画を選択';
+
+  @override
+  String get pickVideoFromLibrarySubtitle => 'アルバムから動画を選んで追加できます';
 
   @override
   String get backgroundSheetTitle => '背景';
@@ -699,6 +770,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get fontSheetTitle => 'フォント';
+
+  @override
+  String get fontSheetSizeLabel => '見出しサイズ';
+
+  @override
+  String get fontSheetColorLabel => '文字色';
+
+  @override
+  String get fontSheetStyleLabel => 'フォントスタイル';
 
   @override
   String get closeTooltip => '閉じる';
@@ -910,7 +990,10 @@ class AppLocalizationsJa extends AppLocalizations {
       '記録を横断したAIチャットはProプラン限定の機能です。アップグレードすると使えるようになります。';
 
   @override
-  String get weeklyReportSettingsTitle => '週刊レポート';
+  String get weeklyReportSettingsTitle => '週刊脳内レポート';
+
+  @override
+  String get weeklyReportSettingsSubtitle => '毎週のレポートをお届けします';
 
   @override
   String get weeklyReportTitle => '週刊脳内レポート';
