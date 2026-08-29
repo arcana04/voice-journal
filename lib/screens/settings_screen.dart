@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -7,11 +9,13 @@ import '../config/legal_links.dart';
 import '../l10n/app_localizations.dart';
 import '../services/reminder_service.dart';
 import '../state/account_store.dart';
+import '../state/apple_reminders_store.dart';
 import '../state/background_store.dart';
 import '../state/calendar_store.dart';
 import '../state/settings_store.dart';
 import '../state/subscription_store.dart';
 import 'account_screen.dart';
+import 'apple_reminders_select_screen.dart';
 import 'background_select_screen.dart';
 import 'integration_select_screen.dart';
 import 'paywall_screen.dart';
@@ -155,6 +159,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 );
               },
             ),
+            if (Platform.isIOS)
+              Consumer<AppleRemindersStore>(
+                builder: (context, remindersStore, _) {
+                  final name = remindersStore.selectedListName;
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.checklist_outlined),
+                    title: Text(l10n.appleRemindersSettingsTitle),
+                    subtitle: Text(
+                      remindersStore.selectedListId == null
+                          ? l10n.integrationsOff
+                          : (name ?? l10n.integrationsOff),
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const AppleRemindersSelectScreen(),
+                      ),
+                    ),
+                  );
+                },
+              ),
             const Divider(height: 32),
             Consumer<SubscriptionStore>(
               builder: (context, subscription, _) {

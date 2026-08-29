@@ -14,6 +14,9 @@ class TaskItem {
   final DateTime? reminderEndAt;
   final bool done;
   final String? calendarEventId;
+
+  /// iPhone標準のリマインダーアプリ（EventKitのEKReminder）に連携登録した際のID。
+  final String? appleReminderId;
   final bool isAllDay;
 
   /// 端末に届くプッシュ通知の発火時刻。[reminderAt]/[reminderEndAt]（カレンダー用の
@@ -31,6 +34,7 @@ class TaskItem {
     this.reminderEndAt,
     this.done = false,
     this.calendarEventId,
+    this.appleReminderId,
     this.isAllDay = false,
     this.notifyAt,
   });
@@ -58,6 +62,8 @@ class TaskItem {
     bool clearReminderEndAt = false,
     String? calendarEventId,
     bool clearCalendarEventId = false,
+    String? appleReminderId,
+    bool clearAppleReminderId = false,
     bool? isAllDay,
     DateTime? notifyAt,
     bool clearNotify = false,
@@ -76,6 +82,9 @@ class TaskItem {
       calendarEventId: clearCalendarEventId
           ? null
           : (calendarEventId ?? this.calendarEventId),
+      appleReminderId: clearAppleReminderId
+          ? null
+          : (appleReminderId ?? this.appleReminderId),
       isAllDay: clearReminder ? false : (isAllDay ?? this.isAllDay),
       notifyAt: clearNotify ? null : (notifyAt ?? this.notifyAt),
     );
@@ -92,6 +101,7 @@ class TaskItem {
       'reminder_end_at': reminderEndAt?.toIso8601String(),
       'done': done ? 1 : 0,
       'calendar_event_id': calendarEventId,
+      'apple_reminder_id': appleReminderId,
       'is_all_day': isAllDay ? 1 : 0,
       'notify_at': notifyAt?.toIso8601String(),
     };
@@ -116,6 +126,7 @@ class TaskItem {
           : null,
       done: (map['done'] as int? ?? 0) == 1,
       calendarEventId: map['calendar_event_id'] as String?,
+      appleReminderId: map['apple_reminder_id'] as String?,
       isAllDay: (map['is_all_day'] as int? ?? 0) == 1,
       notifyAt: notifyAtStr != null ? DateTime.tryParse(notifyAtStr) : null,
     );

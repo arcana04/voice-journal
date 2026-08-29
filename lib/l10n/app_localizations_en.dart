@@ -309,6 +309,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get integrationsRefresh => 'Refresh';
 
   @override
+  String get appleRemindersSettingsTitle => 'Reminders';
+
+  @override
+  String get appleRemindersScreenTitle => 'Reminders Integration';
+
+  @override
+  String get appleRemindersDescription =>
+      'Choose a list from the device\'s Reminders app. Once turned on, any task with a due date will automatically be added there, and completing it in the app marks it as completed in Reminders too.';
+
+  @override
+  String get appleRemindersPermissionDenied =>
+      'Reminders access wasn\'t granted. You can allow it from the system Settings app.';
+
+  @override
+  String get appleRemindersNoLists =>
+      'No writable reminder lists were found. Create a list in the Reminders app, then refresh.';
+
+  @override
   String get appBackgroundSettingsTitle => 'Background';
 
   @override

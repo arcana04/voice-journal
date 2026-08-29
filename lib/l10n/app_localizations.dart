@@ -632,6 +632,36 @@ abstract class AppLocalizations {
   /// **'Refresh'**
   String get integrationsRefresh;
 
+  /// No description provided for @appleRemindersSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get appleRemindersSettingsTitle;
+
+  /// No description provided for @appleRemindersScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders Integration'**
+  String get appleRemindersScreenTitle;
+
+  /// No description provided for @appleRemindersDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a list from the device\'s Reminders app. Once turned on, any task with a due date will automatically be added there, and completing it in the app marks it as completed in Reminders too.'**
+  String get appleRemindersDescription;
+
+  /// No description provided for @appleRemindersPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders access wasn\'t granted. You can allow it from the system Settings app.'**
+  String get appleRemindersPermissionDenied;
+
+  /// No description provided for @appleRemindersNoLists.
+  ///
+  /// In en, this message translates to:
+  /// **'No writable reminder lists were found. Create a list in the Reminders app, then refresh.'**
+  String get appleRemindersNoLists;
+
   /// No description provided for @appBackgroundSettingsTitle.
   ///
   /// In en, this message translates to:

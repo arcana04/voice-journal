@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 
 import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
+import '../services/apple_reminders_service.dart';
+import '../services/apple_reminders_settings_service.dart';
 import '../services/calendar_service.dart';
 import '../services/calendar_settings_service.dart';
 import '../services/cloud_sync_service.dart';
@@ -20,6 +22,9 @@ class JournalStore extends ChangeNotifier {
   final ImageStorageService _images = ImageStorageService();
   final CalendarService _calendar = CalendarService.instance;
   final CalendarSettingsService _calendarSettings = CalendarSettingsService();
+  final AppleRemindersService _appleReminders = AppleRemindersService.instance;
+  final AppleRemindersSettingsService _appleRemindersSettings =
+      AppleRemindersSettingsService();
   final CloudSyncService _cloudSync = CloudSyncService();
   final MediaSyncService _mediaSync = MediaSyncService();
 
@@ -116,6 +121,47 @@ class JournalStore extends ChangeNotifier {
     }
   }
 
+  /// 連携先リマインダーリストが選ばれていれば、タスクの状態に合わせてiPhone標準の
+  /// リマインダーを作成・更新し、新しいリマインダーIDを返す（連携オフや失敗時は
+  /// 元の値のまま）。カレンダー予定と違い、完了時は削除せず「完了」状態にする
+  /// （リマインダーアプリは完了済みToDoを取り消し線付きで表示し続ける設計のため）。
+  Future<String?> _syncTaskAppleReminder(TaskItem task) async {
+    final listId = await _appleRemindersSettings.getListId();
+    if (listId == null) return task.appleReminderId;
+
+    try {
+      final dueDate = task.reminderAt ?? task.dueDate;
+      if (dueDate == null) {
+        if (task.appleReminderId != null) {
+          await _appleReminders.deleteReminder(task.appleReminderId!);
+        }
+        return null;
+      }
+      return await _appleReminders.upsertReminder(
+        listId: listId,
+        reminderId: task.appleReminderId,
+        title: task.title,
+        dueDate: dueDate,
+        includesTime: task.reminderAt != null && !task.isAllDay,
+        completed: task.done,
+      );
+    } catch (e) {
+      debugPrint('apple reminders sync failed: $e');
+      return task.appleReminderId;
+    }
+  }
+
+  Future<void> _deleteTaskAppleReminder(TaskItem task) async {
+    if (task.appleReminderId == null) return;
+    final listId = await _appleRemindersSettings.getListId();
+    if (listId == null) return;
+    try {
+      await _appleReminders.deleteReminder(task.appleReminderId!);
+    } catch (e) {
+      debugPrint('apple reminders delete failed: $e');
+    }
+  }
+
   /// [skipCloudPush]は、クラウドから復元してきたエントリを再度クラウドへ
   /// 送り返さないようにするためのフラグ（[fullSync]から使う）。
   Future<JournalEntry> addEntry(
@@ -137,10 +183,16 @@ class JournalStore extends ChangeNotifier {
         if (eventId != task.calendarEventId) {
           await _db.updateTaskCalendarEventId(task.id!, eventId);
         }
+        final reminderId = await _syncTaskAppleReminder(task);
+        if (reminderId != task.appleReminderId) {
+          await _db.updateTaskAppleReminderId(task.id!, reminderId);
+        }
         syncedTasks.add(
           task.copyWith(
             calendarEventId: eventId,
             clearCalendarEventId: eventId == null,
+            appleReminderId: reminderId,
+            clearAppleReminderId: reminderId == null,
           ),
         );
       } else {
@@ -169,6 +221,13 @@ class JournalStore extends ChangeNotifier {
         await _db.updateTaskCalendarEventId(task.id!, eventId);
       }
     }
+    String? reminderId = task.appleReminderId;
+    if (task.reminderAt != null || task.dueDate != null) {
+      reminderId = await _syncTaskAppleReminder(updatedTask);
+      if (reminderId != task.appleReminderId) {
+        await _db.updateTaskAppleReminderId(task.id!, reminderId);
+      }
+    }
     if (task.notifyAt != null) {
       if (newDone) {
         await _reminders.cancelTaskReminder(task.id!);
@@ -189,6 +248,8 @@ class JournalStore extends ChangeNotifier {
         done: newDone,
         calendarEventId: eventId,
         clearCalendarEventId: eventId == null,
+        appleReminderId: reminderId,
+        clearAppleReminderId: reminderId == null,
       );
     }).toList();
     entries[index] = entries[index].copyWith(tasks: updatedTasks);
@@ -203,6 +264,7 @@ class JournalStore extends ChangeNotifier {
         await _reminders.cancelTaskReminder(task.id!);
       }
       await _deleteTaskCalendarEvent(task);
+      await _deleteTaskAppleReminder(task);
     }
     for (final path in entry.imagePaths) {
       await _images.deleteImage(path);
@@ -268,6 +330,7 @@ class JournalStore extends ChangeNotifier {
         await _reminders.cancelTaskReminder(task.id!);
       }
       await _deleteTaskCalendarEvent(task);
+      await _deleteTaskAppleReminder(task);
     }
 
     final removedIds = tasks.map((t) => t.id).whereType<int>().toSet();
@@ -451,6 +514,12 @@ class JournalStore extends ChangeNotifier {
     if (eventId != task.calendarEventId) {
       await _db.updateTaskCalendarEventId(task.id!, eventId);
     }
+    final reminderId = await _syncTaskAppleReminder(
+      task.copyWith(title: trimmed),
+    );
+    if (reminderId != task.appleReminderId) {
+      await _db.updateTaskAppleReminderId(task.id!, reminderId);
+    }
 
     final index = entries.indexWhere((e) => e.id == entry.id);
     if (index == -1) return;
@@ -460,6 +529,8 @@ class JournalStore extends ChangeNotifier {
         title: trimmed,
         calendarEventId: eventId,
         clearCalendarEventId: eventId == null,
+        appleReminderId: reminderId,
+        clearAppleReminderId: reminderId == null,
       );
     }).toList();
     entries[index] = entries[index].copyWith(tasks: updatedTasks);
@@ -486,17 +557,20 @@ class JournalStore extends ChangeNotifier {
       isAllDay: effectiveAllDay,
     );
 
-    final eventId = await _syncTaskCalendarEvent(
-      task.copyWith(
-        reminderAt: startAt,
-        clearReminder: startAt == null,
-        reminderEndAt: effectiveEndAt,
-        clearReminderEndAt: effectiveEndAt == null,
-        isAllDay: effectiveAllDay,
-      ),
+    final scheduledTask = task.copyWith(
+      reminderAt: startAt,
+      clearReminder: startAt == null,
+      reminderEndAt: effectiveEndAt,
+      clearReminderEndAt: effectiveEndAt == null,
+      isAllDay: effectiveAllDay,
     );
+    final eventId = await _syncTaskCalendarEvent(scheduledTask);
     if (eventId != task.calendarEventId) {
       await _db.updateTaskCalendarEventId(task.id!, eventId);
+    }
+    final reminderId = await _syncTaskAppleReminder(scheduledTask);
+    if (reminderId != task.appleReminderId) {
+      await _db.updateTaskAppleReminderId(task.id!, reminderId);
     }
 
     final index = entries.indexWhere((e) => e.id == entry.id);
@@ -510,6 +584,8 @@ class JournalStore extends ChangeNotifier {
           clearReminderEndAt: effectiveEndAt == null,
           calendarEventId: eventId,
           clearCalendarEventId: eventId == null,
+          appleReminderId: reminderId,
+          clearAppleReminderId: reminderId == null,
           isAllDay: effectiveAllDay,
         );
       }).toList();

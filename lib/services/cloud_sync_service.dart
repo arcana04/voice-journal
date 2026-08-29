@@ -35,7 +35,11 @@ class CloudSyncService {
       'comfort_message': entry.comfortMessage,
       'emotion': entry.emotion?.id,
       'tasks': entry.tasks
-          .map((t) => _stripLocalKeys(t.toMap())..remove('calendar_event_id'))
+          .map(
+            (t) => _stripLocalKeys(t.toMap())
+              ..remove('calendar_event_id')
+              ..remove('apple_reminder_id'),
+          )
           .toList(),
       'notes': entry.notes.map((n) => _stripLocalKeys(n.toMap())).toList(),
     };

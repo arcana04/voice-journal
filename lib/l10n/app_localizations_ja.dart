@@ -296,6 +296,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get integrationsRefresh => '再読み込み';
 
   @override
+  String get appleRemindersSettingsTitle => 'リマインダー';
+
+  @override
+  String get appleRemindersScreenTitle => 'リマインダー連携';
+
+  @override
+  String get appleRemindersDescription =>
+      '端末の「リマインダー」アプリにあるリストから連携先を選べます。ONにすると、期限が確定したタスクが自動でそのリストに登録され、アプリ側で完了にするとリマインダー側でも完了扱いになります。';
+
+  @override
+  String get appleRemindersPermissionDenied =>
+      'リマインダーへのアクセスが許可されていません。設定アプリから許可できます。';
+
+  @override
+  String get appleRemindersNoLists =>
+      '書き込み可能なリマインダーリストが見つかりませんでした。リマインダーアプリでリストを作成してから、再読み込みしてください。';
+
+  @override
   String get appBackgroundSettingsTitle => '背景';
 
   @override

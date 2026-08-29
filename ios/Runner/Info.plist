@@ -57,6 +57,10 @@
 	<string>連携をONにしたカレンダーに、日時付きのタスクを予定として登録するために使用します。</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>連携をONにしたカレンダーに、日時付きのタスクを予定として登録するために使用します。</string>
+	<key>NSRemindersUsageDescription</key>
+	<string>連携をONにしたリマインダーリストに、タスクを登録するために使用します。</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>連携をONにしたリマインダーリストに、タスクを登録するために使用します。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

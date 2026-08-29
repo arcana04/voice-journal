@@ -39,7 +39,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 15,
+      version: 16,
       // tasks/notes/entry_imagesはON DELETE CASCADEをスキーマに宣言しているが、
       // SQLiteは外部キー制約自体をデフォルトで無効にしており、接続のたびに
       // 明示的に有効化しないとその宣言は一切効かない（各deleteメソッドが手動で
@@ -73,6 +73,7 @@ class DbService {
             reminder_end_at TEXT,
             done INTEGER NOT NULL DEFAULT 0,
             calendar_event_id TEXT,
+            apple_reminder_id TEXT,
             is_all_day INTEGER NOT NULL DEFAULT 0,
             notify_at TEXT,
             FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
@@ -224,6 +225,11 @@ class DbService {
         if (oldVersion < 15) {
           await db.execute(
             'ALTER TABLE entry_images ADD COLUMN uploaded INTEGER NOT NULL DEFAULT 0',
+          );
+        }
+        if (oldVersion < 16) {
+          await db.execute(
+            'ALTER TABLE tasks ADD COLUMN apple_reminder_id TEXT',
           );
         }
       },
@@ -515,6 +521,16 @@ class DbService {
     await db.update(
       'tasks',
       {'calendar_event_id': eventId},
+      where: 'id = ?',
+      whereArgs: [taskId],
+    );
+  }
+
+  Future<void> updateTaskAppleReminderId(int taskId, String? reminderId) async {
+    final db = await _database;
+    await db.update(
+      'tasks',
+      {'apple_reminder_id': reminderId},
       where: 'id = ?',
       whereArgs: [taskId],
     );
