@@ -101,17 +101,20 @@ class AppleRemindersChannel: NSObject {
     reminder.title = title
     reminder.isCompleted = args["completed"] as? Bool ?? false
 
+    // アラームはあえて付けない。通知はVoiceJournal自身の通知（notifyAt/ReminderService）が
+    // 一本化して担当する設計で、カレンダー連携（予定は登録するがアラームは付けない）とも
+    // 揃えている。ここでアラームを付けるとiOS標準リマインダーが独自に通知を出し、VoiceJournal
+    // からの通知と重複してしまう。
     if let dueDateStr = args["dueDate"] as? String, let dueDate = Self.parseIsoLocal(dueDateStr) {
       let includesTime = args["includesTime"] as? Bool ?? true
       let components: Set<Calendar.Component> = includesTime
         ? [.year, .month, .day, .hour, .minute]
         : [.year, .month, .day]
       reminder.dueDateComponents = Calendar.current.dateComponents(components, from: dueDate)
-      reminder.alarms = includesTime ? [EKAlarm(absoluteDate: dueDate)] : nil
     } else {
       reminder.dueDateComponents = nil
-      reminder.alarms = nil
     }
+    reminder.alarms = nil
 
     do {
       try eventStore.save(reminder, commit: true)
