@@ -11,5 +11,5 @@ class RevenueCatConfig {
   );
 
   /// RevenueCatダッシュボードで作成する「Pro」プランのエンタイトルメントID。
-  static const String proEntitlementId = 'pro';
+  static const String proEntitlementId = 'voice_journal_pro';
 }

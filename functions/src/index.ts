@@ -36,7 +36,7 @@ const FREE_DAILY_LIMIT = 3;
 const PRO_DAILY_LIMIT = 30;
 /** RevenueCatダッシュボードで作成する「Pro」プランのエンタイトルメントID。クライアント側
  * （lib/config/revenuecat_config.dart）の値と一致させること。 */
-const PRO_ENTITLEMENT_ID = "pro";
+const PRO_ENTITLEMENT_ID = "voice_journal_pro";
 
 type SummaryLevel = "preserve" | "standard" | "compact";
 
