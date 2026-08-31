@@ -7,7 +7,6 @@ import 'package:record/record.dart' show Amplitude;
 
 import '../config/recording_limits.dart';
 import '../l10n/app_localizations.dart';
-import '../models/diary_style.dart';
 import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
 import '../models/summary_level.dart';
@@ -193,7 +192,6 @@ class _HomeScreenState extends State<HomeScreen> {
         File(path),
         customWords: customWords,
         summaryLevel: settings.summaryLevel,
-        diaryStyle: settings.diaryStyle,
         locale: Localizations.localeOf(context).languageCode,
       );
       if (!mounted) return;
@@ -227,7 +225,6 @@ class _HomeScreenState extends State<HomeScreen> {
       final entry = await _backend.processTextMemo(
         text,
         summaryLevel: settings.summaryLevel,
-        diaryStyle: settings.diaryStyle,
         locale: locale,
       );
       if (!mounted) return;
@@ -572,13 +569,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           showDragHandle: true,
                           builder: (_) => const _SummaryLevelSheet(),
                         );
-                      } else if (value == 'diaryStyle') {
-                        showModalBottomSheet<void>(
-                          context: context,
-                          isScrollControlled: true,
-                          showDragHandle: true,
-                          builder: (_) => const _DiaryStyleSheet(),
-                        );
                       }
                     },
                     itemBuilder: (context) => [
@@ -596,14 +586,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: _MenuRow(
                           icon: Icons.auto_awesome_outlined,
                           label: l10n.menuSummaryLevel,
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'diaryStyle',
-                        height: 56,
-                        child: _MenuRow(
-                          icon: Icons.text_fields_rounded,
-                          label: l10n.menuDiaryStyle,
                         ),
                       ),
                     ],
@@ -811,129 +793,6 @@ class _SummaryLevelSheet extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// notes（日記）の文体を選ぶボトムシート。Pro限定のスタイルは未加入だとロック表示にし、
-/// タップするとペイウォールへ誘導する。
-class _DiaryStyleSheet extends StatelessWidget {
-  const _DiaryStyleSheet();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final selected = context.watch<SettingsStore>().diaryStyle;
-    final isPro = context.watch<SubscriptionStore>().isPro;
-
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.diaryStyleSheetTitle,
-              style: Theme.of(context).textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.diaryStyleSheetDescription,
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: Theme.of(context).colorScheme.outline),
-            ),
-            const SizedBox(height: 12),
-            Flexible(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    for (final style in DiaryStyle.values)
-                      _DiaryStyleOption(
-                        style: style,
-                        selected: style == selected,
-                        locked: style.requiresPro && !isPro,
-                        onTap: () {
-                          if (style.requiresPro && !isPro) {
-                            Navigator.of(context).pop();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const PaywallScreen(),
-                              ),
-                            );
-                            return;
-                          }
-                          context.read<SettingsStore>().setDiaryStyle(style);
-                        },
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DiaryStyleOption extends StatelessWidget {
-  final DiaryStyle style;
-  final bool selected;
-  final bool locked;
-  final VoidCallback onTap;
-
-  const _DiaryStyleOption({
-    required this.style,
-    required this.selected,
-    required this.locked,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      color: selected ? theme.colorScheme.primary.withValues(alpha: 0.08) : null,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: selected
-              ? theme.colorScheme.primary
-              : theme.colorScheme.outlineVariant,
-        ),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        title: Row(
-          children: [
-            Text(style.labelFor(l10n), style: theme.textTheme.titleSmall),
-            if (locked) ...[
-              const SizedBox(width: 6),
-              Icon(
-                Icons.lock_outline,
-                size: 16,
-                color: theme.colorScheme.outline,
-              ),
-            ],
-          ],
-        ),
-        subtitle: Text(style.descriptionFor(l10n)),
-        trailing: selected
-            ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
-            : (locked ? Text(l10n.planUpgrade) : null),
       ),
     );
   }

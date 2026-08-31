@@ -550,14 +550,23 @@ class JournalStore extends ChangeNotifier {
     if (task.id == null) return;
     final effectiveAllDay = startAt != null && isAllDay;
     final effectiveEndAt = effectiveAllDay ? null : endAt;
+    // 「今日/今週/1ヶ月以内」フィルタはdueDateだけを見るため、開始日時を
+    // 変更したらdueDateもその日付に合わせて更新する（さもないと編集後も
+    // 古い期限日でフィルタされてしまう）。
+    final newDueDate = startAt != null
+        ? DateTime(startAt.year, startAt.month, startAt.day)
+        : null;
     await _db.updateTaskSchedule(
       task.id!,
       startAt,
       endAt: effectiveEndAt,
       isAllDay: effectiveAllDay,
+      dueDate: newDueDate,
     );
 
     final scheduledTask = task.copyWith(
+      dueDate: newDueDate,
+      clearDueDate: newDueDate == null,
       reminderAt: startAt,
       clearReminder: startAt == null,
       reminderEndAt: effectiveEndAt,
@@ -578,6 +587,8 @@ class JournalStore extends ChangeNotifier {
       final updatedTasks = entries[index].tasks.map((t) {
         if (t.id != task.id) return t;
         return t.copyWith(
+          dueDate: newDueDate,
+          clearDueDate: newDueDate == null,
           reminderAt: startAt,
           clearReminder: startAt == null,
           reminderEndAt: effectiveEndAt,

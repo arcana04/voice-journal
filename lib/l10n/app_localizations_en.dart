@@ -203,79 +203,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Condenses everything down to just the core in 1-2 sentences.';
 
   @override
-  String get menuDiaryStyle => 'Diary tone';
-
-  @override
-  String get diaryStyleSheetTitle => 'Diary tone';
-
-  @override
-  String get diaryStyleSheetDescription =>
-      'Choose the tone/voice the AI writes your diary entries in. This doesn\'t affect how much it\'s summarized.';
-
-  @override
-  String get diaryStyleStandardLabel => 'Standard';
-
-  @override
-  String get diaryStyleStandardDescription =>
-      'A natural, unembellished first-person diary voice.';
-
-  @override
-  String get diaryStyleGalLabel => 'Hyped Gen-Z';
-
-  @override
-  String get diaryStyleGalDescription =>
-      'An extremely hyped, emoji-heavy Gen-Z slang voice. Pro plan only.';
-
-  @override
-  String get diaryStyleNovelLabel => 'Literary';
-
-  @override
-  String get diaryStyleNovelDescription =>
-      'A literary first-person essay voice with scene-setting and introspection. Pro plan only.';
-
-  @override
-  String get diaryStylePositiveMonsterLabel => 'Hype Yourself Up';
-
-  @override
-  String get diaryStylePositiveMonsterDescription =>
-      'Celebrates every little thing you did as an absolute win. Pro plan only.';
-
-  @override
-  String get diaryStyleBulletPointsLabel => 'Bullet Points';
-
-  @override
-  String get diaryStyleBulletPointsDescription =>
-      'A minimal 3-4 line list of what happened, how you felt, and what\'s next. Pro plan only.';
-
-  @override
-  String get diaryStyleFutureSelfLabel => 'To Future Me';
-
-  @override
-  String get diaryStyleFutureSelfDescription =>
-      'A time-capsule letter written for your future self to read. Pro plan only.';
-
-  @override
-  String get diaryStyleHardboiledLabel => 'Hardboiled';
-
-  @override
-  String get diaryStyleHardboiledDescription =>
-      'Terse, unsentimental lines that record only facts and decisions. Pro plan only.';
-
-  @override
-  String get diaryStyleCinematicLabel => 'Cinematic';
-
-  @override
-  String get diaryStyleCinematicDescription =>
-      'A visual voice that lingers on light, sound, and atmosphere like a film scene. Pro plan only.';
-
-  @override
-  String get diaryStyleHistoricalHeroLabel => 'Epic Chronicle';
-
-  @override
-  String get diaryStyleHistoricalHeroDescription =>
-      'Recasts an ordinary day as a legendary chapter in grand, archaic prose. Pro plan only.';
-
-  @override
   String get settingsTitle => 'Settings';
 
   @override
@@ -520,19 +447,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get paywallBenefitCountDesc =>
       'Capture every thought, whenever it strikes';
-
-  @override
-  String get paywallBenefitDiaryStyleTitle => 'Choose your diary style';
-
-  @override
-  String get paywallBenefitDiaryStyleBefore => 'Standard only';
-
-  @override
-  String get paywallBenefitDiaryStyleAfter => 'All 9 styles';
-
-  @override
-  String get paywallBenefitDiaryStyleDesc =>
-      'Match the tone to your mood or moment';
 
   @override
   String get paywallBenefitCustomBackgroundTitle => 'Add ';

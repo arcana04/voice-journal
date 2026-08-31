@@ -47,38 +47,6 @@ function normalizeSummaryLevel(value: unknown): SummaryLevel {
   return "preserve";
 }
 
-/** notes（日記）の文体（口調・言葉遣い）。要約度（SummaryLevel）とは独立の軸で、
- * "gal"（ギャル風）はPro限定機能。クライアント側の DiaryStyle enum
- * （lib/models/diary_style.dart）と一致させること。 */
-type DiaryStyle =
-  | "standard"
-  | "gal"
-  | "novel"
-  | "positive_monster"
-  | "bullet_points"
-  | "future_self"
-  | "hardboiled"
-  | "cinematic"
-  | "historical_hero";
-
-const DIARY_STYLES = new Set<DiaryStyle>([
-  "standard",
-  "gal",
-  "novel",
-  "positive_monster",
-  "bullet_points",
-  "future_self",
-  "hardboiled",
-  "cinematic",
-  "historical_hero",
-]);
-
-function normalizeDiaryStyle(value: unknown): DiaryStyle {
-  return typeof value === "string" && DIARY_STYLES.has(value as DiaryStyle)
-    ? (value as DiaryStyle)
-    : "standard";
-}
-
 /** クライアント（Flutterアプリ）の表示言語。UIの多言語対応に合わせてサーバー側の
  * 音声認識言語・AIプロンプト・エラーメッセージを切り替えるために使う。 */
 type Locale = "ja" | "en";
@@ -207,153 +175,10 @@ Input: "the fireworks were fun"
 - Correct output: "The fireworks were fun." (only lightly tidied into first person, nothing added)
 - Never output something like: "Watching the fireworks was such a genuinely fun time. The way they lit up the night sky was so striking, and having everyone there together made it even better." (inventing people like "everyone" and scene details the speaker never said is a violation)`;
 
-function buildDiaryStyleSection(style: DiaryStyle): string {
-  const guardrails = `【文体についての厳守事項（必ず守ること）】
-- 必ず一人称（話者本人の日記）として書いてください。AIからの返答や語りかけの体裁にはしないでください。
-- 話者が言っていない事実や出来事を勝手に捏造しないでください。
-- 話者が口にした感情の方向性（疲れた・嬉しかった・嫌だった等）はそのまま保ち、言葉遣いだけを以下の指定スタイルに合わせて変えてください。分量・情報量の方針は上記「notesの本文の書き方」の指示に従い、ここでは口調だけを変更してください。`;
-
-  switch (style) {
-    case "gal":
-      return `${guardrails}
-
-【文体：ギャル風】
-ハイテンション・絵文字多用・Z世代/ギャル語を用いたマインド爆上げ文体でリライトしてください。
-- 語尾に「〜すぎて草」「大優勝」「神」「〜案件」などのギャル語・スラングや、絵文字（🔥✨😭🍰💥など）を多用し、感情の昂ぶりを最大化してください。
-- 例:「今日ゼミの発表マジでやりきってうちら大優勝〜！マジお疲れすぎ案件😭💥 帰りに食べたケーキが神レベルに美味しくて速攻でメンタル復活した件🍰✨」
-- 上記の厳守事項（一人称・事実の捏造禁止・本音の保持）は文体を変えても絶対に破らないでください。`;
-    case "novel":
-      return `${guardrails}
-
-【文体：小説風】
-情景描写や内省的な心理変化を交えた、読ませる文学的な一人称の文体でリライトしてください。
-- 三人称の説明文にはせず、話者自身の内面の動きや周囲の情景を丁寧に描写してください。
-- 例:「午後のゼミ発表を終え、張り詰めていた糸がふっと切れたのを感じた。帰り道のカフェで味わったケーキの甘さが、静かに疲れた身体へ染み渡っていく。」`;
-    case "positive_monster":
-      return `${guardrails}
-
-【文体：ポジティブモンスター風】
-どんな小さな行動・事実も全肯定し、自己肯定感を最大化する熱量の一人称の文体でリライトしてください。
-- 「生きているだけで天才」「やり切った自分が凄すぎる」のような勢いで、自分の行動すべてを絶賛・全肯定してください。
-- 例:「ちょっと待って、今日ゼミの発表を完遂した私、凄すぎない！？緊張に負けずやり切った上に、帰りにケーキで自分を労わるセルフケアまで完璧！今日も100万点満点！」`;
-    case "bullet_points":
-      return `${guardrails}
-
-【文体：箇条書き】
-装飾を削ぎ落とし、「事実」「感情」「次のアクション（またはメモ）」を中心に3〜4行程度のシンプルな箇条書き（各行「・」で始める）としてcontentに書いてください。一人称の地の文にはしないでください。
-- 例:
-・ゼミの発表が無事に終了し、肩の荷が下りた。
-・帰り道のカフェで食べたケーキが美味しかった。
-・明日はゆっくり休み、溜まっている課題を整理する。`;
-    case "future_self":
-      return `${guardrails}
-
-【文体：未来の自分へ】
-数ヶ月〜数年後の自分が読み返すことを想定し、「〜な自分へ」「覚えているかな」のようなフレーズを用いた語りかけ・タイムカプセルのような一人称の文体でリライトしてください。
-- 例:「今日の私へ、そして未来の私へ。ゼミの発表、本当にお疲れ様。めちゃくちゃ緊張して逃げたかったけれど、なんとかやり切ったよ。帰りに食べたケーキの味、忘れないでね。」`;
-    case "hardboiled":
-      return `${guardrails}
-
-【文体：ハードボイルド】
-余計な弱音や長文の言い訳を排除し、淡々と短文で事実・疲労・完了したタスクだけを切り取る、硬派でクールな一人称の文体でリライトしてください。
-- 例:「ゼミの発表を完遂。ミッション終了だ。帰り際、行きつけの店で糖分を補給。疲労は否めないが、悪くない一日だった。明日に備えて身体を休めるとしよう。」`;
-    case "cinematic":
-      return `${guardrails}
-
-【文体：映画のワンシーン風】
-出来事を記録するだけでなく、光・音・風・街の空気感などカメラワークを意識した映像的な一人称の文体でリライトしてください。
-- 例:「夕日が入る教室で、手元の資料を閉じた。静かな安堵感が胸に広がる。帰り道、オレンジ色に染まる街並みを歩きながら立ち寄ったカフェ。温かい珈琲の香りが、疲れた身体をそっと解かしていった。」`;
-    case "historical_hero":
-      return `${guardrails}
-
-【文体：歴史上の偉人風】
-「〜なり」「〜を平定せり」「我が歴史的決断」のような古風・重厚な表現を用い、日常の一コマを歴史の教科書に刻むような大言壮語な一人称の文体でリライトしてください。
-- 例:「〇〇の年、我はゼミ発表という大戦に挑み、見事これを平定せり。心身ともに疲弊せし我が身を癒やすべく、帰り道にて甘味を食す。この一戦は、我が平穏を取り戻すための歴史的快挙として語り継がれるであろう。」`;
-    case "standard":
-    default:
-      return `${guardrails}
-
-【文体：標準】
-飾らない自然な一人称の日記らしい文体で書いてください。`;
-  }
-}
-
-function buildDiaryStyleSectionEn(style: DiaryStyle): string {
-  const guardrails = `[Strict rules about tone — always follow these]
-- Always write in first person, as the speaker's own diary entry. Never write it as an AI reply or as addressing the speaker.
-- Never invent facts or events the speaker didn't actually say.
-- Keep the direction of the emotion the speaker expressed (tired, happy, annoyed, etc.) exactly as it is — only change the wording/tone to match the style below. Follow the note-style instructions above for length/amount of detail; only change the voice here.`;
-
-  switch (style) {
-    case "gal":
-      return `${guardrails}
-
-[Tone: Hyped Gen-Z]
-Rewrite it in an extremely hyped, emoji-heavy Gen-Z internet-slang voice.
-- Lean heavily on slang like "no cap", "it's giving...", "I'm deceased", "living for this", "lowkey/highkey", "bestie", plus emoji (🔥✨😭💀), to maximize the emotional energy.
-- Example: "bestie the presentation today?? we ATE and left no crumbs 😭🔥 no cap so proud of us. then the cake after was giving five-star restaurant, I'm deceased 🍰✨"
-- Never break the strict rules above (first person, no fabricated facts, keep the real emotion) just to make it more hyped.`;
-    case "novel":
-      return `${guardrails}
-
-[Tone: Literary]
-Rewrite it in a literary, reflective first-person voice with scene-setting and introspection.
-- Don't write it as detached third-person narration — linger on the speaker's inner emotional shifts and the sensory details around them.
-- Example: "The seminar presentation behind me, I felt the taut thread in my chest quietly give way. On the way home, the sweetness of the cake at the café slowly seeped into my tired body."`;
-    case "positive_monster":
-      return `${guardrails}
-
-[Tone: Hype Yourself Up]
-Rewrite it as an over-the-top, first-person celebration of absolutely everything the speaker did.
-- Praise every small action like it's a huge win — the energy of "I'm a genius just for getting through today" or "I can't believe how well I did."
-- Example: "Wait, hold on — I actually finished my seminar presentation today?? Who even am I?? I pushed through the nerves AND treated myself to cake afterward as self-care. Absolute perfect score today!"`;
-    case "bullet_points":
-      return `${guardrails}
-
-[Tone: Bullet Points]
-Strip away all decoration and write the content as a simple 3-4 line bullet list (each line starting with "-"), centered on: what happened, how you felt, and the next action/note. Don't write flowing first-person prose here.
-- Example:
-- Finished the seminar presentation — huge weight off my shoulders.
-- The cake at the café on the way home was great.
-- Tomorrow: rest properly and sort out the backlog of assignments.`;
-    case "future_self":
-      return `${guardrails}
-
-[Tone: To Future Me]
-Rewrite it as a time-capsule letter to the speaker's future self, using phrases like "Dear future me" or "Do you still remember...".
-- Example: "Dear me today, and future me reading this: you did it. The presentation you wanted to run away from — you got through it. Don't forget the taste of that cake afterward."`;
-    case "hardboiled":
-      return `${guardrails}
-
-[Tone: Hardboiled]
-Cut all self-pity and long-winded excuses. Write terse, unsentimental lines that record only the facts, the fatigue, and the tasks completed.
-- Example: "Presentation done. Mission complete. Grabbed something sweet on the way back. Tired, but not a bad day. Rest up for tomorrow."`;
-    case "cinematic":
-      return `${guardrails}
-
-[Tone: Cinematic]
-Don't just record what happened — describe the light, sound, wind, and atmosphere like a scene from a film.
-- Example: "Late sun cut across the classroom as I closed my notes. A quiet relief spread through my chest. Walking home through streets dyed orange, I stopped at a café — the smell of warm coffee slowly untangling the tension in my tired body."`;
-    case "historical_hero":
-      return `${guardrails}
-
-[Tone: Epic Chronicle]
-Recast the day's events as a legendary chapter of history, in grand, archaic prose — as if recorded in a chronicle of great deeds.
-- Example: "On this day, I marched into the great battle of the seminar presentation, and did emerge victorious. To restore my weary body and spirit, I did partake of a sweet confection upon the homeward road. Let this triumph be remembered as the campaign by which peace was restored to my domain."`;
-    case "standard":
-    default:
-      return `${guardrails}
-
-[Tone: Standard]
-Write it in a natural, unembellished first-person diary voice.`;
-  }
-}
-
 function buildSystemPrompt(
   todayJst: string,
   weekdayJst: string,
   summaryLevel: SummaryLevel,
-  diaryStyle: DiaryStyle,
   glossary?: string
 ): string {
   const glossarySection = glossary
@@ -378,8 +203,6 @@ ${todayJst}（${weekdayJst}曜日、日本時間）。期限の相対表現は�
 4. 話が脱線している場合は、文脈ごとに適切に分類を分けてください。
 
 ${buildNotesStyleSection(summaryLevel)}
-
-${buildDiaryStyleSection(diaryStyle)}
 
 【期限の自動推測】
 tasksに期限らしき表現（「明日」「来週月曜まで」「今月中」など）があれば、上記の今日の日付を基準に実際の日付（YYYY-MM-DD）を計算し due_date に入れてください。日付を一意に決められない・期限の言及がない場合は due_date は null にしてください。due_hint には元の言い回しをそのまま短く残してください。
@@ -419,7 +242,6 @@ function buildSystemPromptEn(
   today: string,
   weekday: string,
   summaryLevel: SummaryLevel,
-  diaryStyle: DiaryStyle,
   glossary?: string
 ): string {
   const glossarySection = glossary
@@ -447,8 +269,6 @@ ${today} (${weekday}, Japan time). Interpret any relative due-date expressions a
 4. If the speaker jumps between topics, split them into separate entries classified appropriately.
 
 ${buildNotesStyleSectionEn(summaryLevel)}
-
-${buildDiaryStyleSectionEn(diaryStyle)}
 
 [Automatic due-date inference]
 If a task contains a due-date-like expression ("tomorrow", "by next Monday", "sometime this month", etc.), compute the actual date (YYYY-MM-DD) relative to today's date above and put it in due_date. If the date can't be determined uniquely, or there's no due-date mention at all, set due_date to null. Put a short version of the original phrase in due_hint.
@@ -823,7 +643,6 @@ async function structure(
   apiKey: string,
   transcript: string,
   summaryLevel: SummaryLevel,
-  diaryStyle: DiaryStyle,
   locale: Locale,
   glossary?: string
 ): Promise<StructuredResult> {
@@ -834,14 +653,12 @@ async function structure(
           jstDateString(now),
           jstWeekdayString(locale, now),
           summaryLevel,
-          diaryStyle,
           glossary
         )
       : buildSystemPrompt(
           jstDateString(now),
           jstWeekdayString(locale, now),
           summaryLevel,
-          diaryStyle,
           glossary
         );
 
@@ -853,7 +670,7 @@ async function structure(
     },
     body: JSON.stringify({
       model: "gpt-4o-mini",
-      // 事実の捏造を減らすため低めに設定（文体の指定はプロンプト側の指示で十分効く）。
+      // 事実の捏造を減らすため低めに設定。
       temperature: 0.3,
       response_format: { type: "json_object" },
       messages: [
@@ -912,7 +729,6 @@ interface ProcessVoiceMemoRequest {
   mimeType?: string;
   customWords?: (string | CustomWordEntry)[];
   summaryLevel?: string;
-  diaryStyle?: string;
   locale?: string;
 }
 
@@ -926,7 +742,7 @@ export const processVoiceMemo = onCall(
     enforceAppCheck: APP_CHECK_ENFORCED,
   },
   async (request) => {
-    const { audioBase64, mimeType, customWords, summaryLevel, diaryStyle, locale } =
+    const { audioBase64, mimeType, customWords, summaryLevel, locale } =
       (request.data ?? {}) as ProcessVoiceMemoRequest;
     const loc = normalizeLocale(locale);
 
@@ -958,20 +774,11 @@ export const processVoiceMemo = onCall(
         throw new HttpsError("invalid-argument", MESSAGES[loc].transcriptionEmpty);
       }
 
-      const requestedStyle = normalizeDiaryStyle(diaryStyle);
-      // "gal"はPro限定機能。クライアント側のロック済みUIをバイパスしてリクエストされても
-      // ここで無料ユーザーには黙って標準スタイルにフォールバックする。
-      const effectiveStyle =
-        requestedStyle === "standard" || (await isProUser(uid))
-          ? requestedStyle
-          : "standard";
-
       const glossary = buildGlossaryContext(words, loc);
       const structured = await structure(
         apiKey,
         transcript,
         normalizeSummaryLevel(summaryLevel),
-        effectiveStyle,
         loc,
         glossary
       );
@@ -1452,7 +1259,6 @@ export const generateWeeklyReport = onCall(
 interface ProcessTextMemoRequest {
   text: string;
   summaryLevel?: string;
-  diaryStyle?: string;
   locale?: string;
 }
 
@@ -1464,7 +1270,7 @@ export const processTextMemo = onCall(
     enforceAppCheck: APP_CHECK_ENFORCED,
   },
   async (request) => {
-    const { text, summaryLevel, diaryStyle, locale } =
+    const { text, summaryLevel, locale } =
       (request.data ?? {}) as ProcessTextMemoRequest;
     const loc = normalizeLocale(locale);
 
@@ -1479,18 +1285,11 @@ export const processTextMemo = onCall(
     try {
       await consumeDailyQuota(uid, loc);
 
-      const requestedStyle = normalizeDiaryStyle(diaryStyle);
-      const effectiveStyle =
-        requestedStyle === "standard" || (await isProUser(uid))
-          ? requestedStyle
-          : "standard";
-
       const apiKey = openAiApiKey.value();
       const structured = await structure(
         apiKey,
         text.trim(),
         normalizeSummaryLevel(summaryLevel),
-        effectiveStyle,
         loc
       );
       return toClientResponse(structured);

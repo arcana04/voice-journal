@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show ChangeNotifier, kDebugMode;
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../config/revenuecat_config.dart';
@@ -22,6 +22,17 @@ class SubscriptionStore extends ChangeNotifier {
   void Function(CustomerInfo)? _listener;
 
   Future<void> _refreshFromCustomerInfo(CustomerInfo info) async {
+    // 本番課金基盤（RevenueCat本番キー/Webhook等）が未整備で、開発者自身も
+    // 実際に課金してPro機能を確認する手段が無いため、デバッグビルドでは常に
+    // Pro扱いにする。リリース/TestFlightビルドには影響しない。
+    if (kDebugMode) {
+      if (!isPro || !isProWithMediaSync) {
+        isPro = true;
+        isProWithMediaSync = true;
+        notifyListeners();
+      }
+      return;
+    }
     final active = info.entitlements.active.containsKey(
       RevenueCatConfig.proEntitlementId,
     );
@@ -48,6 +59,12 @@ class SubscriptionStore extends ChangeNotifier {
   }
 
   Future<void> refresh() async {
+    if (kDebugMode) {
+      isPro = true;
+      isProWithMediaSync = true;
+      notifyListeners();
+      return;
+    }
     isPro = await _purchases.hasProEntitlement();
     isProWithMediaSync = await _purchases.hasMediaSyncEntitlement();
     notifyListeners();

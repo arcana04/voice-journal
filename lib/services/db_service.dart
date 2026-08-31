@@ -490,11 +490,13 @@ class DbService {
     DateTime? startAt, {
     DateTime? endAt,
     bool isAllDay = false,
+    DateTime? dueDate,
   }) async {
     final db = await _database;
     final values = <String, Object?>{
       'reminder_at': startAt?.toIso8601String(),
       'is_all_day': (startAt != null && isAllDay) ? 1 : 0,
+      'due_date': dueDate?.toIso8601String(),
     };
     if (startAt == null || isAllDay) {
       values['reminder_end_at'] = null;

@@ -194,75 +194,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get summaryLevelCompactDescription => '核心だけを1〜2文程度にぎゅっと短くまとめます';
 
   @override
-  String get menuDiaryStyle => '日記の文体';
-
-  @override
-  String get diaryStyleSheetTitle => '日記の文体';
-
-  @override
-  String get diaryStyleSheetDescription =>
-      'AIが日記を書くときの言葉遣い・口調を選べます。要約の強さには影響しません。';
-
-  @override
-  String get diaryStyleStandardLabel => '標準';
-
-  @override
-  String get diaryStyleStandardDescription => '飾らない自然な一人称の日記文体で書きます';
-
-  @override
-  String get diaryStyleGalLabel => 'ギャル風';
-
-  @override
-  String get diaryStyleGalDescription => 'ハイテンション・絵文字多用のギャル語文体で書きます（Pro限定）';
-
-  @override
-  String get diaryStyleNovelLabel => '小説風';
-
-  @override
-  String get diaryStyleNovelDescription => '情景描写を交えた文学的な一人称エッセイ文体で書きます（Pro限定）';
-
-  @override
-  String get diaryStylePositiveMonsterLabel => 'ポジティブモンスター風';
-
-  @override
-  String get diaryStylePositiveMonsterDescription =>
-      'どんな行動も全肯定し自己肯定感を最大化する文体で書きます（Pro限定）';
-
-  @override
-  String get diaryStyleBulletPointsLabel => '箇条書き';
-
-  @override
-  String get diaryStyleBulletPointsDescription =>
-      '事実・感情・次のアクションを3〜4行のシンプルな箇条書きにまとめます（Pro限定）';
-
-  @override
-  String get diaryStyleFutureSelfLabel => '未来の自分へ';
-
-  @override
-  String get diaryStyleFutureSelfDescription =>
-      '未来の自分に語りかけるタイムカプセルのような文体で書きます（Pro限定）';
-
-  @override
-  String get diaryStyleHardboiledLabel => 'ハードボイルド';
-
-  @override
-  String get diaryStyleHardboiledDescription =>
-      '感情を排し、事実と決断だけを短文で刻むストイックな文体で書きます（Pro限定）';
-
-  @override
-  String get diaryStyleCinematicLabel => '映画のワンシーン風';
-
-  @override
-  String get diaryStyleCinematicDescription => '光・音・空気感を意識した映像的な文体で書きます（Pro限定）';
-
-  @override
-  String get diaryStyleHistoricalHeroLabel => '歴史上の偉人風';
-
-  @override
-  String get diaryStyleHistoricalHeroDescription =>
-      '日常の一コマを歴史的快挙に見立てる大言壮語な文体で書きます（Pro限定）';
-
-  @override
   String get settingsTitle => '設定';
 
   @override
@@ -500,18 +431,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get paywallBenefitCountDesc => '思いついた時に、いつでもたくさん使える';
-
-  @override
-  String get paywallBenefitDiaryStyleTitle => '日記の文体が選べる';
-
-  @override
-  String get paywallBenefitDiaryStyleBefore => '標準のみ';
-
-  @override
-  String get paywallBenefitDiaryStyleAfter => '全9種';
-
-  @override
-  String get paywallBenefitDiaryStyleDesc => '気分やシーンに合わせて、ぴったりの文体で書ける';
 
   @override
   String get paywallBenefitCustomBackgroundTitle => '日記背景に';

@@ -1,11 +1,9 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/diary_style.dart';
 import '../models/summary_level.dart';
 
 class SettingsService {
   static const _summaryLevelPref = 'summary_level';
-  static const _diaryStylePref = 'diary_style';
   static const _darkModePref = 'dark_mode';
   static const _hasSeenOnboardingPref = 'has_seen_onboarding';
 
@@ -17,16 +15,6 @@ class SettingsService {
   Future<void> setSummaryLevel(SummaryLevel value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_summaryLevelPref, value.wireValue);
-  }
-
-  Future<DiaryStyle> getDiaryStyle() async {
-    final prefs = await SharedPreferences.getInstance();
-    return DiaryStyleX.fromWireValue(prefs.getString(_diaryStylePref));
-  }
-
-  Future<void> setDiaryStyle(DiaryStyle value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_diaryStylePref, value.wireValue);
   }
 
   Future<bool> getDarkMode() async {

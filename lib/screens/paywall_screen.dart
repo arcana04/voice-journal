@@ -127,15 +127,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 ),
                 _BenefitCard(
                   index: 3,
-                  icon: Icons.auto_awesome_rounded,
-                  color: _BenefitColors.indigo,
-                  title: Text(l10n.paywallBenefitDiaryStyleTitle),
-                  valueBefore: l10n.paywallBenefitDiaryStyleBefore,
-                  valueAfter: l10n.paywallBenefitDiaryStyleAfter,
-                  description: l10n.paywallBenefitDiaryStyleDesc,
-                ),
-                _BenefitCard(
-                  index: 4,
                   icon: Icons.image_rounded,
                   color: _BenefitColors.green,
                   title: Text.rich(
@@ -155,7 +146,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   description: l10n.paywallBenefitCustomBackgroundDesc,
                 ),
                 _BenefitCard(
-                  index: 5,
+                  index: 4,
                   icon: Icons.chat_bubble_rounded,
                   color: _BenefitColors.indigo,
                   title: Text.rich(
@@ -175,7 +166,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   description: l10n.paywallBenefitKnowledgeBaseDesc,
                 ),
                 _BenefitCard(
-                  index: 6,
+                  index: 5,
                   icon: Icons.bar_chart_rounded,
                   color: _BenefitColors.amber,
                   title: Text(
@@ -188,7 +179,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   description: l10n.paywallBenefitWeeklyReportDesc,
                 ),
                 _BenefitCard(
-                  index: 7,
+                  index: 6,
                   icon: Icons.cloud_upload_rounded,
                   color: _BenefitColors.blue,
                   title: Text(

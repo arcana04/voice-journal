@@ -56,6 +56,8 @@ class TaskItem {
   TaskItem copyWith({
     bool? done,
     String? title,
+    DateTime? dueDate,
+    bool clearDueDate = false,
     DateTime? reminderAt,
     bool clearReminder = false,
     DateTime? reminderEndAt,
@@ -73,7 +75,7 @@ class TaskItem {
       entryId: entryId,
       title: title ?? this.title,
       dueHint: dueHint,
-      dueDate: dueDate,
+      dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
       reminderAt: clearReminder ? null : (reminderAt ?? this.reminderAt),
       reminderEndAt: clearReminder || clearReminderEndAt
           ? null
@@ -136,10 +138,20 @@ class TaskItem {
     final dueDateStr = json['due_date'] as String?;
     final reminderAtStr = json['reminder_at'] as String?;
     final reminderEndAtStr = json['reminder_end_at'] as String?;
-    final dueDate = dueDateStr != null ? DateTime.tryParse(dueDateStr) : null;
     final reminderAt = reminderAtStr != null
         ? DateTime.tryParse(reminderAtStr)
         : null;
+    // AIは「15時に」のように時刻だけで明示的な日付表現が無い場合due_dateを
+    // nullにするが、reminder_atには具体的な日付が入っている。その日付を
+    // dueDateにも反映しないと「今日/今週」フィルタから漏れてしまう。
+    final parsedDueDate = dueDateStr != null
+        ? DateTime.tryParse(dueDateStr)
+        : null;
+    final dueDate =
+        parsedDueDate ??
+        (reminderAt != null
+            ? DateTime(reminderAt.year, reminderAt.month, reminderAt.day)
+            : null);
     // AIが期限日だけを抽出し、時刻を抽出できなかった場合は終日タスク扱いにする。
     final isAllDay = dueDate != null && reminderAt == null;
     return TaskItem(
