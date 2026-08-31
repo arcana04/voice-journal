@@ -263,45 +263,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'No writable reminder lists were found. Create a list in the Reminders app, then refresh.';
 
   @override
-  String get appBackgroundSettingsTitle => 'Background';
-
-  @override
-  String get appBackgroundSettingsSubtitle => 'Choose the app\'s background';
-
-  @override
-  String get appBackgroundScreenTitle => 'Choose a background';
-
-  @override
-  String get backgroundAurora => 'Aurora & Ice Hut';
-
-  @override
-  String get backgroundWhitehavenBeach => 'Whitehaven Beach';
-
-  @override
-  String get backgroundFlowerPark => 'Flower Park';
-
-  @override
-  String get backgroundStarrySky => 'Starry Sky';
-
-  @override
-  String get backgroundBalloon => 'Hot Air Balloon';
-
-  @override
-  String get backgroundSavanna => 'Savanna';
-
-  @override
-  String get backgroundDesert => 'Desert';
-
-  @override
-  String get backgroundDeepSea => 'Deep Sea';
-
-  @override
-  String get backgroundAmazon => 'Amazon Rainforest';
-
-  @override
-  String get backgroundCat => 'Cat';
-
-  @override
   String get accountSectionTitle => 'Account';
 
   @override

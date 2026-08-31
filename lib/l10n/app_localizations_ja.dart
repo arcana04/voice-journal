@@ -254,45 +254,6 @@ class AppLocalizationsJa extends AppLocalizations {
       '書き込み可能なリマインダーリストが見つかりませんでした。リマインダーアプリでリストを作成してから、再読み込みしてください。';
 
   @override
-  String get appBackgroundSettingsTitle => '背景';
-
-  @override
-  String get appBackgroundSettingsSubtitle => 'アプリの背景を選択';
-
-  @override
-  String get appBackgroundScreenTitle => '背景を選択';
-
-  @override
-  String get backgroundAurora => 'オーロラと氷原の小屋';
-
-  @override
-  String get backgroundWhitehavenBeach => 'ホワイトヘブンビーチ';
-
-  @override
-  String get backgroundFlowerPark => 'フラワーパーク';
-
-  @override
-  String get backgroundStarrySky => '星空';
-
-  @override
-  String get backgroundBalloon => '気球';
-
-  @override
-  String get backgroundSavanna => 'サバンナ';
-
-  @override
-  String get backgroundDesert => '砂漠';
-
-  @override
-  String get backgroundDeepSea => '深海';
-
-  @override
-  String get backgroundAmazon => 'アマゾン';
-
-  @override
-  String get backgroundCat => '猫';
-
-  @override
   String get accountSectionTitle => 'アカウント';
 
   @override

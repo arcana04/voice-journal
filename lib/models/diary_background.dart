@@ -1,7 +1,7 @@
 import '../l10n/app_localizations.dart';
 
 /// 日記の各ノート（感情ログ）に個別に設定できる背景イラスト。
-/// アプリ全体の背景（[AppBackground]）とは独立で、未設定（null）が既定値。
+/// アプリ全体の単色背景とは独立で、未設定（null）が既定値。
 enum DiaryBackground {
   fruit('fruit', 'assets/images/diary_backgrounds/diary_bg_fruit.png'),
   mintPlant(

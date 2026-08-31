@@ -16,7 +16,6 @@ import '../state/settings_store.dart';
 import '../state/subscription_store.dart';
 import 'account_screen.dart';
 import 'apple_reminders_select_screen.dart';
-import 'background_select_screen.dart';
 import 'integration_select_screen.dart';
 import 'paywall_screen.dart';
 import 'weekly_report_screen.dart';
@@ -109,18 +108,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     );
                   },
-                ),
-                _SettingsTile(
-                  icon: Icons.image_rounded,
-                  color: _SettingsColors.indigo,
-                  title: l10n.appBackgroundSettingsTitle,
-                  subtitle: l10n.appBackgroundSettingsSubtitle,
-                  trailing: const _ChevronIcon(),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const BackgroundSelectScreen(),
-                    ),
-                  ),
                 ),
               ],
             ),
