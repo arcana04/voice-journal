@@ -153,10 +153,9 @@ class DiaryViewScreen extends StatelessWidget {
                                   ),
                                   if (entry.emotion != null) ...[
                                     const SizedBox(width: 12),
-                                    Text(
-                                      entry.emotion!.emoji,
-                                      style: const TextStyle(fontSize: 40),
-                                      semanticsLabel: entry.emotion!.labelFor(
+                                    _EmotionTapReveal(
+                                      asset: entry.emotion!.asset,
+                                      label: entry.emotion!.labelFor(
                                         AppLocalizations.of(context)!,
                                       ),
                                     ),
@@ -218,6 +217,75 @@ class DiaryViewScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// 感情の泡を軽くタップすると下に感情名のラベルを表示し、他の場所を
+/// タップすると即座に消える。
+class _EmotionTapReveal extends StatefulWidget {
+  final String asset;
+  final String label;
+
+  const _EmotionTapReveal({required this.asset, required this.label});
+
+  @override
+  State<_EmotionTapReveal> createState() => _EmotionTapRevealState();
+}
+
+class _EmotionTapRevealState extends State<_EmotionTapReveal> {
+  static const double _size = 48;
+  bool _showLabel = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return TapRegion(
+      onTapOutside: (_) {
+        if (_showLabel) setState(() => _showLabel = false);
+      },
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => setState(() => _showLabel = !_showLabel),
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.topCenter,
+          children: [
+            Semantics(
+              label: widget.label,
+              child: Image.asset(widget.asset, width: _size, height: _size),
+            ),
+            if (_showLabel)
+              Positioned(
+                top: _size + 6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.inverseSurface,
+                    borderRadius: BorderRadius.circular(999),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    widget.label,
+                    style: TextStyle(
+                      color: theme.colorScheme.onInverseSurface,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    softWrap: false,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

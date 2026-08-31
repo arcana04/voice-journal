@@ -294,57 +294,157 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
 
   void _openEmotionSheet(JournalStore store, JournalEntry entry) {
     final l10n = AppLocalizations.of(context)!;
+
+    Widget buildGroup(
+      BuildContext sheetContext,
+      String title,
+      EmotionCategory category,
+      Color accent,
+    ) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12.5,
+                    letterSpacing: 1.4,
+                    color: accent,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Container(height: 1, color: accent.withValues(alpha: 0.25)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 14,
+              runSpacing: 14,
+              children: [
+                for (final tag in EmotionTag.values.where((t) => t.category == category))
+                  SizedBox(
+                    width: 60,
+                    child: Column(
+                      children: [
+                        _EmotionTile(
+                          label: tag.labelFor(l10n),
+                          selected: entry.emotion == tag,
+                          onTap: () async {
+                            Navigator.of(sheetContext).pop();
+                            await store.updateEntryEmotion(entry, tag);
+                          },
+                          child: Image.asset(tag.asset, width: 40, height: 40),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          tag.labelFor(l10n),
+                          style: Theme.of(context).textTheme.labelSmall,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.emotionSheetTitle,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 20,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(sheetContext).size.height * 0.85,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.emotionSheetTitle,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 20,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  _EmotionTile(
-                    label: l10n.emotionNone,
-                    selected: entry.emotion == null,
-                    onTap: () async {
-                      Navigator.of(sheetContext).pop();
-                      await store.updateEntryEmotion(entry, null);
-                    },
-                    child: Icon(
-                      Icons.block,
-                      color: Theme.of(context).colorScheme.outline,
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: 60,
+                  child: Column(
+                    children: [
+                      _EmotionTile(
+                        label: l10n.emotionNone,
+                        selected: entry.emotion == null,
+                        onTap: () async {
+                          Navigator.of(sheetContext).pop();
+                          await store.updateEntryEmotion(entry, null);
+                        },
+                        child: Icon(
+                          Icons.block,
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        l10n.emotionNone,
+                        style: Theme.of(context).textTheme.labelSmall,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        buildGroup(
+                          sheetContext,
+                          'Positive',
+                          EmotionCategory.positive,
+                          const Color(0xFFE8735F),
+                        ),
+                        buildGroup(
+                          sheetContext,
+                          'Normal',
+                          EmotionCategory.fine,
+                          const Color(0xFF3ECF8E),
+                        ),
+                        buildGroup(
+                          sheetContext,
+                          'Negative',
+                          EmotionCategory.negative,
+                          const Color(0xFF8B90F0),
+                        ),
+                      ],
                     ),
                   ),
-                  for (final tag in EmotionTag.values)
-                    _EmotionTile(
-                      label: tag.labelFor(l10n),
-                      selected: entry.emotion == tag,
-                      onTap: () async {
-                        Navigator.of(sheetContext).pop();
-                        await store.updateEntryEmotion(entry, tag);
-                      },
-                      child: Text(
-                        tag.emoji,
-                        style: const TextStyle(fontSize: 26),
-                      ),
-                    ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -501,15 +601,15 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                                     onTap: () =>
                                         _openEmotionSheet(store, entry),
                                     child: entry.emotion != null
-                                        ? Text(
-                                            entry.emotion!.emoji,
-                                            style: const TextStyle(
-                                              fontSize: 32,
+                                        ? Semantics(
+                                            label: entry.emotion!.labelFor(
+                                              AppLocalizations.of(context)!,
                                             ),
-                                            semanticsLabel: entry.emotion!
-                                                .labelFor(
-                                                  AppLocalizations.of(context)!,
-                                                ),
+                                            child: Image.asset(
+                                              entry.emotion!.asset,
+                                              width: 48,
+                                              height: 48,
+                                            ),
                                           )
                                         : Icon(
                                             Icons.add_reaction_outlined,

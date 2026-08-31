@@ -110,7 +110,9 @@ class SavedWeeklyReport {
   final DateTime weekEnd;
   final WeeklyReportInsights insights;
   final Map<EmotionTag, int> emotionCounts;
-  final List<EmotionTag?> dailyEmotions;
+  /// 曜日ごと(月〜日、7件)の感情内訳。1日に複数の記録があれば全て保持する
+  /// （「今週のオーロラ」の色ブレンドに使うため、単一の代表感情には潰さない）。
+  final List<Map<EmotionTag, int>> dailyEmotionCounts;
   final int diaryCount;
   final int ideaCount;
   final int totalTasks;
@@ -124,7 +126,7 @@ class SavedWeeklyReport {
     required this.weekEnd,
     required this.insights,
     required this.emotionCounts,
-    required this.dailyEmotions,
+    required this.dailyEmotionCounts,
     required this.diaryCount,
     required this.ideaCount,
     required this.totalTasks,
@@ -147,7 +149,14 @@ class SavedWeeklyReport {
       'emotion_counts_json': jsonEncode({
         for (final e in emotionCounts.entries) e.key.id: e.value,
       }),
-      'daily_emotions_json': jsonEncode(dailyEmotions.map((e) => e?.id).toList()),
+      // 後方互換用に単一の代表感情（最多カウントのタグ）も残しておく。
+      'daily_emotions_json': jsonEncode(dailyEmotionCounts.map((dayCounts) {
+        if (dayCounts.isEmpty) return null;
+        return dayCounts.entries.reduce((a, b) => a.value >= b.value ? a : b).key.id;
+      }).toList()),
+      'daily_emotion_counts_json': jsonEncode(dailyEmotionCounts.map((dayCounts) {
+        return {for (final e in dayCounts.entries) e.key.id: e.value};
+      }).toList()),
       'diary_count': diaryCount,
       'idea_count': ideaCount,
       'total_tasks': totalTasks,
@@ -163,7 +172,28 @@ class SavedWeeklyReport {
         jsonDecode(map['highlight_quote_json'] as String) as Map<String, dynamic>;
     final emotionCountsRaw =
         jsonDecode(map['emotion_counts_json'] as String) as Map<String, dynamic>;
-    final dailyEmotionsRaw = jsonDecode(map['daily_emotions_json'] as String) as List;
+    final dailyEmotionCountsColumn = map['daily_emotion_counts_json'] as String?;
+    final List<Map<EmotionTag, int>> dailyEmotionCounts;
+    if (dailyEmotionCountsColumn != null) {
+      final raw = jsonDecode(dailyEmotionCountsColumn) as List;
+      dailyEmotionCounts = raw.map((dayRaw) {
+        final dayMap = Map<String, dynamic>.from(dayRaw as Map);
+        return <EmotionTag, int>{
+          for (final entry in dayMap.entries)
+            if (EmotionTag.fromId(entry.key) != null)
+              EmotionTag.fromId(entry.key)!: (entry.value as num).toInt(),
+        };
+      }).toList();
+    } else {
+      // このカラムが無い古い保存済みレポート（v17マイグレーション前）は、
+      // 唯一持っていた単一の代表感情から簡易的に1件カウントを合成する
+      // （全く出さないより、劣化版でも「今週のオーロラ」を表示する）。
+      final dailyEmotionsRaw = jsonDecode(map['daily_emotions_json'] as String) as List;
+      dailyEmotionCounts = dailyEmotionsRaw.map((id) {
+        final tag = EmotionTag.fromId(id as String?);
+        return tag == null ? <EmotionTag, int>{} : <EmotionTag, int>{tag: 1};
+      }).toList();
+    }
 
     return SavedWeeklyReport(
       id: map['id'] as int?,
@@ -187,7 +217,7 @@ class SavedWeeklyReport {
           if (EmotionTag.fromId(entry.key) != null)
             EmotionTag.fromId(entry.key)!: (entry.value as num).toInt(),
       },
-      dailyEmotions: dailyEmotionsRaw.map((id) => EmotionTag.fromId(id as String?)).toList(),
+      dailyEmotionCounts: dailyEmotionCounts,
       diaryCount: map['diary_count'] as int,
       ideaCount: map['idea_count'] as int,
       totalTasks: map['total_tasks'] as int,

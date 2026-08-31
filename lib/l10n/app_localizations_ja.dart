@@ -55,22 +55,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get onboardingPage3Body => '気になったことがあれば、いつでもタップして話しかけてください';
 
   @override
-  String get emotionFatigue => '疲労';
+  String get emotionFatigue => '疲れた';
 
   @override
-  String get emotionLove => '愛情';
+  String get emotionLove => '好き';
 
   @override
-  String get emotionAnxious => '焦り';
+  String get emotionAnxious => '不安';
 
   @override
-  String get emotionExcited => 'ワクワク';
+  String get emotionExcited => 'ドキドキ';
 
   @override
-  String get emotionJoy => '喜び';
+  String get emotionJoy => '楽しい';
 
   @override
-  String get emotionSadness => '悲しみ';
+  String get emotionSadness => '悲しい';
 
   @override
   String get emotionAnger => '怒り';
@@ -79,7 +79,31 @@ class AppLocalizationsJa extends AppLocalizations {
   String get emotionSatisfaction => '満足';
 
   @override
-  String get emotionNeutral => 'ふつう';
+  String get emotionNeutral => '普通';
+
+  @override
+  String get emotionGratitude => '感謝';
+
+  @override
+  String get emotionHappy => '嬉しい';
+
+  @override
+  String get emotionFunny => '面白い';
+
+  @override
+  String get emotionRelief => '安心';
+
+  @override
+  String get emotionCalm => '穏やか';
+
+  @override
+  String get emotionBoredom => '退屈';
+
+  @override
+  String get emotionRegret => '後悔';
+
+  @override
+  String get emotionDislike => '嫌い';
 
   @override
   String get confirmDeleteTitle => '削除しますか？';
@@ -898,7 +922,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get weeklyReportNoEmotionData => '今週はまだ感情の記録がありません';
 
   @override
-  String get weeklyReportCalendarSectionTitle => '感情カレンダー';
+  String get weeklyReportAuroraSectionTitle => '今週のオーロラ';
+
+  @override
+  String get weeklyReportMentalWaveSectionTitle => 'メンタルウェーブ';
 
   @override
   String get weeklyReportCategorySectionTitle => '仕分け比率';

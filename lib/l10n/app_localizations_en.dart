@@ -87,6 +87,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emotionNeutral => 'Neutral';
 
   @override
+  String get emotionGratitude => 'Gratitude';
+
+  @override
+  String get emotionHappy => 'Happy';
+
+  @override
+  String get emotionFunny => 'Amused';
+
+  @override
+  String get emotionRelief => 'Relief';
+
+  @override
+  String get emotionCalm => 'Calm';
+
+  @override
+  String get emotionBoredom => 'Bored';
+
+  @override
+  String get emotionRegret => 'Regret';
+
+  @override
+  String get emotionDislike => 'Dislike';
+
+  @override
   String get confirmDeleteTitle => 'Delete this?';
 
   @override
@@ -932,7 +956,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weeklyReportNoEmotionData => 'No emotional entries yet this week';
 
   @override
-  String get weeklyReportCalendarSectionTitle => 'Emotion calendar';
+  String get weeklyReportAuroraSectionTitle => 'This Week\'s Aurora';
+
+  @override
+  String get weeklyReportMentalWaveSectionTitle => 'Mental Wave';
 
   @override
   String get weeklyReportCategorySectionTitle => 'Category mix';

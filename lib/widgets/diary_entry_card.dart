@@ -233,7 +233,7 @@ class _MediaPreviewTileState extends State<_MediaPreviewTile> {
   }
 }
 
-/// 感情タグを表す絵文字バッジ。カードの角に載せるステッカー風のUI。
+/// 感情タグを表す泡バッジ。カードの角に載せるステッカー風のUI。
 class _EmotionBadge extends StatelessWidget {
   final EmotionTag emotion;
   final String label;
@@ -259,7 +259,7 @@ class _EmotionBadge extends StatelessWidget {
             ),
           ],
         ),
-        child: Text(emotion.emoji, style: const TextStyle(fontSize: 34)),
+        child: Image.asset(emotion.asset, width: 40, height: 40),
       ),
     );
   }

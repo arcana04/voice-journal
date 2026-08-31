@@ -242,6 +242,54 @@ abstract class AppLocalizations {
   /// **'Neutral'**
   String get emotionNeutral;
 
+  /// No description provided for @emotionGratitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Gratitude'**
+  String get emotionGratitude;
+
+  /// No description provided for @emotionHappy.
+  ///
+  /// In en, this message translates to:
+  /// **'Happy'**
+  String get emotionHappy;
+
+  /// No description provided for @emotionFunny.
+  ///
+  /// In en, this message translates to:
+  /// **'Amused'**
+  String get emotionFunny;
+
+  /// No description provided for @emotionRelief.
+  ///
+  /// In en, this message translates to:
+  /// **'Relief'**
+  String get emotionRelief;
+
+  /// No description provided for @emotionCalm.
+  ///
+  /// In en, this message translates to:
+  /// **'Calm'**
+  String get emotionCalm;
+
+  /// No description provided for @emotionBoredom.
+  ///
+  /// In en, this message translates to:
+  /// **'Bored'**
+  String get emotionBoredom;
+
+  /// No description provided for @emotionRegret.
+  ///
+  /// In en, this message translates to:
+  /// **'Regret'**
+  String get emotionRegret;
+
+  /// No description provided for @emotionDislike.
+  ///
+  /// In en, this message translates to:
+  /// **'Dislike'**
+  String get emotionDislike;
+
   /// No description provided for @confirmDeleteTitle.
   ///
   /// In en, this message translates to:
@@ -1808,11 +1856,17 @@ abstract class AppLocalizations {
   /// **'No emotional entries yet this week'**
   String get weeklyReportNoEmotionData;
 
-  /// No description provided for @weeklyReportCalendarSectionTitle.
+  /// No description provided for @weeklyReportAuroraSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Emotion calendar'**
-  String get weeklyReportCalendarSectionTitle;
+  /// **'This Week\'s Aurora'**
+  String get weeklyReportAuroraSectionTitle;
+
+  /// No description provided for @weeklyReportMentalWaveSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mental Wave'**
+  String get weeklyReportMentalWaveSectionTitle;
 
   /// No description provided for @weeklyReportCategorySectionTitle.
   ///

@@ -37,7 +37,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
 
   List<JournalEntry> _weekEntries = [];
   Map<EmotionTag, int> _emotionCounts = {};
-  List<EmotionTag?> _dailyEmotions = List.filled(7, null);
+  List<Map<EmotionTag, int>> _dailyEmotionCounts = List.generate(7, (_) => {});
   int _completedTasks = 0;
   int _diaryCount = 0;
   int _ideaCount = 0;
@@ -59,7 +59,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       _weekEnd = saved.weekEnd;
       _weekKey = saved.weekKey;
       _emotionCounts = saved.emotionCounts;
-      _dailyEmotions = saved.dailyEmotions;
+      _dailyEmotionCounts = saved.dailyEmotionCounts;
       _diaryCount = saved.diaryCount;
       _ideaCount = saved.ideaCount;
       _totalTasks = saved.totalTasks;
@@ -117,7 +117,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       completedTasks += entry.tasks.where((t) => t.done).length;
     }
 
-    final dailyEmotions = List<EmotionTag?>.generate(7, (i) {
+    final dailyEmotionCounts = List<Map<EmotionTag, int>>.generate(7, (i) {
       final day = _weekStart.add(Duration(days: i));
       final dayCounts = <EmotionTag, int>{};
       for (final entry in entries) {
@@ -125,14 +125,13 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
           dayCounts[entry.emotion!] = (dayCounts[entry.emotion!] ?? 0) + 1;
         }
       }
-      if (dayCounts.isEmpty) return null;
-      return dayCounts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+      return dayCounts;
     });
 
     setState(() {
       _weekEntries = entries;
       _emotionCounts = emotionCounts;
-      _dailyEmotions = dailyEmotions;
+      _dailyEmotionCounts = dailyEmotionCounts;
       _completedTasks = completedTasks;
       _diaryCount = diaryCount;
       _ideaCount = ideaCount;
@@ -162,7 +161,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
           weekEnd: _weekEnd,
           insights: insights,
           emotionCounts: emotionCounts,
-          dailyEmotions: dailyEmotions,
+          dailyEmotionCounts: dailyEmotionCounts,
           diaryCount: diaryCount,
           ideaCount: ideaCount,
           totalTasks: totalTasks,
@@ -276,8 +275,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                           insights: snapshot.data!,
                           weekStart: _weekStart,
                           weekEnd: _weekEnd,
-                          emotionCounts: _emotionCounts,
-                          dailyEmotions: _dailyEmotions,
+                          dailyEmotionCounts: _dailyEmotionCounts,
                           diaryCount: _diaryCount,
                           ideaCount: _ideaCount,
                           totalTasks: _totalTasks,

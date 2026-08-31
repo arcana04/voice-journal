@@ -216,7 +216,8 @@ tasksの中に「15時に」「明日の朝9時」「夜7時に病院」のよ�
 
 【感情タグ】
 comfort_messageと同じ条件（category="感情ログ" のnoteが1件以上ある場合のみ）で、その内容から読み取れる最も中心的な感情をひとつだけ選び、emotion に次のいずれかの英語の識別子（この通りのスペルで、翻訳せずに）を入れてください：
-fatigue（疲労・くたびれ）, love（愛情・愛おしさ）, anxious（焦り・不安）, excited（ワクワク・期待）, joy（喜び・嬉しさ）, sadness（悲しみ・落ち込み）, anger（怒り・苛立ち）, satisfaction（満足・達成感）, neutral（それ以外・判別しづらい穏やかな心情）。
+satisfaction（満足・達成感）, gratitude（感謝）, happy（嬉しい・心が温まる感じ）, love（好き・愛情・愛おしさ）, funny（面白い・愉快）, joy（楽しい・満喫している感じ）, excited（ドキドキ・期待）, relief（安心・ほっとした）, calm（穏やか・落ち着いた）, neutral（それ以外・判別しづらい穏やかな心情）, boredom（退屈）, anxious（不安・焦り）, sadness（悲しい・落ち込み）, fatigue（疲れた・くたびれ）, regret（後悔）, anger（怒り・苛立ち）, dislike（嫌い・苦手）。
+happyとjoyとsatisfactionは近い感情だが、happyは他者や出来事への嬉しさ、joyは活動そのものを楽しんでいる感じ、satisfactionは達成感を伴う満足として区別すること。calmとreliefとneutralも近いが、calmは穏やかで落ち着いた状態、reliefは不安が解消してほっとした状態、neutralはどちらにも当てはまらない中立的な心情として区別すること。
 感情ログが無い場合は emotion は null にしてください。
 
 【noteのタイトル】
@@ -234,7 +235,7 @@ fatigue（疲労・くたびれ）, love（愛情・愛おしさ）, anxious（�
     {"category": "アイデア または 感情ログ", "title": "短い見出し", "content": "上記「notesの本文の書き方」に従って一人称でリライトした文章"}
   ],
   "comfort_message": "感情ログがある場合のみ短い労いの言葉。なければnull",
-  "emotion": "感情ログがある場合のみ fatigue/love/anxious/excited/joy/sadness/anger/satisfaction/neutral のいずれか。なければnull"
+  "emotion": "感情ログがある場合のみ satisfaction/gratitude/happy/love/funny/joy/excited/relief/calm/neutral/boredom/anxious/sadness/fatigue/regret/anger/dislike のいずれか。なければnull"
 }`;
 }
 
@@ -282,7 +283,8 @@ Only if there is at least one note with category="感情ログ", write a short, 
 
 [Emotion tag]
 Under the same condition as comfort_message (only if there is at least one note with category="感情ログ"), pick the single most central emotion conveyed by that content and put it in emotion as exactly one of these English identifiers (spelled exactly as shown, never translated):
-fatigue, love, anxious, excited, joy, sadness, anger, satisfaction, neutral (use neutral for anything calm or ambiguous that doesn't clearly fit the others).
+satisfaction, gratitude, happy, love, funny, joy, excited, relief, calm, neutral, boredom, anxious, sadness, fatigue, regret, anger, dislike (use neutral for anything ambiguous that doesn't clearly fit the others).
+happy, joy, and satisfaction are close but distinct: happy is warmth toward someone/something that happened, joy is enjoying the activity itself, satisfaction is a sense of accomplishment. calm, relief, and neutral are also close but distinct: calm is a settled, peaceful state, relief is the feeling right after anxiety resolves, neutral is a plain in-between state that doesn't fit either.
 If there is no 感情ログ note, set emotion to null.
 
 [Note title]
@@ -300,7 +302,7 @@ Output ONLY the following JSON format, with no extra commentary. Remember: every
     {"category": "アイデア or 感情ログ (must stay in Japanese, unchanged)", "title": "short heading, in English", "content": "first-person rewrite per the note style rules above, in English"}
   ],
   "comfort_message": "short comforting message in English, only if there is a 感情ログ note, otherwise null",
-  "emotion": "one of fatigue/love/anxious/excited/joy/sadness/anger/satisfaction/neutral, only if there is a 感情ログ note, otherwise null"
+  "emotion": "one of satisfaction/gratitude/happy/love/funny/joy/excited/relief/calm/neutral/boredom/anxious/sadness/fatigue/regret/anger/dislike, only if there is a 感情ログ note, otherwise null"
 }`;
 }
 
@@ -637,6 +639,14 @@ const VALID_EMOTIONS = new Set([
   "anger",
   "satisfaction",
   "neutral",
+  "gratitude",
+  "happy",
+  "funny",
+  "relief",
+  "calm",
+  "boredom",
+  "regret",
+  "dislike",
 ]);
 
 async function structure(
@@ -1232,9 +1242,12 @@ export const generateWeeklyReport = onCall(
     if (!uid) {
       throw new HttpsError("unauthenticated", MESSAGES[loc].authRequired);
     }
-    if (!(await isProUser(uid))) {
-      throw new HttpsError("permission-denied", MESSAGES[loc].proRequired);
-    }
+    // TEMPORARY: Pro gate disabled at the user's request so they can repeatedly
+    // test the weekly report / weekly aurora feature without needing real Pro
+    // entitlement on every test device. Restore before release:
+    // if (!(await isProUser(uid))) {
+    //   throw new HttpsError("permission-denied", MESSAGES[loc].proRequired);
+    // }
 
     try {
       const apiKey = openAiApiKey.value();
