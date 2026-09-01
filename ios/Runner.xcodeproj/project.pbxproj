@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -13,6 +13,7 @@
 		168C4A1A2072894D015550A4 /* AppleRemindersChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536BC422AC26A9E340305533 /* AppleRemindersChannel.swift */; };
 		17DA8154F29976AF236D7900 /* RecordWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBD2A9E60114F3E99B0F130A /* RecordWidget.swift */; };
 		21A0B8FFA877E23CF17D7652 /* RecordWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 69F48C65BD19AB3AAB961FFF /* RecordWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeaderOnCopy, ); }; };
+		2280B9B15FEA95531C406927 /* StartRecordingIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB77042A13A0204C3551C2FE /* StartRecordingIntent.swift */; };
 		277242621EADFDB693BB4AAE /* FirebaseAuthClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FAEAAEC649C96FEA82B6266 /* FirebaseAuthClient.swift */; };
 		2A02B4A4E796A37CF27316BD /* RecordWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 328BFEFA6B4DEF60ECC0F176 /* RecordWidgetBundle.swift */; };
 		2AF780E5E06DBED14183A790 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6EBFB5E4776766D7A25C1A /* KeychainStore.swift */; };
@@ -133,6 +134,7 @@
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		98EDA894548A353FDD2C8FA6 /* VoiceMemoUploader.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VoiceMemoUploader.swift; sourceTree = "<group>"; };
+		AB77042A13A0204C3551C2FE /* StartRecordingIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StartRecordingIntent.swift; sourceTree = "<group>"; };
 		B0F2B747B78AD88F42845041 /* AudioRecorder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
 		BBD2A9E60114F3E99B0F130A /* RecordWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordWidget.swift; sourceTree = "<group>"; };
 		C957A061A97FF87657F540FB /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
@@ -217,7 +219,6 @@
 				5DA53CA591D7BA007318BF07 /* Pods-RunnerTests.release.xcconfig */,
 				45CE767018BFEBA19A6E2D83 /* Pods-RunnerTests.profile.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -235,7 +236,6 @@
 				73CBCC76E2A8F34511C1866A /* Info.plist */,
 				30FCF29F6CBF4471AA3508F2 /* Assets.xcassets */,
 			);
-			name = VoiceJournalWatch;
 			path = VoiceJournalWatch;
 			sourceTree = "<group>";
 		};
@@ -289,6 +289,7 @@
 				536BC422AC26A9E340305533 /* AppleRemindersChannel.swift */,
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
+				AB77042A13A0204C3551C2FE /* StartRecordingIntent.swift */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -591,6 +592,7 @@
 				168C4A1A2072894D015550A4 /* AppleRemindersChannel.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
+				2280B9B15FEA95531C406927 /* StartRecordingIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -658,6 +660,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UVL9H473GQ;
 				INFOPLIST_FILE = VoiceJournalWatch/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -681,6 +684,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UVL9H473GQ;
 				INFOPLIST_FILE = RecordWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -758,6 +762,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = UVL9H473GQ;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -778,6 +783,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UVL9H473GQ;
 				INFOPLIST_FILE = RecordWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -804,6 +810,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UVL9H473GQ;
 				INFOPLIST_FILE = VoiceJournalWatch/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -829,6 +836,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UVL9H473GQ;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.arcana04.voicejournal.RunnerTests;
@@ -847,6 +855,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UVL9H473GQ;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.arcana04.voicejournal.RunnerTests;
@@ -863,6 +872,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UVL9H473GQ;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.arcana04.voicejournal.RunnerTests;
@@ -993,6 +1003,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = UVL9H473GQ;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1016,6 +1027,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = UVL9H473GQ;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1036,6 +1048,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UVL9H473GQ;
 				INFOPLIST_FILE = RecordWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1060,6 +1073,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UVL9H473GQ;
 				INFOPLIST_FILE = VoiceJournalWatch/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
