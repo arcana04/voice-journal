@@ -116,6 +116,9 @@
   "accountSignInWithApple": "Sign in with Apple",
   "accountSignOutButton": "Sign out",
   "accountRestoreButton": "Restore from cloud",
+  "watchPairingButton": "Pair Apple Watch",
+  "watchPairingSuccessTitle": "Paired",
+  "watchPairingSuccessMessage": "Your Apple Watch is paired. You can now record on the Watch by itself.",
   "syncErrorBannerMessage": "Some data failed to sync",
   "syncErrorBannerAction": "Check",
   "loadErrorBannerMessage": "Failed to load your data",
@@ -305,6 +308,7 @@
 
   "genericProcessingError": "An error occurred while processing",
   "usageFetchError": "Failed to load usage status",
+  "watchNotPairedMessage": "Your Apple Watch isn't paired. Keep it nearby and finish pairing in Apple's Watch app first.",
 
   "backgroundRecordingChannelName": "Background recording",
   "backgroundRecordingChannelDescription": "Keeps recording running while the app is backgrounded or the screen is off",

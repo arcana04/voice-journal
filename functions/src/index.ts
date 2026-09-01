@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { execFile } from "node:child_process";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -38,6 +38,17 @@ const PRO_DAILY_LIMIT = 30;
  * （lib/config/revenuecat_config.dart）の値と一致させること。 */
 const PRO_ENTITLEMENT_ID = "voice_journal_pro";
 
+/** Watchペアリング時に発行するデバイス秘密鍵のバイト長。 */
+const WATCH_DEVICE_SECRET_BYTES = 32;
+/** Watchデバイス認証済み呼び出しに対する、通常の日次クォータとは別枠の
+ * バーストレート制限（このウィンドウ秒数あたり最大何回まで）。watchOSは
+ * App Check（App Attest）に対応していないため正規アプリであることを
+ * ハードウェアレベルで証明できない。その代わりに、ペアリング時に払い出した
+ * デバイス秘密鍵で「一度は正規にペアリングされた端末」であることまでは
+ * 確認できるが、秘密鍵が漏洩した場合の被害を抑えるためこの追加の壁を設ける。 */
+const WATCH_RATE_LIMIT_WINDOW_SECONDS = 60;
+const WATCH_RATE_LIMIT_MAX_CALLS = 5;
+
 type SummaryLevel = "preserve" | "standard" | "compact";
 
 function normalizeSummaryLevel(value: unknown): SummaryLevel {
@@ -64,6 +75,8 @@ const MESSAGES: Record<
     noText: string;
     transcriptionEmpty: string;
     quotaExceeded: (limit: number) => string;
+    watchRateLimited: string;
+    unknownWatchDevice: string;
     proRequired: string;
     transcriptionFailed: (body: string) => string;
     analysisFailed: (body: string) => string;
@@ -77,6 +90,9 @@ const MESSAGES: Record<
     transcriptionEmpty: "音声を認識できませんでした。",
     quotaExceeded: (limit) =>
       `本日の無料利用回数（${limit}回）の上限に達しました。また明日お試しください。`,
+    watchRateLimited:
+      "Apple Watchからのリクエストが多すぎます。少し時間をおいてから再度お試しください。",
+    unknownWatchDevice: "このApple Watchはまだペアリングされていません。iPhoneアプリで再度ペアリングしてください。",
     proRequired: "この機能はProプラン限定です。",
     transcriptionFailed: (body) => `文字起こしに失敗しました: ${body}`,
     analysisFailed: (body) => `AI解析に失敗しました: ${body}`,
@@ -89,6 +105,10 @@ const MESSAGES: Record<
     transcriptionEmpty: "Couldn't recognize any speech in the recording.",
     quotaExceeded: (limit) =>
       `You've reached today's free limit of ${limit} recordings. Please try again tomorrow.`,
+    watchRateLimited:
+      "Too many requests from Apple Watch. Please wait a moment and try again.",
+    unknownWatchDevice:
+      "This Apple Watch hasn't been paired yet. Please pair it again from the iPhone app.",
     proRequired: "This feature is only available on the Pro plan.",
     transcriptionFailed: (body) => `Transcription failed: ${body}`,
     analysisFailed: (body) => `AI analysis failed: ${body}`,
@@ -359,6 +379,85 @@ async function consumeDailyQuota(uid: string, locale: Locale): Promise<void> {
   });
 }
 
+function hashWatchDeviceSecret(secret: string): string {
+  return createHash("sha256").update(secret).digest("hex");
+}
+
+interface WatchDeviceAuthHeaders {
+  deviceId: string;
+  secret: string;
+}
+
+/** CallableのrawRequestから、Watch専用の簡易デバイス認証ヘッダーを取り出す。
+ * ヘッダーが無ければnull（＝通常のiPhoneクライアントからの呼び出し）。 */
+function extractWatchDeviceAuth(rawRequest: {
+  get(name: string): string | undefined;
+}): WatchDeviceAuthHeaders | null {
+  const deviceId = rawRequest.get("X-Watch-Device-Id");
+  const secret = rawRequest.get("X-Watch-Device-Secret");
+  if (!deviceId || !secret) return null;
+  return { deviceId, secret };
+}
+
+/**
+ * Watch単体からの呼び出し用の簡易デバイス認証。mintWatchPairingTokenで
+ * ペアリング時に払い出したデバイス秘密鍵のハッシュと照合する。Firebase Auth
+ * （uid）による本人確認とは別に、「正規にペアリングされたWatch端末からの
+ * 呼び出しか」を追加でチェックするもの（App Check未対応watchOSの代替）。
+ */
+async function verifyWatchDeviceSecret(
+  uid: string,
+  auth: WatchDeviceAuthHeaders,
+  locale: Locale
+): Promise<void> {
+  const db = getFirestore();
+  const deviceRef = db
+    .collection("users")
+    .doc(uid)
+    .collection("watchDevices")
+    .doc(auth.deviceId);
+  const snap = await deviceRef.get();
+  const storedHash = snap.data()?.secretHash as string | undefined;
+  if (!storedHash) {
+    throw new HttpsError("unauthenticated", MESSAGES[locale].unknownWatchDevice);
+  }
+
+  const storedBuf = Buffer.from(storedHash, "hex");
+  const providedBuf = Buffer.from(hashWatchDeviceSecret(auth.secret), "hex");
+  const valid =
+    storedBuf.length === providedBuf.length && timingSafeEqual(storedBuf, providedBuf);
+  if (!valid) {
+    throw new HttpsError("unauthenticated", MESSAGES[locale].unknownWatchDevice);
+  }
+
+  await deviceRef.set({ lastUsedAt: FieldValue.serverTimestamp() }, { merge: true });
+}
+
+/** Watchデバイス認証済みの呼び出しに対する、日次クォータとは別枠のバースト
+ * レート制限。秘密鍵が漏洩した場合の被害を抑えるための追加の壁。 */
+async function consumeWatchRateLimit(
+  uid: string,
+  deviceId: string,
+  locale: Locale
+): Promise<void> {
+  const db = getFirestore();
+  const windowStart = Math.floor(Date.now() / 1000 / WATCH_RATE_LIMIT_WINDOW_SECONDS);
+  const bucketRef = db.collection("watchRateLimit").doc(`${uid}_${deviceId}_${windowStart}`);
+
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(bucketRef);
+    const count = (snap.data()?.count as number | undefined) ?? 0;
+    if (count >= WATCH_RATE_LIMIT_MAX_CALLS) {
+      throw new HttpsError("resource-exhausted", MESSAGES[locale].watchRateLimited);
+    }
+    tx.set(
+      bucketRef,
+      { count: count + 1, updatedAt: FieldValue.serverTimestamp() },
+      { merge: true }
+    );
+  });
+}
+
 export const getUsageStatus = onCall(
   { enforceAppCheck: APP_CHECK_ENFORCED },
   async (request) => {
@@ -373,6 +472,53 @@ export const getUsageStatus = onCall(
     const used = (snap.data()?.count as number | undefined) ?? 0;
 
     return { used, limit };
+  }
+);
+
+interface MintWatchPairingTokenRequest {
+  locale?: string;
+}
+
+interface MintWatchPairingTokenResponse {
+  customToken: string;
+  deviceId: string;
+  deviceSecret: string;
+}
+
+/**
+ * Apple Watchのスタンドアロン録音機能のペアリング用。既にサインイン済みの
+ * iPhoneアプリからペアリング時に一度だけ呼び出し、結果をWatchConnectivity
+ * 経由でWatchに中継する想定。
+ * - customToken: Watch側でFirebase AuthのREST API
+ *   （accounts:signInWithCustomToken）と交換し、Watch専用のidToken/
+ *   refreshTokenを得るためのもの（デフォルトTTL1時間・ワンタイム用。
+ *   watchOSはFirebase Auth SDK未対応のためREST APIを直接叩く）。
+ * - deviceId/deviceSecret: processVoiceMemo呼び出し時にWatch由来の
+ *   リクエストであることを検証する簡易デバイス認証（App Check/App Attestが
+ *   watchOSで使えないための代替。verifyWatchDeviceSecret参照）。
+ */
+export const mintWatchPairingToken = onCall(
+  { enforceAppCheck: APP_CHECK_ENFORCED },
+  async (request): Promise<MintWatchPairingTokenResponse> => {
+    const { locale } = (request.data ?? {}) as MintWatchPairingTokenRequest;
+    const loc = normalizeLocale(locale);
+
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", MESSAGES[loc].authRequired);
+    }
+
+    const deviceSecret = randomBytes(WATCH_DEVICE_SECRET_BYTES).toString("hex");
+    const db = getFirestore();
+    const deviceRef = db.collection("users").doc(uid).collection("watchDevices").doc();
+    await deviceRef.set({
+      secretHash: hashWatchDeviceSecret(deviceSecret),
+      createdAt: FieldValue.serverTimestamp(),
+    });
+
+    const customToken = await getAuth().createCustomToken(uid);
+
+    return { customToken, deviceId: deviceRef.id, deviceSecret };
   }
 );
 
@@ -765,6 +911,16 @@ export const processVoiceMemo = onCall(
     }
 
     try {
+      // Watch単体からの呼び出しは、App Check（App Attest）がwatchOSで使えない
+      // 代わりにペアリング時発行のデバイス秘密鍵で検証し、漏洩時の被害を抑える
+      // 別枠のバーストレート制限もかける。ヘッダーが無ければ通常のiPhone
+      // クライアントからの呼び出しなのでこのブロックはスキップする。
+      const watchAuth = extractWatchDeviceAuth(request.rawRequest);
+      if (watchAuth) {
+        await verifyWatchDeviceSecret(uid, watchAuth, loc);
+        await consumeWatchRateLimit(uid, watchAuth.deviceId, loc);
+      }
+
       await consumeDailyQuota(uid, loc);
 
       const apiKey = openAiApiKey.value();

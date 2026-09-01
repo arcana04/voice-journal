@@ -317,6 +317,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountRestoreButton => 'Restore from cloud';
 
   @override
+  String get watchPairingButton => 'Pair Apple Watch';
+
+  @override
+  String get watchPairingSuccessTitle => 'Paired';
+
+  @override
+  String get watchPairingSuccessMessage =>
+      'Your Apple Watch is paired. You can now record on the Watch by itself.';
+
+  @override
   String get syncErrorBannerMessage => 'Some data failed to sync';
 
   @override
@@ -850,6 +860,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get usageFetchError => 'Failed to load usage status';
+
+  @override
+  String get watchNotPairedMessage =>
+      'Your Apple Watch isn\'t paired. Keep it nearby and finish pairing in Apple\'s Watch app first.';
 
   @override
   String get backgroundRecordingChannelName => 'Background recording';

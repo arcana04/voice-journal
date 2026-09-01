@@ -26,7 +26,8 @@ service cloud.firestore {
         && request.resource.data.notes.size() < 200;
     }
 
-    // Everything else (users/{uid} root doc with isPro, usage/{uid}_{date})
+    // Everything else (users/{uid} root doc with isPro, usage/{uid}_{date},
+    // users/{uid}/watchDevices/{deviceId}, watchRateLimit/{uid}_{deviceId}_{window})
     // goes through Cloud Functions (Admin SDK), which bypasses these rules.
     // No client reads or writes those paths directly.
     match /{document=**} {
