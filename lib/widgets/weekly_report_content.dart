@@ -25,6 +25,7 @@ class WeeklyReportContent extends StatelessWidget {
   final DateTime weekStart;
   final DateTime weekEnd;
   final List<Map<EmotionTag, int>> dailyEmotionCounts;
+  final List<MoodMoment> moodMoments;
   final int diaryCount;
   final int ideaCount;
   final int totalTasks;
@@ -37,6 +38,7 @@ class WeeklyReportContent extends StatelessWidget {
     required this.weekStart,
     required this.weekEnd,
     required this.dailyEmotionCounts,
+    required this.moodMoments,
     required this.diaryCount,
     required this.ideaCount,
     required this.totalTasks,
@@ -80,7 +82,7 @@ class WeeklyReportContent extends StatelessWidget {
               icon: Icons.show_chart,
               title: l10n.weeklyReportMentalWaveSectionTitle,
               child: MentalWaveChart(
-                dailyEmotionCounts: dailyEmotionCounts,
+                moments: moodMoments,
                 weekStart: weekStart,
                 locale: locale,
               ),
@@ -148,6 +150,13 @@ class WeeklyReportContent extends StatelessWidget {
               title: l10n.weeklyReportAdviceSectionTitle,
               child: Text(insights.advice, style: theme.textTheme.bodyMedium),
             ),
+            if (insights.weeklyLetter.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _WeeklyLetterCard(
+                title: l10n.weeklyReportLetterSectionTitle,
+                letter: insights.weeklyLetter,
+              ),
+            ],
           ],
         ),
         // 画面には表示せず、共有画像キャプチャのためだけにオフキャンバスへ配置。
@@ -248,6 +257,52 @@ class _SectionCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           child,
+        ],
+      ),
+    );
+  }
+}
+
+/// AIが書く「週刊レター」。他のデータ系セクションと区別がつくよう、便箋を
+/// 意識した専用の見た目（封筒アイコン＋セリフ調の本文）にしている。
+class _WeeklyLetterCard extends StatelessWidget {
+  final String title;
+  final String letter;
+
+  const _WeeklyLetterCard({required this.title, required this.letter});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.mail_outline, size: 20, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            letter,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontStyle: FontStyle.italic,
+              height: 1.6,
+            ),
+          ),
         ],
       ),
     );

@@ -971,6 +971,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get weeklyReportAdviceSectionTitle => '来週へのアドバイス';
 
   @override
+  String get weeklyReportLetterSectionTitle => 'AIからの週刊レター';
+
+  @override
   String get weeklyReportShareTooltip => '画像として共有';
 
   @override

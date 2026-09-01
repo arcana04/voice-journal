@@ -69,6 +69,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   }
 
+  /// サブスクリプション管理画面を開く。app_settingsパッケージの
+  /// AppSettingsType.subscriptionsはiOS側にしか実装が無く、Androidで呼んでも
+  /// 何も起きない（ボタンが反応しないように見える）ため、Androidでは
+  /// Google PlayのサブスクリプションページをURLで直接開く。
+  Future<void> _openManageSubscription() async {
+    if (Platform.isIOS) {
+      await AppSettings.openAppSettings(type: AppSettingsType.subscriptions);
+      return;
+    }
+    await _openUrl(
+      'https://play.google.com/store/account/subscriptions?package=com.voicejournal.voicejournal',
+    );
+  }
+
   Future<void> _contactSupport(AppLocalizations l10n) async {
     final uri = Uri(
       scheme: 'mailto',
@@ -211,9 +225,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           : l10n.planFreeSubtitle,
                       trailing: subscription.isPro
                           ? TextButton(
-                              onPressed: () => AppSettings.openAppSettings(
-                                type: AppSettingsType.subscriptions,
-                              ),
+                              onPressed: _openManageSubscription,
                               child: Text(l10n.planManage),
                             )
                           : null,

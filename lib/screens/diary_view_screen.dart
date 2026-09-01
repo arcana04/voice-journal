@@ -10,6 +10,7 @@ import '../state/text_style_store.dart';
 import '../utils/note_text_style.dart';
 import '../widgets/diary_screen_background.dart';
 import '../widgets/edit_icon_button.dart';
+import '../widgets/icon_button_style.dart';
 import '../widgets/media_gallery.dart';
 import '../widgets/scrim_text.dart';
 import 'diary_edit_screen.dart';
@@ -90,6 +91,11 @@ class DiaryViewScreen extends StatelessWidget {
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              style: pressableIconButtonStyle(context),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
             actions: [
               EditIconButton(
                 size: 24,
@@ -102,8 +108,10 @@ class DiaryViewScreen extends StatelessWidget {
               const SizedBox(width: 4),
               IconButton(
                 icon: const Icon(Icons.delete_outline),
+                style: pressableIconButtonStyle(context),
                 onPressed: () => _confirmDelete(context, store, entry),
               ),
+              const SizedBox(width: 8),
             ],
           ),
           body: Stack(

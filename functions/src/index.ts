@@ -1120,7 +1120,8 @@ You will be given the week's diary entries, ideas, and tasks below, each with it
   "top_keywords": [ up to 3 objects like {"keyword": "short theme name", "count": approximate number of times it came up} ], ordered by how often they came up. Empty array if nothing recurring.
   "shining_ideas": [ up to 2 objects like {"title": "short idea title", "reason": "1 short sentence on why this idea stands out"} ] — pick from the "Idea" entries only, the ones with the most potential or spark. Empty array if there are no ideas this week.
   "highlight_quote": { "quote": "the single most striking/positive/insightful line quoted (or lightly trimmed) from this week's Diary entries only — pick the one that best captures a realization, a win, or genuine emotion. Empty string if there are no diary entries this week.", "reason": "1 short sentence on why this line stands out" },
-  "advice": "One short, concrete, actionable tip for the upcoming week based on the patterns you noticed (e.g. a day of the week that tends to be busy). Keep it under 2 sentences, warm and non-preachy, in English."
+  "advice": "One short, concrete, actionable tip for the upcoming week based on the patterns you noticed (e.g. a day of the week that tends to be busy). Keep it under 2 sentences, warm and non-preachy, in English.",
+  "weekly_letter": "A warm, personal, narrative-style letter (roughly 150-300 words) written AS IF a thoughtful friend who read every entry this week is writing directly to the user. Open with an address like \\"To you, this week\\" (vary the exact phrasing naturally instead of repeating a fixed template every time) and write in second person (\\"you\\"), weaving together the week's diary moments, tasks accomplished, ideas sparked, and emotional arc into one flowing story — not a bullet-point recap. Reference specific concrete details from the entries (not generic platitudes) so it clearly reads as written about THIS week, not a template. Close with a genuine, warm sign-off. If there is too little content this week to write something genuine, write a short, honest, still-warm note acknowledging the quiet week instead of fabricating detail."
 }
 
 Output ONLY the JSON object, no extra commentary.`;
@@ -1136,7 +1137,8 @@ Output ONLY the JSON object, no extra commentary.`;
   "top_keywords": [ 最大3件、{"keyword": "短いテーマ名", "count": 言及されたおおよその回数} という形のオブジェクト。よく出てきた順。繰り返し出てきたテーマが無ければ空配列。 ],
   "shining_ideas": [ 最大2件、{"title": "アイデアの短いタイトル", "reason": "なぜこのアイデアが光っているかの短い理由（1文）"} という形のオブジェクト。「アイデア」カテゴリのnoteの中から、特にポテンシャルや閃きを感じるものを選ぶこと。今週アイデアが無ければ空配列。 ],
   "highlight_quote": { "quote": "今週の「日記」カテゴリのnoteの中から、気づき・達成・率直な感情が最もよく表れている一文を、そのまま（または軽くトリミングして）引用したもの。今週日記が無ければ空文字列。", "reason": "なぜこの一文が光っているかの短い理由（1文）" },
-  "advice": "気づいたパターンを踏まえた、来週に向けた短く具体的なワンポイントアドバイス。2文以内、説教くさくなく温かいトーンで、日本語で。"
+  "advice": "気づいたパターンを踏まえた、来週に向けた短く具体的なワンポイントアドバイス。2文以内、説教くさくなく温かいトーンで、日本語で。",
+  "weekly_letter": "今週の日記・タスク・アイデア・感情の記録を全て読み込んだ、思いやりのある友人のような視点で書く、温かくストーリー性のある手紙（300〜500文字程度）。冒頭は「今週のあなたへ」のような呼びかけで始め（毎回まったく同じ言い回しの繰り返しにならないよう自然に言葉を変えること）、二人称（「あなた」）で語りかける文体で、今週の出来事・達成したタスク・浮かんだアイデア・感情の起伏を、箇条書きではなく一つの物語として織り交ぜて書くこと。抽象的な決まり文句ではなく、実際の記録に出てきた具体的な内容に触れ、「まさに今週について書かれた手紙」だと感じられるようにすること。最後は温かい結びの言葉で締めくくること。今週の記録が少なすぎて具体的に書けない場合は、無理に内容を作らず、静かな一週間だったことを認める短く正直で温かい一言にすること。"
 }
 
 JSONオブジェクトのみを出力し、余計な説明文は含めないでください。`;
@@ -1149,6 +1151,7 @@ interface WeeklyReportInsightsResult {
   shining_ideas: { title: string; reason: string }[];
   highlight_quote: { quote: string; reason: string };
   advice: string;
+  weekly_letter: string;
 }
 
 /**
@@ -1215,6 +1218,7 @@ function toWeeklyReportResponse(result: WeeklyReportInsightsResult) {
       reason: result.highlight_quote?.reason ?? "",
     },
     advice: result.advice ?? "",
+    weekly_letter: result.weekly_letter ?? "",
   };
 }
 

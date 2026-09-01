@@ -1005,6 +1005,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weeklyReportAdviceSectionTitle => 'Advice for next week';
 
   @override
+  String get weeklyReportLetterSectionTitle => 'Your Weekly Letter';
+
+  @override
   String get weeklyReportShareTooltip => 'Share as image';
 
   @override

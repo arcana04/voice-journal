@@ -39,7 +39,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 17,
+      version: 19,
       // tasks/notes/entry_imagesはON DELETE CASCADEをスキーマに宣言しているが、
       // SQLiteは外部キー制約自体をデフォルトで無効にしており、接続のたびに
       // 明示的に有効化しないとその宣言は一切効かない（各deleteメソッドが手動で
@@ -115,9 +115,11 @@ class DbService {
             shining_ideas_json TEXT NOT NULL,
             highlight_quote_json TEXT NOT NULL,
             advice TEXT NOT NULL,
+            weekly_letter TEXT NOT NULL DEFAULT '',
             emotion_counts_json TEXT NOT NULL,
             daily_emotions_json TEXT NOT NULL,
             daily_emotion_counts_json TEXT,
+            mood_moments_json TEXT NOT NULL DEFAULT '[]',
             diary_count INTEGER NOT NULL,
             idea_count INTEGER NOT NULL,
             total_tasks INTEGER NOT NULL,
@@ -236,6 +238,16 @@ class DbService {
         if (oldVersion < 17) {
           await db.execute(
             'ALTER TABLE weekly_reports ADD COLUMN daily_emotion_counts_json TEXT',
+          );
+        }
+        if (oldVersion < 18) {
+          await db.execute(
+            "ALTER TABLE weekly_reports ADD COLUMN weekly_letter TEXT NOT NULL DEFAULT ''",
+          );
+        }
+        if (oldVersion < 19) {
+          await db.execute(
+            "ALTER TABLE weekly_reports ADD COLUMN mood_moments_json TEXT NOT NULL DEFAULT '[]'",
           );
         }
       },
