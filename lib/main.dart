@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -13,6 +14,7 @@ import 'firebase_options.dart';
 import 'services/auth_service.dart';
 import 'services/reminder_service.dart';
 import 'services/reminder_workmanager.dart';
+import 'services/siri_recording_setup_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,5 +55,10 @@ void main() async {
   // RevenueCat側のユーザーIDをFirebase AuthのUIDに揃えるため、起動時にサインインを
   // 済ませておく（各画面での遅延サインインは従来どおりBackendService側でも行われる）。
   final uid = await AuthService().ensureSignedIn();
+  if (Platform.isIOS) {
+    // Siriから画面を開かずに録音できるようにする準備。失敗しても起動は妨げない
+    // ため、完了を待たずにバックグラウンドで進める。
+    unawaited(SiriRecordingSetupService().ensurePairedIfNeeded());
+  }
   runApp(VoiceJournalApp(uid: uid));
 }
