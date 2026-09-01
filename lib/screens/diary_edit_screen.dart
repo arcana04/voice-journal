@@ -541,6 +541,11 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              style: pressableIconButtonStyle(context),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
             actions: [
               TextButton(
                 style: pressableIconButtonStyle(context),

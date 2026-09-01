@@ -38,6 +38,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
   List<JournalEntry> _weekEntries = [];
   Map<EmotionTag, int> _emotionCounts = {};
   List<Map<EmotionTag, int>> _dailyEmotionCounts = List.generate(7, (_) => {});
+  List<MoodMoment> _moodMoments = [];
   int _completedTasks = 0;
   int _diaryCount = 0;
   int _ideaCount = 0;
@@ -60,6 +61,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       _weekKey = saved.weekKey;
       _emotionCounts = saved.emotionCounts;
       _dailyEmotionCounts = saved.dailyEmotionCounts;
+      _moodMoments = saved.moodMoments;
       _diaryCount = saved.diaryCount;
       _ideaCount = saved.ideaCount;
       _totalTasks = saved.totalTasks;
@@ -128,10 +130,16 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       return dayCounts;
     });
 
+    final moodMoments = [
+      for (final entry in entries)
+        if (entry.emotion != null) MoodMoment(time: entry.createdAt, tag: entry.emotion!),
+    ];
+
     setState(() {
       _weekEntries = entries;
       _emotionCounts = emotionCounts;
       _dailyEmotionCounts = dailyEmotionCounts;
+      _moodMoments = moodMoments;
       _completedTasks = completedTasks;
       _diaryCount = diaryCount;
       _ideaCount = ideaCount;
@@ -162,6 +170,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
           insights: insights,
           emotionCounts: emotionCounts,
           dailyEmotionCounts: dailyEmotionCounts,
+          moodMoments: moodMoments,
           diaryCount: diaryCount,
           ideaCount: ideaCount,
           totalTasks: totalTasks,
@@ -276,6 +285,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                           weekStart: _weekStart,
                           weekEnd: _weekEnd,
                           dailyEmotionCounts: _dailyEmotionCounts,
+                          moodMoments: _moodMoments,
                           diaryCount: _diaryCount,
                           ideaCount: _ideaCount,
                           totalTasks: _totalTasks,

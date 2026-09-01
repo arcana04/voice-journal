@@ -339,6 +339,7 @@
   "weeklyReportDiaryCount": "書いた日記 {count}件",
   "weeklyReportEncouragement": "今週もよく頑張りました！",
   "weeklyReportAdviceSectionTitle": "来週へのアドバイス",
+  "weeklyReportLetterSectionTitle": "AIからの週刊レター",
   "weeklyReportShareTooltip": "画像として共有",
   "weeklyReportShareCaption": "今週の脳内、こんな感じでした📝 #VoiceJournal"
 }

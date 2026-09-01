@@ -366,6 +366,7 @@
   },
   "weeklyReportEncouragement": "You did great this week!",
   "weeklyReportAdviceSectionTitle": "Advice for next week",
+  "weeklyReportLetterSectionTitle": "Your Weekly Letter",
   "weeklyReportShareTooltip": "Share as image",
   "weeklyReportShareCaption": "Here's what my week looked like 📝 #VoiceJournal"
 }

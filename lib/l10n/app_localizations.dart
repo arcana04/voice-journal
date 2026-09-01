@@ -1970,6 +1970,12 @@ abstract class AppLocalizations {
   /// **'Advice for next week'**
   String get weeklyReportAdviceSectionTitle;
 
+  /// No description provided for @weeklyReportLetterSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Weekly Letter'**
+  String get weeklyReportLetterSectionTitle;
+
   /// No description provided for @weeklyReportShareTooltip.
   ///
   /// In en, this message translates to:

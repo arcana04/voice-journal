@@ -2,6 +2,34 @@ import 'dart:convert';
 
 import 'emotion_tag.dart';
 
+/// 週の中で実際に感情タグが記録された1件（エントリ1件）の記録時刻と具体的な
+/// 感情タグ。メンタルウェーブは日ごとの集計ではなく、この実際の記録時刻を
+/// もとに波を描き、タップ時にタグ名まで表示する。
+class MoodMoment {
+  final DateTime time;
+  final EmotionTag tag;
+
+  const MoodMoment({required this.time, required this.tag});
+
+  factory MoodMoment.fromJson(Map<String, dynamic> json) {
+    final tag = EmotionTag.fromId(json['e'] as String?);
+    if (tag != null) {
+      return MoodMoment(time: DateTime.parse(json['t'] as String), tag: tag);
+    }
+    // 後方互換: カテゴリのみ保存していた旧形式は、そのカテゴリの代表タグに
+    // フォールバックする（開発中のみ存在した形式のため簡易対応で十分）。
+    final category = EmotionCategory.values.firstWhere(
+      (c) => c.name == json['c'],
+      orElse: () => EmotionCategory.fine,
+    );
+    final fallbackTag = EmotionTag.values
+        .firstWhere((t) => t.category == category, orElse: () => EmotionTag.neutral);
+    return MoodMoment(time: DateTime.parse(json['t'] as String), tag: fallbackTag);
+  }
+
+  Map<String, dynamic> toJson() => {'t': time.toIso8601String(), 'e': tag.id};
+}
+
 class WeeklyReportKeyword {
   final String keyword;
   final int count;
@@ -59,6 +87,7 @@ class WeeklyReportInsights {
   final List<ShiningIdea> shiningIdeas;
   final HighlightQuote highlightQuote;
   final String advice;
+  final String weeklyLetter;
 
   WeeklyReportInsights({
     required this.moodHeadline,
@@ -67,6 +96,7 @@ class WeeklyReportInsights {
     required this.shiningIdeas,
     required this.highlightQuote,
     required this.advice,
+    required this.weeklyLetter,
   });
 
   factory WeeklyReportInsights.fromJson(Map<String, dynamic> json) {
@@ -87,6 +117,7 @@ class WeeklyReportInsights {
         ),
       ),
       advice: (json['advice'] as String? ?? '').trim(),
+      weeklyLetter: (json['weekly_letter'] as String? ?? '').trim(),
     );
   }
 
@@ -97,6 +128,7 @@ class WeeklyReportInsights {
         'shining_ideas': shiningIdeas.map((i) => i.toJson()).toList(),
         'highlight_quote': highlightQuote.toJson(),
         'advice': advice,
+        'weekly_letter': weeklyLetter,
       };
 }
 
@@ -113,6 +145,8 @@ class SavedWeeklyReport {
   /// 曜日ごと(月〜日、7件)の感情内訳。1日に複数の記録があれば全て保持する
   /// （「今週のオーロラ」の色ブレンドに使うため、単一の代表感情には潰さない）。
   final List<Map<EmotionTag, int>> dailyEmotionCounts;
+  /// メンタルウェーブ用の、実際の記録時刻ごとの感情カテゴリ一覧。
+  final List<MoodMoment> moodMoments;
   final int diaryCount;
   final int ideaCount;
   final int totalTasks;
@@ -127,6 +161,7 @@ class SavedWeeklyReport {
     required this.insights,
     required this.emotionCounts,
     required this.dailyEmotionCounts,
+    required this.moodMoments,
     required this.diaryCount,
     required this.ideaCount,
     required this.totalTasks,
@@ -146,6 +181,7 @@ class SavedWeeklyReport {
       'shining_ideas_json': jsonEncode(insights.shiningIdeas.map((i) => i.toJson()).toList()),
       'highlight_quote_json': jsonEncode(insights.highlightQuote.toJson()),
       'advice': insights.advice,
+      'weekly_letter': insights.weeklyLetter,
       'emotion_counts_json': jsonEncode({
         for (final e in emotionCounts.entries) e.key.id: e.value,
       }),
@@ -157,6 +193,7 @@ class SavedWeeklyReport {
       'daily_emotion_counts_json': jsonEncode(dailyEmotionCounts.map((dayCounts) {
         return {for (final e in dayCounts.entries) e.key.id: e.value};
       }).toList()),
+      'mood_moments_json': jsonEncode(moodMoments.map((m) => m.toJson()).toList()),
       'diary_count': diaryCount,
       'idea_count': ideaCount,
       'total_tasks': totalTasks,
@@ -194,6 +231,12 @@ class SavedWeeklyReport {
         return tag == null ? <EmotionTag, int>{} : <EmotionTag, int>{tag: 1};
       }).toList();
     }
+    final moodMomentsColumn = map['mood_moments_json'] as String?;
+    final moodMoments = moodMomentsColumn == null
+        ? const <MoodMoment>[]
+        : (jsonDecode(moodMomentsColumn) as List)
+            .map((e) => MoodMoment.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
 
     return SavedWeeklyReport(
       id: map['id'] as int?,
@@ -211,6 +254,7 @@ class SavedWeeklyReport {
             .toList(),
         highlightQuote: HighlightQuote.fromJson(highlightQuoteRaw),
         advice: map['advice'] as String? ?? '',
+        weeklyLetter: map['weekly_letter'] as String? ?? '',
       ),
       emotionCounts: {
         for (final entry in emotionCountsRaw.entries)
@@ -218,6 +262,7 @@ class SavedWeeklyReport {
             EmotionTag.fromId(entry.key)!: (entry.value as num).toInt(),
       },
       dailyEmotionCounts: dailyEmotionCounts,
+      moodMoments: moodMoments,
       diaryCount: map['diary_count'] as int,
       ideaCount: map['idea_count'] as int,
       totalTasks: map['total_tasks'] as int,
