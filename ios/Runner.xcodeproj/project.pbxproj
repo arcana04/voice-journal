@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		120C94F0B3FF0B2D7CCAB04F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 30FCF29F6CBF4471AA3508F2 /* Assets.xcassets */; };
 		12713AC5ABA051589BB94546 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 76FDA0344F35B693AD982A46 /* SwiftUI.framework */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		168C4A1A2072894D015550A4 /* AppleRemindersChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536BC422AC26A9E340305533 /* AppleRemindersChannel.swift */; };
@@ -102,6 +103,7 @@
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		2FAEAAEC649C96FEA82B6266 /* FirebaseAuthClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FirebaseAuthClient.swift; sourceTree = "<group>"; };
+		30FCF29F6CBF4471AA3508F2 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		328BFEFA6B4DEF60ECC0F176 /* RecordWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordWidgetBundle.swift; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -231,6 +233,7 @@
 				B0F2B747B78AD88F42845041 /* AudioRecorder.swift */,
 				98EDA894548A353FDD2C8FA6 /* VoiceMemoUploader.swift */,
 				73CBCC76E2A8F34511C1866A /* Info.plist */,
+				30FCF29F6CBF4471AA3508F2 /* Assets.xcassets */,
 			);
 			name = VoiceJournalWatch;
 			path = VoiceJournalWatch;
@@ -454,6 +457,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				120C94F0B3FF0B2D7CCAB04F /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
