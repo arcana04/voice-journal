@@ -69,7 +69,7 @@ class WeeklyAurora extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(14),
       child: SizedBox(
-        height: 160,
+        height: 240,
         width: double.infinity,
         child: CustomPaint(
           painter: _WeeklyAuroraPainter(dayColors: dayColors),
@@ -136,43 +136,37 @@ class _WeeklyAuroraPainter extends CustomPainter {
         : List<double>.generate(dayColors.length, (i) => i / (dayColors.length - 1));
     final gradientColors = dayColors.length == 1 ? [dayColors.first, dayColors.first] : dayColors;
 
+    // 振幅・太さはキャンバスの縦幅に比例させ、高さを変えても揺らぎの
+    // スケール感が保たれるようにする。
+    final h = size.height;
     final bands = [
       _AuroraBand(
-        baseY: size.height * 0.32,
-        amplitude: 14,
+        baseY: h * 0.30,
+        amplitude: h * 0.10,
         freq: 1.6,
         phase: 0.0,
-        thickness: 46,
-        opacity: 0.55,
+        thickness: h * 0.20,
+        opacity: 0.5,
       ),
       _AuroraBand(
-        baseY: size.height * 0.5,
-        amplitude: 20,
+        baseY: h * 0.50,
+        amplitude: h * 0.14,
         freq: 1.1,
         phase: 1.4,
-        thickness: 58,
-        opacity: 0.45,
+        thickness: h * 0.26,
+        opacity: 0.42,
       ),
       _AuroraBand(
-        baseY: size.height * 0.68,
-        amplitude: 16,
+        baseY: h * 0.70,
+        amplitude: h * 0.11,
         freq: 2.0,
         phase: 2.6,
-        thickness: 40,
-        opacity: 0.4,
+        thickness: h * 0.18,
+        opacity: 0.38,
       ),
     ];
 
     for (final band in bands) {
-      final bandColors =
-          gradientColors.map((c) => c.withValues(alpha: band.opacity)).toList();
-      final bandShader = LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: bandColors,
-        stops: stops,
-      ).createShader(rect);
-
       final path = Path();
       const step = 6.0;
       for (var x = 0.0; x <= size.width; x += step) {
@@ -188,14 +182,74 @@ class _WeeklyAuroraPainter extends CustomPainter {
         }
       }
 
-      final paint = Paint()
-        ..shader = bandShader
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = band.thickness
-        ..strokeCap = StrokeCap.round
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18)
-        ..blendMode = BlendMode.plus;
-      canvas.drawPath(path, paint);
+      // 外側のソフトなグロー（滲み）。ぼかしは控えめにして、揺らぎの
+      // 輪郭がちゃんと見える「帯」として認識できるようにする。
+      final glowColors = gradientColors.map((c) => c.withValues(alpha: band.opacity)).toList();
+      final glowShader = LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: glowColors,
+        stops: stops,
+      ).createShader(rect);
+      canvas.drawPath(
+        path,
+        Paint()
+          ..shader = glowShader
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = band.thickness
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8)
+          ..blendMode = BlendMode.plus,
+      );
+
+      // 内側の明るい芯。ここをシャープに保つことで、単なるぼやけた光では
+      // なく「光の帯が流れている」ように見せる。
+      final coreColors =
+          gradientColors.map((c) => c.withValues(alpha: (band.opacity + 0.35).clamp(0.0, 1.0))).toList();
+      final coreShader = LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: coreColors,
+        stops: stops,
+      ).createShader(rect);
+      canvas.drawPath(
+        path,
+        Paint()
+          ..shader = coreShader
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = band.thickness * 0.32
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5)
+          ..blendMode = BlendMode.plus,
+      );
+    }
+
+    // カーテンのように縦に伸びる光の筋を薄く重ね、単なる横帯ではなく
+    // 「垂れ下がるオーロラ」らしい質感を足す。
+    final rng = math.Random(7);
+    for (var i = 0; i < 22; i++) {
+      final x = rng.nextDouble() * size.width;
+      final dayIndex = gradientColors.length == 1
+          ? 0
+          : (x / size.width * (gradientColors.length - 1)).round().clamp(0, gradientColors.length - 1);
+      final rayColor = gradientColors[dayIndex];
+      final rayHeight = h * (0.35 + rng.nextDouble() * 0.4);
+      final rayTop = rng.nextDouble() * (h - rayHeight);
+      canvas.drawRect(
+        Rect.fromLTWH(x, rayTop, 1.6, rayHeight),
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              rayColor.withValues(alpha: 0),
+              rayColor.withValues(alpha: 0.16 + rng.nextDouble() * 0.1),
+              rayColor.withValues(alpha: 0),
+            ],
+          ).createShader(Rect.fromLTWH(x, rayTop, 1.6, rayHeight))
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3)
+          ..blendMode = BlendMode.plus,
+      );
     }
   }
 

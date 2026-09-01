@@ -399,7 +399,14 @@ class _MentalWavePainter extends CustomPainter {
   }) {
     final xs = [for (final c in clusters) c.x];
     final anchors = _buildAnchors(xs, size.width, centerY, amplitude, direction);
-    final samplePoints = _catmullRomSample(anchors);
+    // Catmull-Romは制御点を必ず通るが、山から中央ラインへ戻る区間でオーバー
+    // シュートし、記録の無い場所でも反対側へわずかにはみ出すことがある。
+    // このシリーズが担当する側（正なら中央より上、負なら中央より下）を
+    // 越えないようクランプして、記録の無い区間が完全にフラットに見えるようにする。
+    final samplePoints = _catmullRomSample(anchors).map((p) {
+      final y = direction < 0 ? (p.dy > centerY ? centerY : p.dy) : (p.dy < centerY ? centerY : p.dy);
+      return Offset(p.dx, y);
+    }).toList();
 
     final linePath = Path()..moveTo(samplePoints.first.dx, samplePoints.first.dy);
     for (final p in samplePoints.skip(1)) {
