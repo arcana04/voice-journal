@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
+import '../services/watch_pairing_service.dart';
 import '../state/account_store.dart';
 import '../state/journal_store.dart';
 import '../state/subscription_store.dart';
@@ -128,6 +129,24 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
+  Future<void> _pairWatch() async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _busy = true);
+    try {
+      final locale = Localizations.localeOf(context).languageCode;
+      await WatchPairingService().pairWatch(locale: locale);
+      if (!mounted) return;
+      await _showMessage(l10n.watchPairingSuccessTitle, l10n.watchPairingSuccessMessage);
+    } on WatchPairingException catch (e) {
+      if (!mounted) return;
+      await _showMessage(l10n.accountErrorTitle, e.message);
+    } catch (e) {
+      await _showError(e);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _fullSync() async {
     setState(() => _busy = true);
     try {
@@ -178,6 +197,14 @@ class _AccountScreenState extends State<AccountScreen> {
         const SizedBox(height: 12),
         _MediaSyncNotice(canSyncMedia: canSyncMedia, l10n: l10n),
         const SizedBox(height: 12),
+        if (Platform.isIOS) ...[
+          OutlinedButton.icon(
+            onPressed: _busy ? null : _pairWatch,
+            icon: const Icon(Icons.watch_outlined),
+            label: Text(l10n.watchPairingButton),
+          ),
+          const SizedBox(height: 12),
+        ],
         OutlinedButton(
           onPressed: _busy ? null : _signOut,
           child: Text(l10n.accountSignOutButton),

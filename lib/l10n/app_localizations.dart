@@ -656,6 +656,24 @@ abstract class AppLocalizations {
   /// **'Restore from cloud'**
   String get accountRestoreButton;
 
+  /// No description provided for @watchPairingButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair Apple Watch'**
+  String get watchPairingButton;
+
+  /// No description provided for @watchPairingSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paired'**
+  String get watchPairingSuccessTitle;
+
+  /// No description provided for @watchPairingSuccessMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Apple Watch is paired. You can now record on the Watch by itself.'**
+  String get watchPairingSuccessMessage;
+
   /// No description provided for @syncErrorBannerMessage.
   ///
   /// In en, this message translates to:
@@ -1669,6 +1687,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to load usage status'**
   String get usageFetchError;
+
+  /// No description provided for @watchNotPairedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Apple Watch isn\'t paired. Keep it nearby and finish pairing in Apple\'s Watch app first.'**
+  String get watchNotPairedMessage;
 
   /// No description provided for @backgroundRecordingChannelName.
   ///

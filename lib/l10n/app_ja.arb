@@ -101,6 +101,9 @@
   "accountSignInWithApple": "Appleでサインイン",
   "accountSignOutButton": "ログアウト",
   "accountRestoreButton": "クラウドから復元",
+  "watchPairingButton": "Apple Watchをペアリング",
+  "watchPairingSuccessTitle": "ペアリングしました",
+  "watchPairingSuccessMessage": "Apple Watchとのペアリングが完了しました。Watch単体で録音できます。",
   "syncErrorBannerMessage": "一部のデータの同期に失敗しました",
   "syncErrorBannerAction": "確認する",
   "loadErrorBannerMessage": "データの読み込みに失敗しました",
@@ -284,6 +287,7 @@
 
   "genericProcessingError": "処理中にエラーが発生しました",
   "usageFetchError": "利用状況の取得に失敗しました",
+  "watchNotPairedMessage": "Apple Watchがペアリングされていません。Watchを近くに置いて、Apple純正の「Watch」アプリでペアリングを完了させてください。",
 
   "backgroundRecordingChannelName": "バックグラウンド録音",
   "backgroundRecordingChannelDescription": "録音中にバックグラウンド/画面オフでも録音を継続するための通知です",

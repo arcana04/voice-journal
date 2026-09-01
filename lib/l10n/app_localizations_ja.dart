@@ -308,6 +308,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get accountRestoreButton => 'クラウドから復元';
 
   @override
+  String get watchPairingButton => 'Apple Watchをペアリング';
+
+  @override
+  String get watchPairingSuccessTitle => 'ペアリングしました';
+
+  @override
+  String get watchPairingSuccessMessage =>
+      'Apple Watchとのペアリングが完了しました。Watch単体で録音できます。';
+
+  @override
   String get syncErrorBannerMessage => '一部のデータの同期に失敗しました';
 
   @override
@@ -822,6 +832,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get usageFetchError => '利用状況の取得に失敗しました';
+
+  @override
+  String get watchNotPairedMessage =>
+      'Apple Watchがペアリングされていません。Watchを近くに置いて、Apple純正の「Watch」アプリでペアリングを完了させてください。';
 
   @override
   String get backgroundRecordingChannelName => 'バックグラウンド録音';
