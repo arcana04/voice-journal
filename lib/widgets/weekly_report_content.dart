@@ -6,6 +6,7 @@ import 'package:screenshot/screenshot.dart';
 import '../l10n/app_localizations.dart';
 import '../models/emotion_tag.dart';
 import '../models/weekly_report.dart';
+import 'brain_map.dart';
 import 'category_donut_chart.dart';
 import 'mental_wave_chart.dart';
 import 'weekly_aurora.dart';
@@ -27,6 +28,7 @@ class WeeklyReportContent extends StatelessWidget {
   final DateTime weekEnd;
   final List<Map<EmotionTag, int>> dailyEmotionCounts;
   final List<MoodMoment> moodMoments;
+  final List<BrainMapBubble> brainMapBubbles;
   final int diaryCount;
   final int ideaCount;
   final int totalTasks;
@@ -40,6 +42,7 @@ class WeeklyReportContent extends StatelessWidget {
     required this.weekEnd,
     required this.dailyEmotionCounts,
     required this.moodMoments,
+    required this.brainMapBubbles,
     required this.diaryCount,
     required this.ideaCount,
     required this.totalTasks,
@@ -94,6 +97,13 @@ class WeeklyReportContent extends StatelessWidget {
                 weekStart: weekStart,
                 locale: locale,
               ),
+            ),
+            const SizedBox(height: 16),
+            _SectionCard(
+              icon: Icons.bubble_chart_outlined,
+              title: l10n.weeklyReportKeywordsSectionTitle,
+              subtitle: l10n.weeklyReportBrainMapSubtitle,
+              child: BrainMap(bubbles: brainMapBubbles, locale: locale),
             ),
             const SizedBox(height: 16),
             _SectionCard(
@@ -222,9 +232,10 @@ class _MagazineHeader extends StatelessWidget {
 class _SectionCard extends StatelessWidget {
   final IconData icon;
   final String title;
+  final String? subtitle;
   final Widget child;
 
-  const _SectionCard({required this.icon, required this.title, required this.child});
+  const _SectionCard({required this.icon, required this.title, this.subtitle, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -256,6 +267,16 @@ class _SectionCard extends StatelessWidget {
               ),
             ],
           ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 2),
+            Padding(
+              padding: const EdgeInsets.only(left: 28),
+              child: Text(
+                subtitle!,
+                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           child,
         ],

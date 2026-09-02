@@ -386,8 +386,48 @@ class _MentalWavePainter extends CustomPainter {
     }
   }
 
-  /// 山（クラスターの位置）と谷（中央ライン）を交互に並べた制御点列を作る。
-  /// 山同士の間隔が十分空いていれば谷を挟み、近い山はそのまま繋げる。
+  /// クラスターごとに、両端で傾きが0になるS字カーブ(smoothstep)の滑らかな
+  /// 山を作り、複数の山が重なる位置ではその最大値を採用して波形全体を作る。
+  /// 山が孤立している区間は自然に中央ラインへ収束するため、記録の無い区間
+  /// との継ぎ目に鋭いV字の谷ができない。近い山同士は自然に1つの丘へ繋がる。
+  static const double _riseWidth = 48;
+
+  double _smoothstep(double t) {
+    final c = t.clamp(0.0, 1.0);
+    return c * c * (3 - 2 * c);
+  }
+
+  List<Offset> _sampleWave(
+    List<_MoodCluster> clusters,
+    double width,
+    double centerY,
+    double amplitude,
+    double direction,
+  ) {
+    if (clusters.isEmpty) {
+      return [Offset(0, centerY), Offset(width, centerY)];
+    }
+    final xs = [for (final c in clusters) c.x];
+    double heightAt(double x) {
+      var maxT = 0.0;
+      for (final cx in xs) {
+        final d = (x - cx).abs();
+        if (d >= _riseWidth) continue;
+        final t = _smoothstep(1 - d / _riseWidth);
+        if (t > maxT) maxT = t;
+      }
+      return maxT;
+    }
+
+    const step = 4.0;
+    final points = <Offset>[];
+    for (var x = 0.0; x < width; x += step) {
+      points.add(Offset(x, centerY + direction * amplitude * heightAt(x)));
+    }
+    points.add(Offset(width, centerY + direction * amplitude * heightAt(width)));
+    return points;
+  }
+
   void _drawWave(
     Canvas canvas,
     Size size, {
@@ -397,16 +437,7 @@ class _MentalWavePainter extends CustomPainter {
     required double direction,
     required Color color,
   }) {
-    final xs = [for (final c in clusters) c.x];
-    final anchors = _buildAnchors(xs, size.width, centerY, amplitude, direction);
-    // Catmull-Romは制御点を必ず通るが、山から中央ラインへ戻る区間でオーバー
-    // シュートし、記録の無い場所でも反対側へわずかにはみ出すことがある。
-    // このシリーズが担当する側（正なら中央より上、負なら中央より下）を
-    // 越えないようクランプして、記録の無い区間が完全にフラットに見えるようにする。
-    final samplePoints = _catmullRomSample(anchors).map((p) {
-      final y = direction < 0 ? (p.dy > centerY ? centerY : p.dy) : (p.dy < centerY ? centerY : p.dy);
-      return Offset(p.dx, y);
-    }).toList();
+    final samplePoints = _sampleWave(clusters, size.width, centerY, amplitude, direction);
 
     final linePath = Path()..moveTo(samplePoints.first.dx, samplePoints.first.dy);
     for (final p in samplePoints.skip(1)) {
@@ -467,83 +498,9 @@ class _MentalWavePainter extends CustomPainter {
     }
   }
 
-  List<Offset> _buildAnchors(
-    List<double> xs,
-    double width,
-    double centerY,
-    double amplitude,
-    double direction,
-  ) {
-    if (xs.isEmpty) return [Offset(0, centerY), Offset(width, centerY)];
-
-    const minGap = 16.0;
-    final peakY = centerY + direction * amplitude;
-    final anchors = <Offset>[Offset(0, centerY)];
-
-    if (xs.first > minGap) {
-      anchors.add(Offset(xs.first / 2, centerY));
-    }
-    anchors.add(Offset(xs.first, peakY));
-
-    for (var i = 1; i < xs.length; i++) {
-      final gap = xs[i] - xs[i - 1];
-      if (gap > minGap * 2) {
-        anchors.add(Offset((xs[i - 1] + xs[i]) / 2, centerY));
-      }
-      anchors.add(Offset(xs[i], peakY));
-    }
-
-    if (width - xs.last > minGap) {
-      anchors.add(Offset((xs.last + width) / 2, centerY));
-    }
-    anchors.add(Offset(width, centerY));
-
-    return anchors;
-  }
-
   @override
   bool shouldRepaint(covariant _MentalWavePainter oldDelegate) {
     return oldDelegate.positiveClusters != positiveClusters ||
         oldDelegate.negativeClusters != negativeClusters;
   }
-}
-
-/// Catmull-Romスプラインで、与えられた制御点を滑らかに通過する曲線上の点列を
-/// 生成する（両端は前後の区間を反転して仮想制御点とする標準的な手法）。
-List<Offset> _catmullRomSample(List<Offset> pts, {int samplesPerSegment = 20}) {
-  if (pts.length < 2) return pts;
-  final extended = <Offset>[
-    pts[0] * 2 - pts[1],
-    ...pts,
-    pts[pts.length - 1] * 2 - pts[pts.length - 2],
-  ];
-  final result = <Offset>[];
-  for (var i = 1; i < extended.length - 2; i++) {
-    final p0 = extended[i - 1];
-    final p1 = extended[i];
-    final p2 = extended[i + 1];
-    final p3 = extended[i + 2];
-    final startJ = i == 1 ? 0 : 1;
-    for (var j = startJ; j <= samplesPerSegment; j++) {
-      final t = j / samplesPerSegment;
-      result.add(_catmullRomPoint(p0, p1, p2, p3, t));
-    }
-  }
-  return result;
-}
-
-Offset _catmullRomPoint(Offset p0, Offset p1, Offset p2, Offset p3, double t) {
-  final t2 = t * t;
-  final t3 = t2 * t;
-  final x = 0.5 *
-      ((2 * p1.dx) +
-          (-p0.dx + p2.dx) * t +
-          (2 * p0.dx - 5 * p1.dx + 4 * p2.dx - p3.dx) * t2 +
-          (-p0.dx + 3 * p1.dx - 3 * p2.dx + p3.dx) * t3);
-  final y = 0.5 *
-      ((2 * p1.dy) +
-          (-p0.dy + p2.dy) * t +
-          (2 * p0.dy - 5 * p1.dy + 4 * p2.dy - p3.dy) * t2 +
-          (-p0.dy + 3 * p1.dy - 3 * p2.dy + p3.dy) * t3);
-  return Offset(x, y);
 }

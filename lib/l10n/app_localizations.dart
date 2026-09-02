@@ -1907,14 +1907,26 @@ abstract class AppLocalizations {
   /// No description provided for @weeklyReportKeywordsSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'This week\'s keywords'**
+  /// **'Brain Map'**
   String get weeklyReportKeywordsSectionTitle;
 
   /// No description provided for @weeklyReportNoKeywords.
   ///
   /// In en, this message translates to:
-  /// **'No standout keywords this week'**
+  /// **'No standout keywords found this week'**
   String get weeklyReportNoKeywords;
+
+  /// No description provided for @weeklyReportBrainMapSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s been driving your feelings and thoughts'**
+  String get weeklyReportBrainMapSubtitle;
+
+  /// No description provided for @weeklyReportBrainMapSheetEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No related entries found'**
+  String get weeklyReportBrainMapSheetEmpty;
 
   /// No description provided for @weeklyReportIdeasSectionTitle.
   ///

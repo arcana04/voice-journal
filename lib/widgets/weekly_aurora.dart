@@ -4,50 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../models/emotion_tag.dart';
+import '../utils/emotion_color_blend.dart';
 
-/// その日1日の感情が記録されていない曜日の色（参考デザインの背景トーンに
-/// 馴染む、控えめな暗いスレート色）。
-const Color _kAuroraEmptyColor = Color(0xFF2A3040);
-
-/// 参考デザインの泡の背景と同じ濃紺（実測値: rgb(4,12,31)）。
+/// 参考デザインの泡の背景と同じ濃紺(実測値: rgb(4,12,31))。
 const Color _kAuroraBackdrop = Color(0xFF040C1F);
 
-/// その日1日に記録された感情（複数あり得る）を、件数で重み付けして1色に
-/// ブレンドする。単純なRGB平均だと彩度の高い色同士が濁った灰色になりやすい
-/// ため、色相は円環平均（wrap-around考慮）、彩度・明度は加重平均する。
-Color blendDayEmotionColors(Map<EmotionTag, int> counts) {
-  if (counts.isEmpty) return _kAuroraEmptyColor;
-
-  var sinSum = 0.0;
-  var cosSum = 0.0;
-  var satSum = 0.0;
-  var lightSum = 0.0;
-  var totalWeight = 0;
-
-  for (final entry in counts.entries) {
-    final hsl = HSLColor.fromColor(entry.key.color);
-    final weight = entry.value;
-    if (weight <= 0) continue;
-    final hueRad = hsl.hue * math.pi / 180;
-    sinSum += math.sin(hueRad) * weight;
-    cosSum += math.cos(hueRad) * weight;
-    satSum += hsl.saturation * weight;
-    lightSum += hsl.lightness * weight;
-    totalWeight += weight;
-  }
-
-  if (totalWeight == 0) return _kAuroraEmptyColor;
-
-  var hue = math.atan2(sinSum, cosSum) * 180 / math.pi;
-  if (hue < 0) hue += 360;
-  final saturation = (satSum / totalWeight).clamp(0.0, 1.0);
-  final lightness = (lightSum / totalWeight).clamp(0.0, 1.0);
-  return HSLColor.fromAHSL(1.0, hue, saturation, lightness).toColor();
-}
-
 /// 週刊脳内レポートの「今週のオーロラ」。7日分の感情ブレンド色を横方向に
-/// 滑らかなグラデーションで繋ぎ、波打つ半透明の帯を重ねてオーロラらしい
-/// 揺らぎを表現する。
+/// つなぎ、参考写真(無数の光の筋が波打つ根元から立ち上るカーテン状の
+/// オーロラ)の構図を色付きで再現する。
 class WeeklyAurora extends StatelessWidget {
   /// 月曜始まり7件。各要素はその日に記録された感情タグごとの件数。
   final List<Map<EmotionTag, int>> dailyEmotionCounts;
@@ -63,7 +27,7 @@ class WeeklyAurora extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dayColors = dailyEmotionCounts.map(blendDayEmotionColors).toList();
+    final dayColors = dailyEmotionCounts.map(blendEmotionColors).toList();
     final dayZero = DateTime(weekStart.year, weekStart.month, weekStart.day);
 
     return ClipRRect(
@@ -97,28 +61,25 @@ class WeeklyAurora extends StatelessWidget {
   }
 }
 
-class _AuroraBand {
-  final double baseY;
-  final double amplitude;
-  final double freq;
-  final double phase;
-  final double thickness;
-  final double opacity;
-
-  const _AuroraBand({
-    required this.baseY,
-    required this.amplitude,
-    required this.freq,
-    required this.phase,
-    required this.thickness,
-    required this.opacity,
-  });
-}
-
 class _WeeklyAuroraPainter extends CustomPainter {
   final List<Color> dayColors;
 
   _WeeklyAuroraPainter({required this.dayColors});
+
+  /// オーロラの根元(最も明るい帯)の高さ。参考写真はほぼ平らな稜線に
+  /// うっすら1つの起伏があるだけなので、低周波のsin1つに留める(高周波を
+  /// 混ぜると輪郭がはっきりした瘤の連続に見えてしまう)。
+  double _ridgeY(double t, double h) {
+    return h * 0.5 + h * 0.05 * math.sin(t * 2 * math.pi + 0.6);
+  }
+
+  Color _colorAt(List<Color> colors, double t) {
+    if (colors.length == 1) return colors[0];
+    final scaled = t.clamp(0.0, 1.0) * (colors.length - 1);
+    final i0 = scaled.floor().clamp(0, colors.length - 1);
+    final i1 = (i0 + 1).clamp(0, colors.length - 1);
+    return Color.lerp(colors[i0], colors[i1], scaled - i0) ?? colors[i0];
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -131,123 +92,99 @@ class _WeeklyAuroraPainter extends CustomPainter {
 
     if (dayColors.isEmpty) return;
 
-    final stops = dayColors.length == 1
-        ? <double>[0, 1]
-        : List<double>.generate(dayColors.length, (i) => i / (dayColors.length - 1));
     final gradientColors = dayColors.length == 1 ? [dayColors.first, dayColors.first] : dayColors;
+    final stops = gradientColors.length == 1
+        ? <double>[0, 1]
+        : List<double>.generate(gradientColors.length, (i) => i / (gradientColors.length - 1));
 
-    // 振幅・太さはキャンバスの縦幅に比例させ、高さを変えても揺らぎの
-    // スケール感が保たれるようにする。
     final h = size.height;
-    final bands = [
-      _AuroraBand(
-        baseY: h * 0.30,
-        amplitude: h * 0.10,
-        freq: 1.6,
-        phase: 0.0,
-        thickness: h * 0.20,
-        opacity: 0.5,
-      ),
-      _AuroraBand(
-        baseY: h * 0.50,
-        amplitude: h * 0.14,
-        freq: 1.1,
-        phase: 1.4,
-        thickness: h * 0.26,
-        opacity: 0.42,
-      ),
-      _AuroraBand(
-        baseY: h * 0.70,
-        amplitude: h * 0.11,
-        freq: 2.0,
-        phase: 2.6,
-        thickness: h * 0.18,
-        opacity: 0.38,
-      ),
-    ];
+    final w = size.width;
 
-    for (final band in bands) {
-      final path = Path();
-      const step = 6.0;
-      for (var x = 0.0; x <= size.width; x += step) {
-        final t = size.width == 0 ? 0.0 : x / size.width;
-        final y = band.baseY +
-            band.amplitude * math.sin(t * band.freq * 2 * math.pi + band.phase) +
-            (band.amplitude * 0.5) *
-                math.sin(t * band.freq * 4.3 * math.pi + band.phase * 1.7);
-        if (x == 0) {
-          path.moveTo(x, y);
-        } else {
-          path.lineTo(x, y);
-        }
-      }
-
-      // 外側のソフトなグロー（滲み）。ぼかしは控えめにして、揺らぎの
-      // 輪郭がちゃんと見える「帯」として認識できるようにする。
-      final glowColors = gradientColors.map((c) => c.withValues(alpha: band.opacity)).toList();
-      final glowShader = LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: glowColors,
-        stops: stops,
-      ).createShader(rect);
-      canvas.drawPath(
-        path,
-        Paint()
-          ..shader = glowShader
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = band.thickness
-          ..strokeCap = StrokeCap.round
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8)
-          ..blendMode = BlendMode.plus,
+    // 星: 参考写真のように、暗い上空にうっすら瞬く点を散らす。
+    final starRng = math.Random(3);
+    for (var i = 0; i < 55; i++) {
+      final x = starRng.nextDouble() * w;
+      final y = starRng.nextDouble() * h * 0.55;
+      final r = 0.5 + starRng.nextDouble() * 0.9;
+      canvas.drawCircle(
+        Offset(x, y),
+        r,
+        Paint()..color = Colors.white.withValues(alpha: 0.12 + starRng.nextDouble() * 0.25),
       );
+    }
 
-      // 内側の明るい芯。ここをシャープに保つことで、単なるぼやけた光では
-      // なく「光の帯が流れている」ように見せる。
-      final coreColors =
-          gradientColors.map((c) => c.withValues(alpha: (band.opacity + 0.35).clamp(0.0, 1.0))).toList();
-      final coreShader = LinearGradient(
+    // 根元をなだらかに繋ぐ、稜線に沿った下地のグロー。輪郭が見えないよう
+    // 強めのぼかしを何層も重ね、あくまで「もや」として広がらせる。
+    final ridgePath = Path();
+    const step = 6.0;
+    for (var x = 0.0; x <= w; x += step) {
+      final t = w == 0 ? 0.0 : x / w;
+      final y = _ridgeY(t, h);
+      if (x == 0) {
+        ridgePath.moveTo(x, y);
+      } else {
+        ridgePath.lineTo(x, y);
+      }
+    }
+    void drawRidgeHaze(double widthFactor, double alpha, double blurSigma) {
+      final shader = LinearGradient(
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
-        colors: coreColors,
+        colors: gradientColors.map((c) => c.withValues(alpha: alpha)).toList(),
         stops: stops,
       ).createShader(rect);
       canvas.drawPath(
-        path,
+        ridgePath,
         Paint()
-          ..shader = coreShader
+          ..shader = shader
           ..style = PaintingStyle.stroke
-          ..strokeWidth = band.thickness * 0.32
+          ..strokeWidth = h * widthFactor
           ..strokeCap = StrokeCap.round
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, blurSigma)
           ..blendMode = BlendMode.plus,
       );
     }
 
-    // カーテンのように縦に伸びる光の筋を薄く重ね、単なる横帯ではなく
-    // 「垂れ下がるオーロラ」らしい質感を足す。
-    final rng = math.Random(7);
-    for (var i = 0; i < 22; i++) {
-      final x = rng.nextDouble() * size.width;
-      final dayIndex = gradientColors.length == 1
-          ? 0
-          : (x / size.width * (gradientColors.length - 1)).round().clamp(0, gradientColors.length - 1);
-      final rayColor = gradientColors[dayIndex];
-      final rayHeight = h * (0.35 + rng.nextDouble() * 0.4);
-      final rayTop = rng.nextDouble() * (h - rayHeight);
+    drawRidgeHaze(0.95, 0.28, 34);
+    drawRidgeHaze(0.55, 0.34, 22);
+    drawRidgeHaze(0.26, 0.4, 12);
+
+    // 無数の縦の光の筋。根元から立ち上る高さ・太さをランダムにばらつかせ
+    // つつ、強めにぼかして輪郭のはっきりした線ではなく「もや」として
+    // 溶け合わせる。
+    final rayRng = math.Random(11);
+    final rayCount = (w / 2.6).clamp(80, 260).round();
+    for (var i = 0; i < rayCount; i++) {
+      final x = rayRng.nextDouble() * w;
+      final t = w == 0 ? 0.0 : x / w;
+      final baseY = _ridgeY(t, h);
+      final color = _colorAt(gradientColors, t);
+
+      final tall = rayRng.nextDouble() < 0.12;
+      final rayHeight =
+          tall ? h * (0.5 + rayRng.nextDouble() * 0.4) : h * (0.15 + rayRng.nextDouble() * 0.3);
+      final dropBelow = h * 0.08;
+      final topY = baseY - rayHeight;
+      final bottomY = baseY + dropBelow;
+      final rayWidth = tall ? 3.0 + rayRng.nextDouble() * 2.0 : 2.0 + rayRng.nextDouble() * 2.4;
+      final peakAlpha = tall ? 0.22 + rayRng.nextDouble() * 0.12 : 0.10 + rayRng.nextDouble() * 0.14;
+
+      final rayRect = Rect.fromLTWH(x, topY, rayWidth, bottomY - topY);
       canvas.drawRect(
-        Rect.fromLTWH(x, rayTop, 1.6, rayHeight),
+        rayRect,
         Paint()
           ..shader = LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              rayColor.withValues(alpha: 0),
-              rayColor.withValues(alpha: 0.16 + rng.nextDouble() * 0.1),
-              rayColor.withValues(alpha: 0),
+              color.withValues(alpha: 0),
+              color.withValues(alpha: peakAlpha),
+              color.withValues(alpha: peakAlpha * 0.5),
+              color.withValues(alpha: 0),
             ],
-          ).createShader(Rect.fromLTWH(x, rayTop, 1.6, rayHeight))
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3)
+            stops: const [0, 0.5, 0.78, 1.0],
+          ).createShader(rayRect)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, tall ? 7.0 : 5.0)
           ..blendMode = BlendMode.plus,
       );
     }

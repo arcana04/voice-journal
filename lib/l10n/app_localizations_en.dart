@@ -982,10 +982,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weeklyReportNoCategoryData => 'No entries yet this week';
 
   @override
-  String get weeklyReportKeywordsSectionTitle => 'This week\'s keywords';
+  String get weeklyReportKeywordsSectionTitle => 'Brain Map';
 
   @override
-  String get weeklyReportNoKeywords => 'No standout keywords this week';
+  String get weeklyReportNoKeywords => 'No standout keywords found this week';
+
+  @override
+  String get weeklyReportBrainMapSubtitle =>
+      'What\'s been driving your feelings and thoughts';
+
+  @override
+  String get weeklyReportBrainMapSheetEmpty => 'No related entries found';
 
   @override
   String get weeklyReportIdeasSectionTitle => 'Ideas that shined';

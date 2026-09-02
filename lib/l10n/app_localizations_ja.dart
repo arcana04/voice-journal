@@ -948,10 +948,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get weeklyReportNoCategoryData => '今週はまだ記録がありません';
 
   @override
-  String get weeklyReportKeywordsSectionTitle => '今週のキーワード';
+  String get weeklyReportKeywordsSectionTitle => '脳内マップ';
 
   @override
-  String get weeklyReportNoKeywords => '目立ったキーワードはありませんでした';
+  String get weeklyReportNoKeywords => '今週は目立ったキーワードが見つかりませんでした';
+
+  @override
+  String get weeklyReportBrainMapSubtitle => '何が自分の感情や思考を動かしていたのか';
+
+  @override
+  String get weeklyReportBrainMapSheetEmpty => '関連する記録が見つかりませんでした';
 
   @override
   String get weeklyReportIdeasSectionTitle => '輝いていたアイデア';

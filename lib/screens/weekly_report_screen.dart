@@ -14,6 +14,7 @@ import '../services/backend_service.dart';
 import '../services/db_service.dart';
 import '../state/journal_store.dart';
 import '../state/subscription_store.dart';
+import '../utils/brain_map_builder.dart';
 import '../utils/journal_context_format.dart';
 import '../widgets/app_background_image.dart';
 import '../widgets/pro_feature_gate.dart';
@@ -162,6 +163,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
 
     try {
       final insights = await future;
+      final brainMapBubbles = buildBrainMapBubbles(entries, insights.topKeywords);
       await DbService.instance.saveWeeklyReport(
         SavedWeeklyReport(
           weekKey: _weekKey,
@@ -171,6 +173,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
           emotionCounts: emotionCounts,
           dailyEmotionCounts: dailyEmotionCounts,
           moodMoments: moodMoments,
+          brainMapBubbles: brainMapBubbles,
           diaryCount: diaryCount,
           ideaCount: ideaCount,
           totalTasks: totalTasks,
@@ -279,6 +282,9 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                           onRetry: _retry,
                         );
                       }
+                      final brainMapBubbles = _isHistoryView
+                          ? widget.savedReport!.brainMapBubbles
+                          : buildBrainMapBubbles(_weekEntries, snapshot.data!.topKeywords);
                       return RevealIn(
                         child: WeeklyReportContent(
                           insights: snapshot.data!,
@@ -286,6 +292,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                           weekEnd: _weekEnd,
                           dailyEmotionCounts: _dailyEmotionCounts,
                           moodMoments: _moodMoments,
+                          brainMapBubbles: brainMapBubbles,
                           diaryCount: _diaryCount,
                           ideaCount: _ideaCount,
                           totalTasks: _totalTasks,
