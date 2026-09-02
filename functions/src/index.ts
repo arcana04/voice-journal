@@ -986,11 +986,16 @@ interface ProcessVoiceMemoRequest {
 export const processVoiceMemo = onCall(
   // Proプランは録音15分まで許可するため、ffmpeg処理・Whisper転写の時間を見込んで
   // 通常より長めのタイムアウト・メモリを確保する。
+  //
+  // App Check（App Attest）はwatchOSで使えないため、この関数だけは
+  // フレームワークレベルでの強制をせず、ハンドラ内で「App Checkトークンが
+  // あるか」「Watchペアリング時発行のデバイス秘密鍵で認証できるか」の
+  // どちらかを要求する（両方無ければ拒否）。
   {
     secrets: [openAiApiKey],
     timeoutSeconds: 300,
     memory: "2GiB",
-    enforceAppCheck: APP_CHECK_ENFORCED,
+    enforceAppCheck: false,
   },
   async (request) => {
     const { audioBase64, mimeType, customWords, summaryLevel, locale } =
@@ -1005,12 +1010,16 @@ export const processVoiceMemo = onCall(
       throw new HttpsError("invalid-argument", MESSAGES[loc].noAudio);
     }
 
+    // Watch単体からの呼び出しは、App Checkの代わりにペアリング時発行の
+    // デバイス秘密鍵で検証し、漏洩時の被害を抑える別枠のバーストレート
+    // 制限もかける。ヘッダーが無ければ通常のiPhoneクライアントからの
+    // 呼び出しなので、App Checkトークンの有無で判定する。
+    const watchAuth = extractWatchDeviceAuth(request.rawRequest);
+    if (APP_CHECK_ENFORCED && !watchAuth && !request.app) {
+      throw new HttpsError("unauthenticated", MESSAGES[loc].authRequired);
+    }
+
     try {
-      // Watch単体からの呼び出しは、App Check（App Attest）がwatchOSで使えない
-      // 代わりにペアリング時発行のデバイス秘密鍵で検証し、漏洩時の被害を抑える
-      // 別枠のバーストレート制限もかける。ヘッダーが無ければ通常のiPhone
-      // クライアントからの呼び出しなのでこのブロックはスキップする。
-      const watchAuth = extractWatchDeviceAuth(request.rawRequest);
       if (watchAuth) {
         await verifyWatchDeviceSecret(uid, watchAuth, loc);
         await consumeWatchRateLimit(uid, watchAuth.deviceId, loc);
