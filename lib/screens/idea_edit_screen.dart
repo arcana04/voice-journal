@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
+import '../models/idea_status.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
 
@@ -9,18 +10,26 @@ class _IdeaDraft {
   final NoteItem note;
   final TextEditingController titleController;
   final TextEditingController contentController;
+  final TextEditingController tagController;
+  String? ideaStatus;
+  bool pinned;
 
   _IdeaDraft(this.note)
     : titleController = TextEditingController(text: note.title ?? ''),
-      contentController = TextEditingController(text: note.content);
+      contentController = TextEditingController(text: note.content),
+      tagController = TextEditingController(text: note.tag ?? ''),
+      ideaStatus = note.ideaStatus,
+      pinned = note.pinned;
 
   void dispose() {
     titleController.dispose();
     contentController.dispose();
+    tagController.dispose();
   }
 }
 
-/// アイデア（notes category="アイデア"）の編集画面。見出しと本文を変更できる。
+/// アイデア（notes category="アイデア"）の編集画面。見出し・本文・検討状況・
+/// タグ・ピン留めを変更できる。
 class IdeaEditScreen extends StatefulWidget {
   final int entryId;
 
@@ -53,11 +62,19 @@ class _IdeaEditScreenState extends State<IdeaEditScreen> {
       final title = d.titleController.text.trim();
       var content = d.contentController.text.trim();
       if (content.isEmpty) content = d.note.content;
+      final tag = d.tagController.text.trim();
       await store.updateNoteText(
         entry,
         d.note,
         title: title.isEmpty ? null : title,
         content: content,
+      );
+      await store.updateIdeaMeta(
+        entry,
+        d.note,
+        ideaStatus: d.ideaStatus,
+        pinned: d.pinned,
+        tag: tag.isEmpty ? null : tag,
       );
     }
     if (mounted) Navigator.of(context).pop();
@@ -139,7 +156,97 @@ class _IdeaEditScreenState extends State<IdeaEditScreen> {
               hintText: l10n.ideaContentHint,
             ),
           ),
+          const SizedBox(height: 14),
+          Text(
+            l10n.ideaStatusLabel,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.outline,
+            ),
+          ),
+          const SizedBox(height: 6),
+          StatefulBuilder(
+            builder: (context, setInnerState) => Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _StatusOption(
+                  label: l10n.ideaStatusNone,
+                  color: theme.colorScheme.outline,
+                  selected: draft.ideaStatus == null,
+                  onTap: () => setInnerState(() => draft.ideaStatus = null),
+                ),
+                for (final status in IdeaStatus.values)
+                  _StatusOption(
+                    label: status.labelFor(l10n),
+                    color: status.color,
+                    selected: draft.ideaStatus == status.id,
+                    onTap: () =>
+                        setInnerState(() => draft.ideaStatus = status.id),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: draft.tagController,
+            style: theme.textTheme.bodyMedium,
+            decoration: InputDecoration(
+              isDense: true,
+              labelText: l10n.ideaTagLabel,
+              hintText: l10n.ideaTagHint,
+              prefixIcon: const Icon(Icons.sell_outlined, size: 18),
+            ),
+          ),
+          const SizedBox(height: 4),
+          StatefulBuilder(
+            builder: (context, setInnerState) => SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              title: Text(l10n.ideaPinTooltip),
+              value: draft.pinned,
+              onChanged: (v) => setInnerState(() => draft.pinned = v),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _StatusOption extends StatelessWidget {
+  final String label;
+  final Color color;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _StatusOption({
+    required this.label,
+    required this.color,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? color.withValues(alpha: 0.16) : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected ? color : theme.colorScheme.outlineVariant,
+          ),
+        ),
+        child: Text(
+          label,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: selected ? color : theme.colorScheme.onSurfaceVariant,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
       ),
     );
   }

@@ -39,7 +39,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 20,
+      version: 21,
       // tasks/notes/entry_imagesはON DELETE CASCADEをスキーマに宣言しているが、
       // SQLiteは外部キー制約自体をデフォルトで無効にしており、接続のたびに
       // 明示的に有効化しないとその宣言は一切効かない（各deleteメソッドが手動で
@@ -90,6 +90,9 @@ class DbService {
             text_color INTEGER,
             font_scale REAL,
             background_id TEXT,
+            idea_status TEXT,
+            pinned INTEGER NOT NULL DEFAULT 0,
+            tag TEXT,
             FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
           )
         ''');
@@ -256,6 +259,13 @@ class DbService {
             "ALTER TABLE weekly_reports ADD COLUMN brain_map_json TEXT NOT NULL DEFAULT '[]'",
           );
         }
+        if (oldVersion < 21) {
+          await db.execute('ALTER TABLE notes ADD COLUMN idea_status TEXT');
+          await db.execute(
+            'ALTER TABLE notes ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
+          );
+          await db.execute('ALTER TABLE notes ADD COLUMN tag TEXT');
+        }
       },
     );
   }
@@ -309,6 +319,9 @@ class DbService {
         'text_color': note.textColorValue,
         'font_scale': note.fontScale,
         'background_id': note.backgroundId,
+        'idea_status': note.ideaStatus,
+        'pinned': note.pinned ? 1 : 0,
+        'tag': note.tag,
       });
       savedNotes.add(
         NoteItem(
@@ -321,6 +334,9 @@ class DbService {
           textColorValue: note.textColorValue,
           fontScale: note.fontScale,
           backgroundId: note.backgroundId,
+          ideaStatus: note.ideaStatus,
+          pinned: note.pinned,
+          tag: note.tag,
         ),
       );
     }
@@ -482,6 +498,23 @@ class DbService {
         'font_scale': fontScale,
         'background_id': backgroundId,
       },
+      where: 'id = ?',
+      whereArgs: [noteId],
+    );
+  }
+
+  /// アイデアの検討状況・ピン留め・タグを更新する。[ideaStatus]/[tag]はnullを
+  /// 渡すと「指定なし」として保存される。
+  Future<void> updateIdeaMeta(
+    int noteId, {
+    required String? ideaStatus,
+    required bool pinned,
+    required String? tag,
+  }) async {
+    final db = await _database;
+    await db.update(
+      'notes',
+      {'idea_status': ideaStatus, 'pinned': pinned ? 1 : 0, 'tag': tag},
       where: 'id = ?',
       whereArgs: [noteId],
     );

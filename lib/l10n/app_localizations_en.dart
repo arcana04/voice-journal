@@ -834,6 +834,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ideaContentHint => 'Idea content';
 
   @override
+  String get ideaStatusConsidering => 'Considering';
+
+  @override
+  String get ideaStatusAdopted => 'Adopted';
+
+  @override
+  String get ideaStatusRejected => 'Rejected';
+
+  @override
+  String get ideaStatusNone => 'No status';
+
+  @override
+  String get ideaStatusLabel => 'Status';
+
+  @override
+  String get ideaTagLabel => 'Tag';
+
+  @override
+  String get ideaTagHint => 'Tag (optional)';
+
+  @override
+  String get ideaSearchHint => 'Search ideas';
+
+  @override
+  String get ideaPinTooltip => 'Pin';
+
+  @override
+  String get ideaUnpinTooltip => 'Unpin';
+
+  @override
+  String get ideaSortNewestFirstTooltip =>
+      'Sorted newest first (tap for oldest first)';
+
+  @override
+  String get ideaSortOldestFirstTooltip =>
+      'Sorted oldest first (tap for newest first)';
+
+  @override
+  String get ideasFilterEmpty => 'No ideas match this filter';
+
+  @override
   String get reviewTitle => 'Review content';
 
   @override

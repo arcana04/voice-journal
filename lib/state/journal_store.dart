@@ -478,6 +478,37 @@ class JournalStore extends ChangeNotifier {
     _trackSync(_cloudSync.pushEntry(entries[index]));
   }
 
+  Future<void> updateIdeaMeta(
+    JournalEntry entry,
+    NoteItem note, {
+    required String? ideaStatus,
+    required bool pinned,
+    required String? tag,
+  }) async {
+    if (note.id == null) return;
+    await _db.updateIdeaMeta(
+      note.id!,
+      ideaStatus: ideaStatus,
+      pinned: pinned,
+      tag: tag,
+    );
+    final index = entries.indexWhere((e) => e.id == entry.id);
+    if (index == -1) return;
+    final updatedNotes = entries[index].notes.map((n) {
+      if (n.id != note.id) return n;
+      return n.copyWith(
+        ideaStatus: ideaStatus,
+        clearIdeaStatus: ideaStatus == null,
+        pinned: pinned,
+        tag: tag,
+        clearTag: tag == null,
+      );
+    }).toList();
+    entries[index] = entries[index].copyWith(notes: updatedNotes);
+    notifyListeners();
+    _trackSync(_cloudSync.pushEntry(entries[index]));
+  }
+
   Future<void> updateEntryEmotion(
     JournalEntry entry,
     EmotionTag? emotion,

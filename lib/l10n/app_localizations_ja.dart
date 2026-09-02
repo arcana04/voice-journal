@@ -806,6 +806,45 @@ class AppLocalizationsJa extends AppLocalizations {
   String get ideaContentHint => 'アイデアの内容';
 
   @override
+  String get ideaStatusConsidering => '検討中';
+
+  @override
+  String get ideaStatusAdopted => '採用';
+
+  @override
+  String get ideaStatusRejected => '却下';
+
+  @override
+  String get ideaStatusNone => '未設定';
+
+  @override
+  String get ideaStatusLabel => '検討状況';
+
+  @override
+  String get ideaTagLabel => 'タグ';
+
+  @override
+  String get ideaTagHint => 'タグ（任意）';
+
+  @override
+  String get ideaSearchHint => 'アイデアを検索';
+
+  @override
+  String get ideaPinTooltip => 'ピン留め';
+
+  @override
+  String get ideaUnpinTooltip => 'ピン留めを解除';
+
+  @override
+  String get ideaSortNewestFirstTooltip => '新しい順に並び替え中（タップで古い順に）';
+
+  @override
+  String get ideaSortOldestFirstTooltip => '古い順に並び替え中（タップで新しい順に）';
+
+  @override
+  String get ideasFilterEmpty => 'この絞り込みに該当するアイデアはありません';
+
+  @override
   String get reviewTitle => '内容を確認';
 
   @override

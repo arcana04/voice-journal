@@ -183,6 +183,15 @@ class NoteItem {
   /// [DiaryBackground.id]。未設定（背景なし）ならnull。
   final String? backgroundId;
 
+  /// [IdeaStatus.id]。アイデア（[kNoteCategoryIdea]）のみで使う検討状況。未設定はnull。
+  final String? ideaStatus;
+
+  /// アイデア画面の上部に固定表示するための手動フラグ。
+  final bool pinned;
+
+  /// アイデアの自由入力タグ（種類分け用）。未設定はnull。
+  final String? tag;
+
   NoteItem({
     this.id,
     this.entryId,
@@ -193,6 +202,9 @@ class NoteItem {
     this.textColorValue,
     this.fontScale,
     this.backgroundId,
+    this.ideaStatus,
+    this.pinned = false,
+    this.tag,
   });
 
   NoteItem copyWith({
@@ -205,6 +217,11 @@ class NoteItem {
     double? fontScale,
     String? backgroundId,
     bool clearBackground = false,
+    String? ideaStatus,
+    bool clearIdeaStatus = false,
+    bool? pinned,
+    String? tag,
+    bool clearTag = false,
   }) {
     return NoteItem(
       id: id,
@@ -220,6 +237,9 @@ class NoteItem {
       backgroundId: clearBackground
           ? null
           : (backgroundId ?? this.backgroundId),
+      ideaStatus: clearIdeaStatus ? null : (ideaStatus ?? this.ideaStatus),
+      pinned: pinned ?? this.pinned,
+      tag: clearTag ? null : (tag ?? this.tag),
     );
   }
 
@@ -234,6 +254,9 @@ class NoteItem {
       'text_color': textColorValue,
       'font_scale': fontScale,
       'background_id': backgroundId,
+      'idea_status': ideaStatus,
+      'pinned': pinned ? 1 : 0,
+      'tag': tag,
     };
   }
 
@@ -248,6 +271,9 @@ class NoteItem {
       textColorValue: map['text_color'] as int?,
       fontScale: (map['font_scale'] as num?)?.toDouble(),
       backgroundId: map['background_id'] as String?,
+      ideaStatus: map['idea_status'] as String?,
+      pinned: (map['pinned'] as int? ?? 0) == 1,
+      tag: map['tag'] as String?,
     );
   }
 

@@ -1634,6 +1634,84 @@ abstract class AppLocalizations {
   /// **'Idea content'**
   String get ideaContentHint;
 
+  /// No description provided for @ideaStatusConsidering.
+  ///
+  /// In en, this message translates to:
+  /// **'Considering'**
+  String get ideaStatusConsidering;
+
+  /// No description provided for @ideaStatusAdopted.
+  ///
+  /// In en, this message translates to:
+  /// **'Adopted'**
+  String get ideaStatusAdopted;
+
+  /// No description provided for @ideaStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get ideaStatusRejected;
+
+  /// No description provided for @ideaStatusNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No status'**
+  String get ideaStatusNone;
+
+  /// No description provided for @ideaStatusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get ideaStatusLabel;
+
+  /// No description provided for @ideaTagLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag'**
+  String get ideaTagLabel;
+
+  /// No description provided for @ideaTagHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag (optional)'**
+  String get ideaTagHint;
+
+  /// No description provided for @ideaSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search ideas'**
+  String get ideaSearchHint;
+
+  /// No description provided for @ideaPinTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin'**
+  String get ideaPinTooltip;
+
+  /// No description provided for @ideaUnpinTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get ideaUnpinTooltip;
+
+  /// No description provided for @ideaSortNewestFirstTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorted newest first (tap for oldest first)'**
+  String get ideaSortNewestFirstTooltip;
+
+  /// No description provided for @ideaSortOldestFirstTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorted oldest first (tap for newest first)'**
+  String get ideaSortOldestFirstTooltip;
+
+  /// No description provided for @ideasFilterEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No ideas match this filter'**
+  String get ideasFilterEmpty;
+
   /// No description provided for @reviewTitle.
   ///
   /// In en, this message translates to:
