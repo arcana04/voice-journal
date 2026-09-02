@@ -330,6 +330,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get loadErrorBannerAction => '再試行';
 
   @override
+  String get mediaStorageWarningBannerMessage => '写真・動画のクラウド容量がそろそろ上限です';
+
+  @override
+  String get mediaStorageFullBannerMessage =>
+      '写真・動画のクラウド容量が上限に達しました。新しい写真・動画は同期されません';
+
+  @override
+  String get mediaStorageBannerAction => '整理する';
+
+  @override
   String get accountSyncingMessage => '同期中です…';
 
   @override

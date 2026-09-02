@@ -105,6 +105,17 @@ class _RootScreenState extends State<RootScreen> {
                   ),
                 );
               }
+              final mediaUsage = store.mediaUsage;
+              if (mediaUsage != null && mediaUsage.isWarning) {
+                return _StatusBanner(
+                  icon: Icons.storage_outlined,
+                  message: mediaUsage.isOverCap
+                      ? l10n.mediaStorageFullBannerMessage
+                      : l10n.mediaStorageWarningBannerMessage,
+                  actionLabel: l10n.mediaStorageBannerAction,
+                  onAction: () => setState(() => _index = 1),
+                );
+              }
               return const SizedBox.shrink();
             },
           ),

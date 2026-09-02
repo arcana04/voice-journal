@@ -698,6 +698,24 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get loadErrorBannerAction;
 
+  /// No description provided for @mediaStorageWarningBannerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your photo/video cloud storage is almost full'**
+  String get mediaStorageWarningBannerMessage;
+
+  /// No description provided for @mediaStorageFullBannerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo/video cloud storage is full. New photos and videos won\'t sync'**
+  String get mediaStorageFullBannerMessage;
+
+  /// No description provided for @mediaStorageBannerAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean up'**
+  String get mediaStorageBannerAction;
+
   /// No description provided for @accountSyncingMessage.
   ///
   /// In en, this message translates to:

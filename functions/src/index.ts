@@ -11,6 +11,7 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
+import { onObjectFinalized, onObjectDeleted } from "firebase-functions/v2/storage";
 import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions/v2";
 import ffmpegPath from "ffmpeg-static";
@@ -34,6 +35,9 @@ const APP_CHECK_ENFORCED = false;
 
 const FREE_DAILY_LIMIT = 3;
 const PRO_DAILY_LIMIT = 30;
+/** 写真・動画クラウド同期（サブスクプラン限定）の合計容量上限。定額課金なのに
+ * Firebase Storage代が青天井になるのを防ぐための安全弁。 */
+const MEDIA_STORAGE_CAP_BYTES = 5 * 1024 * 1024 * 1024; // 5GB
 /** RevenueCatダッシュボードで作成する「Pro」プランのエンタイトルメントID。クライアント側
  * （lib/config/revenuecat_config.dart）の値と一致させること。 */
 const PRO_ENTITLEMENT_ID = "voice_journal_pro";
@@ -474,6 +478,55 @@ export const getUsageStatus = onCall(
     const used = (snap.data()?.count as number | undefined) ?? 0;
 
     return { used, limit };
+  }
+);
+
+/** users/{uid}/entries/{entryId}/media/{fileName} 以下のオブジェクトだけを
+ * 対象に、[uid]と抽出してマッチさせる。それ以外のパスにはマッチしない。 */
+const MEDIA_OBJECT_PATH_RE = /^users\/([^/]+)\/entries\/[^/]+\/media\/[^/]+$/;
+
+async function adjustMediaBytesUsed(uid: string, deltaBytes: number): Promise<void> {
+  if (deltaBytes === 0) return;
+  const db = getFirestore();
+  await db
+    .collection("users")
+    .doc(uid)
+    .set(
+      { mediaBytesUsed: FieldValue.increment(deltaBytes) },
+      { merge: true }
+    );
+}
+
+/** 写真・動画のアップロード完了のたびに、そのユーザーの合計使用量
+ * （users/{uid}.mediaBytesUsed）を加算する。 */
+export const onMediaObjectFinalized = onObjectFinalized(async (event) => {
+  const match = MEDIA_OBJECT_PATH_RE.exec(event.data.name);
+  if (!match) return;
+  await adjustMediaBytesUsed(match[1], Number(event.data.size ?? 0));
+});
+
+/** 写真・動画の削除のたびに、そのユーザーの合計使用量を差し引く。 */
+export const onMediaObjectDeleted = onObjectDeleted(async (event) => {
+  const match = MEDIA_OBJECT_PATH_RE.exec(event.data.name);
+  if (!match) return;
+  await adjustMediaBytesUsed(match[1], -Number(event.data.size ?? 0));
+});
+
+/** クライアントはusers/{uid}を直接読めない（firestore.rules参照）ため、写真・
+ * 動画クラウド同期の使用量/上限をこの呼び出し経由で取得する。 */
+export const getMediaUsage = onCall(
+  { enforceAppCheck: APP_CHECK_ENFORCED },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", "認証が必要です。");
+    }
+
+    const db = getFirestore();
+    const snap = await db.collection("users").doc(uid).get();
+    const used = (snap.data()?.mediaBytesUsed as number | undefined) ?? 0;
+
+    return { used, cap: MEDIA_STORAGE_CAP_BYTES };
   }
 );
 

@@ -339,6 +339,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadErrorBannerAction => 'Retry';
 
   @override
+  String get mediaStorageWarningBannerMessage =>
+      'Your photo/video cloud storage is almost full';
+
+  @override
+  String get mediaStorageFullBannerMessage =>
+      'Photo/video cloud storage is full. New photos and videos won\'t sync';
+
+  @override
+  String get mediaStorageBannerAction => 'Clean up';
+
+  @override
   String get accountSyncingMessage => 'Syncing…';
 
   @override

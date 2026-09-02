@@ -7,6 +7,7 @@ import '../l10n/l10n_utils.dart';
 import '../models/custom_word.dart';
 import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
+import '../models/media_usage.dart';
 import '../models/summary_level.dart';
 import '../models/usage_status.dart';
 import '../models/weekly_report.dart';
@@ -154,6 +155,23 @@ class BackendService {
       return UsageStatus(
         used: (data['used'] as num?)?.toInt() ?? 0,
         limit: (data['limit'] as num?)?.toInt() ?? 0,
+      );
+    } on FirebaseFunctionsException catch (e) {
+      throw BackendServiceException(e.message ?? currentLocalizations().usageFetchError);
+    }
+  }
+
+  Future<MediaUsage> fetchMediaUsage() async {
+    await _auth.ensureSignedIn();
+
+    try {
+      final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+      final callable = functions.httpsCallable('getMediaUsage');
+      final result = await callable.call<Map<String, dynamic>>();
+      final data = result.data;
+      return MediaUsage(
+        usedBytes: (data['used'] as num?)?.toInt() ?? 0,
+        capBytes: (data['cap'] as num?)?.toInt() ?? 0,
       );
     } on FirebaseFunctionsException catch (e) {
       throw BackendServiceException(e.message ?? currentLocalizations().usageFetchError);

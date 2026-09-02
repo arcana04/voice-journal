@@ -6,8 +6,10 @@ import 'package:flutter/foundation.dart';
 
 import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
+import '../models/media_usage.dart';
 import '../services/apple_reminders_service.dart';
 import '../services/apple_reminders_settings_service.dart';
+import '../services/backend_service.dart';
 import '../services/calendar_service.dart';
 import '../services/calendar_settings_service.dart';
 import '../services/cloud_sync_service.dart';
@@ -27,10 +29,26 @@ class JournalStore extends ChangeNotifier {
       AppleRemindersSettingsService();
   final CloudSyncService _cloudSync = CloudSyncService();
   final MediaSyncService _mediaSync = MediaSyncService();
+  final BackendService _backend = BackendService();
 
   List<JournalEntry> entries = [];
   bool loading = false;
   bool _syncing = false;
+
+  /// 写真・動画クラウド同期（サブスクプラン限定）の直近の使用量。未取得/取得
+  /// 失敗時はnull（バナー等は単に表示しない）。
+  MediaUsage? mediaUsage;
+
+  /// [BackendService.fetchMediaUsage]で最新の使用量を取得する。失敗しても
+  /// 静かに諦める（容量確認はコア機能ではないため、ここでUIを壊さない）。
+  Future<void> refreshMediaUsage() async {
+    try {
+      mediaUsage = await _backend.fetchMediaUsage();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('refreshMediaUsage failed: $e');
+    }
+  }
 
   /// 直近の[load]呼び出しが失敗した場合のエラー内容。成功すればnullに戻る。
   /// UIはこれを見て、末永く回り続けるローディング表示を防いだり、エラーを
@@ -65,6 +83,7 @@ class JournalStore extends ChangeNotifier {
       // これに加えて WorkManager 経由でも定期的に同じ復元処理を行う
       // （[reminderCallbackDispatcher]）ため、再起動後アプリを開かなくても復元される。
       unawaited(_reminders.rescheduleAllPending());
+      unawaited(refreshMediaUsage());
     } catch (e) {
       loadError = e.toString();
       debugPrint('journal load failed: $e');
@@ -392,13 +411,17 @@ class JournalStore extends ChangeNotifier {
       imagePaths: [...entries[index].imagePaths, ...paths],
     );
     notifyListeners();
-    if (canSyncMedia) {
+    // 容量上限に達している場合は、静かに（同期エラー扱いにはせず）アップロード
+    // 自体をスキップする——ファイルはローカルには残るので、上限に達した後も
+    // 撮影・添付そのものは引き続きでき、データが失われることはない。
+    if (canSyncMedia && mediaUsage?.isOverCap != true) {
       _trackSync(
         _mediaSync.uploadPendingMedia(
           entryId: entry.id!,
           remoteId: entry.remoteId,
         ),
       );
+      unawaited(refreshMediaUsage());
     }
   }
 
