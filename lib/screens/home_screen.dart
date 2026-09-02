@@ -130,10 +130,10 @@ class _HomeScreenState extends State<HomeScreen> {
     _amplitudeSub = _recorder
         .onAmplitudeChanged(const Duration(milliseconds: 300))
         .listen((amplitude) {
-      if (amplitude.current > kSilenceThresholdDb) {
-        _lastSoundAt = DateTime.now();
-      }
-    });
+          if (amplitude.current > kSilenceThresholdDb) {
+            _lastSoundAt = DateTime.now();
+          }
+        });
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       final next = _elapsed + const Duration(seconds: 1);
       if (next >= _maxDuration) {
@@ -310,9 +310,9 @@ class _HomeScreenState extends State<HomeScreen> {
     await context.read<JournalStore>().addEntry(entry);
     if (!mounted) return;
     setState(
-      () => _statusMessage = AppLocalizations.of(
-        context,
-      )!.statusOrganized(entry.summary),
+      () =>
+          _statusMessage = AppLocalizations.of(context)!
+              .statusOrganized(entry.summary),
     );
   }
 
@@ -336,10 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radius),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
         content: SingleChildScrollView(child: Text(message)),
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
@@ -406,9 +403,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          Positioned.fill(
-            child: const AppBackgroundImage(),
-          ),
+          Positioned.fill(child: const AppBackgroundImage()),
           SafeArea(
             child: Stack(
               children: [
@@ -532,64 +527,68 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: const Icon(Icons.add),
                     ),
                   ),
-                Positioned(
-                  top: 4,
-                  left: 4,
-                  child: IconButton(
-                    icon: const Icon(Icons.settings_outlined, size: 32),
-                    tooltip: l10n.settingsTooltip,
-                    style: pressableIconButtonStyle(context),
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                if (draftItems == null)
+                  Positioned(
+                    top: 4,
+                    left: 4,
+                    child: IconButton(
+                      icon: const Icon(Icons.settings_outlined, size: 32),
+                      tooltip: l10n.settingsTooltip,
+                      style: pressableIconButtonStyle(context),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const SettingsScreen(),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert),
-                    style: pressableIconButtonStyle(context),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    padding: EdgeInsets.zero,
-                    onSelected: (value) {
-                      if (value == 'dictionary') {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const CustomDictionaryScreen(),
+                if (draftItems == null)
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert),
+                      style: pressableIconButtonStyle(context),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: EdgeInsets.zero,
+                      onSelected: (value) {
+                        if (value == 'dictionary') {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const CustomDictionaryScreen(),
+                            ),
+                          );
+                        } else if (value == 'summaryLevel') {
+                          showModalBottomSheet<void>(
+                            context: context,
+                            isScrollControlled: true,
+                            showDragHandle: true,
+                            builder: (_) => const _SummaryLevelSheet(),
+                          );
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'dictionary',
+                          height: 56,
+                          child: _MenuRow(
+                            icon: Icons.edit_outlined,
+                            label: l10n.menuCustomDictionary,
                           ),
-                        );
-                      } else if (value == 'summaryLevel') {
-                        showModalBottomSheet<void>(
-                          context: context,
-                          isScrollControlled: true,
-                          showDragHandle: true,
-                          builder: (_) => const _SummaryLevelSheet(),
-                        );
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: 'dictionary',
-                        height: 56,
-                        child: _MenuRow(
-                          icon: Icons.edit_outlined,
-                          label: l10n.menuCustomDictionary,
                         ),
-                      ),
-                      PopupMenuItem(
-                        value: 'summaryLevel',
-                        height: 56,
-                        child: _MenuRow(
-                          icon: Icons.auto_awesome_outlined,
-                          label: l10n.menuSummaryLevel,
+                        PopupMenuItem(
+                          value: 'summaryLevel',
+                          height: 56,
+                          child: _MenuRow(
+                            icon: Icons.auto_awesome_outlined,
+                            label: l10n.menuSummaryLevel,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
               ],
             ),
           ),
