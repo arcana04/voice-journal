@@ -280,6 +280,12 @@
   "manualDiaryContentHint": "今日はどんな一日でしたか？",
   "manualDiaryContentRequiredError": "内容を入力してください",
 
+  "manualIdeaFabTooltip": "アイデアを追加",
+  "manualIdeaScreenTitle": "アイデアを追加",
+  "manualIdeaTitleHint": "見出し（任意）",
+  "manualIdeaContentHint": "アイデアの内容",
+  "manualIdeaContentRequiredError": "内容を入力してください",
+
   "ideasEmpty": "まだアイデアがありません\n思いついたことを話してみましょう",
 
   "editIdeaTitle": "アイデアを編集",

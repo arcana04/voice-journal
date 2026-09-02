@@ -301,6 +301,12 @@
   "manualDiaryContentHint": "How was your day?",
   "manualDiaryContentRequiredError": "Please enter some content",
 
+  "manualIdeaFabTooltip": "Add idea",
+  "manualIdeaScreenTitle": "Add idea",
+  "manualIdeaTitleHint": "Heading (optional)",
+  "manualIdeaContentHint": "Idea content",
+  "manualIdeaContentRequiredError": "Please enter some content",
+
   "ideasEmpty": "No ideas yet\nTry saying what comes to mind",
 
   "editIdeaTitle": "Edit idea",

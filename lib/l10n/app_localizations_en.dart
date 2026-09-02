@@ -848,6 +848,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manualDiaryContentRequiredError => 'Please enter some content';
 
   @override
+  String get manualIdeaFabTooltip => 'Add idea';
+
+  @override
+  String get manualIdeaScreenTitle => 'Add idea';
+
+  @override
+  String get manualIdeaTitleHint => 'Heading (optional)';
+
+  @override
+  String get manualIdeaContentHint => 'Idea content';
+
+  @override
+  String get manualIdeaContentRequiredError => 'Please enter some content';
+
+  @override
   String get ideasEmpty => 'No ideas yet\nTry saying what comes to mind';
 
   @override

@@ -1658,6 +1658,36 @@ abstract class AppLocalizations {
   /// **'Please enter some content'**
   String get manualDiaryContentRequiredError;
 
+  /// No description provided for @manualIdeaFabTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add idea'**
+  String get manualIdeaFabTooltip;
+
+  /// No description provided for @manualIdeaScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add idea'**
+  String get manualIdeaScreenTitle;
+
+  /// No description provided for @manualIdeaTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Heading (optional)'**
+  String get manualIdeaTitleHint;
+
+  /// No description provided for @manualIdeaContentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Idea content'**
+  String get manualIdeaContentHint;
+
+  /// No description provided for @manualIdeaContentRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter some content'**
+  String get manualIdeaContentRequiredError;
+
   /// No description provided for @ideasEmpty.
   ///
   /// In en, this message translates to:

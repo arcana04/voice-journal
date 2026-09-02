@@ -819,6 +819,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get manualDiaryContentRequiredError => '内容を入力してください';
 
   @override
+  String get manualIdeaFabTooltip => 'アイデアを追加';
+
+  @override
+  String get manualIdeaScreenTitle => 'アイデアを追加';
+
+  @override
+  String get manualIdeaTitleHint => '見出し（任意）';
+
+  @override
+  String get manualIdeaContentHint => 'アイデアの内容';
+
+  @override
+  String get manualIdeaContentRequiredError => '内容を入力してください';
+
+  @override
   String get ideasEmpty => 'まだアイデアがありません\n思いついたことを話してみましょう';
 
   @override

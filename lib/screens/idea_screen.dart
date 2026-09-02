@@ -9,6 +9,7 @@ import '../widgets/app_background_image.dart';
 import '../widgets/idea_entry_card.dart';
 import '../widgets/scrim_text.dart';
 import 'idea_edit_screen.dart';
+import 'manual_idea_screen.dart';
 
 enum _IdeaFilter { all, considering, adopted, rejected }
 
@@ -142,6 +143,21 @@ class _IdeaScreenState extends State<IdeaScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      floatingActionButton: Padding(
+        // 外側のRootScreenが持つフローティングナビゲーションバー（透過で背後に
+        // body が回り込む extendBody:true）と重ならないよう、その高さ分だけ上げる。
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom + 76,
+        ),
+        child: FloatingActionButton(
+          heroTag: 'manual_idea_fab',
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ManualIdeaScreen()),
+          ),
+          tooltip: AppLocalizations.of(context)!.manualIdeaFabTooltip,
+          child: const Icon(Icons.add),
+        ),
+      ),
       body: Stack(
         children: [
           Positioned.fill(
