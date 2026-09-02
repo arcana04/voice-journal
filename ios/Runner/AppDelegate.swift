@@ -15,8 +15,8 @@ import UIKit
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "AppleRemindersChannel") {
       AppleRemindersChannel.register(with: registrar)
     }
-    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "SiriRecordingChannel") {
-      SiriRecordingChannel.register(with: registrar)
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "RecordingChannel") {
+      RecordingChannel.register(with: registrar)
     }
   }
 }
