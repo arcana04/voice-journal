@@ -237,6 +237,7 @@ tasksの中に「15時に」「明日の朝9時」「夜7時に病院」のよ�
 【感情タグ】
 comfort_messageと同じ条件（category="感情ログ" のnoteが1件以上ある場合のみ）で、その内容から読み取れる最も中心的な感情をひとつだけ選び、emotion に次のいずれかの英語の識別子（この通りのスペルで、翻訳せずに）を入れてください：
 satisfaction（満足・達成感）, gratitude（感謝）, happy（嬉しい・心が温まる感じ）, love（好き・愛情・愛おしさ）, funny（面白い・愉快）, joy（楽しい・満喫している感じ）, excited（ドキドキ・期待）, relief（安心・ほっとした）, calm（穏やか・落ち着いた）, neutral（それ以外・判別しづらい穏やかな心情）, boredom（退屈）, anxious（不安・焦り）, sadness（悲しい・落ち込み）, fatigue（疲れた・くたびれ）, regret（後悔）, anger（怒り・苛立ち）, dislike（嫌い・苦手）。
+【重要】文中に「楽しい」「楽しかった」という言葉が出てくるからといって、それだけで安易にjoyを選ばないこと。表面的な単語ではなく、実際に読み取れる感情の中身で判断する。例えば次のように、より的確な選択肢があればそちらを優先すること：誰かに親切にされた・何かをしてもらった→gratitude、目標を達成した・やり遂げた→satisfaction、大切な人や物への愛着・好意→love、冗談や滑稽な出来事で笑った→funny、これから起きることへのわくわく・期待・緊張→excited、心配事が解消してほっとした→relief。joyは「活動そのものを満喫している」という意味に明確に当てはまる場合だけ選び、ポジティブ全般の既定値として使わないこと。
 happyとjoyとsatisfactionは近い感情だが、happyは他者や出来事への嬉しさ、joyは活動そのものを楽しんでいる感じ、satisfactionは達成感を伴う満足として区別すること。calmとreliefとneutralも近いが、calmは穏やかで落ち着いた状態、reliefは不安が解消してほっとした状態、neutralはどちらにも当てはまらない中立的な心情として区別すること。
 感情ログが無い場合は emotion は null にしてください。
 
@@ -304,6 +305,7 @@ Only if there is at least one note with category="感情ログ", write a short, 
 [Emotion tag]
 Under the same condition as comfort_message (only if there is at least one note with category="感情ログ"), pick the single most central emotion conveyed by that content and put it in emotion as exactly one of these English identifiers (spelled exactly as shown, never translated):
 satisfaction, gratitude, happy, love, funny, joy, excited, relief, calm, neutral, boredom, anxious, sadness, fatigue, regret, anger, dislike (use neutral for anything ambiguous that doesn't clearly fit the others).
+[Important] Don't default to joy just because the speaker literally says "fun" or "enjoyed it" — judge by the actual feeling being conveyed, not the surface word. Prefer a more specific match when one clearly fits: someone was kind / did something for them → gratitude; they accomplished or finished a goal → satisfaction; affection for a person or thing → love; something struck them as funny/amusing → funny; anticipation or nervous excitement about something upcoming → excited; relief after a worry resolved → relief. Reserve joy for cases that are specifically about enjoying an activity itself, not as a catch-all default for anything positive.
 happy, joy, and satisfaction are close but distinct: happy is warmth toward someone/something that happened, joy is enjoying the activity itself, satisfaction is a sense of accomplishment. calm, relief, and neutral are also close but distinct: calm is a settled, peaceful state, relief is the feeling right after anxiety resolves, neutral is a plain in-between state that doesn't fit either.
 If there is no 感情ログ note, set emotion to null.
 
@@ -795,6 +797,46 @@ const VALID_EMOTIONS = new Set([
   "dislike",
 ]);
 
+const EMOTION_LABEL_JA: Record<string, string> = {
+  satisfaction: "満足",
+  gratitude: "感謝",
+  happy: "嬉しい",
+  love: "好き",
+  funny: "面白い",
+  joy: "楽しい",
+  excited: "ドキドキ",
+  relief: "安心",
+  calm: "穏やか",
+  neutral: "普通",
+  boredom: "退屈",
+  anxious: "不安",
+  sadness: "悲しい",
+  fatigue: "疲れた",
+  regret: "後悔",
+  anger: "怒り",
+  dislike: "嫌い",
+};
+
+const EMOTION_LABEL_EN: Record<string, string> = {
+  satisfaction: "Satisfaction",
+  gratitude: "Gratitude",
+  happy: "Happy",
+  love: "Love",
+  funny: "Funny",
+  joy: "Joy",
+  excited: "Excited",
+  relief: "Relief",
+  calm: "Calm",
+  neutral: "Neutral",
+  boredom: "Boredom",
+  anxious: "Anxious",
+  sadness: "Sad",
+  fatigue: "Tired",
+  regret: "Regret",
+  anger: "Anger",
+  dislike: "Dislike",
+};
+
 async function structure(
   apiKey: string,
   transcript: string,
@@ -966,23 +1008,25 @@ function buildKnowledgeBaseSystemPrompt(locale: Locale): string {
   if (locale === "en") {
     return `You are an AI assistant that answers the user's questions by referencing their own past voice memos and journal entries.
 
-You will be given a list of the user's past diary entries, ideas, and tasks below, each with its date.
+You will be given a list of the user's past diary entries, ideas, and tasks below, each with its date. Diary entries that had an emotion tag assigned are marked with "— <emotion>" right after the date.
 Answer the user's question in English, using ONLY the information in that list as your source.
 - If you find relevant entries, mention which date(s) they're from.
 - If nothing relevant is found, honestly say so instead of guessing or making something up.
 - If asked for a trend or pattern, back it up with concrete counts or frequency from the entries.
 - If asked to compile a list, present it as a concise bullet list.
+- If asked to analyze the CAUSE of a feeling (e.g. "why have I been anxious lately?", "what's been bringing me down?"), don't just list the matching entries — actively look across entries near each other in time for recurring situations, people, places, or events that line up with that emotion tag, and lay out the pattern you found as a plausible explanation. Phrase it as an inference grounded in what's written ("it looks like ___ tends to coincide with ___"), not as a certain diagnosis, and say so if the entries are too sparse to support any real pattern.
 Keep your answer concise and conversational, not a wall of text.`;
   }
 
   return `あなたはユーザー本人が過去に記録した音声メモ・日記を横断的に参照して、質問に答えるAIアシスタントです。
 
-以下に、ユーザーが過去に記録した日記・アイデア・タスクの一覧を日付つきで渡します。
+以下に、ユーザーが過去に記録した日記・アイデア・タスクの一覧を日付つきで渡します。感情タグが付いている日記には、日付の直後に「— <感情>」の形で付記されています。
 これらの内容だけを根拠に、ユーザーの質問に日本語で答えてください。
 - 該当する記録があれば、いつの記録か（日付）に触れてください。
 - 該当する記録が見当たらない場合は、推測で答えを作らず、正直に見つからなかったと伝えてください。
 - 傾向や頻度を尋ねられた場合は、件数など具体的な根拠を示してください。
 - リスト化を求められた場合は、簡潔な箇条書きでまとめてください。
+- 「最近なんで不安なんだろう」「何にモヤモヤしてるんだろう」のように感情の原因分析を求められた場合は、単に該当する記録を列挙するだけで終わらせないでください。該当する感情タグの前後・周辺の記録も横断的に見て、繰り返し出てくる出来事・人物・場所・状況などのパターンを探し、見つかった傾向を「〜という時に〜な気分になっていることが多いようです」のように、記録から読み取れる推測として筋道立てて提示してください。断定はせず、記録が少なすぎてパターンと呼べない場合は無理に決めつけず正直にそう伝えてください。
 簡潔で会話的な答え方をしてください。長文の説明文にはしないでください。`;
 }
 
@@ -1099,8 +1143,13 @@ function formatFirestoreEntriesAsContext(
 
   for (const data of docs) {
     const createdAt = new Date(data.created_at ?? "");
+    const emotionId = typeof data.emotion === "string" ? data.emotion : null;
+    const emotionLabel = emotionId
+      ? (locale === "en" ? EMOTION_LABEL_EN : EMOTION_LABEL_JA)[emotionId]
+      : undefined;
+    const emotionSuffix = emotionLabel ? ` — ${emotionLabel}` : "";
     lines.push(
-      `■ ${Number.isNaN(createdAt.getTime()) ? "" : dateFormatter.format(createdAt)}`
+      `■ ${Number.isNaN(createdAt.getTime()) ? "" : dateFormatter.format(createdAt)}${emotionSuffix}`
     );
     for (const note of (data.notes ?? []) as {
       category?: string;
@@ -1273,7 +1322,7 @@ You will be given the week's diary entries, ideas, and tasks below, each with it
 {
   "mood_headline": "One short, punchy catchphrase headline (under ~12 words) capturing the week's emotional pattern, quoting the two most common emotions from the given breakdown with their approximate percentages of the week's total, e.g. \\"An 'Excited 70% / Anxious 30%' challenger week!\\". Compute the percentages yourself from the given counts — never invent numbers not supported by the breakdown. If the breakdown is empty, write a gentle one-line note that there wasn't enough emotional data this week instead of inventing a mood.",
   "emotion_narrative": "1-2 sentences describing the emotional trend across the week (e.g. which day had the most of a particular feeling, whether it improved or worsened toward the weekend). Write it in a warm, encouraging tone, in English. If there isn't enough emotional content to say anything meaningful, say so briefly instead of inventing a trend.",
-  "top_keywords": [ up to 3 objects like {"keyword": "short theme name", "count": approximate number of times it came up} ], ordered by how often they came up. Empty array if nothing recurring.
+  "top_keywords": [ up to 10 objects like {"keyword": "a literal short word or phrase (roughly 2-8 characters/words) copied as-is from the entries — NOT an abstracted theme name, so it can be matched back against the original text", "count": approximate number of times it came up} ], ordered by how often they came up. Only include a keyword if it's genuinely recurring or notable (don't pad the list to reach 10). Empty array if nothing recurring.
   "shining_ideas": [ up to 2 objects like {"title": "short idea title", "reason": "1 short sentence on why this idea stands out"} ] — pick from the "Idea" entries only, the ones with the most potential or spark. Empty array if there are no ideas this week.
   "highlight_quote": { "quote": "the single most striking/positive/insightful line quoted (or lightly trimmed) from this week's Diary entries only — pick the one that best captures a realization, a win, or genuine emotion. Empty string if there are no diary entries this week.", "reason": "1 short sentence on why this line stands out" },
   "advice": "One short, concrete, actionable tip for the upcoming week based on the patterns you noticed (e.g. a day of the week that tends to be busy). Keep it under 2 sentences, warm and non-preachy, in English.",
@@ -1290,7 +1339,7 @@ Output ONLY the JSON object, no extra commentary.`;
 {
   "mood_headline": "今週の感情パターンを表す、短くキャッチーな一言見出し（15文字〜30文字程度）。渡された感情タグの内訳から最も多い上位2つの感情とそのおおよその割合（%）を引用すること。例：「『ワクワク70%／焦り30%』の挑戦者モード」。割合は必ず渡された集計値から自分で計算し、根拠のない数字を作らないこと。内訳が空の場合は、無理に気分を作らず「今週は感情の記録が少なめでした」のような優しい一言にすること。",
   "emotion_narrative": "今週の感情の傾向を1〜2文で。例えば特定の感情がどの曜日に集中していたか、週末にかけて改善/悪化したかなど。温かく励ますようなトーンで日本語で書いてください。感情に関する記録が少なすぎて有意な傾向が言えない場合は、無理に傾向を作らず正直にそう書いてください。",
-  "top_keywords": [ 最大3件、{"keyword": "短いテーマ名", "count": 言及されたおおよその回数} という形のオブジェクト。よく出てきた順。繰り返し出てきたテーマが無ければ空配列。 ],
+  "top_keywords": [ 最大10件、{"keyword": "記録中の文章からそのまま抜き出した、短い単語・フレーズ(2〜8文字程度)。要約・言い換えした抽象的なテーマ名にはせず、元の文章と照合できる形で使うこと。", "count": 言及されたおおよその回数} という形のオブジェクト。よく出てきた順。10件に満たなくても無理に埋めず、本当に繰り返し出てきた・印象的だったものだけを入れること。繰り返し出てきたテーマが無ければ空配列。 ],
   "shining_ideas": [ 最大2件、{"title": "アイデアの短いタイトル", "reason": "なぜこのアイデアが光っているかの短い理由（1文）"} という形のオブジェクト。「アイデア」カテゴリのnoteの中から、特にポテンシャルや閃きを感じるものを選ぶこと。今週アイデアが無ければ空配列。 ],
   "highlight_quote": { "quote": "今週の「日記」カテゴリのnoteの中から、気づき・達成・率直な感情が最もよく表れている一文を、そのまま（または軽くトリミングして）引用したもの。今週日記が無ければ空文字列。", "reason": "なぜこの一文が光っているかの短い理由（1文）" },
   "advice": "気づいたパターンを踏まえた、来週に向けた短く具体的なワンポイントアドバイス。2文以内、説教くさくなく温かいトーンで、日本語で。",

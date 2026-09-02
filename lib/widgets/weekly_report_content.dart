@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:screenshot/screenshot.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/emotion_tag.dart';
 import '../models/weekly_report.dart';
+import 'brain_map.dart';
 import 'category_donut_chart.dart';
 import 'mental_wave_chart.dart';
 import 'weekly_aurora.dart';
@@ -26,6 +28,7 @@ class WeeklyReportContent extends StatelessWidget {
   final DateTime weekEnd;
   final List<Map<EmotionTag, int>> dailyEmotionCounts;
   final List<MoodMoment> moodMoments;
+  final List<BrainMapBubble> brainMapBubbles;
   final int diaryCount;
   final int ideaCount;
   final int totalTasks;
@@ -39,6 +42,7 @@ class WeeklyReportContent extends StatelessWidget {
     required this.weekEnd,
     required this.dailyEmotionCounts,
     required this.moodMoments,
+    required this.brainMapBubbles,
     required this.diaryCount,
     required this.ideaCount,
     required this.totalTasks,
@@ -77,6 +81,13 @@ class WeeklyReportContent extends StatelessWidget {
                 locale: locale,
               ),
             ),
+            if (insights.weeklyLetter.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _WeeklyLetterCard(
+                title: l10n.weeklyReportLetterSectionTitle,
+                letter: insights.weeklyLetter,
+              ),
+            ],
             const SizedBox(height: 16),
             _SectionCard(
               icon: Icons.show_chart,
@@ -86,6 +97,13 @@ class WeeklyReportContent extends StatelessWidget {
                 weekStart: weekStart,
                 locale: locale,
               ),
+            ),
+            const SizedBox(height: 16),
+            _SectionCard(
+              icon: Icons.bubble_chart_outlined,
+              title: l10n.weeklyReportKeywordsSectionTitle,
+              subtitle: l10n.weeklyReportBrainMapSubtitle,
+              child: BrainMap(bubbles: brainMapBubbles, locale: locale),
             ),
             const SizedBox(height: 16),
             _SectionCard(
@@ -150,13 +168,6 @@ class WeeklyReportContent extends StatelessWidget {
               title: l10n.weeklyReportAdviceSectionTitle,
               child: Text(insights.advice, style: theme.textTheme.bodyMedium),
             ),
-            if (insights.weeklyLetter.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _WeeklyLetterCard(
-                title: l10n.weeklyReportLetterSectionTitle,
-                letter: insights.weeklyLetter,
-              ),
-            ],
           ],
         ),
         // 画面には表示せず、共有画像キャプチャのためだけにオフキャンバスへ配置。
@@ -221,9 +232,10 @@ class _MagazineHeader extends StatelessWidget {
 class _SectionCard extends StatelessWidget {
   final IconData icon;
   final String title;
+  final String? subtitle;
   final Widget child;
 
-  const _SectionCard({required this.icon, required this.title, required this.child});
+  const _SectionCard({required this.icon, required this.title, this.subtitle, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -255,6 +267,16 @@ class _SectionCard extends StatelessWidget {
               ),
             ],
           ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 2),
+            Padding(
+              padding: const EdgeInsets.only(left: 28),
+              child: Text(
+                subtitle!,
+                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           child,
         ],
@@ -263,47 +285,105 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-/// AIが書く「週刊レター」。他のデータ系セクションと区別がつくよう、便箋を
-/// 意識した専用の見た目（封筒アイコン＋セリフ調の本文）にしている。
+/// AIが書く「週刊レター」。他のダーク基調のカードとはあえて対比させ、
+/// 羊皮紙・手紙らしい見た目（クリーム地のグラデーション＋経年による縁の
+/// 焼け＋明朝体）にしている。
 class _WeeklyLetterCard extends StatelessWidget {
   final String title;
   final String letter;
 
   const _WeeklyLetterCard({required this.title, required this.letter});
 
+  static const Color _parchmentLight = Color(0xFFF4E8C8);
+  static const Color _parchmentDark = Color(0xFFDFC38C);
+  static const Color _parchmentEdge = Color(0xFFB08D4F);
+  static const Color _ink = Color(0xFF4A3524);
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.25)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.mail_outline, size: 20, color: theme.colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Text(
-            letter,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontStyle: FontStyle.italic,
-              height: 1.6,
-            ),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: _parchmentEdge, width: 1.4),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
           ),
         ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(5),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: const BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.topLeft,
+                    radius: 1.4,
+                    colors: [_parchmentLight, _parchmentDark],
+                  ),
+                ),
+              ),
+            ),
+            // 経年で縁が焼けたような、四隅を暗くするビネット。
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.center,
+                    radius: 1.0,
+                    stops: const [0.55, 1.0],
+                    colors: [Colors.transparent, _parchmentEdge.withValues(alpha: 0.4)],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 20, 22, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.history_edu_outlined, size: 20, color: _ink.withValues(alpha: 0.8)),
+                      const SizedBox(width: 8),
+                      Text(
+                        title,
+                        style: GoogleFonts.shipporiMincho(
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            letterSpacing: 1.6,
+                            color: _ink,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Divider(
+                    color: _ink.withValues(alpha: 0.25),
+                    thickness: 1,
+                    height: 22,
+                  ),
+                  Text(
+                    letter,
+                    style: GoogleFonts.shipporiMincho(
+                      textStyle: const TextStyle(
+                        fontSize: 15,
+                        height: 1.9,
+                        color: _ink,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

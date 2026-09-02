@@ -62,6 +62,69 @@ class ShiningIdea {
   Map<String, dynamic> toJson() => {'title': title, 'reason': reason};
 }
 
+/// 「脳内マップ」の1バブルが持つ、実際に紐づいた記録1件分。
+class BrainMapMatch {
+  final DateTime time;
+  final String snippet;
+  final EmotionTag? emotion;
+
+  const BrainMapMatch({required this.time, required this.snippet, this.emotion});
+
+  factory BrainMapMatch.fromJson(Map<String, dynamic> json) {
+    return BrainMapMatch(
+      time: DateTime.parse(json['t'] as String),
+      snippet: json['s'] as String? ?? '',
+      emotion: EmotionTag.fromId(json['e'] as String?),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        't': time.toIso8601String(),
+        's': snippet,
+        if (emotion != null) 'e': emotion!.id,
+      };
+}
+
+/// 「脳内マップ」(Word Cloudのバブル)の1件。[WeeklyReportInsights.topKeywords]
+/// (AIが抽出したキーワード)と、その週の実際の記録本文を突き合わせてローカルで
+/// 計算する(AIの判断はキーワード抽出のみ、紐づく感情の集計・色のブレンドは
+/// ローカルDBの値から計算する、という他の集計値と同じ役割分担)。
+/// 履歴閲覧時にも同じ結果を再現できるよう、計算結果をそのまま保存する。
+class BrainMapBubble {
+  final String keyword;
+  /// バブルの大きさに使う重み(そのキーワードが実際に見つかった記録の件数)。
+  /// AIの自己申告のcountではなく、ローカルでの実際のマッチ件数を使う。
+  final int weight;
+  /// 紐づく感情をブレンドした色(ARGB32)。[emotion_color_blend.dart]で計算済み。
+  final int colorValue;
+  final List<BrainMapMatch> matches;
+
+  const BrainMapBubble({
+    required this.keyword,
+    required this.weight,
+    required this.colorValue,
+    required this.matches,
+  });
+
+  factory BrainMapBubble.fromJson(Map<String, dynamic> json) {
+    return BrainMapBubble(
+      keyword: json['k'] as String? ?? '',
+      weight: (json['w'] as num?)?.toInt() ?? 0,
+      colorValue: (json['c'] as num?)?.toInt() ?? 0xFF2A3040,
+      matches: (json['m'] as List? ?? [])
+          .map((e) => BrainMapMatch.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'k': keyword,
+        'w': weight,
+        'c': colorValue,
+        'm': matches.map((e) => e.toJson()).toList(),
+      };
+}
+
 class HighlightQuote {
   final String quote;
   final String reason;
@@ -147,6 +210,10 @@ class SavedWeeklyReport {
   final List<Map<EmotionTag, int>> dailyEmotionCounts;
   /// メンタルウェーブ用の、実際の記録時刻ごとの感情カテゴリ一覧。
   final List<MoodMoment> moodMoments;
+  /// 「脳内マップ」のバブル一覧。生成時にその週の実際の記録と突き合わせて
+  /// 計算済みのものをそのまま保存する(履歴閲覧時は元の記録が残っていない
+  /// 週もあるため、都度再計算はせずスナップショットをそのまま使う)。
+  final List<BrainMapBubble> brainMapBubbles;
   final int diaryCount;
   final int ideaCount;
   final int totalTasks;
@@ -162,6 +229,7 @@ class SavedWeeklyReport {
     required this.emotionCounts,
     required this.dailyEmotionCounts,
     required this.moodMoments,
+    required this.brainMapBubbles,
     required this.diaryCount,
     required this.ideaCount,
     required this.totalTasks,
@@ -194,6 +262,7 @@ class SavedWeeklyReport {
         return {for (final e in dayCounts.entries) e.key.id: e.value};
       }).toList()),
       'mood_moments_json': jsonEncode(moodMoments.map((m) => m.toJson()).toList()),
+      'brain_map_json': jsonEncode(brainMapBubbles.map((b) => b.toJson()).toList()),
       'diary_count': diaryCount,
       'idea_count': ideaCount,
       'total_tasks': totalTasks,
@@ -237,6 +306,12 @@ class SavedWeeklyReport {
         : (jsonDecode(moodMomentsColumn) as List)
             .map((e) => MoodMoment.fromJson(Map<String, dynamic>.from(e as Map)))
             .toList();
+    final brainMapColumn = map['brain_map_json'] as String?;
+    final brainMapBubbles = brainMapColumn == null
+        ? const <BrainMapBubble>[]
+        : (jsonDecode(brainMapColumn) as List)
+            .map((e) => BrainMapBubble.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
 
     return SavedWeeklyReport(
       id: map['id'] as int?,
@@ -263,6 +338,7 @@ class SavedWeeklyReport {
       },
       dailyEmotionCounts: dailyEmotionCounts,
       moodMoments: moodMoments,
+      brainMapBubbles: brainMapBubbles,
       diaryCount: map['diary_count'] as int,
       ideaCount: map['idea_count'] as int,
       totalTasks: map['total_tasks'] as int,

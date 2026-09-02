@@ -244,22 +244,12 @@ class _EmotionBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       label: label,
-      child: Container(
+      child: SizedBox(
         width: 56,
         height: 56,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Theme.of(context).colorScheme.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
+        child: Center(
+          child: Image.asset(emotion.asset, width: 48, height: 48),
         ),
-        child: Image.asset(emotion.asset, width: 40, height: 40),
       ),
     );
   }
