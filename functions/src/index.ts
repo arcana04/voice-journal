@@ -30,10 +30,11 @@ const revenueCatWebhookSecret = defineSecret("REVENUECAT_WEBHOOK_SECRET");
  * （Play Integrity/App Attest）を有効化しているが、開発用署名(ad-hoc)の
  * ビルドで実機検証したところApp Attestトークンが取得できず、
  * processVoiceMemoなどiPhone本体からの通常の呼び出しまでunauthenticatedで
- * 全滅することを確認した（2026-09-02）。原因（Firebaseコンソール側の
- * プロバイダ登録未完了か、ad-hoc署名でのApp Attest非対応か）を切り分けて
- * 直すまでfalseに戻す。 */
-const APP_CHECK_ENFORCED = false;
+ * 全滅することを確認した（2026-09-02）。TestFlight配信ビルド（Codemagic経由）
+ * でApp Attestが実際に通るか確認するため一時的にtrueへ戻す。もし同じ
+ * unauthenticatedエラーが再発したらfalseに戻し、Firebaseコンソール側の
+ * プロバイダ登録を疑う。 */
+const APP_CHECK_ENFORCED = true;
 
 const FREE_DAILY_LIMIT = 3;
 const PRO_DAILY_LIMIT = 30;
