@@ -50,6 +50,7 @@ workflows:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "$CM_PROVISIONING_PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/voicejournal.mobileprovision
           echo "$CM_PROVISIONING_PROFILE_WIDGET" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/voicejournal-widget.mobileprovision
+          echo "$CM_PROVISIONING_PROFILE_WATCH" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/voicejournal-watch.mobileprovision
       - name: Set up code signing settings on Xcode project
         script: |
           xcode-project use-profiles
