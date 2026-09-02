@@ -16,7 +16,7 @@ struct StartRecordingIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         if let url = URL(string: "voicejournal://record") {
-            UIApplication.shared.open(url)
+            await UIApplication.shared.open(url)
         }
         return .result(dialog: "録音を開始します")
     }

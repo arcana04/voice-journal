@@ -16,6 +16,7 @@ actor BackgroundAudioRecorder {
         case alreadyRecording
         case notRecording
         case failedToStart(Error)
+        case recordFailedToStart
     }
 
     var isRecording: Bool { recorder != nil }
@@ -59,7 +60,7 @@ actor BackgroundAudioRecorder {
             let newRecorder = try AVAudioRecorder(url: url, settings: settings)
             newRecorder.isMeteringEnabled = true
             guard newRecorder.record() else {
-                throw RecorderError.failedToStart(SiriAuthError.invalidResponse)
+                throw RecorderError.recordFailedToStart
             }
             recorder = newRecorder
             recordingURL = url
