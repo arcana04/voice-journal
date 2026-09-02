@@ -27,11 +27,13 @@ const revenueCatWebhookSecret = defineSecret("REVENUECAT_WEBHOOK_SECRET");
 
 /** App Check未検証のリクエストを拒否するかどうか。クライアント側
  * （lib/main.dartのFirebaseAppCheck.instance.activate）は本番プロバイダ
- * （Play Integrity/App Attest）で実装済み。まだストア未提出でストアユーザーが
- * 存在しない（動いているのは開発者の実機のみ）タイミングで先に強制を有効化し、
- * 万一弾かれても実機で気づいてすぐ直せる/切り戻せる状態にしてある
- * （2026-09-02）。 */
-const APP_CHECK_ENFORCED = true;
+ * （Play Integrity/App Attest）を有効化しているが、開発用署名(ad-hoc)の
+ * ビルドで実機検証したところApp Attestトークンが取得できず、
+ * processVoiceMemoなどiPhone本体からの通常の呼び出しまでunauthenticatedで
+ * 全滅することを確認した（2026-09-02）。原因（Firebaseコンソール側の
+ * プロバイダ登録未完了か、ad-hoc署名でのApp Attest非対応か）を切り分けて
+ * 直すまでfalseに戻す。 */
+const APP_CHECK_ENFORCED = false;
 
 const FREE_DAILY_LIMIT = 3;
 const PRO_DAILY_LIMIT = 30;
