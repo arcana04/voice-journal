@@ -147,6 +147,23 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       _totalTasks = totalTasks;
     });
 
+    // 前回このweek_keyで保存したスナップショットと日記・アイデア・タスクの件数が
+    // 一致するなら、その間に記録が増減していないとみなしてAI呼び出しを省略する。
+    // LLMの出力は毎回同じにはならないため、何も変わっていないのに開くたびに
+    // キーワード（脳内マップ）やレターの中身がブレてしまうのを防ぐ。
+    final cached = await DbService.instance.getWeeklyReportByWeekKey(_weekKey);
+    if (!mounted) return;
+    if (cached != null &&
+        cached.diaryCount == diaryCount &&
+        cached.ideaCount == ideaCount &&
+        cached.totalTasks == totalTasks &&
+        cached.completedTasks == completedTasks) {
+      setState(() {
+        _insightsFuture = Future.value(cached.insights);
+      });
+      return;
+    }
+
     final locale = Localizations.localeOf(context).languageCode;
     final contextText = formatEntriesAsContext(entries, locale);
     final emotionBreakdown = {
