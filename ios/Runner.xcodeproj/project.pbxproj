@@ -14,16 +14,14 @@
 		17DA8154F29976AF236D7900 /* RecordWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBD2A9E60114F3E99B0F130A /* RecordWidget.swift */; };
 		21A0B8FFA877E23CF17D7652 /* RecordWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 69F48C65BD19AB3AAB961FFF /* RecordWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeaderOnCopy, ); }; };
 		2280B9B15FEA95531C406927 /* StartRecordingIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB77042A13A0204C3551C2FE /* StartRecordingIntent.swift */; };
+		15556993FDB3B5DF073D38FC /* RecordingChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB64FA9815C332C4533A6819 /* RecordingChannel.swift */; };
 		277242621EADFDB693BB4AAE /* FirebaseAuthClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FAEAAEC649C96FEA82B6266 /* FirebaseAuthClient.swift */; };
-		280CFA28A2EDFEC050374579 /* SiriVoiceMemoUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAE711A83451547BF29C67DC /* SiriVoiceMemoUploader.swift */; };
 		2A02B4A4E796A37CF27316BD /* RecordWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 328BFEFA6B4DEF60ECC0F176 /* RecordWidgetBundle.swift */; };
 		2AF780E5E06DBED14183A790 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6EBFB5E4776766D7A25C1A /* KeychainStore.swift */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		50BFA00627EB53B3C5DDA3ED /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F07E101B8661E36666A872B9 /* Pods_RunnerTests.framework */; };
-		5CF2A2B6798FBBDB1961B84E /* SiriRecordingChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9529AD004DF094BCBBD2AC48 /* SiriRecordingChannel.swift */; };
 		63B955745758D175E7E52085 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 489A481FADF3D5C52C89AB40 /* InfoPlist.strings */; };
-		6EF1DCFCBFB1B0BA0C76B48C /* SiriRecordingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 316721D92DF0D594799868D3 /* SiriRecordingConfig.swift */; };
 		73E63FBBD53A5C5D02EAA265 /* BackgroundAudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 850519EC233F079F702EF6FA /* BackgroundAudioRecorder.swift */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */; };
@@ -40,8 +38,6 @@
 		C136F853E69857E14AE3046F /* VoiceMemoUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98EDA894548A353FDD2C8FA6 /* VoiceMemoUploader.swift */; };
 		C6DBDE7FC16C2287039518F9 /* PairingReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54A06EB78D31253D2C9CAA15 /* PairingReceiver.swift */; };
 		D03304670DB1B0D5A9DB04BC /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F2B747B78AD88F42845041 /* AudioRecorder.swift */; };
-		E38BCC7E06591F4250FB0844 /* SiriKeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372CC66269658B38B7462FBC /* SiriKeychainStore.swift */; };
-		E3CC7C643CBCEB97C5713C1D /* SiriAuthClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA03BD958D53D320CC71AAA /* SiriAuthClient.swift */; };
 		E858267AEDA5DC1B02FAEF1E /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8BABC05D6C42952A8DFE0DF6 /* WidgetKit.framework */; };
 /* End PBXBuildFile section */
 
@@ -110,15 +106,12 @@
 		13E5E36853419FE359EDCB74 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
-		2FA03BD958D53D320CC71AAA /* SiriAuthClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SiriAuthClient.swift; sourceTree = "<group>"; };
 		2FAEAAEC649C96FEA82B6266 /* FirebaseAuthClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FirebaseAuthClient.swift; sourceTree = "<group>"; };
 		30FCF29F6CBF4471AA3508F2 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		316721D92DF0D594799868D3 /* SiriRecordingConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SiriRecordingConfig.swift; sourceTree = "<group>"; };
 		328BFEFA6B4DEF60ECC0F176 /* RecordWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordWidgetBundle.swift; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		349BDFD02BF5BEF25D0E6687 /* WatchConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchConfig.swift; sourceTree = "<group>"; };
-		372CC66269658B38B7462FBC /* SiriKeychainStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SiriKeychainStore.swift; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		45CE767018BFEBA19A6E2D83 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
 		536BC422AC26A9E340305533 /* AppleRemindersChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleRemindersChannel.swift; sourceTree = "<group>"; };
@@ -136,7 +129,6 @@
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
 		850519EC233F079F702EF6FA /* BackgroundAudioRecorder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackgroundAudioRecorder.swift; sourceTree = "<group>"; };
 		8BABC05D6C42952A8DFE0DF6 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
-		9529AD004DF094BCBBD2AC48 /* SiriRecordingChannel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SiriRecordingChannel.swift; sourceTree = "<group>"; };
 		9688E76FA4B451FDEDE2015E /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
@@ -147,12 +139,12 @@
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		98EDA894548A353FDD2C8FA6 /* VoiceMemoUploader.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VoiceMemoUploader.swift; sourceTree = "<group>"; };
 		AB77042A13A0204C3551C2FE /* StartRecordingIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StartRecordingIntent.swift; sourceTree = "<group>"; };
+		BB64FA9815C332C4533A6819 /* RecordingChannel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecordingChannel.swift; sourceTree = "<group>"; };
 		B0F2B747B78AD88F42845041 /* AudioRecorder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
 		BBD2A9E60114F3E99B0F130A /* RecordWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordWidget.swift; sourceTree = "<group>"; };
 		C957A061A97FF87657F540FB /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		CBCFE9364FEA37605D498F16 /* ja */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		D2BC09C6B1040E74C02529F3 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		DAE711A83451547BF29C67DC /* SiriVoiceMemoUploader.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SiriVoiceMemoUploader.swift; sourceTree = "<group>"; };
 		E4F7B17356C45B79BB0B19C8 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		EC6981E656E123A51BD719F7 /* VoiceJournalWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VoiceJournalWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F07E101B8661E36666A872B9 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -304,6 +296,7 @@
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 				AB77042A13A0204C3551C2FE /* StartRecordingIntent.swift */,
+				BB64FA9815C332C4533A6819 /* RecordingChannel.swift */,
 				489A481FADF3D5C52C89AB40 /* InfoPlist.strings */,
 				D3396ECACF17CBF081D6090B /* SiriRecording */,
 			);
@@ -325,12 +318,7 @@
 		D3396ECACF17CBF081D6090B /* SiriRecording */ = {
 			isa = PBXGroup;
 			children = (
-				372CC66269658B38B7462FBC /* SiriKeychainStore.swift */,
-				316721D92DF0D594799868D3 /* SiriRecordingConfig.swift */,
-				2FA03BD958D53D320CC71AAA /* SiriAuthClient.swift */,
-				DAE711A83451547BF29C67DC /* SiriVoiceMemoUploader.swift */,
 				850519EC233F079F702EF6FA /* BackgroundAudioRecorder.swift */,
-				9529AD004DF094BCBBD2AC48 /* SiriRecordingChannel.swift */,
 			);
 			name = SiriRecording;
 			path = SiriRecording;
@@ -625,12 +613,8 @@
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
 				2280B9B15FEA95531C406927 /* StartRecordingIntent.swift in Sources */,
-				E38BCC7E06591F4250FB0844 /* SiriKeychainStore.swift in Sources */,
-				6EF1DCFCBFB1B0BA0C76B48C /* SiriRecordingConfig.swift in Sources */,
-				E3CC7C643CBCEB97C5713C1D /* SiriAuthClient.swift in Sources */,
-				280CFA28A2EDFEC050374579 /* SiriVoiceMemoUploader.swift in Sources */,
+				15556993FDB3B5DF073D38FC /* RecordingChannel.swift in Sources */,
 				73E63FBBD53A5C5D02EAA265 /* BackgroundAudioRecorder.swift in Sources */,
-				5CF2A2B6798FBBDB1961B84E /* SiriRecordingChannel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

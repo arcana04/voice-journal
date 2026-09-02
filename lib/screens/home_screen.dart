@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:record/record.dart' show Amplitude;
 
 import '../config/recording_limits.dart';
 import '../l10n/app_localizations.dart';
@@ -43,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Duration _elapsed = Duration.zero;
   Duration _maxDuration = kMaxRecordingDuration;
   Timer? _timer;
-  StreamSubscription<Amplitude>? _amplitudeSub;
+  StreamSubscription<RecordingAmplitude>? _amplitudeSub;
   DateTime? _lastSoundAt;
   String? _statusMessage;
 

@@ -32,16 +32,17 @@ actor FirebaseAuthClient {
         let (data, response) = try await URLSession.shared.data(for: request)
         try Self.checkOK(response, data: data)
 
+        // accounts:signInWithCustomTokenのレスポンスにlocalIdは含まれない
+        // （signInWithPassword等とは異なる）。uidが必要な場合はidTokenの
+        // JWTペイロード（subクレーム）から取得すること。
         struct SignInResult: Decodable {
             let idToken: String
             let refreshToken: String
-            let localId: String
             let expiresIn: String
         }
         let result = try JSONDecoder().decode(SignInResult.self, from: data)
 
         KeychainStore.set(result.refreshToken, for: .refreshToken)
-        KeychainStore.set(result.localId, for: .uid)
         KeychainStore.set(deviceId, for: .deviceId)
         KeychainStore.set(deviceSecret, for: .deviceSecret)
 
