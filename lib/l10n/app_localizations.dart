@@ -1628,6 +1628,36 @@ abstract class AppLocalizations {
   /// **'Please enter a task'**
   String get manualTaskTitleRequiredError;
 
+  /// No description provided for @manualDiaryFabTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add diary entry'**
+  String get manualDiaryFabTooltip;
+
+  /// No description provided for @manualDiaryScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add diary entry'**
+  String get manualDiaryScreenTitle;
+
+  /// No description provided for @manualDiaryTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Heading (optional)'**
+  String get manualDiaryTitleHint;
+
+  /// No description provided for @manualDiaryContentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How was your day?'**
+  String get manualDiaryContentHint;
+
+  /// No description provided for @manualDiaryContentRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter some content'**
+  String get manualDiaryContentRequiredError;
+
   /// No description provided for @ideasEmpty.
   ///
   /// In en, this message translates to:
@@ -1771,6 +1801,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Drag a card here'**
   String get dragCardHere;
+
+  /// No description provided for @addCardButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add card'**
+  String get addCardButton;
 
   /// No description provided for @genericProcessingError.
   ///

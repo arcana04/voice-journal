@@ -69,6 +69,35 @@ class EntryReview extends StatefulWidget {
 
 class _EntryReviewState extends State<EntryReview> {
   late final List<DraftItem> _items = List.of(widget.initialItems);
+  int _newItemSeq = 0;
+  String? _autofocusId;
+
+  void _addItem(_ReviewBucket bucket) {
+    final id = 'new_${_newItemSeq++}';
+    final item = switch (bucket) {
+      _ReviewBucket.task => DraftItem(
+        id: id,
+        type: DraftItemType.task,
+        text: '',
+      ),
+      _ReviewBucket.idea => DraftItem(
+        id: id,
+        type: DraftItemType.diary,
+        text: '',
+        noteCategory: kNoteCategoryIdea,
+      ),
+      _ReviewBucket.feeling => DraftItem(
+        id: id,
+        type: DraftItemType.diary,
+        text: '',
+        noteCategory: kNoteCategoryFeeling,
+      ),
+    };
+    setState(() {
+      _items.add(item);
+      _autofocusId = id;
+    });
+  }
 
   void _moveTo(DraftItem item, _ReviewBucket bucket) {
     if (_bucketOf(item) == bucket) return;
@@ -274,6 +303,10 @@ class _EntryReviewState extends State<EntryReview> {
                     child: _buildCard(theme, item),
                   ),
                 ),
+              _AddCardButton(
+                label: l10n.addCardButton,
+                onTap: () => _addItem(bucket),
+              ),
             ],
           ),
         );
@@ -287,6 +320,7 @@ class _EntryReviewState extends State<EntryReview> {
       theme: theme,
       dragHandle: handle,
       item: item,
+      autofocus: item.id == _autofocusId,
       onChanged: (value) => item.text = value,
       onRemove: () => _removeItem(item),
     );
@@ -306,6 +340,39 @@ class _EntryReviewState extends State<EntryReview> {
   }
 }
 
+class _AddCardButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _AddCardButton({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.add, size: 16, color: theme.colorScheme.primary),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _CardShell extends StatelessWidget {
   final ThemeData theme;
   final DraftItem item;
@@ -313,6 +380,7 @@ class _CardShell extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final VoidCallback? onRemove;
   final bool dragging;
+  final bool autofocus;
 
   const _CardShell({
     required this.theme,
@@ -321,6 +389,7 @@ class _CardShell extends StatelessWidget {
     this.onChanged,
     this.onRemove,
     this.dragging = false,
+    this.autofocus = false,
   });
 
   @override
@@ -374,6 +443,7 @@ class _CardShell extends StatelessWidget {
                       )
                     : TextFormField(
                         initialValue: item.text,
+                        autofocus: autofocus,
                         minLines: 1,
                         maxLines: 3,
                         style: theme.textTheme.bodyMedium,

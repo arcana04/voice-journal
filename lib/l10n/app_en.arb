@@ -295,6 +295,12 @@
   "manualTaskTitleHint": "Task (e.g. Buy milk)",
   "manualTaskTitleRequiredError": "Please enter a task",
 
+  "manualDiaryFabTooltip": "Add diary entry",
+  "manualDiaryScreenTitle": "Add diary entry",
+  "manualDiaryTitleHint": "Heading (optional)",
+  "manualDiaryContentHint": "How was your day?",
+  "manualDiaryContentRequiredError": "Please enter some content",
+
   "ideasEmpty": "No ideas yet\nTry saying what comes to mind",
 
   "editIdeaTitle": "Edit idea",
@@ -321,6 +327,7 @@
   "sectionTask": "Task",
   "discard": "Discard",
   "dragCardHere": "Drag a card here",
+  "addCardButton": "Add card",
 
   "genericProcessingError": "An error occurred while processing",
   "usageFetchError": "Failed to load usage status",

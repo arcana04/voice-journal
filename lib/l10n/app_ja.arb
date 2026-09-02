@@ -274,6 +274,12 @@
   "manualTaskTitleHint": "タスク内容（例: 牛乳を買う）",
   "manualTaskTitleRequiredError": "タスク内容を入力してください",
 
+  "manualDiaryFabTooltip": "日記を追加",
+  "manualDiaryScreenTitle": "日記を追加",
+  "manualDiaryTitleHint": "見出し（任意）",
+  "manualDiaryContentHint": "今日はどんな一日でしたか？",
+  "manualDiaryContentRequiredError": "内容を入力してください",
+
   "ideasEmpty": "まだアイデアがありません\n思いついたことを話してみましょう",
 
   "editIdeaTitle": "アイデアを編集",
@@ -300,6 +306,7 @@
   "sectionTask": "タスク",
   "discard": "破棄",
   "dragCardHere": "ここにカードをドラッグ",
+  "addCardButton": "カードを追加",
 
   "genericProcessingError": "処理中にエラーが発生しました",
   "usageFetchError": "利用状況の取得に失敗しました",

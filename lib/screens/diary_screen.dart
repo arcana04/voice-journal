@@ -16,6 +16,7 @@ import '../widgets/icon_button_style.dart';
 import '../widgets/note_text_style_picker.dart';
 import '../widgets/scrim_text.dart';
 import 'diary_view_screen.dart';
+import 'manual_diary_screen.dart';
 
 class DiaryScreen extends StatefulWidget {
   const DiaryScreen({super.key});
@@ -209,6 +210,21 @@ class _DiaryScreenState extends State<DiaryScreen> {
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context).toString();
     return Scaffold(
+      floatingActionButton: Padding(
+        // 外側のRootScreenが持つフローティングナビゲーションバー（透過で背後に
+        // body が回り込む extendBody:true）と重ならないよう、その高さ分だけ上げる。
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom + 76,
+        ),
+        child: FloatingActionButton(
+          heroTag: 'manual_diary_fab',
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ManualDiaryScreen()),
+          ),
+          tooltip: AppLocalizations.of(context)!.manualDiaryFabTooltip,
+          child: const Icon(Icons.add),
+        ),
+      ),
       body: Stack(
         children: [
           Positioned.fill(

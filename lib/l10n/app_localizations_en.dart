@@ -833,6 +833,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manualTaskTitleRequiredError => 'Please enter a task';
 
   @override
+  String get manualDiaryFabTooltip => 'Add diary entry';
+
+  @override
+  String get manualDiaryScreenTitle => 'Add diary entry';
+
+  @override
+  String get manualDiaryTitleHint => 'Heading (optional)';
+
+  @override
+  String get manualDiaryContentHint => 'How was your day?';
+
+  @override
+  String get manualDiaryContentRequiredError => 'Please enter some content';
+
+  @override
   String get ideasEmpty => 'No ideas yet\nTry saying what comes to mind';
 
   @override
@@ -906,6 +921,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dragCardHere => 'Drag a card here';
+
+  @override
+  String get addCardButton => 'Add card';
 
   @override
   String get genericProcessingError => 'An error occurred while processing';

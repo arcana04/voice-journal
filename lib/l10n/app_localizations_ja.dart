@@ -804,6 +804,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get manualTaskTitleRequiredError => 'タスク内容を入力してください';
 
   @override
+  String get manualDiaryFabTooltip => '日記を追加';
+
+  @override
+  String get manualDiaryScreenTitle => '日記を追加';
+
+  @override
+  String get manualDiaryTitleHint => '見出し（任意）';
+
+  @override
+  String get manualDiaryContentHint => '今日はどんな一日でしたか？';
+
+  @override
+  String get manualDiaryContentRequiredError => '内容を入力してください';
+
+  @override
   String get ideasEmpty => 'まだアイデアがありません\n思いついたことを話してみましょう';
 
   @override
@@ -875,6 +890,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get dragCardHere => 'ここにカードをドラッグ';
+
+  @override
+  String get addCardButton => 'カードを追加';
 
   @override
   String get genericProcessingError => '処理中にエラーが発生しました';
