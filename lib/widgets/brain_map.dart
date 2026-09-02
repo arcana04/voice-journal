@@ -275,19 +275,37 @@ class _BubbleView extends StatelessWidget {
             stops: const [0.0, 0.6, 1.0],
           ),
         ),
-        alignment: Alignment.center,
-        padding: const EdgeInsets.all(4),
-        child: Text(
-          bubble.keyword,
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
-            fontSize: fontSize,
-            shadows: const [Shadow(color: Colors.black45, blurRadius: 3)],
-          ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // 感情の色が透けて見える程度に抑えた、ガラス玉風のツヤ・虹色の縁取り。
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.6,
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/brain_map/bubble_overlay.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(4),
+              child: Text(
+                bubble.keyword,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: fontSize,
+                  shadows: const [Shadow(color: Colors.black45, blurRadius: 3)],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

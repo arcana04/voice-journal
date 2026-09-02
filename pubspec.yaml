@@ -105,6 +105,7 @@ flutter:
     - assets/images/backgrounds/
     - assets/images/diary_backgrounds/
     - assets/images/emotion_bubbles/
+    - assets/images/brain_map/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
