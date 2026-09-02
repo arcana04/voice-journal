@@ -26,12 +26,12 @@ const openAiApiKey = defineSecret("OPENAI_API_KEY");
 const revenueCatWebhookSecret = defineSecret("REVENUECAT_WEBHOOK_SECRET");
 
 /** App Check未検証のリクエストを拒否するかどうか。クライアント側
- * （lib/main.dartのFirebaseAppCheck.instance.activate）は既に有効化済みだが、
- * Play Integrity/App Attestの本番プロバイダ登録などFirebaseコンソール側の設定が
- * 完了し、コンソールのApp Checkメトリクスで正規トラフィックがほぼ100%
- * トークン付きになっていることを確認するまでは、trueにして正規ユーザーを
- * 誤ってブロックしないようfalseのままにしておく。 */
-const APP_CHECK_ENFORCED = false;
+ * （lib/main.dartのFirebaseAppCheck.instance.activate）は本番プロバイダ
+ * （Play Integrity/App Attest）で実装済み。まだストア未提出でストアユーザーが
+ * 存在しない（動いているのは開発者の実機のみ）タイミングで先に強制を有効化し、
+ * 万一弾かれても実機で気づいてすぐ直せる/切り戻せる状態にしてある
+ * （2026-09-02）。 */
+const APP_CHECK_ENFORCED = true;
 
 const FREE_DAILY_LIMIT = 3;
 const PRO_DAILY_LIMIT = 30;
