@@ -647,4 +647,16 @@ class DbService {
     final rows = await db.query('weekly_reports', orderBy: 'week_start DESC');
     return rows.map(SavedWeeklyReport.fromMap).toList();
   }
+
+  Future<SavedWeeklyReport?> getWeeklyReportByWeekKey(String weekKey) async {
+    final db = await _database;
+    final rows = await db.query(
+      'weekly_reports',
+      where: 'week_key = ?',
+      whereArgs: [weekKey],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return SavedWeeklyReport.fromMap(rows.first);
+  }
 }
