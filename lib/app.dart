@@ -103,14 +103,32 @@ class VoiceJournalApp extends StatelessWidget {
             themeMode: settings.darkMode ? ThemeMode.dark : ThemeMode.light,
             theme: _buildTheme(Colors.white, Brightness.light),
             darkTheme: _buildTheme(Colors.black, Brightness.dark),
-            home: !settings.loaded
-                ? const SizedBox.shrink()
-                : settings.hasSeenOnboarding
-                ? const RootScreen()
-                : OnboardingScreen(onFinished: settings.completeOnboarding),
+            // homeにsettings.loaded等で分岐する条件式を直接渡すと、
+            // MaterialAppのNavigatorがルート遷移として扱ってしまい、
+            // 古い方の画面がOffstageで生き残ったまま新しい画面と同時に
+            // マウントされ続ける不具合が実機・シミュレータの両方で確認された
+            // （RootScreen/HomeScreenが2つ同時に存在し、ロック画面ウィジェット
+            // からの録音開始が二重に走ってネイティブ側で衝突していた）。
+            // homeは常にこの1つのAppGateウィジェットに固定し、ロード状態による
+            // 出し分けはその内側の通常のbuild()に任せることで回避する。
+            home: const _AppGate(),
           );
         },
       ),
     );
+  }
+}
+
+class _AppGate extends StatelessWidget {
+  const _AppGate();
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsStore>();
+    if (!settings.loaded) return const SizedBox.shrink();
+    if (!settings.hasSeenOnboarding) {
+      return OnboardingScreen(onFinished: settings.completeOnboarding);
+    }
+    return const RootScreen();
   }
 }

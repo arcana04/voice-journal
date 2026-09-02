@@ -53,9 +53,15 @@ class _RootScreenState extends State<RootScreen> {
   }
 
   void _handleRecordRequested() {
-    if (!mounted) return;
-    setState(() => _index = 0);
-    context.read<RecordTriggerStore>().requestRecordNow();
+    // initState中（アプリ起動直後）に呼ばれると、HomeScreen側がまだ
+    // RecordTriggerStoreのリスナー登録（didChangeDependencies）を終えておらず、
+    // notifyListeners()が届かず録音開始が無視されてしまう。最初のフレーム
+    // 描画後まで発火を遅らせることで、リスナー登録後に確実に届くようにする。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() => _index = 0);
+      context.read<RecordTriggerStore>().requestRecordNow();
+    });
   }
 
   void _handleWeeklyReportRequested() {

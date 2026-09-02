@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../config/recording_limits.dart';
@@ -39,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final RecorderService _recorder = RecorderService();
   final BackendService _backend = BackendService();
   RecordButtonState _state = RecordButtonState.idle;
+  bool _isStartingRecording = false;
   Duration _elapsed = Duration.zero;
   Duration _maxDuration = kMaxRecordingDuration;
   Timer? _timer;
@@ -108,13 +110,40 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _startRecording() async {
+    // ロック画面ウィジェット等からのディープリンクは、起動時リンクと
+    // リンクストリームの両方から同じ録音開始シグナルが飛んでくることがあり、
+    // 対策が無いと_startRecording()が同時に2回走って競合する
+    // （片方は正常に開始、もう片方はネイティブ側の「録音中」エラーで失敗する）。
+    if (_isStartingRecording) return;
+    _isStartingRecording = true;
     final hasPermission = await _recorder.hasPermission();
     if (!hasPermission) {
+      _isStartingRecording = false;
       if (!mounted) return;
       _showMessage(AppLocalizations.of(context)!.micPermissionDenied);
       return;
     }
-    await _recorder.start();
+    try {
+      await _recorder.start();
+    } catch (e) {
+      _isStartingRecording = false;
+      // ロック画面ウィジェット等からの起動直後は、画面が実質的に2つ同時に
+      // 生きてしまい（原因調査中）、両方が_startRecording()を試みることが
+      // ある。片方がネイティブ側の録音を正常に開始できていれば実害は無いので、
+      // 「録音中」エラーはこの良性の競合として無視し、既に始まっている
+      // 録音にこの画面の状態を追従させる（エラー表示はしない）。
+      if (e is PlatformException && e.message == 'alreadyRecording') {
+        // 録音自体は既に始まっているので、以下の通常成功時の処理へ続ける。
+      } else {
+        if (!mounted) return;
+        _showResultDialog(
+          AppLocalizations.of(context)!.recordingErrorTitle,
+          '$e',
+        );
+        return;
+      }
+    }
+    _isStartingRecording = false;
     if (!mounted) return;
     final isPro = context.read<SubscriptionStore>().isPro;
     setState(() {

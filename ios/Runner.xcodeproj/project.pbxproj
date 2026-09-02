@@ -13,7 +13,6 @@
 		168C4A1A2072894D015550A4 /* AppleRemindersChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536BC422AC26A9E340305533 /* AppleRemindersChannel.swift */; };
 		17DA8154F29976AF236D7900 /* RecordWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBD2A9E60114F3E99B0F130A /* RecordWidget.swift */; };
 		21A0B8FFA877E23CF17D7652 /* RecordWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 69F48C65BD19AB3AAB961FFF /* RecordWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeaderOnCopy, ); }; };
-		2280B9B15FEA95531C406927 /* StartRecordingIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB77042A13A0204C3551C2FE /* StartRecordingIntent.swift */; };
 		15556993FDB3B5DF073D38FC /* RecordingChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB64FA9815C332C4533A6819 /* RecordingChannel.swift */; };
 		277242621EADFDB693BB4AAE /* FirebaseAuthClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FAEAAEC649C96FEA82B6266 /* FirebaseAuthClient.swift */; };
 		2A02B4A4E796A37CF27316BD /* RecordWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 328BFEFA6B4DEF60ECC0F176 /* RecordWidgetBundle.swift */; };
@@ -138,7 +137,6 @@
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		98EDA894548A353FDD2C8FA6 /* VoiceMemoUploader.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VoiceMemoUploader.swift; sourceTree = "<group>"; };
-		AB77042A13A0204C3551C2FE /* StartRecordingIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StartRecordingIntent.swift; sourceTree = "<group>"; };
 		BB64FA9815C332C4533A6819 /* RecordingChannel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecordingChannel.swift; sourceTree = "<group>"; };
 		B0F2B747B78AD88F42845041 /* AudioRecorder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
 		BBD2A9E60114F3E99B0F130A /* RecordWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordWidget.swift; sourceTree = "<group>"; };
@@ -295,7 +293,6 @@
 				536BC422AC26A9E340305533 /* AppleRemindersChannel.swift */,
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
-				AB77042A13A0204C3551C2FE /* StartRecordingIntent.swift */,
 				BB64FA9815C332C4533A6819 /* RecordingChannel.swift */,
 				489A481FADF3D5C52C89AB40 /* InfoPlist.strings */,
 				D3396ECACF17CBF081D6090B /* SiriRecording */,
@@ -612,7 +609,6 @@
 				168C4A1A2072894D015550A4 /* AppleRemindersChannel.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
-				2280B9B15FEA95531C406927 /* StartRecordingIntent.swift in Sources */,
 				15556993FDB3B5DF073D38FC /* RecordingChannel.swift in Sources */,
 				73E63FBBD53A5C5D02EAA265 /* BackgroundAudioRecorder.swift in Sources */,
 			);
