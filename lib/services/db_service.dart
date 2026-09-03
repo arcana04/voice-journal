@@ -339,16 +339,26 @@ class DbService {
           // 週次レポートのキャッシュ判定を件数だけでなく実際の記録idの集合でも
           // 検証できるようにする列。既存行はデフォルト値''になり、次回の判定で
           // 必ず不一致(=再生成)扱いになる想定通りの挙動。
-          await db.execute(
+          await _addColumnIfMissing(
+            db,
             "ALTER TABLE weekly_reports ADD COLUMN entry_ids_signature TEXT NOT NULL DEFAULT ''",
           );
         }
         if (oldVersion < 23) {
           // 日記添付画像の自由配置（Pro限定）用。NULLのままなら「まだ動かして
           // いない」を意味し、キャンバス側で自動的に並べる。
-          await db.execute('ALTER TABLE entry_images ADD COLUMN pos_x REAL');
-          await db.execute('ALTER TABLE entry_images ADD COLUMN pos_y REAL');
-          await db.execute('ALTER TABLE entry_images ADD COLUMN scale REAL');
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE entry_images ADD COLUMN pos_x REAL',
+          );
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE entry_images ADD COLUMN pos_y REAL',
+          );
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE entry_images ADD COLUMN scale REAL',
+          );
         }
       },
     );
