@@ -196,9 +196,10 @@ struct ContentView: View {
     }
 }
 
-/// 分類の選び直し(タップでメニュー)とテキスト編集(タップでWatchのScribble/
-/// ディクテーション/キーボード入力)ができる1項目分の行。ドラッグ操作は
-/// Watchの画面サイズでは操作精度が厳しいため、タップ操作で代替している。
+/// 分類の選び直し(タップでピッカー画面に遷移)とテキスト編集(タップでWatchの
+/// Scribble/ディクテーション/キーボード入力)ができる1項目分の行。ドラッグ
+/// 操作はWatchの画面サイズでは操作精度が厳しいため、タップ操作で代替している。
+/// (Menuはwatchosで使えないため、Pickerで代替している)
 private struct DraftItemRow: View {
     @Binding var item: DraftItem
     let onDelete: () -> Void
@@ -206,19 +207,16 @@ private struct DraftItemRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Menu {
+                Picker(selection: $item.category) {
                     ForEach(EntryCategory.allCases, id: \.self) { option in
-                        Button {
-                            item.category = option
-                        } label: {
-                            Label(option.label, systemImage: option.iconName)
-                        }
+                        Label(option.label, systemImage: option.iconName)
+                            .tag(option)
                     }
                 } label: {
                     Label(item.category.label, systemImage: item.category.iconName)
-                        .font(.caption2)
-                        .fontWeight(.bold)
                 }
+                .font(.caption2)
+                .fontWeight(.bold)
 
                 Spacer()
 
