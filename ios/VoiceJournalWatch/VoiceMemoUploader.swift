@@ -6,10 +6,26 @@ enum UploadError: Error {
     case server(code: String, message: String)
 }
 
+struct ProcessVoiceMemoTask: Codable {
+    let title: String
+    let due_hint: String?
+    let due_date: String?
+    let reminder_at: String?
+    let reminder_end_at: String?
+}
+
+struct ProcessVoiceMemoNote: Codable {
+    let category: String
+    let title: String?
+    let content: String
+}
+
 struct ProcessVoiceMemoResult: Decodable {
     let summary: String
-    // tasks/notesの詳細なパースは今回のスコープ外。必要になったら
-    // functions/src/index.tsのtoClientResponse()の形に合わせて追加する。
+    let tasks: [ProcessVoiceMemoTask]
+    let notes: [ProcessVoiceMemoNote]
+    let comfort_message: String?
+    let emotion: String?
 }
 
 /// processVoiceMemoはFirebase Callable Functionsだが、watchOSにFirebase

@@ -89,6 +89,30 @@ actor FirebaseAuthClient {
         return (id, secret)
     }
 
+    /// 現在のidTokenのJWTペイロード（sub/user_idクレーム）からuidを取り出す。
+    /// signInWithCustomTokenのレスポンス自体にはlocalId/uidが含まれないため。
+    func currentUid() async throws -> String {
+        let token = try await validIdToken()
+        guard
+            let payload = Self.decodeJWTPayload(token),
+            let uid = (payload["user_id"] as? String) ?? (payload["sub"] as? String)
+        else {
+            throw FirebaseAuthError.invalidResponse
+        }
+        return uid
+    }
+
+    private static func decodeJWTPayload(_ token: String) -> [String: Any]? {
+        let segments = token.split(separator: ".")
+        guard segments.count >= 2 else { return nil }
+        var base64 = String(segments[1])
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        while base64.count % 4 != 0 { base64 += "=" }
+        guard let data = Data(base64Encoded: base64) else { return nil }
+        return try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+    }
+
     private static func checkOK(_ response: URLResponse, data: Data) throws {
         guard let http = response as? HTTPURLResponse else { throw FirebaseAuthError.invalidResponse }
         guard (200..<300).contains(http.statusCode) else {

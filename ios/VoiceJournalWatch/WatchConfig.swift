@@ -14,4 +14,12 @@ enum WatchConfig {
     static let secureTokenRefreshURL =
         URL(string: "https://securetoken.googleapis.com/v1/token?key=\(firebaseWebAPIKey)")!
     static let processVoiceMemoURL = URL(string: "\(functionsBaseURL)/processVoiceMemo")!
+
+    /// users/{uid}/entries/{entryId} ドキュメントへのFirestore REST API URL。
+    /// lib/services/cloud_sync_service.dartが書き込む先と同じコレクション。
+    static func firestoreEntryURL(uid: String, entryId: String) -> URL {
+        URL(
+            string: "https://firestore.googleapis.com/v1/projects/\(firebaseProjectId)/databases/(default)/documents/users/\(uid)/entries/\(entryId)"
+        )!
+    }
 }

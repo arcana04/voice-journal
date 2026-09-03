@@ -15,6 +15,7 @@
 		21A0B8FFA877E23CF17D7652 /* RecordWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 69F48C65BD19AB3AAB961FFF /* RecordWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeaderOnCopy, ); }; };
 		15556993FDB3B5DF073D38FC /* RecordingChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB64FA9815C332C4533A6819 /* RecordingChannel.swift */; };
 		277242621EADFDB693BB4AAE /* FirebaseAuthClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FAEAAEC649C96FEA82B6266 /* FirebaseAuthClient.swift */; };
+		A4CA748CD0B0BFA96C536037 /* EntryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03EEEC3EC3B75CC4958AC1E9 /* EntryStore.swift */; };
 		2A02B4A4E796A37CF27316BD /* RecordWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 328BFEFA6B4DEF60ECC0F176 /* RecordWidgetBundle.swift */; };
 		2AF780E5E06DBED14183A790 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6EBFB5E4776766D7A25C1A /* KeychainStore.swift */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
@@ -106,6 +107,7 @@
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		2FAEAAEC649C96FEA82B6266 /* FirebaseAuthClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FirebaseAuthClient.swift; sourceTree = "<group>"; };
+		03EEEC3EC3B75CC4958AC1E9 /* EntryStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EntryStore.swift; sourceTree = "<group>"; };
 		30FCF29F6CBF4471AA3508F2 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		328BFEFA6B4DEF60ECC0F176 /* RecordWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordWidgetBundle.swift; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
@@ -237,6 +239,7 @@
 				54A06EB78D31253D2C9CAA15 /* PairingReceiver.swift */,
 				B0F2B747B78AD88F42845041 /* AudioRecorder.swift */,
 				98EDA894548A353FDD2C8FA6 /* VoiceMemoUploader.swift */,
+				03EEEC3EC3B75CC4958AC1E9 /* EntryStore.swift */,
 				73CBCC76E2A8F34511C1866A /* Info.plist */,
 				30FCF29F6CBF4471AA3508F2 /* Assets.xcassets */,
 			);
@@ -626,6 +629,7 @@
 				C6DBDE7FC16C2287039518F9 /* PairingReceiver.swift in Sources */,
 				D03304670DB1B0D5A9DB04BC /* AudioRecorder.swift in Sources */,
 				C136F853E69857E14AE3046F /* VoiceMemoUploader.swift in Sources */,
+				A4CA748CD0B0BFA96C536037 /* EntryStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
