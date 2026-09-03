@@ -4,17 +4,25 @@ import 'emotion_tag.dart';
 
 /// 週の中で実際に感情タグが記録された1件（エントリ1件）の記録時刻と具体的な
 /// 感情タグ。メンタルウェーブは日ごとの集計ではなく、この実際の記録時刻を
-/// もとに波を描き、タップ時にタグ名まで表示する。
+/// もとに波を描き、タップ時にタグ名まで表示する。[textLength]は感情の星座
+/// (`WeeklyConstellation`)が星の大きさを決めるのに使う、その記録の本文の
+/// 文字数（AIの新規判定は挟まず、既存のテキストから機械的に求める）。
 class MoodMoment {
   final DateTime time;
   final EmotionTag tag;
+  final int textLength;
 
-  const MoodMoment({required this.time, required this.tag});
+  const MoodMoment({required this.time, required this.tag, this.textLength = 0});
 
   factory MoodMoment.fromJson(Map<String, dynamic> json) {
+    final textLength = (json['l'] as num?)?.toInt() ?? 0;
     final tag = EmotionTag.fromId(json['e'] as String?);
     if (tag != null) {
-      return MoodMoment(time: DateTime.parse(json['t'] as String), tag: tag);
+      return MoodMoment(
+        time: DateTime.parse(json['t'] as String),
+        tag: tag,
+        textLength: textLength,
+      );
     }
     // 後方互換: カテゴリのみ保存していた旧形式は、そのカテゴリの代表タグに
     // フォールバックする（開発中のみ存在した形式のため簡易対応で十分）。
@@ -24,10 +32,14 @@ class MoodMoment {
     );
     final fallbackTag = EmotionTag.values
         .firstWhere((t) => t.category == category, orElse: () => EmotionTag.neutral);
-    return MoodMoment(time: DateTime.parse(json['t'] as String), tag: fallbackTag);
+    return MoodMoment(
+      time: DateTime.parse(json['t'] as String),
+      tag: fallbackTag,
+      textLength: textLength,
+    );
   }
 
-  Map<String, dynamic> toJson() => {'t': time.toIso8601String(), 'e': tag.id};
+  Map<String, dynamic> toJson() => {'t': time.toIso8601String(), 'e': tag.id, 'l': textLength};
 }
 
 class WeeklyReportKeyword {
@@ -219,6 +231,12 @@ class SavedWeeklyReport {
   final int totalTasks;
   final int completedTasks;
   final DateTime createdAt;
+  /// その週に実在した記録(エントリ)のidをソートして連結した文字列。件数
+  /// (diaryCount等)だけでは「記録を削除して別の記録を同数だけ作り直した」
+  /// ケースを見分けられず、中身が変わったのにキャッシュを再利用してしまう
+  /// （AIが生成したキーワード等が実際の記録と食い違って表示される）ため、
+  /// この署名も一致した場合のみキャッシュを再利用する。
+  final String entryIdsSignature;
 
   SavedWeeklyReport({
     this.id,
@@ -235,6 +253,7 @@ class SavedWeeklyReport {
     required this.totalTasks,
     required this.completedTasks,
     required this.createdAt,
+    this.entryIdsSignature = '',
   });
 
   Map<String, Object?> toMap() {
@@ -268,6 +287,7 @@ class SavedWeeklyReport {
       'total_tasks': totalTasks,
       'completed_tasks': completedTasks,
       'created_at': createdAt.toIso8601String(),
+      'entry_ids_signature': entryIdsSignature,
     };
   }
 
@@ -344,6 +364,7 @@ class SavedWeeklyReport {
       totalTasks: map['total_tasks'] as int,
       completedTasks: map['completed_tasks'] as int,
       createdAt: DateTime.parse(map['created_at'] as String),
+      entryIdsSignature: map['entry_ids_signature'] as String? ?? '',
     );
   }
 }

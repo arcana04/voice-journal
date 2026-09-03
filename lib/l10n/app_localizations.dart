@@ -518,6 +518,30 @@ abstract class AppLocalizations {
   /// **'Switch to an easier-on-the-eyes look'**
   String get darkModeSubtitle;
 
+  /// No description provided for @settingsCustomBackgroundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Background Image'**
+  String get settingsCustomBackgroundTitle;
+
+  /// No description provided for @settingsCustomBackgroundSubtitleUnset.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get settingsCustomBackgroundSubtitleUnset;
+
+  /// No description provided for @settingsCustomBackgroundSubtitleSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom photo set (tap to change)'**
+  String get settingsCustomBackgroundSubtitleSet;
+
+  /// No description provided for @settingsCustomBackgroundClearTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to default'**
+  String get settingsCustomBackgroundClearTooltip;
+
   /// No description provided for @settingsProBadge.
   ///
   /// In en, this message translates to:
@@ -1988,6 +2012,24 @@ abstract class AppLocalizations {
   /// **'Chatting across all your entries is a Pro feature. Upgrade to unlock it.'**
   String get knowledgeBaseProLockedDescription;
 
+  /// No description provided for @ideaBrainstormTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Brainstorm with AI'**
+  String get ideaBrainstormTooltip;
+
+  /// No description provided for @ideaBrainstormChatQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore 3 different angles for \"{title}\"'**
+  String ideaBrainstormChatQuestion(Object title);
+
+  /// No description provided for @ideaBrainstormErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t get suggestions'**
+  String get ideaBrainstormErrorTitle;
+
   /// No description provided for @weeklyReportSettingsTitle.
   ///
   /// In en, this message translates to:
@@ -2042,11 +2084,11 @@ abstract class AppLocalizations {
   /// **'No emotional entries yet this week'**
   String get weeklyReportNoEmotionData;
 
-  /// No description provided for @weeklyReportAuroraSectionTitle.
+  /// No description provided for @weeklyReportConstellationSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'This Week\'s Aurora'**
-  String get weeklyReportAuroraSectionTitle;
+  /// **'Weekly Constellation'**
+  String get weeklyReportConstellationSectionTitle;
 
   /// No description provided for @weeklyReportMentalWaveSectionTitle.
   ///

@@ -9,6 +9,7 @@ class SettingsStore extends ChangeNotifier {
   SummaryLevel summaryLevel = SummaryLevel.preserve;
   bool darkMode = true;
   bool hasSeenOnboarding = false;
+  String? customBackgroundPath;
   bool _loaded = false;
   bool get loaded => _loaded;
 
@@ -16,7 +17,14 @@ class SettingsStore extends ChangeNotifier {
     summaryLevel = await _service.getSummaryLevel();
     darkMode = await _service.getDarkMode();
     hasSeenOnboarding = await _service.getHasSeenOnboarding();
+    customBackgroundPath = await _service.getCustomBackgroundPath();
     _loaded = true;
+    notifyListeners();
+  }
+
+  Future<void> setCustomBackgroundPath(String? value) async {
+    customBackgroundPath = value;
+    await _service.setCustomBackgroundPath(value);
     notifyListeners();
   }
 

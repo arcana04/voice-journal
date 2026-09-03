@@ -38,7 +38,6 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
 
   List<JournalEntry> _weekEntries = [];
   Map<EmotionTag, int> _emotionCounts = {};
-  List<Map<EmotionTag, int>> _dailyEmotionCounts = List.generate(7, (_) => {});
   List<MoodMoment> _moodMoments = [];
   int _completedTasks = 0;
   int _diaryCount = 0;
@@ -61,7 +60,6 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       _weekEnd = saved.weekEnd;
       _weekKey = saved.weekKey;
       _emotionCounts = saved.emotionCounts;
-      _dailyEmotionCounts = saved.dailyEmotionCounts;
       _moodMoments = saved.moodMoments;
       _diaryCount = saved.diaryCount;
       _ideaCount = saved.ideaCount;
@@ -133,13 +131,25 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
 
     final moodMoments = [
       for (final entry in entries)
-        if (entry.emotion != null) MoodMoment(time: entry.createdAt, tag: entry.emotion!),
+        if (entry.emotion != null)
+          MoodMoment(
+            time: entry.createdAt,
+            tag: entry.emotion!,
+            textLength: entry.notes
+                .where((n) => n.category == kNoteCategoryFeeling)
+                .fold(0, (sum, n) => sum + n.content.length),
+          ),
     ];
+
+    // 記録の増減だけでなく「削除して同数だけ作り直した」ケースも見分ける
+    // ための署名。件数が一致していても、実体が別の記録に入れ替わっていれば
+    // 不一致になりキャッシュを再利用しない（脳内マップ等が実際の記録内容と
+    // 食い違って表示される事故を防ぐ）。
+    final entryIdsSignature = (entries.map((e) => e.id).toList()..sort()).join(',');
 
     setState(() {
       _weekEntries = entries;
       _emotionCounts = emotionCounts;
-      _dailyEmotionCounts = dailyEmotionCounts;
       _moodMoments = moodMoments;
       _completedTasks = completedTasks;
       _diaryCount = diaryCount;
@@ -147,13 +157,15 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       _totalTasks = totalTasks;
     });
 
-    // 前回このweek_keyで保存したスナップショットと日記・アイデア・タスクの件数が
-    // 一致するなら、その間に記録が増減していないとみなしてAI呼び出しを省略する。
-    // LLMの出力は毎回同じにはならないため、何も変わっていないのに開くたびに
-    // キーワード（脳内マップ）やレターの中身がブレてしまうのを防ぐ。
+    // 前回このweek_keyで保存したスナップショットと日記・アイデア・タスクの件数
+    // (かつ記録idの集合)が一致するなら、その間に記録が変わっていないとみなし
+    // てAI呼び出しを省略する。LLMの出力は毎回同じにはならないため、何も変わって
+    // いないのに開くたびにキーワード（脳内マップ）やレターの中身がブレてしまう
+    // のを防ぐ。
     final cached = await DbService.instance.getWeeklyReportByWeekKey(_weekKey);
     if (!mounted) return;
     if (cached != null &&
+        cached.entryIdsSignature == entryIdsSignature &&
         cached.diaryCount == diaryCount &&
         cached.ideaCount == ideaCount &&
         cached.totalTasks == totalTasks &&
@@ -195,6 +207,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
           ideaCount: ideaCount,
           totalTasks: totalTasks,
           completedTasks: completedTasks,
+          entryIdsSignature: entryIdsSignature,
           createdAt: DateTime.now(),
         ),
       );
@@ -307,7 +320,6 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                           insights: snapshot.data!,
                           weekStart: _weekStart,
                           weekEnd: _weekEnd,
-                          dailyEmotionCounts: _dailyEmotionCounts,
                           moodMoments: _moodMoments,
                           brainMapBubbles: brainMapBubbles,
                           diaryCount: _diaryCount,

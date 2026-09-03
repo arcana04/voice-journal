@@ -7,119 +7,37 @@ import '../l10n/app_localizations.dart';
 enum EmotionCategory { positive, fine, negative }
 
 /// AIが日記（感情ログ）の内容から判定する感情タグ。バックエンドから受け取る
-/// [id]は固定の英語識別子で、表示ラベル・泡画像・色はこちら側で持つ。
+/// [id]は固定の英語識別子で、表示ラベル・色はこちら側で持つ。
 /// [id]は既存9種を含め後方互換のため変更しない（DB・Firestoreに生文字列で
-/// 保存されているため）。
+/// 保存されているため）。表示は[EmotionBubble]が正円1種類・[color]の塗り
+/// だけで統一する（個別の画像アセットは持たない）。[color]は[category]ごとに
+/// 色相ファミリーを揃えている（positive=暖色/fine=緑〜ティール/negative=
+/// 青〜インディゴ、いずれも黒に近づけすぎず視認性を確保）ので、同じ
+/// カテゴリ内の他の値と大きく外れた色相にしないこと。
 enum EmotionTag {
-  satisfaction(
-    'satisfaction',
-    'assets/images/emotion_bubbles/emotion_satisfaction.png',
-    Color(0xFFBA6A02),
-    EmotionCategory.positive,
-  ),
-  gratitude(
-    'gratitude',
-    'assets/images/emotion_bubbles/emotion_gratitude.png',
-    Color(0xFFD53E28),
-    EmotionCategory.positive,
-  ),
-  happy(
-    'happy',
-    'assets/images/emotion_bubbles/emotion_happy.png',
-    Color(0xFFC53001),
-    EmotionCategory.positive,
-  ),
-  love(
-    'love',
-    'assets/images/emotion_bubbles/emotion_love.png',
-    Color(0xFFC41556),
-    EmotionCategory.positive,
-  ),
-  funny(
-    'funny',
-    'assets/images/emotion_bubbles/emotion_funny.png',
-    Color(0xFFB11624),
-    EmotionCategory.positive,
-  ),
-  joy(
-    'joy',
-    'assets/images/emotion_bubbles/emotion_joy.png',
-    Color(0xFF6A8210),
-    EmotionCategory.positive,
-  ),
-  excited(
-    'excited',
-    'assets/images/emotion_bubbles/emotion_excited.png',
-    Color(0xFF59258F),
-    EmotionCategory.fine,
-  ),
-  relief(
-    'relief',
-    'assets/images/emotion_bubbles/emotion_relief.png',
-    Color(0xFF147A5E),
-    EmotionCategory.fine,
-  ),
-  calm(
-    'calm',
-    'assets/images/emotion_bubbles/emotion_calm.png',
-    Color(0xFF0F6DAC),
-    EmotionCategory.fine,
-  ),
-  neutral(
-    'neutral',
-    'assets/images/emotion_bubbles/emotion_neutral.png',
-    Color(0xFF565963),
-    EmotionCategory.fine,
-  ),
-  boredom(
-    'boredom',
-    'assets/images/emotion_bubbles/emotion_boredom.png',
-    Color(0xFF78503D),
-    EmotionCategory.fine,
-  ),
-  anxious(
-    'anxious',
-    'assets/images/emotion_bubbles/emotion_anxious.png',
-    Color(0xFF2A1454),
-    EmotionCategory.negative,
-  ),
-  sadness(
-    'sadness',
-    'assets/images/emotion_bubbles/emotion_sadness.png',
-    Color(0xFF041262),
-    EmotionCategory.negative,
-  ),
-  fatigue(
-    'fatigue',
-    'assets/images/emotion_bubbles/emotion_fatigue.png',
-    Color(0xFF12243E),
-    EmotionCategory.negative,
-  ),
-  regret(
-    'regret',
-    'assets/images/emotion_bubbles/emotion_regret.png',
-    Color(0xFF381C2C),
-    EmotionCategory.negative,
-  ),
-  anger(
-    'anger',
-    'assets/images/emotion_bubbles/emotion_anger.png',
-    Color(0xFF29070D),
-    EmotionCategory.negative,
-  ),
-  dislike(
-    'dislike',
-    'assets/images/emotion_bubbles/emotion_dislike.png',
-    Color(0xFF1C1C1C),
-    EmotionCategory.negative,
-  );
+  satisfaction('satisfaction', Color(0xFFECA413), EmotionCategory.positive),
+  gratitude('gratitude', Color(0xFFE76423), EmotionCategory.positive),
+  happy('happy', Color(0xFFE75740), EmotionCategory.positive),
+  love('love', Color(0xFFDD3C71), EmotionCategory.positive),
+  funny('funny', Color(0xFFDF2030), EmotionCategory.positive),
+  joy('joy', Color(0xFFE7C623), EmotionCategory.positive),
+  excited('excited', Color(0xFF28BD98), EmotionCategory.fine),
+  relief('relief', Color(0xFF2BAB76), EmotionCategory.fine),
+  calm('calm', Color(0xFF34A7B2), EmotionCategory.fine),
+  neutral('neutral', Color(0xFF669991), EmotionCategory.fine),
+  boredom('boredom', Color(0xFF428A84), EmotionCategory.fine),
+  anxious('anxious', Color(0xFF5C39C6), EmotionCategory.negative),
+  sadness('sadness', Color(0xFF3156C4), EmotionCategory.negative),
+  fatigue('fatigue', Color(0xFF5980A6), EmotionCategory.negative),
+  regret('regret', Color(0xFF633B9B), EmotionCategory.negative),
+  anger('anger', Color(0xFF3528BD), EmotionCategory.negative),
+  dislike('dislike', Color(0xFF4D5180), EmotionCategory.negative);
 
   final String id;
-  final String asset;
   final Color color;
   final EmotionCategory category;
 
-  const EmotionTag(this.id, this.asset, this.color, this.category);
+  const EmotionTag(this.id, this.color, this.category);
 
   String labelFor(AppLocalizations l10n) => switch (this) {
         EmotionTag.satisfaction => l10n.emotionSatisfaction,

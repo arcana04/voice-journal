@@ -230,6 +230,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get darkModeSubtitle => '目にやさしい表示に切り替えます';
 
   @override
+  String get settingsCustomBackgroundTitle => '背景画像';
+
+  @override
+  String get settingsCustomBackgroundSubtitleUnset => '未設定';
+
+  @override
+  String get settingsCustomBackgroundSubtitleSet => '設定済み（タップで変更）';
+
+  @override
+  String get settingsCustomBackgroundClearTooltip => '元に戻す';
+
+  @override
   String get settingsProBadge => 'Pro限定';
 
   @override
@@ -990,6 +1002,17 @@ class AppLocalizationsJa extends AppLocalizations {
       '記録を横断したAIチャットはProプラン限定の機能です。アップグレードすると使えるようになります。';
 
   @override
+  String get ideaBrainstormTooltip => 'AIで深掘り';
+
+  @override
+  String ideaBrainstormChatQuestion(Object title) {
+    return '「$title」を3つの切り口で深掘りして';
+  }
+
+  @override
+  String get ideaBrainstormErrorTitle => '深掘りの取得に失敗しました';
+
+  @override
   String get weeklyReportSettingsTitle => '週刊脳内レポート';
 
   @override
@@ -1018,7 +1041,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get weeklyReportNoEmotionData => '今週はまだ感情の記録がありません';
 
   @override
-  String get weeklyReportAuroraSectionTitle => '今週のオーロラ';
+  String get weeklyReportConstellationSectionTitle => '感情の星座';
 
   @override
   String get weeklyReportMentalWaveSectionTitle => 'メンタルウェーブ';

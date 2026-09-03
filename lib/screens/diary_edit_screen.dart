@@ -17,8 +17,9 @@ import '../utils/custom_background_picker.dart';
 import '../utils/note_text_style.dart';
 import '../widgets/diary_background_tile.dart';
 import '../widgets/diary_screen_background.dart';
+import '../widgets/emotion_bubble.dart';
 import '../widgets/icon_button_style.dart';
-import '../widgets/media_gallery.dart';
+import '../widgets/diary_media_canvas.dart';
 import '../widgets/note_text_style_picker.dart';
 import '../widgets/scrim_text.dart';
 
@@ -346,7 +347,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                             Navigator.of(sheetContext).pop();
                             await store.updateEntryEmotion(entry, tag);
                           },
-                          child: Image.asset(tag.asset, width: 40, height: 40),
+                          child: EmotionBubble(tag: tag, size: 32),
                         ),
                         const SizedBox(height: 5),
                         Text(
@@ -606,14 +607,10 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                                     onTap: () =>
                                         _openEmotionSheet(store, entry),
                                     child: entry.emotion != null
-                                        ? Semantics(
+                                        ? EmotionPill(
+                                            tag: entry.emotion!,
                                             label: entry.emotion!.labelFor(
                                               AppLocalizations.of(context)!,
-                                            ),
-                                            child: Image.asset(
-                                              entry.emotion!.asset,
-                                              width: 48,
-                                              height: 48,
                                             ),
                                           )
                                         : Icon(
@@ -638,13 +635,14 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                         ),
                         const SizedBox(height: 16),
                         for (final d in drafts) _buildNoteBlock(theme, d),
-                        if (entry.imagePaths.isNotEmpty) ...[
+                        if (entry.images.isNotEmpty) ...[
                           const SizedBox(height: 8),
-                          MediaGallery(
-                            paths: entry.imagePaths,
-                            onRemove: (index) => store.removeMediaFromEntry(
+                          DiaryMediaCanvas(
+                            entry: entry,
+                            editable: context.read<SubscriptionStore>().isPro,
+                            onRemove: (path) => store.removeMediaFromEntry(
                               entry,
-                              entry.imagePaths[index],
+                              path,
                               canSyncMedia:
                                   context.read<SubscriptionStore>().isProWithMediaSync,
                             ),

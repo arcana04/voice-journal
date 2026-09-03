@@ -5,6 +5,7 @@ import 'dart:ui' show Color;
 import 'package:flutter/foundation.dart';
 
 import '../models/emotion_tag.dart';
+import '../models/entry_image.dart';
 import '../models/journal_entry.dart';
 import '../models/media_usage.dart';
 import '../services/apple_reminders_service.dart';
@@ -407,8 +408,11 @@ class JournalStore extends ChangeNotifier {
     await _db.addImages(entry.id!, paths);
     final index = entries.indexWhere((e) => e.id == entry.id);
     if (index == -1) return;
+    final newImages = [
+      for (final path in paths) EntryImage(entryId: entry.id!, path: path),
+    ];
     entries[index] = entries[index].copyWith(
-      imagePaths: [...entries[index].imagePaths, ...paths],
+      images: [...entries[index].images, ...newImages],
     );
     notifyListeners();
     // 容量上限に達している場合は、静かに（同期エラー扱いにはせず）アップロード
@@ -436,12 +440,38 @@ class JournalStore extends ChangeNotifier {
     final index = entries.indexWhere((e) => e.id == entry.id);
     if (index == -1) return;
     entries[index] = entries[index].copyWith(
-      imagePaths: entries[index].imagePaths.where((p) => p != path).toList(),
+      images: entries[index].images.where((i) => i.path != path).toList(),
     );
     notifyListeners();
     if (canSyncMedia) {
       _trackSync(_mediaSync.deleteMedia(entry.remoteId, path));
     }
+  }
+
+  /// 添付画像の自由配置（Pro限定）。[x]/[y]は正規化座標(0..1)、[scale]は
+  /// 基準サイズに対する拡大率。クラウド同期は対象外（Storageには画像バイナリ
+  /// しか無く、位置情報を運ぶチャンネルが無いため、端末ローカルにのみ保存する）。
+  Future<void> updateImagePosition(
+    JournalEntry entry,
+    String path, {
+    required double x,
+    required double y,
+    required double scale,
+  }) async {
+    if (entry.id == null) return;
+    await _db.updateImagePosition(entry.id!, path, x: x, y: y, scale: scale);
+    final index = entries.indexWhere((e) => e.id == entry.id);
+    if (index == -1) return;
+    entries[index] = entries[index].copyWith(
+      images: [
+        for (final image in entries[index].images)
+          if (image.path == path)
+            image.copyWith(x: x, y: y, scale: scale)
+          else
+            image,
+      ],
+    );
+    notifyListeners();
   }
 
   Future<void> updateNoteText(

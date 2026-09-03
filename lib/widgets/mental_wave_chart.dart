@@ -4,6 +4,7 @@ import 'package:intl/intl.dart' hide TextDirection;
 import '../l10n/app_localizations.dart';
 import '../models/emotion_tag.dart';
 import '../models/weekly_report.dart';
+import 'emotion_bubble.dart';
 
 /// 波の1つの山（＝1つ以上の記録が近い時刻に集まったもの）。タップすると
 /// [moments]の一覧をボトムシートで見せるので、1日に大量に記録した日でも
@@ -264,7 +265,7 @@ class _MentalWaveChartState extends State<MentalWaveChart> {
                                     color: m.tag.color.withValues(alpha: 0.22),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: Image.asset(m.tag.asset, fit: BoxFit.contain),
+                                  child: Center(child: EmotionBubble(tag: m.tag, size: 26)),
                                 ),
                                 const SizedBox(width: 14),
                                 Expanded(

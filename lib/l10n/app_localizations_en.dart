@@ -239,6 +239,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get darkModeSubtitle => 'Switch to an easier-on-the-eyes look';
 
   @override
+  String get settingsCustomBackgroundTitle => 'Background Image';
+
+  @override
+  String get settingsCustomBackgroundSubtitleUnset => 'Not set';
+
+  @override
+  String get settingsCustomBackgroundSubtitleSet =>
+      'Custom photo set (tap to change)';
+
+  @override
+  String get settingsCustomBackgroundClearTooltip => 'Reset to default';
+
+  @override
   String get settingsProBadge => 'Pro only';
 
   @override
@@ -1027,6 +1040,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Chatting across all your entries is a Pro feature. Upgrade to unlock it.';
 
   @override
+  String get ideaBrainstormTooltip => 'Brainstorm with AI';
+
+  @override
+  String ideaBrainstormChatQuestion(Object title) {
+    return 'Explore 3 different angles for \"$title\"';
+  }
+
+  @override
+  String get ideaBrainstormErrorTitle => 'Couldn\'t get suggestions';
+
+  @override
   String get weeklyReportSettingsTitle => 'Weekly Brain Report';
 
   @override
@@ -1055,7 +1079,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weeklyReportNoEmotionData => 'No emotional entries yet this week';
 
   @override
-  String get weeklyReportAuroraSectionTitle => 'This Week\'s Aurora';
+  String get weeklyReportConstellationSectionTitle => 'Weekly Constellation';
 
   @override
   String get weeklyReportMentalWaveSectionTitle => 'Mental Wave';

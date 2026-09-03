@@ -1,4 +1,5 @@
 import 'emotion_tag.dart';
+import 'entry_image.dart';
 
 class TaskItem {
   final int? id;
@@ -306,7 +307,10 @@ class JournalEntry {
   final List<NoteItem> notes;
   final String? comfortMessage;
   final EmotionTag? emotion;
-  final List<String> imagePaths;
+  final List<EntryImage> images;
+
+  /// 位置・サイズ情報を必要としない呼び出し元向けの、パスだけの一覧。
+  List<String> get imagePaths => images.map((i) => i.path).toList();
 
   JournalEntry({
     this.id,
@@ -317,13 +321,13 @@ class JournalEntry {
     required this.notes,
     this.comfortMessage,
     this.emotion,
-    this.imagePaths = const [],
+    this.images = const [],
   });
 
   JournalEntry copyWith({
     List<TaskItem>? tasks,
     List<NoteItem>? notes,
-    List<String>? imagePaths,
+    List<EntryImage>? images,
     EmotionTag? emotion,
     bool clearEmotion = false,
   }) {
@@ -336,7 +340,7 @@ class JournalEntry {
       notes: notes ?? this.notes,
       comfortMessage: comfortMessage,
       emotion: clearEmotion ? null : (emotion ?? this.emotion),
-      imagePaths: imagePaths ?? this.imagePaths,
+      images: images ?? this.images,
     );
   }
 }

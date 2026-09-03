@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../l10n/app_localizations.dart';
-import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
 import '../services/video_thumbnail_service.dart';
 import '../utils/media_type.dart';
+import 'emotion_bubble.dart';
 
 /// 日記画面の一覧に出す、タップで詳細画面を開くための読み取り専用プレビューカード。
 class DiaryEntryCard extends StatelessWidget {
@@ -43,86 +43,81 @@ class DiaryEntryCard extends StatelessWidget {
           ],
         ),
         padding: const EdgeInsets.all(16),
-        child: Stack(
-          clipBehavior: Clip.none,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      day,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: theme.colorScheme.primary,
-                        height: 1,
-                      ),
+                Text(
+                  day,
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: theme.colorScheme.primary,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    timeLabel,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(width: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        timeLabel,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const Spacer(),
+                if (entry.emotion != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: EmotionPill(
+                      tag: entry.emotion!,
+                      label: entry.emotion!.labelFor(AppLocalizations.of(context)!),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Container(
+              width: 48,
+              height: 3,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            for (final note in entry.notes.where(
+              (n) => n.category == kNoteCategoryFeeling,
+            ))
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if ((note.title ?? '').isNotEmpty)
+                      Text(
+                        note.title!,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
+                      ),
+                    const SizedBox(height: 2),
+                    Text(
+                      note.content,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  width: 48,
-                  height: 3,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                for (final note in entry.notes.where(
-                  (n) => n.category == kNoteCategoryFeeling,
-                ))
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if ((note.title ?? '').isNotEmpty)
-                          Text(
-                            note.title!,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        const SizedBox(height: 2),
-                        Text(
-                          note.content,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                if (entry.imagePaths.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  _buildMediaPreview(theme),
-                ],
-              ],
-            ),
-            if (entry.emotion != null)
-              Positioned(
-                top: -14,
-                right: -14,
-                child: _EmotionBadge(
-                  emotion: entry.emotion!,
-                  label: entry.emotion!.labelFor(AppLocalizations.of(context)!),
-                ),
               ),
+            if (entry.imagePaths.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              _buildMediaPreview(theme),
+            ],
           ],
         ),
       ),
@@ -227,28 +222,6 @@ class _MediaPreviewTileState extends State<_MediaPreviewTile> {
                 ),
               ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 感情タグを表す泡バッジ。カードの角に載せるステッカー風のUI。
-class _EmotionBadge extends StatelessWidget {
-  final EmotionTag emotion;
-  final String label;
-
-  const _EmotionBadge({required this.emotion, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: label,
-      child: SizedBox(
-        width: 56,
-        height: 56,
-        child: Center(
-          child: Image.asset(emotion.asset, width: 48, height: 48),
         ),
       ),
     );

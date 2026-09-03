@@ -4,12 +4,11 @@ import 'package:intl/intl.dart';
 import 'package:screenshot/screenshot.dart';
 
 import '../l10n/app_localizations.dart';
-import '../models/emotion_tag.dart';
 import '../models/weekly_report.dart';
 import 'brain_map.dart';
 import 'category_donut_chart.dart';
 import 'mental_wave_chart.dart';
-import 'weekly_aurora.dart';
+import 'weekly_constellation.dart';
 
 /// 「仕分け比率」ドーナツチャート用の3カテゴリの色。dataviz skillの検証済み
 /// パレット（palette.md）の先頭3スロットをそのまま使用（all-pairsで検証済み）。
@@ -26,7 +25,6 @@ class WeeklyReportContent extends StatelessWidget {
   final WeeklyReportInsights insights;
   final DateTime weekStart;
   final DateTime weekEnd;
-  final List<Map<EmotionTag, int>> dailyEmotionCounts;
   final List<MoodMoment> moodMoments;
   final List<BrainMapBubble> brainMapBubbles;
   final int diaryCount;
@@ -40,7 +38,6 @@ class WeeklyReportContent extends StatelessWidget {
     required this.insights,
     required this.weekStart,
     required this.weekEnd,
-    required this.dailyEmotionCounts,
     required this.moodMoments,
     required this.brainMapBubbles,
     required this.diaryCount,
@@ -73,10 +70,10 @@ class WeeklyReportContent extends StatelessWidget {
             _MagazineHeader(dateRange: dateRange),
             const SizedBox(height: 20),
             _SectionCard(
-              icon: Icons.gradient_outlined,
-              title: l10n.weeklyReportAuroraSectionTitle,
-              child: WeeklyAurora(
-                dailyEmotionCounts: dailyEmotionCounts,
+              icon: Icons.auto_awesome,
+              title: l10n.weeklyReportConstellationSectionTitle,
+              child: WeeklyConstellation(
+                moments: moodMoments,
                 weekStart: weekStart,
                 locale: locale,
               ),
@@ -180,7 +177,7 @@ class WeeklyReportContent extends StatelessWidget {
               dateRange: dateRange,
               insights: insights,
               categorySlices: categorySlices,
-              dailyEmotionCounts: dailyEmotionCounts,
+              moodMoments: moodMoments,
               weekStart: weekStart,
               locale: locale,
             ),
@@ -460,7 +457,7 @@ class ShareCard extends StatelessWidget {
   final String dateRange;
   final WeeklyReportInsights insights;
   final List<CategorySlice> categorySlices;
-  final List<Map<EmotionTag, int>> dailyEmotionCounts;
+  final List<MoodMoment> moodMoments;
   final DateTime weekStart;
   final String locale;
 
@@ -469,7 +466,7 @@ class ShareCard extends StatelessWidget {
     required this.dateRange,
     required this.insights,
     required this.categorySlices,
-    required this.dailyEmotionCounts,
+    required this.moodMoments,
     required this.weekStart,
     required this.locale,
   });
@@ -515,11 +512,7 @@ class ShareCard extends StatelessWidget {
                 style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
               ),
             const SizedBox(height: 20),
-            WeeklyAurora(
-              dailyEmotionCounts: dailyEmotionCounts,
-              weekStart: weekStart,
-              locale: locale,
-            ),
+            WeeklyConstellation(moments: moodMoments, weekStart: weekStart, locale: locale),
             const SizedBox(height: 20),
             CategoryDonutChart(slices: categorySlices),
             if (insights.highlightQuote.quote.isNotEmpty) ...[

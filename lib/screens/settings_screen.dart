@@ -2,12 +2,14 @@ import 'dart:io';
 
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/legal_links.dart';
 import '../config/theme_colors.dart';
 import '../l10n/app_localizations.dart';
+import '../services/app_background_storage_service.dart';
 import '../services/reminder_service.dart';
 import '../state/account_store.dart';
 import '../state/apple_reminders_store.dart';
@@ -69,6 +71,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   }
 
+  Future<void> _pickCustomAppBackground(bool isPro) async {
+    if (!isPro) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const PaywallScreen()),
+      );
+      return;
+    }
+
+    final picker = ImagePicker();
+    XFile? picked;
+    try {
+      picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.mediaPickFailed('$e'))),
+      );
+      return;
+    }
+    if (picked == null) return;
+
+    final path = await AppBackgroundStorageService().saveBackground(File(picked.path));
+    if (!mounted) return;
+    await context.read<SettingsStore>().setCustomBackgroundPath(path);
+  }
+
+  Future<void> _clearCustomAppBackground() async {
+    await AppBackgroundStorageService().clear();
+    if (!mounted) return;
+    await context.read<SettingsStore>().setCustomBackgroundPath(null);
+  }
+
   /// サブスクリプション管理画面を開く。app_settingsパッケージの
   /// AppSettingsType.subscriptionsはiOS側にしか実装が無く、Androidで呼んでも
   /// 何も起きない（ボタンが反応しないように見える）ため、Androidでは
@@ -120,6 +157,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onChanged: (value) =>
                             context.read<SettingsStore>().setDarkMode(value),
                       ),
+                    );
+                  },
+                ),
+                Consumer2<SettingsStore, SubscriptionStore>(
+                  builder: (context, settings, subscription, _) {
+                    final hasCustomBackground =
+                        settings.customBackgroundPath != null;
+                    return _SettingsTile(
+                      icon: Icons.wallpaper_rounded,
+                      color: _SettingsColors.violet,
+                      title: l10n.settingsCustomBackgroundTitle,
+                      subtitle: hasCustomBackground
+                          ? l10n.settingsCustomBackgroundSubtitleSet
+                          : l10n.settingsCustomBackgroundSubtitleUnset,
+                      badge: subscription.isPro
+                          ? null
+                          : _Pill(
+                              text: l10n.settingsProBadge,
+                              color: _SettingsColors.violet,
+                            ),
+                      trailing: !subscription.isPro
+                          ? Icon(
+                              Icons.lock_rounded,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.outline,
+                            )
+                          : hasCustomBackground
+                          ? IconButton(
+                              icon: const Icon(Icons.close_rounded, size: 20),
+                              tooltip: l10n.settingsCustomBackgroundClearTooltip,
+                              visualDensity: VisualDensity.compact,
+                              onPressed: _clearCustomAppBackground,
+                            )
+                          : const _ChevronIcon(),
+                      onTap: () =>
+                          _pickCustomAppBackground(subscription.isPro),
                     );
                   },
                 ),
@@ -350,6 +423,7 @@ class _SettingsColors {
   static const blue = Color(0xFF3B82F6);
   static const amber = Color(0xFFE2952F);
   static const rose = Color(0xFFE84393);
+  static const violet = Color(0xFF8B5CF6);
 }
 
 class _SectionLabel extends StatelessWidget {

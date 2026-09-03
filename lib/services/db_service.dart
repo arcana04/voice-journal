@@ -4,6 +4,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/emotion_tag.dart';
+import '../models/entry_image.dart';
 import '../models/journal_entry.dart';
 import '../models/weekly_report.dart';
 
@@ -39,7 +40,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 21,
+      version: 23,
       // tasks/notes/entry_imagesはON DELETE CASCADEをスキーマに宣言しているが、
       // SQLiteは外部キー制約自体をデフォルトで無効にしており、接続のたびに
       // 明示的に有効化しないとその宣言は一切効かない（各deleteメソッドが手動で
@@ -103,6 +104,9 @@ class DbService {
             path TEXT NOT NULL,
             sort_order INTEGER NOT NULL DEFAULT 0,
             uploaded INTEGER NOT NULL DEFAULT 0,
+            pos_x REAL,
+            pos_y REAL,
+            scale REAL,
             FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
           )
         ''');
@@ -128,7 +132,8 @@ class DbService {
             idea_count INTEGER NOT NULL,
             total_tasks INTEGER NOT NULL,
             completed_tasks INTEGER NOT NULL,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            entry_ids_signature TEXT NOT NULL DEFAULT ''
           )
         ''');
       },
@@ -266,6 +271,21 @@ class DbService {
           );
           await db.execute('ALTER TABLE notes ADD COLUMN tag TEXT');
         }
+        if (oldVersion < 22) {
+          // 週次レポートのキャッシュ判定を件数だけでなく実際の記録idの集合でも
+          // 検証できるようにする列。既存行はデフォルト値''になり、次回の判定で
+          // 必ず不一致(=再生成)扱いになる想定通りの挙動。
+          await db.execute(
+            "ALTER TABLE weekly_reports ADD COLUMN entry_ids_signature TEXT NOT NULL DEFAULT ''",
+          );
+        }
+        if (oldVersion < 23) {
+          // 日記添付画像の自由配置（Pro限定）用。NULLのままなら「まだ動かして
+          // いない」を意味し、キャンバス側で自動的に並べる。
+          await db.execute('ALTER TABLE entry_images ADD COLUMN pos_x REAL');
+          await db.execute('ALTER TABLE entry_images ADD COLUMN pos_y REAL');
+          await db.execute('ALTER TABLE entry_images ADD COLUMN scale REAL');
+        }
       },
     );
   }
@@ -394,11 +414,39 @@ class DbService {
               .toList(),
           comfortMessage: row['comfort_message'] as String?,
           emotion: EmotionTag.fromId(row['emotion'] as String?),
-          imagePaths: (imagesByEntry[row['id'] as int] ?? const [])
-              .map((r) => r['path'] as String)
+          images: (imagesByEntry[row['id'] as int] ?? const [])
+              .map(
+                (r) => EntryImage(
+                  id: r['id'] as int,
+                  entryId: r['entry_id'] as int,
+                  path: r['path'] as String,
+                  sortOrder: r['sort_order'] as int,
+                  x: r['pos_x'] as double?,
+                  y: r['pos_y'] as double?,
+                  scale: r['scale'] as double?,
+                ),
+              )
               .toList(),
         ),
     ];
+  }
+
+  /// [x]/[y]/[scale]を更新する（Pro限定の自由配置機能）。[x]/[y]は正規化座標
+  /// (0..1)、[scale]は基準サイズに対する拡大率。
+  Future<void> updateImagePosition(
+    int entryId,
+    String path, {
+    required double x,
+    required double y,
+    required double scale,
+  }) async {
+    final db = await _database;
+    await db.update(
+      'entry_images',
+      {'pos_x': x, 'pos_y': y, 'scale': scale},
+      where: 'entry_id = ? AND path = ?',
+      whereArgs: [entryId, path],
+    );
   }
 
   /// [paths] を entryId のエントリに追加で紐付ける（既存の枚数の続きの並び順で）。

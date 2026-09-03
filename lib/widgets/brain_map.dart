@@ -210,7 +210,14 @@ List<_PlacedBubble> _layoutBubbles(List<BrainMapBubble> bubbles, double width, d
     final radius =
         BrainMap._minRadius + (BrainMap._maxRadius - BrainMap._minRadius) * normalized.clamp(0.0, 1.0);
 
+    // 完全に重ならない場所が(枠が狭すぎて)見つからない場合でも、無条件で
+    // 中央にフォールバックすると既に置いたバブルと完全に重なって背後に隠れて
+    // しまう。探索中に見つけた「既存バブルとの最短距離が一番大きい候補」を
+    // 常に記録しておき、理想の場所が無ければそれを使うことで、最低限バブル
+    // 同士が完全一致で重なることだけは避ける。
     Offset? spot;
+    var bestCandidate = Offset(centerX, centerY);
+    var bestMinDist = double.negativeInfinity;
     const angleStep = 0.5;
     const radiusStep = 4.0;
     final maxRadiusSearch = math.sqrt(width * width + height * height);
@@ -225,18 +232,21 @@ List<_PlacedBubble> _layoutBubbles(List<BrainMapBubble> bubbles, double width, d
         candidate.dx.clamp(radius, width - radius),
         candidate.dy.clamp(radius, height - radius),
       );
-      final overlaps = placed.any((p) {
-        final minDist = p.radius + radius + 4;
-        return (p.center - clamped).distanceSquared < minDist * minDist;
-      });
-      if (!overlaps) {
+      final minDistToPlaced = placed.isEmpty
+          ? double.infinity
+          : placed.map((p) => (p.center - clamped).distance - p.radius).reduce(math.min);
+      if (minDistToPlaced > bestMinDist) {
+        bestMinDist = minDistToPlaced;
+        bestCandidate = clamped;
+      }
+      if (minDistToPlaced >= radius + 4) {
         spot = clamped;
         break;
       }
       angle += angleStep;
       spiralRadius += radiusStep * (angleStep / (2 * math.pi));
     }
-    spot ??= Offset(centerX, centerY);
+    spot ??= bestCandidate;
     placed.add(_PlacedBubble(bubble: bubble, center: spot, radius: radius));
   }
 
@@ -250,9 +260,13 @@ class _BubbleView extends StatelessWidget {
 
   const _BubbleView({required this.bubble, required this.radius, required this.onTap});
 
+  // 感情色をバブル本体に使うと、彩度の高い色ほど周囲のシャドウが強く
+  // にじんで見えてしまう(特に赤系)ため、バブルは色分けせず統一したガラス玉
+  // トーンにする。どの感情が紐づくかはタップ後のシート内の小さなドットで示す。
+  static const Color _baseColor = Color(0xFFAEB4C8);
+
   @override
   Widget build(BuildContext context) {
-    final color = Color(bubble.colorValue);
     final fontSize = (radius * 0.34).clamp(10.0, 16.0);
 
     return GestureDetector(
@@ -262,15 +276,19 @@ class _BubbleView extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           boxShadow: [
-            BoxShadow(color: color.withValues(alpha: 0.55), blurRadius: radius * 0.7, spreadRadius: 1),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.22),
+              blurRadius: radius * 0.35,
+              offset: Offset(0, radius * 0.1),
+            ),
           ],
           gradient: RadialGradient(
             center: const Alignment(-0.3, -0.3),
             radius: 0.9,
             colors: [
-              Color.lerp(color, Colors.white, 0.35)!,
-              color,
-              Color.lerp(color, Colors.black, 0.25)!,
+              Color.lerp(_baseColor, Colors.white, 0.55)!,
+              _baseColor,
+              Color.lerp(_baseColor, Colors.black, 0.12)!,
             ],
             stops: const [0.0, 0.6, 1.0],
           ),

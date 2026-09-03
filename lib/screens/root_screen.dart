@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../services/deep_link_service.dart';
 import '../services/reminder_service.dart';
+import '../state/idea_brainstorm_request_store.dart';
 import '../state/journal_store.dart';
 import '../state/record_trigger_store.dart';
 import '../state/subscription_store.dart';
@@ -84,6 +85,19 @@ class _RootScreenState extends State<RootScreen> {
         } else {
           ReminderService.instance.cancelWeeklyReportNotification();
         }
+      });
+    }
+
+    // アイデア画面の「AIで深掘り」ボタンが押されたら、相談タブへ自動で
+    // 切り替える。実際にブレインストームを開始してチャットへ積むのは
+    // KnowledgeBaseScreen側（IndexedStackで常にマウントされているので
+    // タブが非表示でも同じフレームでpendingを検知できる）。
+    final hasPendingBrainstorm =
+        context.watch<IdeaBrainstormRequestStore>().pending != null;
+    if (hasPendingBrainstorm && _index != 4) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _index = 4);
       });
     }
 
