@@ -2,7 +2,8 @@ import Foundation
 import WatchConnectivity
 
 /// iPhone側（Flutterアプリ、watch_connectivityパッケージ経由）から
-/// WatchConnectivityのtransferUserInfoで中継されるペアリング情報
+/// WatchConnectivityのupdateApplicationContext（このパッケージは
+/// transferUserInfoを公開していないため）で中継されるペアリング情報
 /// （customToken/deviceId/deviceSecret）を受け取り、FirebaseAuthClientで
 /// Watch専用のrefreshTokenに交換してKeychainへ保存する。
 final class PairingReceiver: NSObject, ObservableObject {
@@ -26,11 +27,23 @@ extension PairingReceiver: WCSessionDelegate {
         error: Error?
     ) {}
 
+    // iPhone側（watch_pairing_service.dart）は実際にはtransferUserInfoではなく
+    // updateApplicationContextでペアリング情報を送っている（watch_connectivity
+    // パッケージがtransferUserInfoを公開していないため）。didReceiveUserInfoしか
+    // 実装していないとこの中継が届かず無言で失敗するため、両方の経路に対応する。
     func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
+        handlePairingPayload(userInfo)
+    }
+
+    func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
+        handlePairingPayload(applicationContext)
+    }
+
+    private func handlePairingPayload(_ payload: [String: Any]) {
         guard
-            let customToken = userInfo["customToken"] as? String,
-            let deviceId = userInfo["deviceId"] as? String,
-            let deviceSecret = userInfo["deviceSecret"] as? String
+            let customToken = payload["customToken"] as? String,
+            let deviceId = payload["deviceId"] as? String,
+            let deviceSecret = payload["deviceSecret"] as? String
         else { return }
 
         Task {
