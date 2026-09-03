@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../services/deep_link_service.dart';
 import '../services/reminder_service.dart';
+import '../state/account_store.dart';
 import '../state/idea_brainstorm_request_store.dart';
 import '../state/journal_store.dart';
 import '../state/record_trigger_store.dart';
@@ -43,6 +44,25 @@ class _RootScreenState extends State<RootScreen> {
     _deepLinks.init(onRecordRequested: _handleRecordRequested);
     ReminderService.instance.weeklyReportRequests
         .addListener(_handleWeeklyReportRequested);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncOnStartupIfSignedIn());
+  }
+
+  /// アプリ起動のたびに、サインイン済み(匿名でない)アカウントならクラウドから
+  /// 自動で取り込む。これまでは「アカウントを復元」ボタンを手動で押さない限り
+  /// クラウド上の変更（例: Apple Watch単体で録音・保存したエントリ）が
+  /// この端末に一切反映されなかったため。
+  Future<void> _syncOnStartupIfSignedIn() async {
+    if (!mounted) return;
+    if (!context.read<AccountStore>().isSignedIn) return;
+    final store = context.read<JournalStore>();
+    // fullSyncは現在のentriesと突き合わせて「まだ無いものだけ」取り込むため、
+    // Provider作成時の非同期loadと競合してentriesが空のまま呼ばれると、
+    // 既にローカルにあるエントリまで新規として再挿入してしまう。ここで
+    // 一度loadしてentriesを最新化してからfullSyncする。
+    await store.load();
+    if (!mounted) return;
+    final canSyncMedia = context.read<SubscriptionStore>().isProWithMediaSync;
+    await store.fullSync(canSyncMedia: canSyncMedia);
   }
 
   @override
