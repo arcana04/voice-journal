@@ -31,10 +31,11 @@ const revenueCatWebhookSecret = defineSecret("REVENUECAT_WEBHOOK_SECRET");
  * ビルドで実機検証したところApp Attestトークンが取得できず、
  * processVoiceMemoなどiPhone本体からの通常の呼び出しまでunauthenticatedで
  * 全滅することを確認した（2026-09-02）。TestFlight配信ビルド（Codemagic経由）
- * でApp Attestが実際に通るか確認するため一時的にtrueへ戻す。もし同じ
- * unauthenticatedエラーが再発したらfalseに戻し、Firebaseコンソール側の
- * プロバイダ登録を疑う。 */
-const APP_CHECK_ENFORCED = true;
+ * でApp Attestが実際に通るか再検証したが（2026-09-03）、mintWatchPairingToken
+ * 呼び出しがunauthenticatedで失敗することを確認 — TestFlight配信でも
+ * App Attestが通っていない。原因（Firebaseコンソール側のプロバイダ登録未完了か、
+ * 署名方式そのものの非対応か）を切り分けるまで、一旦falseに戻す。 */
+const APP_CHECK_ENFORCED = false;
 
 const FREE_DAILY_LIMIT = 3;
 const PRO_DAILY_LIMIT = 30;
