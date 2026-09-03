@@ -43,6 +43,29 @@ enum EntryCategory: String, CaseIterable {
     }
 }
 
+extension ProcessVoiceMemoResult {
+    var totalItemCount: Int { tasks.count + notes.count }
+
+    /// カテゴリごとの件数の内訳（表示順はEntryCategory.allCasesの順）。
+    var categoryBreakdown: [(category: EntryCategory, count: Int)] {
+        var counts: [EntryCategory: Int] = [:]
+        if !tasks.isEmpty { counts[.task, default: 0] += tasks.count }
+        for note in notes {
+            let category: EntryCategory = note.category == "アイデア" ? .idea : .diary
+            counts[category, default: 0] += 1
+        }
+        return EntryCategory.allCases.compactMap { category in
+            guard let count = counts[category] else { return nil }
+            return (category, count)
+        }
+    }
+
+    /// 「タスク1件・日記1件」のような、複数項目に仕分けられたときの内訳表示。
+    var breakdownSummary: String {
+        categoryBreakdown.map { "\($0.category.label)\($0.count)件" }.joined(separator: "・")
+    }
+}
+
 enum EntryStoreError: Error {
     case notPaired
     case invalidResponse

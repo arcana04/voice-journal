@@ -2,8 +2,11 @@ import SwiftUI
 
 /// 録音〜保存の画面状態。録音停止と同時にAIの既定分類でFirestoreへ保存して
 /// しまう(データを失わないことを優先)。resultの画面はその後の「確認・分類の
-/// 訂正だけ」を担い、タスク/日記/アイデアのボタンを押すと単一項目にまとめ
-/// 直して上書き保存する。
+/// 訂正だけ」を担う。1回の発話がタスク/日記/アイデアのどれか1件だけに
+/// 仕分けられた場合のみ、ボタンで選び直せる(単一項目にまとめ直して上書き)。
+/// 複数項目(タスク+日記など)に仕分けられた場合は、1つのボタンで上書きすると
+/// 他の項目を消してしまうため、内訳を表示するだけにして訂正はiPhone側の
+/// 3カラムレビュー画面に委ねる。
 private enum FlowState {
     case idle
     case uploading
@@ -92,14 +95,25 @@ struct ContentView: View {
     ) -> some View {
         ScrollView {
             VStack(spacing: 8) {
-                HStack(spacing: 4) {
-                    Image(systemName: category.iconName)
-                    Text("\(category.label)として保存しました")
+                if result.totalItemCount <= 1 {
+                    HStack(spacing: 4) {
+                        Image(systemName: category.iconName)
+                        Text("\(category.label)として保存しました")
+                    }
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.accentColor)
+                    .multilineTextAlignment(.center)
+                } else {
+                    // 1回の発話から複数項目(タスク+日記など)に仕分けられた場合、
+                    // 単一のカテゴリボタンで上書きすると他の項目を消してしまう。
+                    // ここでは内訳を表示するだけにとどめ、訂正はiPhone側に委ねる。
+                    Text("\(result.breakdownSummary)に仕分けて保存しました")
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.accentColor)
+                        .multilineTextAlignment(.center)
                 }
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundColor(.accentColor)
-                .multilineTextAlignment(.center)
 
                 // 省略せず全文表示。ScrollViewで縦にスクロールして読める。
                 Text(result.summary)
@@ -107,20 +121,27 @@ struct ContentView: View {
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("分類が違う場合はタップして変更")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                if result.totalItemCount <= 1 {
+                    Text("分類が違う場合はタップして変更")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
 
-                HStack(spacing: 4) {
-                    ForEach(EntryCategory.allCases, id: \.self) { option in
-                        categoryButton(
-                            option,
-                            isSelected: option == category,
-                            result: result,
-                            createdAt: createdAt,
-                            entryId: entryId
-                        )
+                    HStack(spacing: 4) {
+                        ForEach(EntryCategory.allCases, id: \.self) { option in
+                            categoryButton(
+                                option,
+                                isSelected: option == category,
+                                result: result,
+                                createdAt: createdAt,
+                                entryId: entryId
+                            )
+                        }
                     }
+                } else {
+                    Text("複数項目に分かれているため、訂正はiPhone側のアプリで行ってください")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
                 }
 
                 Button("完了") { flow = .idle }
