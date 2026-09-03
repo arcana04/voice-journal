@@ -21,19 +21,32 @@ String _generateLocalId() {
   ).join();
 }
 
+/// `ALTER TABLE ... ADD COLUMN`をべき等にする。過去に_database getterの
+/// 競合（同時に複数回_open()が走ってしまう不具合、修正済み）でonUpgradeが
+/// 一部だけ実行された端末があり、カラムは追加済みなのにuser_versionだけ
+/// 古いまま進まなくなっていた。以後同じ状況が起きても先に進めるよう、
+/// 既に存在するカラムへのALTER TABLEは無視する。
+Future<void> _addColumnIfMissing(Database db, String sql) async {
+  try {
+    await db.execute(sql);
+  } on DatabaseException catch (e) {
+    if (!e.toString().contains('duplicate column name')) rethrow;
+  }
+}
+
 class DbService {
   static final DbService instance = DbService._internal();
   DbService._internal();
 
-  Database? _db;
+  Future<Database>? _dbFuture;
 
-  Future<Database> get _database async {
-    final existing = _db;
-    if (existing != null) return existing;
-    final opened = await _open();
-    _db = opened;
-    return opened;
-  }
+  // ほぼ同時に複数箇所（各Storeのロードなど）からこのgetterが呼ばれると、
+  // 単に「Database?をキャッシュする」実装ではDatabaseが確立する前に
+  // _open()が並行して複数回走ってしまい、onUpgradeのマイグレーション
+  // （ALTER TABLE）が重複実行されて"duplicate column name"エラーで
+  // 失敗する不具合があった。Futureそのものをメモ化することで、後から来た
+  // 呼び出しは同じ1つの_open()呼び出しを待つようにする。
+  Future<Database> get _database => _dbFuture ??= _open();
 
   Future<Database> _open() async {
     final dbPath = await getDatabasesPath();
@@ -139,17 +152,24 @@ class DbService {
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
-          await db.execute(
+          await _addColumnIfMissing(
+            db,
             'ALTER TABLE entries ADD COLUMN comfort_message TEXT',
           );
-          await db.execute('ALTER TABLE tasks ADD COLUMN due_date TEXT');
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE tasks ADD COLUMN due_date TEXT',
+          );
         }
         if (oldVersion < 3) {
-          await db.execute('ALTER TABLE tasks ADD COLUMN reminder_at TEXT');
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE tasks ADD COLUMN reminder_at TEXT',
+          );
         }
         if (oldVersion < 4) {
           await db.execute('''
-            CREATE TABLE entry_images (
+            CREATE TABLE IF NOT EXISTS entry_images (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               entry_id INTEGER NOT NULL,
               path TEXT NOT NULL,
@@ -159,37 +179,62 @@ class DbService {
           ''');
         }
         if (oldVersion < 5) {
-          await db.execute('ALTER TABLE notes ADD COLUMN title TEXT');
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE notes ADD COLUMN title TEXT',
+          );
         }
         if (oldVersion < 6) {
-          await db.execute('ALTER TABLE entries ADD COLUMN emotion TEXT');
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE entries ADD COLUMN emotion TEXT',
+          );
         }
         if (oldVersion < 7) {
-          await db.execute(
+          await _addColumnIfMissing(
+            db,
             'ALTER TABLE tasks ADD COLUMN calendar_event_id TEXT',
           );
         }
         if (oldVersion < 8) {
-          await db.execute('ALTER TABLE tasks ADD COLUMN reminder_end_at TEXT');
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE tasks ADD COLUMN reminder_end_at TEXT',
+          );
         }
         if (oldVersion < 9) {
-          await db.execute(
+          await _addColumnIfMissing(
+            db,
             'ALTER TABLE notes ADD COLUMN font_family_index INTEGER',
           );
-          await db.execute('ALTER TABLE notes ADD COLUMN text_color INTEGER');
-          await db.execute('ALTER TABLE notes ADD COLUMN font_scale REAL');
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE notes ADD COLUMN text_color INTEGER',
+          );
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE notes ADD COLUMN font_scale REAL',
+          );
         }
         if (oldVersion < 10) {
-          await db.execute(
+          await _addColumnIfMissing(
+            db,
             'ALTER TABLE tasks ADD COLUMN is_all_day INTEGER NOT NULL DEFAULT 0',
           );
         }
         if (oldVersion < 11) {
-          await db.execute('ALTER TABLE entries ADD COLUMN remote_id TEXT');
-          await db.execute(
-            'CREATE UNIQUE INDEX idx_entries_remote_id ON entries(remote_id)',
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE entries ADD COLUMN remote_id TEXT',
           );
-          final rows = await db.query('entries', columns: ['id']);
+          await db.execute(
+            'CREATE UNIQUE INDEX IF NOT EXISTS idx_entries_remote_id ON entries(remote_id)',
+          );
+          final rows = await db.query(
+            'entries',
+            columns: ['id'],
+            where: 'remote_id IS NULL',
+          );
           final batch = db.batch();
           for (final row in rows) {
             batch.update(
@@ -202,18 +247,24 @@ class DbService {
           await batch.commit(noResult: true);
         }
         if (oldVersion < 12) {
-          await db.execute('ALTER TABLE notes ADD COLUMN background_id TEXT');
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE notes ADD COLUMN background_id TEXT',
+          );
         }
         if (oldVersion < 13) {
           // 「通知時刻」を「開始・終了時間（カレンダー用）」から独立させる。既存タスクは
           // 従来どおり開始時刻に通知していたはずなので、その値をそのまま引き継ぐ
           // （以後はTaskEditScreenで両者を別々に変更できる）。
-          await db.execute('ALTER TABLE tasks ADD COLUMN notify_at TEXT');
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE tasks ADD COLUMN notify_at TEXT',
+          );
           await db.execute('UPDATE tasks SET notify_at = reminder_at');
         }
         if (oldVersion < 14) {
           await db.execute('''
-            CREATE TABLE weekly_reports (
+            CREATE TABLE IF NOT EXISTS weekly_reports (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               week_key TEXT NOT NULL UNIQUE,
               week_start TEXT NOT NULL,
@@ -235,41 +286,54 @@ class DbService {
           ''');
         }
         if (oldVersion < 15) {
-          await db.execute(
+          await _addColumnIfMissing(
+            db,
             'ALTER TABLE entry_images ADD COLUMN uploaded INTEGER NOT NULL DEFAULT 0',
           );
         }
         if (oldVersion < 16) {
-          await db.execute(
+          await _addColumnIfMissing(
+            db,
             'ALTER TABLE tasks ADD COLUMN apple_reminder_id TEXT',
           );
         }
         if (oldVersion < 17) {
-          await db.execute(
+          await _addColumnIfMissing(
+            db,
             'ALTER TABLE weekly_reports ADD COLUMN daily_emotion_counts_json TEXT',
           );
         }
         if (oldVersion < 18) {
-          await db.execute(
+          await _addColumnIfMissing(
+            db,
             "ALTER TABLE weekly_reports ADD COLUMN weekly_letter TEXT NOT NULL DEFAULT ''",
           );
         }
         if (oldVersion < 19) {
-          await db.execute(
+          await _addColumnIfMissing(
+            db,
             "ALTER TABLE weekly_reports ADD COLUMN mood_moments_json TEXT NOT NULL DEFAULT '[]'",
           );
         }
         if (oldVersion < 20) {
-          await db.execute(
+          await _addColumnIfMissing(
+            db,
             "ALTER TABLE weekly_reports ADD COLUMN brain_map_json TEXT NOT NULL DEFAULT '[]'",
           );
         }
         if (oldVersion < 21) {
-          await db.execute('ALTER TABLE notes ADD COLUMN idea_status TEXT');
-          await db.execute(
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE notes ADD COLUMN idea_status TEXT',
+          );
+          await _addColumnIfMissing(
+            db,
             'ALTER TABLE notes ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
           );
-          await db.execute('ALTER TABLE notes ADD COLUMN tag TEXT');
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE notes ADD COLUMN tag TEXT',
+          );
         }
         if (oldVersion < 22) {
           // 週次レポートのキャッシュ判定を件数だけでなく実際の記録idの集合でも
