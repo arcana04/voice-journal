@@ -98,7 +98,7 @@ struct ContentView: View {
     private func reviewView(context: ReviewContext) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 8) {
-                Text("内容を確認・訂正できます")
+                Text("分類をタップで切替・内容を編集できます")
                     .font(.caption2)
                     .foregroundColor(.secondary)
 
@@ -196,10 +196,10 @@ struct ContentView: View {
     }
 }
 
-/// 分類の選び直し(タップでピッカー画面に遷移)とテキスト編集(タップでWatchの
+/// 分類の選び直し(タップで次の分類へ巡回)とテキスト編集(タップでWatchの
 /// Scribble/ディクテーション/キーボード入力)ができる1項目分の行。ドラッグ
 /// 操作はWatchの画面サイズでは操作精度が厳しいため、タップ操作で代替している。
-/// (Menuはwatchosで使えないため、Pickerで代替している)
+/// (MenuもPickerもwatchOSで表示が崩れたため、単純な巡回ボタンに変更している)
 private struct DraftItemRow: View {
     @Binding var item: DraftItem
     let onDelete: () -> Void
@@ -207,16 +207,13 @@ private struct DraftItemRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Picker(selection: $item.category) {
-                    ForEach(EntryCategory.allCases, id: \.self) { option in
-                        Label(option.label, systemImage: option.iconName)
-                            .tag(option)
-                    }
-                } label: {
+                Button(action: { item.category = item.category.next }) {
                     Label(item.category.label, systemImage: item.category.iconName)
+                        .font(.caption2)
+                        .fontWeight(.bold)
                 }
-                .font(.caption2)
-                .fontWeight(.bold)
+                .buttonStyle(.bordered)
+                .tint(.blue)
 
                 Spacer()
 
@@ -228,8 +225,8 @@ private struct DraftItemRow: View {
             }
 
             TextField("内容", text: $item.text, axis: .vertical)
-                .font(.caption)
-                .lineLimit(1...6)
+                .font(.caption2)
+                .lineLimit(1...4)
         }
         .padding(6)
         .background(Color.gray.opacity(0.15))

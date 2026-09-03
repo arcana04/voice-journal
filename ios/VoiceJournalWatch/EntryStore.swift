@@ -31,6 +31,14 @@ enum EntryCategory: String, CaseIterable {
         case .idea: return "lightbulb.fill"
         }
     }
+
+    /// タップのたびに次の分類へ順送りする(watchOSでは`Picker`/`Menu`の表示が
+    /// 崩れたため、単純な巡回ボタンに置き換えている)。
+    var next: EntryCategory {
+        let all = EntryCategory.allCases
+        let index = all.firstIndex(of: self)!
+        return all[(index + 1) % all.count]
+    }
 }
 
 /// Watch上で確認・編集する1項目。タスク/日記/アイデアいずれかの分類と、
