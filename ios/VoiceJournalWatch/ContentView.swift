@@ -1,24 +1,32 @@
 import SwiftUI
 
-/// 録音〜保存の画面状態。録音停止と同時にAIの既定分類でFirestoreへ保存して
-/// しまう(データを失わないことを優先)。resultの画面はその後の「確認・分類の
-/// 訂正だけ」を担う。1回の発話がタスク/日記/アイデアのどれか1件だけに
-/// 仕分けられた場合のみ、ボタンで選び直せる(単一項目にまとめ直して上書き)。
-/// 複数項目(タスク+日記など)に仕分けられた場合は、1つのボタンで上書きすると
-/// 他の項目を消してしまうため、内訳を表示するだけにして訂正はiPhone側の
-/// 3カラムレビュー画面に委ねる。
+/// 録音〜保存の画面状態。録音停止と同時にAIの分類結果をそのままFirestoreへ
+/// 保存してしまう(データを失わないことを優先)。reviewingの画面はその後、
+/// 項目ごとに分類の選び直し・テキストの編集ができる一覧を表示し、
+/// 「保存して閉じる」を押すとその時点の内容で上書きする。iPhoneが無くても
+/// Watch単体で仕分け・訂正が完結する（アプリの「Watch単体で完結する」という
+/// コンセプトに合わせている）。
 private enum FlowState {
     case idle
     case uploading
-    case result(ProcessVoiceMemoResult, createdAt: Date, entryId: String, category: EntryCategory)
+    case reviewing(ReviewContext)
     case error(String)
+}
+
+private struct ReviewContext {
+    let summary: String
+    let comfortMessage: String?
+    let emotion: String?
+    let createdAt: Date
+    let entryId: String
 }
 
 struct ContentView: View {
     @StateObject private var pairing = PairingReceiver.shared
     @StateObject private var recorder = AudioRecorder()
     @State private var flow: FlowState = .idle
-    @State private var isSavingCategory = false
+    @State private var draftItems: [DraftItem] = []
+    @State private var isSaving = false
 
     var body: some View {
         VStack(spacing: 10) {
@@ -58,8 +66,8 @@ struct ContentView: View {
             Text("アップロード中…")
                 .font(.caption2)
                 .foregroundColor(.secondary)
-        case .result(let result, let createdAt, let entryId, let category):
-            resultView(result: result, createdAt: createdAt, entryId: entryId, category: category)
+        case .reviewing(let context):
+            reviewView(context: context)
         case .error(let message):
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundColor(.red)
@@ -87,119 +95,66 @@ struct ContentView: View {
         .buttonStyle(.plain)
     }
 
-    private func resultView(
-        result: ProcessVoiceMemoResult,
-        createdAt: Date,
-        entryId: String,
-        category: EntryCategory
-    ) -> some View {
+    private func reviewView(context: ReviewContext) -> some View {
         ScrollView {
-            VStack(spacing: 8) {
-                if result.totalItemCount <= 1 {
-                    HStack(spacing: 4) {
-                        Image(systemName: category.iconName)
-                        Text("\(category.label)として保存しました")
-                    }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("内容を確認・訂正できます")
                     .font(.caption2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.accentColor)
-                    .multilineTextAlignment(.center)
-                } else {
-                    // 1回の発話から複数項目(タスク+日記など)に仕分けられた場合、
-                    // 単一のカテゴリボタンで上書きすると他の項目を消してしまう。
-                    // ここでは内訳を表示するだけにとどめ、訂正はiPhone側に委ねる。
-                    Text("\(result.breakdownSummary)に仕分けて保存しました")
-                        .font(.caption2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.accentColor)
-                        .multilineTextAlignment(.center)
-                }
+                    .foregroundColor(.secondary)
 
-                // 省略せず全文表示。ScrollViewで縦にスクロールして読める。
-                Text(result.summary)
-                    .font(.caption)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                if result.totalItemCount <= 1 {
-                    Text("分類が違う場合はタップして変更")
+                if draftItems.isEmpty {
+                    Text("項目がありません")
                         .font(.caption2)
                         .foregroundColor(.secondary)
-
-                    HStack(spacing: 4) {
-                        ForEach(EntryCategory.allCases, id: \.self) { option in
-                            categoryButton(
-                                option,
-                                isSelected: option == category,
-                                result: result,
-                                createdAt: createdAt,
-                                entryId: entryId
-                            )
-                        }
+                } else {
+                    ForEach($draftItems) { $item in
+                        DraftItemRow(
+                            item: $item,
+                            onDelete: { draftItems.removeAll { $0.id == item.id } }
+                        )
                     }
-                } else {
-                    Text("複数項目に分かれているため、訂正はiPhone側のアプリで行ってください")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
                 }
 
-                Button("完了") { flow = .idle }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.green)
-                    .padding(.top, 4)
+                Button(action: { saveDraft(context: context) }) {
+                    if isSaving {
+                        ProgressView()
+                    } else {
+                        Text("保存して閉じる")
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
+                .disabled(isSaving)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 4)
             }
             .padding(.horizontal, 2)
         }
     }
 
-    @ViewBuilder
-    private func categoryButton(
-        _ option: EntryCategory,
-        isSelected: Bool,
-        result: ProcessVoiceMemoResult,
-        createdAt: Date,
-        entryId: String
-    ) -> some View {
-        let action = { selectCategory(option, result: result, createdAt: createdAt, entryId: entryId) }
-        // 3つ横並びだとWatch画面幅の余裕が無いため、ボタンの中身はテキストのみ
-        // にする(アイコン+テキストだと幅が足りず折り返す機種がある)。選択中/
-        // 非選択の区別はborderedProminent(塗り)/bordered(枠のみ)で付ける。
-        if isSelected {
-            Button(option.label, action: action)
-                .buttonStyle(.borderedProminent)
-                .disabled(isSavingCategory)
-                .font(.caption2)
-        } else {
-            Button(option.label, action: action)
-                .buttonStyle(.bordered)
-                .disabled(isSavingCategory)
-                .font(.caption2)
-        }
-    }
-
-    private func selectCategory(
-        _ newCategory: EntryCategory,
-        result: ProcessVoiceMemoResult,
-        createdAt: Date,
-        entryId: String
-    ) {
-        guard case .result(_, _, _, let current) = flow, current != newCategory else { return }
-        isSavingCategory = true
-        flow = .result(result, createdAt: createdAt, entryId: entryId, category: newCategory)
+    private func saveDraft(context: ReviewContext) {
+        isSaving = true
+        let items = draftItems
         Task {
             do {
-                try await EntryStore.recategorize(
-                    result: result,
-                    createdAt: createdAt,
-                    entryId: entryId,
-                    category: newCategory
+                try await EntryStore.saveDraftItems(
+                    items,
+                    summary: context.summary,
+                    comfortMessage: context.comfortMessage,
+                    emotion: context.emotion,
+                    createdAt: context.createdAt,
+                    entryId: context.entryId
                 )
+                await MainActor.run {
+                    isSaving = false
+                    flow = .idle
+                }
             } catch {
-                // 最初の保存自体は既に成功しているので、分類の訂正だけ失敗しても
-                // データは残る。ここでは静かに諦める(次に開いたときiPhone側で直せる)。
+                await MainActor.run {
+                    isSaving = false
+                    flow = .error("\(error)")
+                }
             }
-            await MainActor.run { isSavingCategory = false }
         }
     }
 
@@ -212,10 +167,21 @@ struct ContentView: View {
                     let result = try await VoiceMemoUploader.upload(audioFileURL: url)
                     let createdAt = Date()
                     let entryId = EntryStore.generateEntryId()
-                    let category = EntryCategory.primary(for: result)
+                    // まずAIの分類結果をそのまま保存する(データを失わないことを優先)。
+                    // このあとの画面で編集しても、指を離すまでの間にアプリが落ちる等
+                    // しても記録自体は既に残っている。
                     try await EntryStore.save(result: result, createdAt: createdAt, entryId: entryId)
                     await MainActor.run {
-                        flow = .result(result, createdAt: createdAt, entryId: entryId, category: category)
+                        draftItems = result.draftItems()
+                        flow = .reviewing(
+                            ReviewContext(
+                                summary: result.summary,
+                                comfortMessage: result.comfort_message,
+                                emotion: result.emotion,
+                                createdAt: createdAt,
+                                entryId: entryId
+                            )
+                        )
                     }
                 } catch {
                     await MainActor.run {
@@ -227,5 +193,48 @@ struct ContentView: View {
             flow = .idle
             recorder.start()
         }
+    }
+}
+
+/// 分類の選び直し(タップでメニュー)とテキスト編集(タップでWatchのScribble/
+/// ディクテーション/キーボード入力)ができる1項目分の行。ドラッグ操作は
+/// Watchの画面サイズでは操作精度が厳しいため、タップ操作で代替している。
+private struct DraftItemRow: View {
+    @Binding var item: DraftItem
+    let onDelete: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Menu {
+                    ForEach(EntryCategory.allCases, id: \.self) { option in
+                        Button {
+                            item.category = option
+                        } label: {
+                            Label(option.label, systemImage: option.iconName)
+                        }
+                    }
+                } label: {
+                    Label(item.category.label, systemImage: item.category.iconName)
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                }
+
+                Spacer()
+
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .foregroundColor(.red)
+                }
+                .buttonStyle(.plain)
+            }
+
+            TextField("内容", text: $item.text, axis: .vertical)
+                .font(.caption)
+                .lineLimit(1...6)
+        }
+        .padding(6)
+        .background(Color.gray.opacity(0.15))
+        .cornerRadius(8)
     }
 }

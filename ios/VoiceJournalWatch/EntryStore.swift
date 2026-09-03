@@ -31,20 +31,34 @@ enum EntryCategory: String, CaseIterable {
         case .idea: return "lightbulb.fill"
         }
     }
+}
 
-    /// AIの分類結果から、最初に表示する既定のカテゴリを決める。タスクが
-    /// 1件でもあればタスク優先、なければnotesの最初の1件のcategoryを見る。
-    static func primary(for result: ProcessVoiceMemoResult) -> EntryCategory {
-        if !result.tasks.isEmpty { return .task }
-        if let first = result.notes.first {
-            return first.category == "アイデア" ? .idea : .diary
-        }
-        return .diary
-    }
+/// Watch上で確認・編集する1項目。タスク/日記/アイデアいずれかの分類と、
+/// 中身のテキストだけを編集可能にする(日時などタスクの詳細設定は
+/// iPhone側に委ねる)。[originalTask]は、分類をタスクのまま変えなかった
+/// 場合にdue_hint等の日時情報を保存時に引き継ぐために保持しておく。
+struct DraftItem: Identifiable {
+    let id = UUID()
+    var category: EntryCategory
+    var text: String
+    var originalTask: ProcessVoiceMemoTask?
 }
 
 extension ProcessVoiceMemoResult {
     var totalItemCount: Int { tasks.count + notes.count }
+
+    /// Watch上で1項目ずつ分類変更・編集できるドラフト一覧に変換する。
+    func draftItems() -> [DraftItem] {
+        var items: [DraftItem] = []
+        for task in tasks {
+            items.append(DraftItem(category: .task, text: task.title, originalTask: task))
+        }
+        for note in notes {
+            let category: EntryCategory = note.category == "アイデア" ? .idea : .diary
+            items.append(DraftItem(category: category, text: note.content, originalTask: nil))
+        }
+        return items
+    }
 
     /// カテゴリごとの件数の内訳（表示順はEntryCategory.allCasesの順）。
     var categoryBreakdown: [(category: EntryCategory, count: Int)] {
@@ -132,54 +146,59 @@ enum EntryStore {
         return entryId
     }
 
-    /// ユーザーがWatch上で分類を選び直した場合、単一のタスク/ノートに
-    /// まとめ直して上書きする（分類変更だけを目的とした単純化）。
-    static func recategorize(
-        result: ProcessVoiceMemoResult,
+    /// Watch上で編集済みのドラフト一覧を、タスク/ノートの配列へ組み立て直して
+    /// 上書き保存する。分類をタスクのまま変えていない項目は元のdue_hint/
+    /// due_date/reminder_at等を引き継ぎ、新たにタスクへ変更された項目は
+    /// 日時情報を持たない素のタスクとして保存する（日時編集はiPhone側に委ねる）。
+    static func saveDraftItems(
+        _ items: [DraftItem],
+        summary: String,
+        comfortMessage: String?,
+        emotion: String?,
         createdAt: Date,
-        entryId: String,
-        category: EntryCategory
+        entryId: String
     ) async throws {
-        let isoFormatter = ISO8601DateFormatter()
-        let createdAtString = isoFormatter.string(from: createdAt)
-        let bestText = result.notes.first?.content ?? result.summary
-
         var tasks: [[String: Any?]] = []
         var notes: [[String: Any?]] = []
 
-        switch category {
-        case .task:
-            let sourceTask = result.tasks.first
-            tasks = [[
-                "title": sourceTask?.title ?? result.summary,
-                "due_hint": sourceTask?.due_hint,
-                "due_date": sourceTask?.due_date,
-                "reminder_at": sourceTask?.reminder_at,
-                "reminder_end_at": sourceTask?.reminder_end_at,
-                "done": 0,
-                "is_all_day": 0,
-                "notify_at": sourceTask?.reminder_at,
-            ]]
-        case .diary, .idea:
-            notes = [[
-                "category": category.noteCategoryValue,
-                "title": result.notes.first?.title,
-                "content": bestText,
-                "font_family_index": nil,
-                "text_color": nil,
-                "font_scale": nil,
-                "background_id": nil,
-                "idea_status": nil,
-                "pinned": 0,
-                "tag": nil,
-            ]]
+        for item in items {
+            let text = item.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else { continue }
+            switch item.category {
+            case .task:
+                let original = item.originalTask
+                tasks.append([
+                    "title": text,
+                    "due_hint": original?.due_hint,
+                    "due_date": original?.due_date,
+                    "reminder_at": original?.reminder_at,
+                    "reminder_end_at": original?.reminder_end_at,
+                    "done": 0,
+                    "is_all_day": 0,
+                    "notify_at": original?.reminder_at,
+                ])
+            case .diary, .idea:
+                notes.append([
+                    "category": item.category.noteCategoryValue,
+                    "title": nil,
+                    "content": text,
+                    "font_family_index": nil,
+                    "text_color": nil,
+                    "font_scale": nil,
+                    "background_id": nil,
+                    "idea_status": nil,
+                    "pinned": 0,
+                    "tag": nil,
+                ])
+            }
         }
 
+        let isoFormatter = ISO8601DateFormatter()
         let fields: [String: Any?] = [
-            "summary": result.summary,
-            "created_at": createdAtString,
-            "comfort_message": result.comfort_message,
-            "emotion": result.emotion,
+            "summary": summary,
+            "created_at": isoFormatter.string(from: createdAt),
+            "comfort_message": comfortMessage,
+            "emotion": emotion,
             "tasks": tasks,
             "notes": notes,
         ]
