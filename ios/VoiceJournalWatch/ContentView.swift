@@ -90,27 +90,70 @@ struct ContentView: View {
         entryId: String,
         category: EntryCategory
     ) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(.green)
-            Text(result.summary)
-                .font(.caption)
-                .multilineTextAlignment(.center)
-                .lineLimit(3)
-            HStack(spacing: 4) {
-                ForEach(EntryCategory.allCases, id: \.self) { option in
-                    Button(option.label) {
-                        selectCategory(option, result: result, createdAt: createdAt, entryId: entryId)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(option == category ? .accentColor : .gray)
-                    .disabled(isSavingCategory)
-                    .font(.caption2)
+        ScrollView {
+            VStack(spacing: 8) {
+                HStack(spacing: 4) {
+                    Image(systemName: category.iconName)
+                    Text("\(category.label)として保存しました")
                 }
+                .font(.caption2)
+                .fontWeight(.bold)
+                .foregroundColor(.accentColor)
+                .multilineTextAlignment(.center)
+
+                // 省略せず全文表示。ScrollViewで縦にスクロールして読める。
+                Text(result.summary)
+                    .font(.caption)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("分類が違う場合はタップして変更")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+
+                HStack(spacing: 4) {
+                    ForEach(EntryCategory.allCases, id: \.self) { option in
+                        categoryButton(
+                            option,
+                            isSelected: option == category,
+                            result: result,
+                            createdAt: createdAt,
+                            entryId: entryId
+                        )
+                    }
+                }
+
+                Button("完了") { flow = .idle }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+                    .padding(.top, 4)
             }
-            Button("完了") { flow = .idle }
+            .padding(.horizontal, 2)
+        }
+    }
+
+    @ViewBuilder
+    private func categoryButton(
+        _ option: EntryCategory,
+        isSelected: Bool,
+        result: ProcessVoiceMemoResult,
+        createdAt: Date,
+        entryId: String
+    ) -> some View {
+        let action = { selectCategory(option, result: result, createdAt: createdAt, entryId: entryId) }
+        // 3つ横並びだとWatch画面幅の余裕が無いため、ボタンの中身はテキストのみ
+        // にする(アイコン+テキストだと幅が足りず折り返す機種がある)。選択中/
+        // 非選択の区別はborderedProminent(塗り)/bordered(枠のみ)で付ける。
+        if isSelected {
+            Button(option.label, action: action)
                 .buttonStyle(.borderedProminent)
-                .padding(.top, 2)
+                .disabled(isSavingCategory)
+                .font(.caption2)
+        } else {
+            Button(option.label, action: action)
+                .buttonStyle(.bordered)
+                .disabled(isSavingCategory)
+                .font(.caption2)
         }
     }
 

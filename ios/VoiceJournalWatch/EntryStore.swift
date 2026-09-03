@@ -23,6 +23,15 @@ enum EntryCategory: String, CaseIterable {
         }
     }
 
+    /// iPhone側のボトムナビゲーションと合わせたSF Symbol(checklist/book.closed/lightbulb)。
+    var iconName: String {
+        switch self {
+        case .task: return "checklist"
+        case .diary: return "book.closed.fill"
+        case .idea: return "lightbulb.fill"
+        }
+    }
+
     /// AIの分類結果から、最初に表示する既定のカテゴリを決める。タスクが
     /// 1件でもあればタスク優先、なければnotesの最初の1件のcategoryを見る。
     static func primary(for result: ProcessVoiceMemoResult) -> EntryCategory {
