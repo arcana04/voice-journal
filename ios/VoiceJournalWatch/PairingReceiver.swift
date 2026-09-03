@@ -21,11 +21,19 @@ final class PairingReceiver: NSObject, ObservableObject {
 }
 
 extension PairingReceiver: WCSessionDelegate {
+    // didReceiveApplicationContextは新着データにのみ反応するedge-triggeredな
+    // コールバックで、iPhone側が先にペアリングを送信し、Watch側アプリが後から
+    // 起動された場合（実際によくある順序）は一度も呼ばれない。activate完了時に
+    // 保留中の最新コンテキストをsession.receivedApplicationContextから
+    // 明示的に読み直すことで、この取りこぼしを防ぐ。
     func session(
         _ session: WCSession,
         activationDidCompleteWith activationState: WCSessionActivationState,
         error: Error?
-    ) {}
+    ) {
+        guard activationState == .activated else { return }
+        handlePairingPayload(session.receivedApplicationContext)
+    }
 
     // iPhone側（watch_pairing_service.dart）は実際にはtransferUserInfoではなく
     // updateApplicationContextでペアリング情報を送っている（watch_connectivity
@@ -40,6 +48,7 @@ extension PairingReceiver: WCSessionDelegate {
     }
 
     private func handlePairingPayload(_ payload: [String: Any]) {
+        guard !isPaired else { return }
         guard
             let customToken = payload["customToken"] as? String,
             let deviceId = payload["deviceId"] as? String,

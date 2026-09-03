@@ -12,6 +12,12 @@ struct ContentView: View {
                 Text("iPhoneアプリでペアリングしてください")
                     .multilineTextAlignment(.center)
                     .font(.footnote)
+                if let lastError = pairing.lastError {
+                    Text(lastError)
+                        .multilineTextAlignment(.center)
+                        .font(.caption2)
+                        .foregroundColor(.red)
+                }
             } else {
                 recordButton
                 if let message = statusMessage {
