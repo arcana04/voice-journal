@@ -23,6 +23,42 @@ enum DiaryBackground {
   sleepingCat(
     'sleeping_cat',
     'assets/images/diary_backgrounds/diary_bg_sleeping_cat.png',
+  ),
+  blueCheckBouquet(
+    'blue_check_bouquet',
+    'assets/images/diary_backgrounds/diary_bg_blue_check_bouquet.png',
+  ),
+  vintageCamera(
+    'vintage_camera',
+    'assets/images/diary_backgrounds/diary_bg_vintage_camera.png',
+  ),
+  shopping(
+    'shopping',
+    'assets/images/diary_backgrounds/diary_bg_shopping.png',
+  ),
+  newYork('new_york', 'assets/images/diary_backgrounds/diary_bg_new_york.png'),
+  beach('beach', 'assets/images/diary_backgrounds/diary_bg_beach.png'),
+  palmTree(
+    'palm_tree',
+    'assets/images/diary_backgrounds/diary_bg_palm_tree.png',
+  ),
+  europeanStreet(
+    'european_street',
+    'assets/images/diary_backgrounds/diary_bg_european_street.png',
+  ),
+  running('running', 'assets/images/diary_backgrounds/diary_bg_running.png'),
+  livingRoom(
+    'living_room',
+    'assets/images/diary_backgrounds/diary_bg_living_room.png',
+  ),
+  musicNote(
+    'music_note',
+    'assets/images/diary_backgrounds/diary_bg_music_note.png',
+  ),
+  letter('letter', 'assets/images/diary_backgrounds/diary_bg_letter.png'),
+  deepSea(
+    'deep_sea',
+    'assets/images/diary_backgrounds/diary_bg_deep_sea.png',
   );
 
   final String id;
@@ -39,6 +75,18 @@ enum DiaryBackground {
     DiaryBackground.parkDay => l10n.diaryBgParkDay,
     DiaryBackground.nightSky => l10n.diaryBgNightSky,
     DiaryBackground.sleepingCat => l10n.diaryBgSleepingCat,
+    DiaryBackground.blueCheckBouquet => l10n.diaryBgBlueCheckBouquet,
+    DiaryBackground.vintageCamera => l10n.diaryBgVintageCamera,
+    DiaryBackground.shopping => l10n.diaryBgShopping,
+    DiaryBackground.newYork => l10n.diaryBgNewYork,
+    DiaryBackground.beach => l10n.diaryBgBeach,
+    DiaryBackground.palmTree => l10n.diaryBgPalmTree,
+    DiaryBackground.europeanStreet => l10n.diaryBgEuropeanStreet,
+    DiaryBackground.running => l10n.diaryBgRunning,
+    DiaryBackground.livingRoom => l10n.diaryBgLivingRoom,
+    DiaryBackground.musicNote => l10n.diaryBgMusicNote,
+    DiaryBackground.letter => l10n.diaryBgLetter,
+    DiaryBackground.deepSea => l10n.diaryBgDeepSea,
   };
 
   /// 未設定（背景なし）を表すnullを含め、保存済みIDから復元する。

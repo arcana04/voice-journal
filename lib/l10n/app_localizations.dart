@@ -1394,6 +1394,78 @@ abstract class AppLocalizations {
   /// **'Sleeping Cat'**
   String get diaryBgSleepingCat;
 
+  /// No description provided for @diaryBgBlueCheckBouquet.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue Check Bouquet'**
+  String get diaryBgBlueCheckBouquet;
+
+  /// No description provided for @diaryBgVintageCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Vintage Camera'**
+  String get diaryBgVintageCamera;
+
+  /// No description provided for @diaryBgShopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping'**
+  String get diaryBgShopping;
+
+  /// No description provided for @diaryBgNewYork.
+  ///
+  /// In en, this message translates to:
+  /// **'New York'**
+  String get diaryBgNewYork;
+
+  /// No description provided for @diaryBgBeach.
+  ///
+  /// In en, this message translates to:
+  /// **'Beach'**
+  String get diaryBgBeach;
+
+  /// No description provided for @diaryBgPalmTree.
+  ///
+  /// In en, this message translates to:
+  /// **'Palm Tree'**
+  String get diaryBgPalmTree;
+
+  /// No description provided for @diaryBgEuropeanStreet.
+  ///
+  /// In en, this message translates to:
+  /// **'European Street'**
+  String get diaryBgEuropeanStreet;
+
+  /// No description provided for @diaryBgRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get diaryBgRunning;
+
+  /// No description provided for @diaryBgLivingRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Living Room'**
+  String get diaryBgLivingRoom;
+
+  /// No description provided for @diaryBgMusicNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Music Note'**
+  String get diaryBgMusicNote;
+
+  /// No description provided for @diaryBgLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Letter'**
+  String get diaryBgLetter;
+
+  /// No description provided for @diaryBgDeepSea.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Sea'**
+  String get diaryBgDeepSea;
+
   /// No description provided for @fontSheetTitle.
   ///
   /// In en, this message translates to:

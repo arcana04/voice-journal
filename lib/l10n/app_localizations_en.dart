@@ -716,6 +716,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diaryBgSleepingCat => 'Sleeping Cat';
 
   @override
+  String get diaryBgBlueCheckBouquet => 'Blue Check Bouquet';
+
+  @override
+  String get diaryBgVintageCamera => 'Vintage Camera';
+
+  @override
+  String get diaryBgShopping => 'Shopping';
+
+  @override
+  String get diaryBgNewYork => 'New York';
+
+  @override
+  String get diaryBgBeach => 'Beach';
+
+  @override
+  String get diaryBgPalmTree => 'Palm Tree';
+
+  @override
+  String get diaryBgEuropeanStreet => 'European Street';
+
+  @override
+  String get diaryBgRunning => 'Running';
+
+  @override
+  String get diaryBgLivingRoom => 'Living Room';
+
+  @override
+  String get diaryBgMusicNote => 'Music Note';
+
+  @override
+  String get diaryBgLetter => 'Letter';
+
+  @override
+  String get diaryBgDeepSea => 'Deep Sea';
+
+  @override
   String get fontSheetTitle => 'Font';
 
   @override

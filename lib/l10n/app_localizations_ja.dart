@@ -687,6 +687,42 @@ class AppLocalizationsJa extends AppLocalizations {
   String get diaryBgSleepingCat => '眠る猫';
 
   @override
+  String get diaryBgBlueCheckBouquet => '青チェック花束';
+
+  @override
+  String get diaryBgVintageCamera => 'ヴィンテージカメラ';
+
+  @override
+  String get diaryBgShopping => 'ショッピング';
+
+  @override
+  String get diaryBgNewYork => 'ニューヨーク';
+
+  @override
+  String get diaryBgBeach => 'ビーチ';
+
+  @override
+  String get diaryBgPalmTree => 'ヤシの木';
+
+  @override
+  String get diaryBgEuropeanStreet => 'ヨーロッパの街並み';
+
+  @override
+  String get diaryBgRunning => 'ランニング';
+
+  @override
+  String get diaryBgLivingRoom => 'リビング';
+
+  @override
+  String get diaryBgMusicNote => '音符';
+
+  @override
+  String get diaryBgLetter => '手紙';
+
+  @override
+  String get diaryBgDeepSea => '深海';
+
+  @override
   String get fontSheetTitle => 'フォント';
 
   @override
