@@ -8,13 +8,7 @@ import '../services/auth_service.dart';
 /// アカウント連携エラーの理由。UI側でメッセージ出し分けに使う。
 class AccountException implements Exception {
   final AccountErrorReason reason;
-  // TODO(debug): 原因切り分け用に元のFirebaseAuthExceptionの内容を保持している。
-  // 原因特定後、debugDetailごと削除すること。
-  final String? debugDetail;
-  AccountException(this.reason, [this.debugDetail]);
-
-  @override
-  String toString() => 'AccountException($reason, $debugDetail)';
+  AccountException(this.reason);
 }
 
 enum AccountErrorReason { networkError, unknown }
@@ -79,22 +73,7 @@ class AccountStore extends ChangeNotifier {
       } on FirebaseAuthException catch (e) {
         if (e.code != 'credential-already-in-use' &&
             e.code != 'email-already-in-use') {
-          // TODO(debug): linkWithCredential特有の不具合切り分けのため、
-          // 想定外のエラーでも通常サインインへフォールバックしてみる。
-          // 原因特定後、このtry/catchを外しrethrowに戻すこと。
-          try {
-            final result = await FirebaseAuth.instance.signInWithCredential(
-              credential,
-            );
-            notifyListeners();
-            return result.user!.uid;
-          } on FirebaseAuthException catch (e2) {
-            throw AccountException(
-              _reasonFor(e2),
-              'link failed (${e.code}: ${e.message}); '
-              'plain signIn also failed (${e2.code}: ${e2.message})',
-            );
-          }
+          rethrow;
         }
         final result = await FirebaseAuth.instance.signInWithCredential(
           credential,
@@ -103,7 +82,7 @@ class AccountStore extends ChangeNotifier {
         return result.user!.uid;
       }
     } on FirebaseAuthException catch (e) {
-      throw AccountException(_reasonFor(e), '${e.code}: ${e.message}');
+      throw AccountException(_reasonFor(e));
     }
   }
 
