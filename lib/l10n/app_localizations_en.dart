@@ -239,6 +239,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get darkModeSubtitle => 'Switch to an easier-on-the-eyes look';
 
   @override
+  String get themeColorTitle => 'Theme Color';
+
+  @override
+  String get themeColorSubtitle => 'Change the app\'s overall accent color';
+
+  @override
+  String get themeColorSheetTitle => 'Choose a theme color';
+
+  @override
   String get settingsProBadge => 'Pro only';
 
   @override
@@ -1063,17 +1072,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Chatting across all your entries is a Pro feature. Upgrade to unlock it.';
 
   @override
-  String get ideaBrainstormTooltip => 'Brainstorm with AI';
-
-  @override
-  String ideaBrainstormChatQuestion(Object title) {
-    return 'Explore 3 different angles for \"$title\"';
-  }
-
-  @override
-  String get ideaBrainstormErrorTitle => 'Couldn\'t get suggestions';
-
-  @override
   String get weeklyReportSettingsTitle => 'Weekly Brain Report';
 
   @override
@@ -1102,10 +1100,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weeklyReportNoEmotionData => 'No mood entries yet this week';
 
   @override
-  String get weeklyReportConstellationSectionTitle => 'Weekly Constellation';
-
-  @override
-  String get weeklyReportMentalWaveSectionTitle => 'Mental Wave';
+  String get weeklyReportConstellationSectionTitle => 'Emotion Graph';
 
   @override
   String get weeklyReportCategorySectionTitle => 'Category mix';
@@ -1119,6 +1114,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get weeklyReportBrainMapSubtitle =>
       'How your week split across positive, normal, and negative moods';
+
+  @override
+  String get weeklyReportWordsSectionTitle => 'Words of the Week';
+
+  @override
+  String get weeklyReportWordsEmpty => 'No standout words yet';
+
+  @override
+  String get weeklyReportWordDetailEmpty =>
+      'No entries mentioning this word were found';
 
   @override
   String get emotionCategoryPositive => 'Positive';
@@ -1162,6 +1167,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weeklyReportLetterSectionTitle => 'Your Weekly Letter';
+
+  @override
+  String get weeklyReportLetterLocked =>
+      'This week\'s letter arrives Sunday at 8:00 PM. We\'ll keep it a little secret until then.';
 
   @override
   String get weeklyReportShareTooltip => 'Share as image';

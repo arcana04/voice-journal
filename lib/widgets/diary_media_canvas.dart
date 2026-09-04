@@ -202,11 +202,10 @@ class _DiaryMediaCanvasState extends State<DiaryMediaCanvas> {
               child: Container(
                 height: canvasH,
                 width: double.infinity,
+                clipBehavior: Clip.hardEdge,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                clipBehavior: Clip.hardEdge,
                 child: Stack(children: tiles),
               ),
             ),

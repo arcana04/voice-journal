@@ -6,6 +6,7 @@ import '../l10n/app_localizations.dart';
 import '../models/diary_background.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
+import '../state/settings_store.dart';
 import '../state/subscription_store.dart';
 import '../state/text_style_store.dart';
 import '../utils/custom_background_picker.dart';
@@ -250,12 +251,58 @@ class _DiaryScreenState extends State<DiaryScreen> {
                       ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
                 bool hasEntry(DateTime day) =>
                     allDiaryEntries.any((e) => _isSameDate(e.createdAt, day));
+                final accent = context.watch<SettingsStore>().accentColor;
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              accent,
+                              Color.lerp(accent, Colors.black, 0.25)!,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(999),
+                          boxShadow: [
+                            BoxShadow(
+                              color: accent.withValues(alpha: 0.35),
+                              blurRadius: 14,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Text(
+                          '日記',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 18,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                    _WeekStrip(
+                      weekStart: _weekStart,
+                      selectedDate: _selectedDate,
+                      locale: locale,
+                      hasEntry: hasEntry,
+                      onSelectDate: _selectDate,
+                      onPreviousWeek: () => _shiftWeek(-1),
+                      onNextWeek: () => _shiftWeek(1),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
                       child: Row(
                         children: [
                           ScrimText(
@@ -263,11 +310,29 @@ class _DiaryScreenState extends State<DiaryScreen> {
                               horizontal: 14,
                               vertical: 8,
                             ),
-                            child: Text(
-                              '${DateFormat.MMMd(locale).format(_selectedDate)}'
-                              '(${DateFormat.E(locale).format(_selectedDate)})',
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  DateFormat.E(locale).format(_selectedDate),
+                                  style: Theme.of(context).textTheme.labelMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                                Text(
+                                  DateFormat.MMMd(locale).format(_selectedDate),
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                        color: Theme.of(context).colorScheme.primary,
+                                      ),
+                                ),
+                              ],
                             ),
                           ),
                           const Spacer(),
@@ -291,15 +356,6 @@ class _DiaryScreenState extends State<DiaryScreen> {
                           ),
                         ],
                       ),
-                    ),
-                    _WeekStrip(
-                      weekStart: _weekStart,
-                      selectedDate: _selectedDate,
-                      locale: locale,
-                      hasEntry: hasEntry,
-                      onSelectDate: _selectDate,
-                      onPreviousWeek: () => _shiftWeek(-1),
-                      onNextWeek: () => _shiftWeek(1),
                     ),
                     Expanded(
                       child: GestureDetector(

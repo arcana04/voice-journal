@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'config/theme_colors.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/root_screen.dart';
@@ -9,60 +8,56 @@ import 'state/account_store.dart';
 import 'state/apple_reminders_store.dart';
 import 'state/calendar_store.dart';
 import 'state/custom_words_store.dart';
-import 'state/idea_brainstorm_request_store.dart';
 import 'state/journal_store.dart';
 import 'state/record_trigger_store.dart';
 import 'state/settings_store.dart';
 import 'state/subscription_store.dart';
 import 'state/text_style_store.dart';
 
-DatePickerThemeData _datePickerTheme(ColorScheme scheme) {
+DatePickerThemeData _datePickerTheme(ColorScheme scheme, Color accent) {
   Color onSelected(Set<WidgetState> states, Color unselected) =>
       states.contains(WidgetState.selected) ? Colors.white : unselected;
   Color bgSelected(Set<WidgetState> states) =>
-      states.contains(WidgetState.selected)
-      ? kAppAccentColor
-      : Colors.transparent;
+      states.contains(WidgetState.selected) ? accent : Colors.transparent;
 
   return DatePickerThemeData(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
     headerBackgroundColor: Colors.transparent,
     headerForegroundColor: scheme.onSurface,
-    todayBorder: const BorderSide(color: kAppAccentColor, width: 1.5),
+    todayBorder: BorderSide(color: accent, width: 1.5),
     todayForegroundColor: WidgetStateProperty.resolveWith(
-      (states) => onSelected(states, kAppAccentColor),
+      (states) => onSelected(states, accent),
     ),
     todayBackgroundColor: WidgetStateProperty.resolveWith(bgSelected),
     dayForegroundColor: WidgetStateProperty.resolveWith(
       (states) => onSelected(states, scheme.onSurface),
     ),
     dayBackgroundColor: WidgetStateProperty.resolveWith(bgSelected),
-    dayOverlayColor: WidgetStatePropertyAll(
-      kAppAccentColor.withValues(alpha: 0.1),
-    ),
+    dayOverlayColor: WidgetStatePropertyAll(accent.withValues(alpha: 0.1)),
     yearForegroundColor: WidgetStateProperty.resolveWith(
       (states) => onSelected(states, scheme.onSurface),
     ),
     yearBackgroundColor: WidgetStateProperty.resolveWith(bgSelected),
     weekdayStyle: TextStyle(color: scheme.outline, fontWeight: FontWeight.w700),
     confirmButtonStyle: FilledButton.styleFrom(
-      backgroundColor: kAppAccentColor,
+      backgroundColor: accent,
       foregroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
     ),
     cancelButtonStyle: OutlinedButton.styleFrom(
-      foregroundColor: kAppAccentColor,
-      side: BorderSide(color: kAppAccentColor.withValues(alpha: 0.4)),
+      foregroundColor: accent,
+      side: BorderSide(color: accent.withValues(alpha: 0.4)),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
     ),
   );
 }
 
-ThemeData _buildTheme(Color scaffoldBackgroundColor, Brightness brightness) {
-  final scheme = ColorScheme.fromSeed(
-    seedColor: kAppAccentColor,
-    brightness: brightness,
-  );
+ThemeData _buildTheme(
+  Color scaffoldBackgroundColor,
+  Brightness brightness,
+  Color accent,
+) {
+  final scheme = ColorScheme.fromSeed(seedColor: accent, brightness: brightness);
   return ThemeData(
     colorScheme: scheme,
     scaffoldBackgroundColor: scaffoldBackgroundColor,
@@ -71,7 +66,7 @@ ThemeData _buildTheme(Color scaffoldBackgroundColor, Brightness brightness) {
       backgroundColor: scaffoldBackgroundColor,
       surfaceTintColor: Colors.transparent,
     ),
-    datePickerTheme: _datePickerTheme(scheme),
+    datePickerTheme: _datePickerTheme(scheme, accent),
   );
 }
 
@@ -91,7 +86,6 @@ class VoiceJournalApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CustomWordsStore()..load()),
         ChangeNotifierProvider(create: (_) => TextStyleStore()..load()),
         ChangeNotifierProvider(create: (_) => RecordTriggerStore()),
-        ChangeNotifierProvider(create: (_) => IdeaBrainstormRequestStore()),
         ChangeNotifierProvider(create: (_) => SubscriptionStore()..initialize(uid)),
         ChangeNotifierProvider(create: (_) => AccountStore()),
       ],
@@ -103,8 +97,8 @@ class VoiceJournalApp extends StatelessWidget {
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             themeMode: settings.darkMode ? ThemeMode.dark : ThemeMode.light,
-            theme: _buildTheme(Colors.white, Brightness.light),
-            darkTheme: _buildTheme(Colors.black, Brightness.dark),
+            theme: _buildTheme(Colors.white, Brightness.light, settings.accentColor),
+            darkTheme: _buildTheme(Colors.black, Brightness.dark, settings.accentColor),
             // homeにsettings.loaded等で分岐する条件式を直接渡すと、
             // MaterialAppのNavigatorがルート遷移として扱ってしまい、
             // 古い方の画面がOffstageで生き残ったまま新しい画面と同時に

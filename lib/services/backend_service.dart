@@ -6,7 +6,6 @@ import 'package:cloud_functions/cloud_functions.dart';
 import '../l10n/l10n_utils.dart';
 import '../models/custom_word.dart';
 import '../models/emotion_tag.dart';
-import '../models/idea_brainstorm.dart';
 import '../models/journal_entry.dart';
 import '../models/media_usage.dart';
 import '../models/review_category.dart';
@@ -124,30 +123,6 @@ class BackendService {
         'locale': locale,
       });
       return (result.data['answer'] as String? ?? '').trim();
-    } on FirebaseFunctionsException catch (e) {
-      throw BackendServiceException(e.message ?? currentLocalizations().genericProcessingError);
-    }
-  }
-
-  Future<List<IdeaAngle>> brainstormIdea({
-    required String title,
-    required String content,
-    required String locale,
-  }) async {
-    await _auth.ensureSignedIn();
-
-    try {
-      final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
-      final callable = functions.httpsCallable('brainstormIdea');
-      final result = await callable.call<Map<String, dynamic>>({
-        'title': title,
-        'content': content,
-        'locale': locale,
-      });
-      final angles = (result.data['angles'] as List? ?? [])
-          .map((e) => IdeaAngle.fromJson(Map<String, dynamic>.from(e as Map)))
-          .toList();
-      return angles;
     } on FirebaseFunctionsException catch (e) {
       throw BackendServiceException(e.message ?? currentLocalizations().genericProcessingError);
     }

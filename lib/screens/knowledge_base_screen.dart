@@ -2,21 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
-import '../models/idea_brainstorm.dart';
 import '../services/backend_service.dart';
-import '../state/idea_brainstorm_request_store.dart';
 import '../state/journal_store.dart';
 import '../state/subscription_store.dart';
 import '../utils/journal_context_format.dart';
 import '../widgets/app_background_image.dart';
-import '../widgets/idea_angle_card.dart';
 import '../widgets/pro_feature_gate.dart';
 import '../widgets/scrim_text.dart';
 
 class _ChatMessage {
   final String question;
   String? answer;
-  List<IdeaAngle>? angles;
   String? error;
   bool loading = true;
 
@@ -87,41 +83,6 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
     _scrollToBottom();
   }
 
-  /// アイデア画面の「AIで深掘り」ボタン（[IdeaBrainstormRequestStore]経由）から
-  /// 起動される。通常の質問と同じ吹き出しの流れに乗せつつ、回答は3枚の
-  /// カード（[IdeaAngle]）として表示する。
-  Future<void> _sendBrainstorm(IdeaBrainstormRequest request) async {
-    final l10n = AppLocalizations.of(context)!;
-    final question = l10n.ideaBrainstormChatQuestion(request.title);
-    final message = _ChatMessage(question: question);
-    setState(() => _messages.add(message));
-    _scrollToBottom();
-
-    final locale = Localizations.localeOf(context).languageCode;
-
-    try {
-      final angles = await _backend.brainstormIdea(
-        title: request.title,
-        content: request.content,
-        locale: locale,
-      );
-      if (!mounted) return;
-      setState(() {
-        message.angles = angles;
-        message.loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        message.error = e is BackendServiceException
-            ? e.message
-            : AppLocalizations.of(context)!.ideaBrainstormErrorTitle;
-        message.loading = false;
-      });
-    }
-    _scrollToBottom();
-  }
-
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
@@ -138,17 +99,6 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isPro = context.watch<SubscriptionStore>().isPro;
-
-    final pendingBrainstorm = context.watch<IdeaBrainstormRequestStore>().pending;
-    if (pendingBrainstorm != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final store = context.read<IdeaBrainstormRequestStore>();
-        if (store.pending == null) return; // 別フレームで既に消費済み
-        store.consume();
-        _sendBrainstorm(pendingBrainstorm);
-      });
-    }
 
     if (!isPro) {
       return Scaffold(
@@ -305,22 +255,14 @@ class _ChatBubbles extends StatelessWidget {
                         ),
                       ],
                     )
-                  : message.error == null && (message.angles?.isNotEmpty ?? false)
-                      ? Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            for (final angle in message.angles!) IdeaAngleCard(angle: angle),
-                          ],
-                        )
-                      : Text(
-                          message.error ?? message.answer ?? '',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: message.error != null
-                                ? theme.colorScheme.error
-                                : null,
-                          ),
-                        ),
+                  : Text(
+                      message.error ?? message.answer ?? '',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: message.error != null
+                            ? theme.colorScheme.error
+                            : null,
+                      ),
+                    ),
             ),
           ),
         ],

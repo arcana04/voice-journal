@@ -230,6 +230,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get darkModeSubtitle => '目にやさしい表示に切り替えます';
 
   @override
+  String get themeColorTitle => 'テーマカラー';
+
+  @override
+  String get themeColorSubtitle => 'アプリ全体のアクセントカラーを変更します';
+
+  @override
+  String get themeColorSheetTitle => 'テーマカラーを選ぶ';
+
+  @override
   String get settingsProBadge => 'Pro限定';
 
   @override
@@ -1026,17 +1035,6 @@ class AppLocalizationsJa extends AppLocalizations {
       '記録を横断したAIチャットはProプラン限定の機能です。アップグレードすると使えるようになります。';
 
   @override
-  String get ideaBrainstormTooltip => 'AIで深掘り';
-
-  @override
-  String ideaBrainstormChatQuestion(Object title) {
-    return '「$title」を3つの切り口で深掘りして';
-  }
-
-  @override
-  String get ideaBrainstormErrorTitle => '深掘りの取得に失敗しました';
-
-  @override
   String get weeklyReportSettingsTitle => '週刊脳内レポート';
 
   @override
@@ -1065,10 +1063,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get weeklyReportNoEmotionData => '今週はまだ感情の記録がありません';
 
   @override
-  String get weeklyReportConstellationSectionTitle => '感情の星座';
-
-  @override
-  String get weeklyReportMentalWaveSectionTitle => 'メンタルウェーブ';
+  String get weeklyReportConstellationSectionTitle => '感情グラフ';
 
   @override
   String get weeklyReportCategorySectionTitle => '仕分け比率';
@@ -1081,6 +1076,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get weeklyReportBrainMapSubtitle => '今週の感情はポジティブ・ノーマル・ネガティブどれが多かったか';
+
+  @override
+  String get weeklyReportWordsSectionTitle => '今週のよく話した言葉';
+
+  @override
+  String get weeklyReportWordsEmpty => '目立って多く話した言葉はまだありません';
+
+  @override
+  String get weeklyReportWordDetailEmpty => 'この言葉を含む記録は見つかりませんでした';
 
   @override
   String get emotionCategoryPositive => 'ポジティブ';
@@ -1124,6 +1128,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get weeklyReportLetterSectionTitle => 'AIからの週刊レター';
+
+  @override
+  String get weeklyReportLetterLocked =>
+      '今週のレターは日曜20:00に届きます。それまで少し秘密にしておきますね。';
 
   @override
   String get weeklyReportShareTooltip => '画像として共有';

@@ -45,6 +45,8 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
   bool _sharing = false;
   late final DateTime _weekStart;
   late final DateTime _weekEnd;
+  late final DateTime _letterCutoff;
+  late final bool _letterUnlocked;
   late final String _weekKey;
   bool get _isHistoryView => widget.savedReport != null;
 
@@ -57,6 +59,9 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
     if (saved != null) {
       _weekStart = saved.weekStart;
       _weekEnd = saved.weekEnd;
+      _letterCutoff = saved.weekEnd;
+      // 履歴は既に完了した週のスナップショットなので、レターは常に解禁済み扱い。
+      _letterUnlocked = true;
       _weekKey = saved.weekKey;
       _emotionCounts = saved.emotionCounts;
       _moodMoments = saved.moodMoments;
@@ -73,7 +78,12 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
     // 月曜始まりの今週（進行中の週）を対象にする。過去に完成した週は履歴として
     // 保存済みのスナップショットのみを見る（ここでの再生成対象にはしない）。
     _weekStart = today.subtract(Duration(days: now.weekday - 1));
-    _weekEnd = now;
+    // 週刊レターは日曜20:00に「解禁」される特別な演出。それまではグラフ類
+    // だけ最新の記録まで反映し続け、レターの解禁後は日曜20:00時点の内容で
+    // 固定する（後から開いても中身が変わらないようにするため）。
+    _letterCutoff = _weekStart.add(const Duration(days: 6, hours: 20));
+    _letterUnlocked = !now.isBefore(_letterCutoff);
+    _weekEnd = _letterUnlocked ? _letterCutoff : now;
     _weekKey = _dateKey(_weekStart);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -95,7 +105,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
     final entries = context
         .read<JournalStore>()
         .entries
-        .where((e) => e.createdAt.isAfter(_weekStart))
+        .where((e) => e.createdAt.isAfter(_weekStart) && e.createdAt.isBefore(_weekEnd))
         .toList();
 
     final emotionCounts = <EmotionTag, int>{};
@@ -325,6 +335,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                           totalTasks: _totalTasks,
                           completedTasks: _completedTasks,
                           shareController: _shareController,
+                          letterUnlocked: _letterUnlocked,
                         ),
                       );
                     },

@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/idea_status.dart';
 import '../models/journal_entry.dart';
-import '../screens/paywall_screen.dart';
-import '../state/idea_brainstorm_request_store.dart';
-import '../state/subscription_store.dart';
 import 'edit_icon_button.dart';
 
 /// アイデア画面用のカード。ある録音から生まれた「アイデア」だけを表示する。
@@ -82,25 +78,10 @@ class IdeaEntryCard extends StatelessWidget {
     onChangeStatus(idea, ideaStatus: selected);
   }
 
-  void _openBrainstorm(BuildContext context, NoteItem idea) {
-    final isPro = context.read<SubscriptionStore>().isPro;
-    if (!isPro) {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const PaywallScreen()),
-      );
-      return;
-    }
-    context.read<IdeaBrainstormRequestStore>().request(
-          title: idea.title ?? '',
-          content: idea.content,
-        );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final isPro = context.watch<SubscriptionStore>().isPro;
     final locale = Localizations.localeOf(context).toString();
     final timeLabel =
         '${DateFormat.MMMd(locale).format(entry.createdAt)} ${DateFormat.Hm(locale).format(entry.createdAt)}';
@@ -163,38 +144,6 @@ class IdeaEntryCard extends StatelessWidget {
                                 _TagChip(label: idea.tag!.trim()),
                             ],
                           ),
-                        ),
-                        IconButton(
-                          icon: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Icon(
-                                Icons.auto_awesome,
-                                size: 20,
-                                color: theme.colorScheme.outline,
-                              ),
-                              if (!isPro)
-                                Positioned(
-                                  right: -3,
-                                  bottom: -3,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(1),
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.surface,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.lock,
-                                      size: 11,
-                                      color: theme.colorScheme.primary,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          tooltip: l10n.ideaBrainstormTooltip,
-                          visualDensity: VisualDensity.compact,
-                          onPressed: () => _openBrainstorm(context, idea),
                         ),
                         IconButton(
                           icon: Icon(

@@ -65,7 +65,6 @@ class _WeeklyReportHistoryScreenState extends State<WeeklyReportHistoryScreen> {
                   itemCount: reports.length,
                   itemBuilder: (context, index) {
                     final report = reports[index];
-                    final locale = Localizations.localeOf(context).toString();
                     final dateRange =
                         '${DateFormat('yyyy.MM.dd').format(report.weekStart)} – '
                         '${DateFormat('MM.dd').format(report.weekEnd)}';
@@ -73,15 +72,8 @@ class _WeeklyReportHistoryScreenState extends State<WeeklyReportHistoryScreen> {
                       margin: const EdgeInsets.only(bottom: 12),
                       color: theme.colorScheme.surface.withValues(alpha: 0.88),
                       child: ListTile(
-                        leading: const Icon(Icons.auto_awesome),
+                        leading: const Icon(Icons.summarize_outlined),
                         title: Text(dateRange),
-                        subtitle: Text(
-                          report.insights.moodHeadline.isNotEmpty
-                              ? report.insights.moodHeadline
-                              : DateFormat.yMMMd(locale).format(report.createdAt),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(

@@ -518,6 +518,24 @@ abstract class AppLocalizations {
   /// **'Switch to an easier-on-the-eyes look'**
   String get darkModeSubtitle;
 
+  /// No description provided for @themeColorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme Color'**
+  String get themeColorTitle;
+
+  /// No description provided for @themeColorSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the app\'s overall accent color'**
+  String get themeColorSubtitle;
+
+  /// No description provided for @themeColorSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a theme color'**
+  String get themeColorSheetTitle;
+
   /// No description provided for @settingsProBadge.
   ///
   /// In en, this message translates to:
@@ -2060,24 +2078,6 @@ abstract class AppLocalizations {
   /// **'Chatting across all your entries is a Pro feature. Upgrade to unlock it.'**
   String get knowledgeBaseProLockedDescription;
 
-  /// No description provided for @ideaBrainstormTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Brainstorm with AI'**
-  String get ideaBrainstormTooltip;
-
-  /// No description provided for @ideaBrainstormChatQuestion.
-  ///
-  /// In en, this message translates to:
-  /// **'Explore 3 different angles for \"{title}\"'**
-  String ideaBrainstormChatQuestion(Object title);
-
-  /// No description provided for @ideaBrainstormErrorTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Couldn\'t get suggestions'**
-  String get ideaBrainstormErrorTitle;
-
   /// No description provided for @weeklyReportSettingsTitle.
   ///
   /// In en, this message translates to:
@@ -2135,14 +2135,8 @@ abstract class AppLocalizations {
   /// No description provided for @weeklyReportConstellationSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Weekly Constellation'**
+  /// **'Emotion Graph'**
   String get weeklyReportConstellationSectionTitle;
-
-  /// No description provided for @weeklyReportMentalWaveSectionTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Mental Wave'**
-  String get weeklyReportMentalWaveSectionTitle;
 
   /// No description provided for @weeklyReportCategorySectionTitle.
   ///
@@ -2167,6 +2161,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'How your week split across positive, normal, and negative moods'**
   String get weeklyReportBrainMapSubtitle;
+
+  /// No description provided for @weeklyReportWordsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Words of the Week'**
+  String get weeklyReportWordsSectionTitle;
+
+  /// No description provided for @weeklyReportWordsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No standout words yet'**
+  String get weeklyReportWordsEmpty;
+
+  /// No description provided for @weeklyReportWordDetailEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries mentioning this word were found'**
+  String get weeklyReportWordDetailEmpty;
 
   /// No description provided for @emotionCategoryPositive.
   ///
@@ -2245,6 +2257,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your Weekly Letter'**
   String get weeklyReportLetterSectionTitle;
+
+  /// No description provided for @weeklyReportLetterLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'This week\'s letter arrives Sunday at 8:00 PM. We\'ll keep it a little secret until then.'**
+  String get weeklyReportLetterLocked;
 
   /// No description provided for @weeklyReportShareTooltip.
   ///

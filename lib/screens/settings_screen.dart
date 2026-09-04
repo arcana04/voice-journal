@@ -92,6 +92,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await launchUrl(uri);
   }
 
+  void _openThemeColorSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (_) => const _ThemeColorSheet(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -120,6 +128,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onChanged: (value) =>
                             context.read<SettingsStore>().setDarkMode(value),
                       ),
+                    );
+                  },
+                ),
+                Consumer<SettingsStore>(
+                  builder: (context, settings, _) {
+                    return _SettingsTile(
+                      icon: Icons.palette_rounded,
+                      color: settings.accentColor,
+                      title: l10n.themeColorTitle,
+                      subtitle: l10n.themeColorSubtitle,
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 22,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: settings.accentColor,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: settings.accentColor.withValues(alpha: 0.4),
+                                  blurRadius: 6,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const _ChevronIcon(),
+                        ],
+                      ),
+                      onTap: () => _openThemeColorSheet(context),
                     );
                   },
                 ),
@@ -336,6 +380,91 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// 「テーマカラー」タイルから開く、プリセットから選ぶだけのシンプルな
+/// カラーピッカー。選ぶと即座に[SettingsStore]経由でアプリ全体に反映される。
+class _ThemeColorSheet extends StatelessWidget {
+  const _ThemeColorSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final settings = context.watch<SettingsStore>();
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        bottom: MediaQuery.of(context).padding.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.themeColorSheetTitle,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+          ),
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 18,
+            runSpacing: 18,
+            children: [
+              for (var i = 0; i < kAccentColorPresets.length; i++)
+                _ThemeColorSwatch(
+                  color: kAccentColorPresets[i],
+                  selected: settings.accentColorIndex == i,
+                  onTap: () =>
+                      context.read<SettingsStore>().setAccentColorIndex(i),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ThemeColorSwatch extends StatelessWidget {
+  final Color color;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ThemeColorSwatch({
+    required this.color,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 48,
+        height: 48,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color,
+          border: Border.all(
+            color: selected ? Colors.white : Colors.transparent,
+            width: 3,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: selected ? 0.55 : 0.3),
+              blurRadius: selected ? 14 : 8,
+              spreadRadius: selected ? 1 : 0,
+            ),
+          ],
+        ),
+        child: selected
+            ? const Icon(Icons.check, color: Colors.white, size: 22)
+            : null,
       ),
     );
   }

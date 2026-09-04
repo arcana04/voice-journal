@@ -20,7 +20,6 @@ class DiaryEntryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context).toString();
-    final day = DateFormat('d', locale).format(entry.createdAt);
     final timeLabel = DateFormat.Hm(locale).format(entry.createdAt);
 
     return InkWell(
@@ -50,21 +49,10 @@ class DiaryEntryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  day,
-                  style: theme.textTheme.headlineMedium?.copyWith(
+                  timeLabel,
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                     color: theme.colorScheme.primary,
-                    height: 1,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    timeLabel,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
                   ),
                 ),
                 const Spacer(),
