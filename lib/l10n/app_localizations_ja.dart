@@ -678,28 +678,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get diaryBgHeartBalloon => 'ハート風船';
 
   @override
-  String get diaryBgSakuraStation => '桜の駅';
-
-  @override
-  String get diaryBgAutumnLeaves => '秋の紅葉';
-
-  @override
-  String get diaryBgStudyDesk => '勉強机';
-
-  @override
-  String get diaryBgHome => '家の中';
-
-  @override
   String get diaryBgParkDay => 'タンポポ畑';
 
   @override
   String get diaryBgNightSky => '夜空';
-
-  @override
-  String get diaryBgSadBoy => '落ち込んでいる少年';
-
-  @override
-  String get diaryBgBeachGirl => '海辺の少女';
 
   @override
   String get diaryBgSleepingCat => '眠る猫';

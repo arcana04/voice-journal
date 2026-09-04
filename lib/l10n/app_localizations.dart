@@ -1376,30 +1376,6 @@ abstract class AppLocalizations {
   /// **'Heart Balloons'**
   String get diaryBgHeartBalloon;
 
-  /// No description provided for @diaryBgSakuraStation.
-  ///
-  /// In en, this message translates to:
-  /// **'Sakura Station'**
-  String get diaryBgSakuraStation;
-
-  /// No description provided for @diaryBgAutumnLeaves.
-  ///
-  /// In en, this message translates to:
-  /// **'Autumn Leaves'**
-  String get diaryBgAutumnLeaves;
-
-  /// No description provided for @diaryBgStudyDesk.
-  ///
-  /// In en, this message translates to:
-  /// **'Study Desk'**
-  String get diaryBgStudyDesk;
-
-  /// No description provided for @diaryBgHome.
-  ///
-  /// In en, this message translates to:
-  /// **'At Home'**
-  String get diaryBgHome;
-
   /// No description provided for @diaryBgParkDay.
   ///
   /// In en, this message translates to:
@@ -1411,18 +1387,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Night Sky'**
   String get diaryBgNightSky;
-
-  /// No description provided for @diaryBgSadBoy.
-  ///
-  /// In en, this message translates to:
-  /// **'Feeling Down'**
-  String get diaryBgSadBoy;
-
-  /// No description provided for @diaryBgBeachGirl.
-  ///
-  /// In en, this message translates to:
-  /// **'By the Sea'**
-  String get diaryBgBeachGirl;
 
   /// No description provided for @diaryBgSleepingCat.
   ///

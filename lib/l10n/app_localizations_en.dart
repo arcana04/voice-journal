@@ -707,28 +707,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diaryBgHeartBalloon => 'Heart Balloons';
 
   @override
-  String get diaryBgSakuraStation => 'Sakura Station';
-
-  @override
-  String get diaryBgAutumnLeaves => 'Autumn Leaves';
-
-  @override
-  String get diaryBgStudyDesk => 'Study Desk';
-
-  @override
-  String get diaryBgHome => 'At Home';
-
-  @override
   String get diaryBgParkDay => 'Dandelion Field';
 
   @override
   String get diaryBgNightSky => 'Night Sky';
-
-  @override
-  String get diaryBgSadBoy => 'Feeling Down';
-
-  @override
-  String get diaryBgBeachGirl => 'By the Sea';
 
   @override
   String get diaryBgSleepingCat => 'Sleeping Cat';
