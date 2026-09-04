@@ -911,7 +911,7 @@ class ShareCard extends StatelessWidget {
             Align(
               alignment: Alignment.centerRight,
               child: Text(
-                'VoiceJournal',
+                'Voice Brain',
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: theme.colorScheme.outline,
                   fontWeight: FontWeight.w700,

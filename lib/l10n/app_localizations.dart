@@ -161,7 +161,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingPage1Body.
   ///
   /// In en, this message translates to:
-  /// **'Tap the record button and speak — VoiceJournal takes care of the rest'**
+  /// **'Tap the record button and speak — Voice Brain takes care of the rest'**
   String get onboardingPage1Body;
 
   /// No description provided for @onboardingPage2Title.
@@ -782,6 +782,42 @@ abstract class AppLocalizations {
   /// **'Your data on this device won\'t be deleted. Sign back in anytime to resume syncing.'**
   String get accountSignOutConfirmMessage;
 
+  /// No description provided for @accountDeleteButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get accountDeleteButton;
+
+  /// No description provided for @accountDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account?'**
+  String get accountDeleteConfirmTitle;
+
+  /// No description provided for @accountDeleteConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This can\'t be undone. Your diary entries, ideas, and tasks in the cloud, your photos and videos, and everything on this device will be permanently deleted.'**
+  String get accountDeleteConfirmMessage;
+
+  /// No description provided for @accountDeleteConfirmButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get accountDeleteConfirmButton;
+
+  /// No description provided for @accountDeleteCompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get accountDeleteCompleteTitle;
+
+  /// No description provided for @accountDeleteCompleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account and all its data have been deleted.'**
+  String get accountDeleteCompleteMessage;
+
   /// No description provided for @accountMediaSyncFreeNote.
   ///
   /// In en, this message translates to:
@@ -809,7 +845,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactSupportEmailSubject.
   ///
   /// In en, this message translates to:
-  /// **'VoiceJournal Support'**
+  /// **'Voice Brain Support'**
   String get contactSupportEmailSubject;
 
   /// No description provided for @planSectionTitle.
@@ -943,6 +979,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Make every entry feel like yours'**
   String get paywallBenefitCustomBackgroundDesc;
+
+  /// No description provided for @paywallBenefitImageLayoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Freely arrange photos'**
+  String get paywallBenefitImageLayoutTitle;
+
+  /// No description provided for @paywallBenefitImageLayoutDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reposition and resize with a slider on any entry'**
+  String get paywallBenefitImageLayoutDesc;
 
   /// No description provided for @paywallBenefitKnowledgeBaseHighlight.
   ///
@@ -2273,7 +2321,7 @@ abstract class AppLocalizations {
   /// No description provided for @weeklyReportShareCaption.
   ///
   /// In en, this message translates to:
-  /// **'Here\'s what my week looked like 📝 #VoiceJournal'**
+  /// **'Here\'s what my week looked like 📝 #VoiceBrain'**
   String get weeklyReportShareCaption;
 }
 

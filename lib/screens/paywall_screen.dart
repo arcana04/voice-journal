@@ -147,6 +147,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 ),
                 _BenefitCard(
                   index: 4,
+                  icon: Icons.crop_free_rounded,
+                  color: _BenefitColors.teal,
+                  title: Text(l10n.paywallBenefitImageLayoutTitle),
+                  description: l10n.paywallBenefitImageLayoutDesc,
+                ),
+                _BenefitCard(
+                  index: 5,
                   icon: Icons.chat_bubble_rounded,
                   color: _BenefitColors.indigo,
                   title: Text.rich(
@@ -166,7 +173,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   description: l10n.paywallBenefitKnowledgeBaseDesc,
                 ),
                 _BenefitCard(
-                  index: 5,
+                  index: 6,
                   icon: Icons.bar_chart_rounded,
                   color: _BenefitColors.amber,
                   title: Text(
@@ -179,7 +186,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   description: l10n.paywallBenefitWeeklyReportDesc,
                 ),
                 _BenefitCard(
-                  index: 6,
+                  index: 7,
                   icon: Icons.cloud_upload_rounded,
                   color: _BenefitColors.blue,
                   title: Text(
@@ -457,6 +464,7 @@ class _BenefitColors {
   static const green = Color(0xFF13A67D);
   static const amber = Color(0xFFE2952F);
   static const blue = Color(0xFF3B82F6);
+  static const teal = Color(0xFF0D9488);
 }
 
 class _PaywallSectionHeader extends StatelessWidget {

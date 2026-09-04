@@ -43,7 +43,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingPage1Body =>
-      'Tap the record button and speak — VoiceJournal takes care of the rest';
+      'Tap the record button and speak — Voice Brain takes care of the rest';
 
   @override
   String get onboardingPage2Title => 'AI sorts it out for you';
@@ -386,6 +386,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your data on this device won\'t be deleted. Sign back in anytime to resume syncing.';
 
   @override
+  String get accountDeleteButton => 'Delete account';
+
+  @override
+  String get accountDeleteConfirmTitle => 'Delete your account?';
+
+  @override
+  String get accountDeleteConfirmMessage =>
+      'This can\'t be undone. Your diary entries, ideas, and tasks in the cloud, your photos and videos, and everything on this device will be permanently deleted.';
+
+  @override
+  String get accountDeleteConfirmButton => 'Delete';
+
+  @override
+  String get accountDeleteCompleteTitle => 'Deleted';
+
+  @override
+  String get accountDeleteCompleteMessage =>
+      'Your account and all its data have been deleted.';
+
+  @override
   String get accountMediaSyncFreeNote =>
       'Only text (diary entries, ideas, and tasks) is backed up. Photos and videos aren\'t synced to the cloud — that\'s limited to the monthly/annual plans (not included with the lifetime plan).';
 
@@ -400,7 +420,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactSupportTitle => 'Contact us';
 
   @override
-  String get contactSupportEmailSubject => 'VoiceJournal Support';
+  String get contactSupportEmailSubject => 'Voice Brain Support';
 
   @override
   String get planSectionTitle => 'Plan';
@@ -472,6 +492,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get paywallBenefitCustomBackgroundDesc =>
       'Make every entry feel like yours';
+
+  @override
+  String get paywallBenefitImageLayoutTitle => 'Freely arrange photos';
+
+  @override
+  String get paywallBenefitImageLayoutDesc =>
+      'Drag to reposition and resize with a slider on any entry';
 
   @override
   String get paywallBenefitKnowledgeBaseHighlight => 'Ask (second brain)';
@@ -1177,5 +1204,5 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weeklyReportShareCaption =>
-      'Here\'s what my week looked like 📝 #VoiceJournal';
+      'Here\'s what my week looked like 📝 #VoiceBrain';
 }

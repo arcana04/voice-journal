@@ -14,7 +14,7 @@
          フォアグラウンドサービス権限は使わない。マニフェストマージで除去する。 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" tools:node="remove"/>
     <application
-        android:label="voicejournal"
+        android:label="Voice Brain"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <!-- flutter_foreground_task: バックグラウンド/画面オフでも録音のマイクアクセスを

@@ -129,6 +129,48 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
+  Future<void> _deleteAccount() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.accountDeleteConfirmTitle),
+        content: Text(l10n.accountDeleteConfirmMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            child: Text(l10n.accountDeleteConfirmButton),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    if (!mounted) return;
+    setState(() => _busy = true);
+    try {
+      final uid = await context.read<AccountStore>().deleteAccount();
+      if (!mounted) return;
+      await context.read<SubscriptionStore>().switchUser(uid);
+      if (!mounted) return;
+      await context.read<JournalStore>().load();
+      if (!mounted) return;
+      await _showMessage(l10n.accountDeleteCompleteTitle, l10n.accountDeleteCompleteMessage);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } catch (e) {
+      await _showError(e);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _pairWatch() async {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _busy = true);
@@ -218,6 +260,14 @@ class _AccountScreenState extends State<AccountScreen> {
           l10n.accountNotSignedInDescription,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.outline,
+          ),
+        ),
+        const SizedBox(height: 32),
+        Center(
+          child: TextButton(
+            onPressed: _busy ? null : _deleteAccount,
+            style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+            child: Text(l10n.accountDeleteButton),
           ),
         ),
       ],

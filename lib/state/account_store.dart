@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 import '../services/auth_service.dart';
+import '../services/db_service.dart';
 
 /// アカウント連携エラーの理由。UI側でメッセージ出し分けに使う。
 class AccountException implements Exception {
@@ -94,6 +96,33 @@ class AccountStore extends ChangeNotifier {
   /// 日記データは一切削除しない — ログアウトは同期を止めるだけで、
   /// データを消す操作ではない。戻り値は新しい匿名uid。
   Future<String> signOut() async {
+    await FirebaseAuth.instance.signOut();
+    final uid = await _authService.ensureSignedIn();
+    notifyListeners();
+    return uid;
+  }
+
+  /// アカウントと紐づく全データ（Firestoreの記録、Storageの写真・動画、端末
+  /// ローカルのSQLite）を完全に削除する。[signOut]と違い元に戻せない。App
+  /// Storeガイドライン5.1.1(v)（アカウント作成を提供するアプリはアプリ内での
+  /// 削除手段も必須）への対応。サーバー側の削除（Cloud Function
+  /// `deleteAccount`、Firebase Authのユーザー本体も含めて消す）が成功した後に
+  /// のみローカルデータを消す — 途中でネットワークエラーなどが起きた場合に、
+  /// サーバーは消えていないのにローカルだけ消えてしまう事態を避けるため。
+  /// 成功後は新しい匿名セッションを再確立する。戻り値は新しい匿名uid。
+  Future<String> deleteAccount() async {
+    try {
+      await FirebaseFunctions.instanceFor(
+        region: 'us-central1',
+      ).httpsCallable('deleteAccount').call();
+    } on FirebaseFunctionsException catch (e) {
+      throw AccountException(
+        e.code == 'unavailable' || e.code == 'deadline-exceeded'
+            ? AccountErrorReason.networkError
+            : AccountErrorReason.unknown,
+      );
+    }
+    await DbService.instance.wipeAllLocalData();
     await FirebaseAuth.instance.signOut();
     final uid = await _authService.ensureSignedIn();
     notifyListeners();

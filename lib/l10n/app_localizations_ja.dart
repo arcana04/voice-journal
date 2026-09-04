@@ -40,7 +40,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get onboardingPage1Title => '思いついた瞬間に、\nつぶやくだけ';
 
   @override
-  String get onboardingPage1Body => '録音ボタンをタップして話すだけで、VoiceJournalが記録してくれます';
+  String get onboardingPage1Body => '録音ボタンをタップして話すだけで、Voice Brainが記録してくれます';
 
   @override
   String get onboardingPage2Title => 'AIが自動で仕分けします';
@@ -374,6 +374,25 @@ class AppLocalizationsJa extends AppLocalizations {
       '端末内のデータは削除されません。再度ログインすると同期を再開できます。';
 
   @override
+  String get accountDeleteButton => 'アカウントを削除';
+
+  @override
+  String get accountDeleteConfirmTitle => 'アカウントを削除しますか？';
+
+  @override
+  String get accountDeleteConfirmMessage =>
+      'この操作は元に戻せません。クラウドに保存された日記・アイデア・タスク、写真・動画、この端末内のすべてのデータが完全に削除されます。';
+
+  @override
+  String get accountDeleteConfirmButton => '削除する';
+
+  @override
+  String get accountDeleteCompleteTitle => '削除しました';
+
+  @override
+  String get accountDeleteCompleteMessage => 'アカウントとすべてのデータを削除しました。';
+
+  @override
   String get accountMediaSyncFreeNote =>
       'バックアップされるのは日記・アイデア・タスクのテキストのみです。写真・動画はクラウドに同期されません（月額/年額プラン限定機能、買い切りプランは対象外）。';
 
@@ -387,7 +406,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get contactSupportTitle => 'お問い合わせ';
 
   @override
-  String get contactSupportEmailSubject => 'VoiceJournalへのお問い合わせ';
+  String get contactSupportEmailSubject => 'Voice Brainへのお問い合わせ';
 
   @override
   String get planSectionTitle => 'プラン';
@@ -454,6 +473,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get paywallBenefitCustomBackgroundDesc => 'お気に入りの写真で、あなただけの特別な日記に';
+
+  @override
+  String get paywallBenefitImageLayoutTitle => '添付画像を自由に配置';
+
+  @override
+  String get paywallBenefitImageLayoutDesc => 'ドラッグで好きな位置へ、スライダーで自由なサイズに';
 
   @override
   String get paywallBenefitKnowledgeBaseHighlight => '相談（第二の脳）';
@@ -1137,5 +1162,5 @@ class AppLocalizationsJa extends AppLocalizations {
   String get weeklyReportShareTooltip => '画像として共有';
 
   @override
-  String get weeklyReportShareCaption => '今週の脳内、こんな感じでした📝 #VoiceJournal';
+  String get weeklyReportShareCaption => '今週の脳内、こんな感じでした📝 #VoiceBrain';
 }

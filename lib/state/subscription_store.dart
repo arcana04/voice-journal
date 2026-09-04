@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show ChangeNotifier, kDebugMode;
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter/foundation.dart' show ChangeNotifier, kDebugMode, debugPrint;
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../config/revenuecat_config.dart';
@@ -44,6 +45,26 @@ class SubscriptionStore extends ChangeNotifier {
       isProWithMediaSync = withMediaSync;
       notifyListeners();
     }
+    if (active) unawaited(_syncProStatusToServer());
+  }
+
+  /// サーバー側（Cloud Functions経由のisProUser）はRevenueCatのWebhookが書き込む
+  /// FirestoreのミラーしかPro判定に使わないため、Webhookの配信漏れがあると
+  /// 「クライアントはProと表示されるのにサーバー呼び出しはPro限定エラーになる」
+  /// という食い違いが起きうる。ここでクライアント側が実際にProだと分かった
+  /// タイミング（初回ロード・購入・復元・識別ユーザー切り替え・バックグラウンド
+  /// 更新のいずれも[_refreshFromCustomerInfo]/[refresh]経由でここに来る）ごとに、
+  /// サーバーへ自己修復用の再同期を依頼する。失敗しても無視してよい
+  /// （次にProだと分かったタイミングで再試行されるベストエフォート処理）。
+  Future<void> _syncProStatusToServer() async {
+    if (kDebugMode) return;
+    try {
+      await FirebaseFunctions.instanceFor(
+        region: 'us-central1',
+      ).httpsCallable('syncProStatus').call();
+    } catch (e) {
+      debugPrint('syncProStatus failed: $e');
+    }
   }
 
   Future<void> initialize(String appUserId) async {
@@ -68,6 +89,7 @@ class SubscriptionStore extends ChangeNotifier {
     isPro = await _purchases.hasProEntitlement();
     isProWithMediaSync = await _purchases.hasMediaSyncEntitlement();
     notifyListeners();
+    if (isPro) unawaited(_syncProStatusToServer());
   }
 
   Future<bool> restore() async {

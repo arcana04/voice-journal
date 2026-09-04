@@ -92,7 +92,7 @@ class VoiceJournalApp extends StatelessWidget {
       child: Consumer<SettingsStore>(
         builder: (context, settings, _) {
           return MaterialApp(
-            title: 'VoiceJournal',
+            title: 'Voice Brain',
             debugShowCheckedModeBanner: false,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,

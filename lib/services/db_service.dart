@@ -729,6 +729,16 @@ class DbService {
     await db.delete('entries', where: 'id = ?', whereArgs: [entryId]);
   }
 
+  /// アカウント削除時に端末ローカルのデータを全て消す。`entries`を消せば
+  /// `tasks`/`notes`/`entry_images`はON DELETE CASCADEで連動して消えるが、
+  /// `weekly_reports`はentriesに外部キーで紐づいていない独立テーブルなので
+  /// 明示的に消す必要がある。
+  Future<void> wipeAllLocalData() async {
+    final db = await _database;
+    await db.delete('entries');
+    await db.delete('weekly_reports');
+  }
+
   /// entry単位ではなく、指定したnoteだけを削除する（日記/アイデア個別削除用）。
   Future<void> deleteNotes(List<int> noteIds) async {
     if (noteIds.isEmpty) return;

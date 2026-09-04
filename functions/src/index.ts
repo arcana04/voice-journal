@@ -7,7 +7,7 @@ import { promisify } from "node:util";
 
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, FieldPath } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
@@ -24,6 +24,10 @@ const openAiApiKey = defineSecret("OPENAI_API_KEY");
 // RevenueCatダッシュボードのWebhook設定画面で、Authorizationヘッダーの値として
 // この値を設定する（なりすましPOST防止）。
 const revenueCatWebhookSecret = defineSecret("REVENUECAT_WEBHOOK_SECRET");
+// RevenueCatダッシュボードの Project settings > API keys で取得できるSecret API
+// key（"sk_"始まり、公開SDKキー"appl_"/"goog_"とは別物）。syncProStatusが
+// Subscriber APIを叩くのに使う。
+const revenueCatSecretApiKey = defineSecret("REVENUECAT_SECRET_API_KEY");
 
 /** App Check未検証のリクエストを拒否するかどうか。クライアント側
  * （lib/main.dartのFirebaseAppCheck.instance.activate）は本番プロバイダ
@@ -710,6 +714,46 @@ async function setUserMediaStorageClass(
 }
 
 /**
+ * users/{uid}.isPro とカスタムクレームを更新する共通処理。RevenueCatのWebhook
+ * （revenueCatWebhook）と、クライアント起点の自己修復用同期（syncProStatus、
+ * webhook配信が届かなかった場合のフォールバック）の両方から呼ばれる。
+ */
+async function applyProStatus(
+  uid: string,
+  isPro: boolean,
+  source: string
+): Promise<void> {
+  const db = getFirestore();
+  const userRef = db.collection("users").doc(uid);
+  const previousIsPro = (await userRef.get()).data()?.isPro === true;
+  await userRef.set(
+    {
+      isPro,
+      revenueCatSource: source,
+      revenueCatUpdatedAt: FieldValue.serverTimestamp(),
+    },
+    { merge: true }
+  );
+  // Storage Security Rulesはfirestore.get()によるクロスサービス参照が
+  // 使えないため、カスタムクレームでisProを持たせて`request.auth.token.isPro`
+  // として直接参照できるようにする（Firestore側のisProUser()はこれまで通り
+  // Firestoreドキュメントを見る）。
+  try {
+    await getAuth().setCustomUserClaims(uid, { isPro });
+  } catch (claimErr) {
+    logger.error("applyProStatus setCustomUserClaims failed", claimErr);
+  }
+
+  // 失効/復帰の「遷移」のときだけメディアのストレージクラスを移動する
+  // （書き換えのたびに課金が発生するオペレーションなので不要な実行を避ける）。
+  if (isPro && !previousIsPro) {
+    await setUserMediaStorageClass(uid, "STANDARD");
+  } else if (!isPro && previousIsPro) {
+    await setUserMediaStorageClass(uid, "COLDLINE");
+  }
+}
+
+/**
  * RevenueCatからのWebhook受信エンドポイント。RevenueCatダッシュボードの
  * Webhook設定でこの関数のURLを登録し、AuthorizationヘッダーにREVENUECAT_WEBHOOK_SECRET
  * の値を設定する。app_user_idにはクライアント側でFirebase AuthのUIDを渡している
@@ -753,35 +797,7 @@ export const revenueCatWebhook = onRequest(
           activeEventTypes.has(eventType) &&
           (!event?.entitlement_ids ||
             event.entitlement_ids.includes(PRO_ENTITLEMENT_ID));
-        const db = getFirestore();
-        const userRef = db.collection("users").doc(uid);
-        const previousIsPro = (await userRef.get()).data()?.isPro === true;
-        await userRef.set(
-          {
-            isPro,
-            revenueCatEventType: eventType,
-            revenueCatUpdatedAt: FieldValue.serverTimestamp(),
-          },
-          { merge: true }
-        );
-        // Storage Security Rulesはfirestore.get()によるクロスサービス参照が
-        // 使えないため、カスタムクレームでisProを持たせて`request.auth.token.isPro`
-        // として直接参照できるようにする（Firestore側のisProUser()はこれまで通り
-        // Firestoreドキュメントを見る）。
-        try {
-          await getAuth().setCustomUserClaims(uid, { isPro });
-        } catch (claimErr) {
-          logger.error("revenueCatWebhook setCustomUserClaims failed", claimErr);
-        }
-
-        // 失効/復帰の「遷移」のときだけメディアのストレージクラスを移動する
-        // （RENEWALなど既にPro/非Proのまま変わらないイベントでは何もしない
-        // ——書き換えのたびに課金が発生するオペレーションなので不要な実行を避ける）。
-        if (eventType === "EXPIRATION") {
-          await setUserMediaStorageClass(uid, "COLDLINE");
-        } else if (isPro && !previousIsPro) {
-          await setUserMediaStorageClass(uid, "STANDARD");
-        }
+        await applyProStatus(uid, isPro, `webhook:${eventType}`);
       }
 
       res.status(200).send("ok");
@@ -789,6 +805,146 @@ export const revenueCatWebhook = onRequest(
       logger.error("revenueCatWebhook unexpected error", err);
       res.status(500).send("internal error");
     }
+  }
+);
+
+interface RevenueCatEntitlement {
+  expires_date: string | null;
+}
+
+interface RevenueCatSubscriberResponse {
+  subscriber?: {
+    entitlements?: Record<string, RevenueCatEntitlement>;
+  };
+}
+
+/**
+ * クライアント（SubscriptionStore）から明示的に呼ばれ、RevenueCatのSubscriber
+ * REST APIを直接叩いて現在の権利状態を取得し、users/{uid}.isProへ反映する。
+ * revenueCatWebhookの配信が何らかの理由で（インフラ側の一時的な問題、ダッシュ
+ * ボード設定ミス等）届かなかった場合の自己修復用フォールバック——「クライアント
+ * 側はProと表示されるのに、相談機能を呼ぶとサーバー側でPro限定エラーになる」
+ * という不具合（クライアントはRevenueCat SDKを直接見るが、サーバーはWebhookが
+ * 書き込むFirestoreのミラー値しか見ていない、という非対称性が原因）への対策。
+ * 呼び出し元は自分自身のuidの状態しか同期できない（他人のisProを書き換える
+ * 経路にはならない）。
+ */
+export const syncProStatus = onCall(
+  {
+    secrets: [revenueCatSecretApiKey],
+    timeoutSeconds: 30,
+    memory: "256MiB",
+    enforceAppCheck: APP_CHECK_ENFORCED,
+  },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", "authentication required");
+    }
+
+    const apiKey = revenueCatSecretApiKey.value();
+    if (!apiKey) {
+      // シークレット未設定ならRevenueCatに問い合わせようがない。誤ってisProを
+      // falseへ巻き戻さないよう、何もせず安全側に倒す。
+      logger.warn("syncProStatus called but REVENUECAT_SECRET_API_KEY is not set");
+      return { isPro: null };
+    }
+
+    const response = await fetch(
+      `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(uid)}`,
+      { headers: { Authorization: `Bearer ${apiKey}` } }
+    );
+    if (!response.ok) {
+      logger.error("syncProStatus RevenueCat request failed", {
+        uid,
+        status: response.status,
+      });
+      throw new HttpsError("unavailable", "failed to reach RevenueCat");
+    }
+
+    const data = (await response.json()) as RevenueCatSubscriberResponse;
+    const entitlement = data.subscriber?.entitlements?.[PRO_ENTITLEMENT_ID];
+    const isPro =
+      !!entitlement &&
+      (entitlement.expires_date === null ||
+        new Date(entitlement.expires_date).getTime() > Date.now());
+
+    await applyProStatus(uid, isPro, "client-sync");
+    return { isPro };
+  }
+);
+
+/** `collection`のうち、ドキュメントIDが`prefix`で始まるものを全て削除する。
+ * usage/{uid}_{date}やwatchRateLimit/{uid}_{deviceId}_{window}のように、
+ * uidをドキュメントID側に埋め込んだ複合キー方式のコレクション（uidの
+ * サブコレクションではないため`recursiveDelete`では触れられない）を
+ * 削除するために使う。 */
+async function deleteDocsWithIdPrefix(
+  db: FirebaseFirestore.Firestore,
+  collection: string,
+  prefix: string
+): Promise<void> {
+  const upperBound = prefix + "";
+  for (;;) {
+    const snap = await db
+      .collection(collection)
+      .where(FieldPath.documentId(), ">=", prefix)
+      .where(FieldPath.documentId(), "<", upperBound)
+      .limit(400)
+      .get();
+    if (snap.empty) return;
+    const batch = db.batch();
+    snap.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+    if (snap.size < 400) return;
+  }
+}
+
+/**
+ * ユーザー自身のアカウントとそれに紐づく全データを完全に削除する。
+ * App Storeガイドライン5.1.1(v)（アカウント作成を提供するアプリは、アプリ内
+ * での削除手段も提供する義務がある）への対応。呼び出し元は自分自身のuidしか
+ * 操作できない（他人のデータを消す経路にはならない）。
+ * 削除対象: Firestoreの users/{uid} 以下（entries/watchDevicesサブコレクション
+ * を含め再帰削除）、usage/{uid}_*・watchRateLimit/{uid}_* の複合キー方式
+ * ドキュメント群、Storageの users/{uid}/ 配下の写真・動画、最後にFirebase Auth
+ * のユーザー本体。各ステップは冪等（すでに無いものを消そうとしても失敗しない）
+ * ため、途中でタイムアウトしても安全に再試行できる。
+ */
+export const deleteAccount = onCall(
+  { timeoutSeconds: 300, memory: "256MiB", enforceAppCheck: APP_CHECK_ENFORCED },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", "authentication required");
+    }
+
+    const db = getFirestore();
+
+    await db.recursiveDelete(db.collection("users").doc(uid));
+    await deleteDocsWithIdPrefix(db, "usage", `${uid}_`);
+    await deleteDocsWithIdPrefix(db, "watchRateLimit", `${uid}_`);
+
+    try {
+      const bucket = getStorage().bucket();
+      await bucket.deleteFiles({ prefix: `users/${uid}/`, force: true });
+    } catch (err) {
+      logger.error("deleteAccount storage cleanup failed", { uid, err });
+    }
+
+    try {
+      await getAuth().deleteUser(uid);
+    } catch (err) {
+      // 直前の呼び出しが一部失敗して再試行された場合など、既にAuth側の
+      // ユーザーが消えていることがある——それ自体はエラーではない。
+      const code = (err as { code?: string } | null)?.code;
+      if (code !== "auth/user-not-found") {
+        logger.error("deleteAccount deleteUser failed", { uid, err });
+        throw new HttpsError("internal", "failed to delete auth user");
+      }
+    }
+
+    return { ok: true };
   }
 );
 

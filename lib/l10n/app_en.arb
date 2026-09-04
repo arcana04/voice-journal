@@ -12,7 +12,7 @@
   "onboardingGetStarted": "Get Started",
   "onboardingCreateAccount": "Create an account (you can also do this later in Settings)",
   "onboardingPage1Title": "The moment it crosses your mind,\njust say it out loud",
-  "onboardingPage1Body": "Tap the record button and speak — VoiceJournal takes care of the rest",
+  "onboardingPage1Body": "Tap the record button and speak — Voice Brain takes care of the rest",
   "onboardingPage2Title": "AI sorts it out for you",
   "onboardingPage2Body": "What you say is automatically sorted into a diary entry, idea, or task",
   "onboardingPage3Title": "Let's get started",
@@ -137,12 +137,18 @@
   "accountErrorUnknown": "Something went wrong. Please try again shortly.",
   "accountSignOutConfirmTitle": "Sign out?",
   "accountSignOutConfirmMessage": "Your data on this device won't be deleted. Sign back in anytime to resume syncing.",
+  "accountDeleteButton": "Delete account",
+  "accountDeleteConfirmTitle": "Delete your account?",
+  "accountDeleteConfirmMessage": "This can't be undone. Your diary entries, ideas, and tasks in the cloud, your photos and videos, and everything on this device will be permanently deleted.",
+  "accountDeleteConfirmButton": "Delete",
+  "accountDeleteCompleteTitle": "Deleted",
+  "accountDeleteCompleteMessage": "Your account and all its data have been deleted.",
   "accountMediaSyncFreeNote": "Only text (diary entries, ideas, and tasks) is backed up. Photos and videos aren't synced to the cloud — that's limited to the monthly/annual plans (not included with the lifetime plan).",
   "accountMediaSyncProNote": "Photos and videos are backed up to the cloud too.",
 
   "supportSectionTitle": "Support",
   "contactSupportTitle": "Contact us",
-  "contactSupportEmailSubject": "VoiceJournal Support",
+  "contactSupportEmailSubject": "Voice Brain Support",
 
   "planSectionTitle": "Plan",
   "planCurrentTitle": "Current plan",
@@ -166,6 +172,8 @@
   "paywallBenefitCustomBackgroundTitle": "Add ",
   "paywallBenefitCustomBackgroundHighlight": "your own photo",
   "paywallBenefitCustomBackgroundDesc": "Make every entry feel like yours",
+  "paywallBenefitImageLayoutTitle": "Freely arrange photos",
+  "paywallBenefitImageLayoutDesc": "Drag to reposition and resize with a slider on any entry",
   "paywallBenefitKnowledgeBaseHighlight": "Ask (second brain)",
   "paywallBenefitKnowledgeBaseSuffix": " is unlocked",
   "paywallBenefitKnowledgeBaseDesc": "AI digs through everything you've recorded to help",
@@ -420,5 +428,5 @@
   "weeklyReportLetterSectionTitle": "Your Weekly Letter",
   "weeklyReportLetterLocked": "This week's letter arrives Sunday at 8:00 PM. We'll keep it a little secret until then.",
   "weeklyReportShareTooltip": "Share as image",
-  "weeklyReportShareCaption": "Here's what my week looked like 📝 #VoiceJournal"
+  "weeklyReportShareCaption": "Here's what my week looked like 📝 #VoiceBrain"
 }

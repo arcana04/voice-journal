@@ -12,7 +12,7 @@
   "onboardingGetStarted": "はじめる",
   "onboardingCreateAccount": "アカウントを作成する（あとで設定からも可能）",
   "onboardingPage1Title": "思いついた瞬間に、\nつぶやくだけ",
-  "onboardingPage1Body": "録音ボタンをタップして話すだけで、VoiceJournalが記録してくれます",
+  "onboardingPage1Body": "録音ボタンをタップして話すだけで、Voice Brainが記録してくれます",
   "onboardingPage2Title": "AIが自動で仕分けします",
   "onboardingPage2Body": "話した内容から、日記・アイデア・タスクに自動で振り分けます",
   "onboardingPage3Title": "さあ、はじめましょう",
@@ -122,12 +122,18 @@
   "accountErrorUnknown": "エラーが発生しました。しばらくしてから再度お試しください。",
   "accountSignOutConfirmTitle": "ログアウトしますか？",
   "accountSignOutConfirmMessage": "端末内のデータは削除されません。再度ログインすると同期を再開できます。",
+  "accountDeleteButton": "アカウントを削除",
+  "accountDeleteConfirmTitle": "アカウントを削除しますか？",
+  "accountDeleteConfirmMessage": "この操作は元に戻せません。クラウドに保存された日記・アイデア・タスク、写真・動画、この端末内のすべてのデータが完全に削除されます。",
+  "accountDeleteConfirmButton": "削除する",
+  "accountDeleteCompleteTitle": "削除しました",
+  "accountDeleteCompleteMessage": "アカウントとすべてのデータを削除しました。",
   "accountMediaSyncFreeNote": "バックアップされるのは日記・アイデア・タスクのテキストのみです。写真・動画はクラウドに同期されません（月額/年額プラン限定機能、買い切りプランは対象外）。",
   "accountMediaSyncProNote": "写真・動画もクラウドにバックアップされます。",
 
   "supportSectionTitle": "サポート",
   "contactSupportTitle": "お問い合わせ",
-  "contactSupportEmailSubject": "VoiceJournalへのお問い合わせ",
+  "contactSupportEmailSubject": "Voice Brainへのお問い合わせ",
 
   "planSectionTitle": "プラン",
   "planCurrentTitle": "現在のプラン",
@@ -151,6 +157,8 @@
   "paywallBenefitCustomBackgroundTitle": "日記背景に",
   "paywallBenefitCustomBackgroundHighlight": "自分の画像を追加",
   "paywallBenefitCustomBackgroundDesc": "お気に入りの写真で、あなただけの特別な日記に",
+  "paywallBenefitImageLayoutTitle": "添付画像を自由に配置",
+  "paywallBenefitImageLayoutDesc": "ドラッグで好きな位置へ、スライダーで自由なサイズに",
   "paywallBenefitKnowledgeBaseHighlight": "相談（第二の脳）",
   "paywallBenefitKnowledgeBaseSuffix": "が使える",
   "paywallBenefitKnowledgeBaseDesc": "過去の記録を横断して、AIが深くサポート",
@@ -393,5 +401,5 @@
   "weeklyReportLetterSectionTitle": "AIからの週刊レター",
   "weeklyReportLetterLocked": "今週のレターは日曜20:00に届きます。それまで少し秘密にしておきますね。",
   "weeklyReportShareTooltip": "画像として共有",
-  "weeklyReportShareCaption": "今週の脳内、こんな感じでした📝 #VoiceJournal"
+  "weeklyReportShareCaption": "今週の脳内、こんな感じでした📝 #VoiceBrain"
 }
