@@ -73,6 +73,10 @@ class AuthService {
       return OAuthProvider('apple.com').credential(
         idToken: idToken,
         rawNonce: rawNonce,
+        // authorizationCodeをaccessTokenとして渡さないと、Firebase側の
+        // Apple IDトークン検証が"Invalid OAuth response from apple.com"
+        // で失敗する（firebase/flutterfire#13235）。
+        accessToken: appleCredential.authorizationCode,
       );
     } on SignInWithAppleAuthorizationException catch (e) {
       if (e.code == AuthorizationErrorCode.canceled) {
