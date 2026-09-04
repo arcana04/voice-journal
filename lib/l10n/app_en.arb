@@ -342,9 +342,11 @@
 
   "reviewTitle": "Review content",
   "reviewDescription": "Edit the text if it's off. Drag a card to move it between diary, idea, and task.",
+  "reviewDescriptionNoDrag": "Edit the text if it's off",
   "sectionDiary": "Diary",
   "sectionIdea": "Idea",
   "sectionTask": "Task",
+  "sectionEmptyPlaceholder": "No content yet",
   "discard": "Discard",
   "dragCardHere": "Drag a card here",
   "addCardButton": "Add card",

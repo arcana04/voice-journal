@@ -321,9 +321,11 @@
 
   "reviewTitle": "内容を確認",
   "reviewDescription": "違っていればテキストを直せます。カードをドラッグすると日記・アイデア・タスクを入れ替えられます",
+  "reviewDescriptionNoDrag": "違っていればテキストを直せます",
   "sectionDiary": "日記",
   "sectionIdea": "アイデア",
   "sectionTask": "タスク",
+  "sectionEmptyPlaceholder": "まだ内容がありません",
   "discard": "破棄",
   "dragCardHere": "ここにカードをドラッグ",
   "addCardButton": "カードを追加",

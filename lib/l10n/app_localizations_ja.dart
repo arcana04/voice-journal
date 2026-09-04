@@ -934,6 +934,9 @@ class AppLocalizationsJa extends AppLocalizations {
       '違っていればテキストを直せます。カードをドラッグすると日記・アイデア・タスクを入れ替えられます';
 
   @override
+  String get reviewDescriptionNoDrag => '違っていればテキストを直せます';
+
+  @override
   String get sectionDiary => '日記';
 
   @override
@@ -941,6 +944,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sectionTask => 'タスク';
+
+  @override
+  String get sectionEmptyPlaceholder => 'まだ内容がありません';
 
   @override
   String get discard => '破棄';

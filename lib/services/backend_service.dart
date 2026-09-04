@@ -9,6 +9,7 @@ import '../models/emotion_tag.dart';
 import '../models/idea_brainstorm.dart';
 import '../models/journal_entry.dart';
 import '../models/media_usage.dart';
+import '../models/review_category.dart';
 import '../models/summary_level.dart';
 import '../models/usage_status.dart';
 import '../models/weekly_report.dart';
@@ -30,6 +31,7 @@ class BackendService {
     File audioFile, {
     List<CustomWord> customWords = const [],
     SummaryLevel summaryLevel = SummaryLevel.preserve,
+    Set<ReviewCategory> allowedCategories = const {...ReviewCategory.values},
     required String locale,
   }) async {
     await _auth.ensureSignedIn();
@@ -46,6 +48,7 @@ class BackendService {
         'customWords': customWords.map((w) => w.toJson()).toList(),
         'summaryLevel': summaryLevel.wireValue,
         'locale': locale,
+        'allowedCategories': allowedCategories.map((c) => c.wireValue).toList(),
       });
       return _entryFromResponse(result.data);
     } on FirebaseFunctionsException catch (e) {
@@ -59,6 +62,7 @@ class BackendService {
   Future<JournalEntry> processTextMemo(
     String text, {
     SummaryLevel summaryLevel = SummaryLevel.preserve,
+    Set<ReviewCategory> allowedCategories = const {...ReviewCategory.values},
     required String locale,
   }) async {
     await _auth.ensureSignedIn();
@@ -70,6 +74,7 @@ class BackendService {
         'text': text,
         'summaryLevel': summaryLevel.wireValue,
         'locale': locale,
+        'allowedCategories': allowedCategories.map((c) => c.wireValue).toList(),
       });
       return _entryFromResponse(result.data);
     } on FirebaseFunctionsException catch (e) {

@@ -1886,6 +1886,12 @@ abstract class AppLocalizations {
   /// **'Edit the text if it\'s off. Drag a card to move it between diary, idea, and task.'**
   String get reviewDescription;
 
+  /// No description provided for @reviewDescriptionNoDrag.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit the text if it\'s off'**
+  String get reviewDescriptionNoDrag;
+
   /// No description provided for @sectionDiary.
   ///
   /// In en, this message translates to:
@@ -1903,6 +1909,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Task'**
   String get sectionTask;
+
+  /// No description provided for @sectionEmptyPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'No content yet'**
+  String get sectionEmptyPlaceholder;
 
   /// No description provided for @discard.
   ///

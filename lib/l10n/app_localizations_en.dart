@@ -966,6 +966,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Edit the text if it\'s off. Drag a card to move it between diary, idea, and task.';
 
   @override
+  String get reviewDescriptionNoDrag => 'Edit the text if it\'s off';
+
+  @override
   String get sectionDiary => 'Diary';
 
   @override
@@ -973,6 +976,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sectionTask => 'Task';
+
+  @override
+  String get sectionEmptyPlaceholder => 'No content yet';
 
   @override
   String get discard => 'Discard';

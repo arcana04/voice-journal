@@ -9,6 +9,7 @@ import '../config/recording_limits.dart';
 import '../l10n/app_localizations.dart';
 import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
+import '../models/review_category.dart';
 import '../models/summary_level.dart';
 import '../models/usage_status.dart';
 import '../services/backend_service.dart';
@@ -53,6 +54,25 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _draftComfortMessage;
   EmotionTag? _draftEmotion;
   List<DraftItem>? _draftItems;
+  Set<ReviewCategory> _draftEnabledCategories = {...ReviewCategory.values};
+
+  /// 録音前に「今回話す内容」として絞り込んだカテゴリ。常に全カテゴリ選択済み
+  /// の状態から始まり（[_stopAndProcess]/[_submitText]が使い終わった直後に
+  /// 全選択へリセットする）、ユーザーが手動で外した場合のみ絞り込まれる。
+  /// 空にはできない（最後の1つはタップしても外れない）。
+  Set<ReviewCategory> _selectedCategories = {...ReviewCategory.values};
+
+  void _toggleCategory(ReviewCategory category) {
+    setState(() {
+      if (_selectedCategories.contains(category)) {
+        if (_selectedCategories.length > 1) {
+          _selectedCategories.remove(category);
+        }
+      } else {
+        _selectedCategories.add(category);
+      }
+    });
+  }
 
   RecordTriggerStore? _recordTrigger;
   int _lastHandledRequestId = 0;
@@ -199,7 +219,11 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       return;
     }
-    setState(() => _state = RecordButtonState.processing);
+    final allowedCategories = _selectedCategories;
+    setState(() {
+      _state = RecordButtonState.processing;
+      _selectedCategories = {...ReviewCategory.values};
+    });
 
     if (path == null) {
       if (!mounted) return;
@@ -220,10 +244,11 @@ class _HomeScreenState extends State<HomeScreen> {
         File(path),
         customWords: customWords,
         summaryLevel: settings.summaryLevel,
+        allowedCategories: allowedCategories,
         locale: Localizations.localeOf(context).languageCode,
       );
       if (!mounted) return;
-      _applyDraft(entry);
+      _applyDraft(entry, allowedCategories);
     } catch (e) {
       if (!mounted) return;
       _handleProcessingError(e);
@@ -242,9 +267,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _submitText(String text) async {
+    final allowedCategories = _selectedCategories;
     setState(() {
       _state = RecordButtonState.processing;
       _statusMessage = null;
+      _selectedCategories = {...ReviewCategory.values};
     });
 
     try {
@@ -253,17 +280,18 @@ class _HomeScreenState extends State<HomeScreen> {
       final entry = await _backend.processTextMemo(
         text,
         summaryLevel: settings.summaryLevel,
+        allowedCategories: allowedCategories,
         locale: locale,
       );
       if (!mounted) return;
-      _applyDraft(entry);
+      _applyDraft(entry, allowedCategories);
     } catch (e) {
       if (!mounted) return;
       _handleProcessingError(e);
     }
   }
 
-  void _applyDraft(JournalEntry entry) {
+  void _applyDraft(JournalEntry entry, Set<ReviewCategory> enabledCategories) {
     setState(() {
       _state = RecordButtonState.idle;
       _statusMessage = null;
@@ -272,6 +300,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _draftComfortMessage = entry.comfortMessage;
       _draftEmotion = entry.emotion;
       _draftItems = _buildDraftItems(entry);
+      _draftEnabledCategories = enabledCategories;
     });
     _refreshUsage();
   }
@@ -440,6 +469,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? EntryReview(
                         summary: _draftSummary,
                         initialItems: draftItems,
+                        enabledCategories: _draftEnabledCategories,
                         onSave: _saveDraft,
                         onDiscard: _discardDraft,
                       )
@@ -465,7 +495,18 @@ class _HomeScreenState extends State<HomeScreen> {
                             Waveform(
                               active: _state == RecordButtonState.recording,
                             ),
-                            const SizedBox(height: 48),
+                            const SizedBox(height: 32),
+                            Visibility(
+                              visible: _state == RecordButtonState.idle,
+                              maintainState: true,
+                              maintainAnimation: true,
+                              maintainSize: true,
+                              child: _CategoryFilterRow(
+                                selected: _selectedCategories,
+                                onToggle: _toggleCategory,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
                             RecordButton(state: _state, onTap: _onTap),
                             const SizedBox(height: 32),
                             ScrimText(
@@ -622,6 +663,93 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 録音前に「今回話す内容」を絞り込むチップ列。常時表示で、タップで
+/// トグル選択（最後の1つは外せない）。ScrimTextと同じ半透明の縁取りで統一する。
+class _CategoryFilterRow extends StatelessWidget {
+  final Set<ReviewCategory> selected;
+  final ValueChanged<ReviewCategory> onToggle;
+
+  const _CategoryFilterRow({required this.selected, required this.onToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final category in ReviewCategory.values)
+          _CategoryChip(
+            label: category.labelFor(l10n),
+            icon: category.icon,
+            selected: selected.contains(category),
+            onTap: () => onToggle(category),
+          ),
+      ],
+    );
+  }
+}
+
+class _CategoryChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _CategoryChip({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.surface.withValues(alpha: 0.75),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected
+                ? Colors.transparent
+                : theme.colorScheme.outlineVariant,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 15,
+              color: selected
+                  ? theme.colorScheme.onPrimary
+                  : theme.colorScheme.onSurface,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: selected
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -66,6 +66,20 @@ function normalizeSummaryLevel(value: unknown): SummaryLevel {
   return "preserve";
 }
 
+/** 録音前にユーザーが「今回話す内容」として絞り込んだカテゴリ。省略・不正値・
+ * 空配列の場合は常に全カテゴリ扱い（今までどおりの3分類）にフォールバックする。 */
+type AllowedCategory = "diary" | "idea" | "task";
+const ALL_CATEGORIES: AllowedCategory[] = ["diary", "idea", "task"];
+
+function normalizeAllowedCategories(value: unknown): Set<AllowedCategory> {
+  if (!Array.isArray(value)) return new Set(ALL_CATEGORIES);
+  const filtered = value.filter(
+    (v): v is AllowedCategory => v === "diary" || v === "idea" || v === "task"
+  );
+  const unique = new Set(filtered);
+  return unique.size > 0 ? unique : new Set(ALL_CATEGORIES);
+}
+
 /** クライアント（Flutterアプリ）の表示言語。UIの多言語対応に合わせてサーバー側の
  * 音声認識言語・AIプロンプト・エラーメッセージを切り替えるために使う。 */
 type Locale = "ja" | "en";
@@ -203,10 +217,89 @@ Input: "the fireworks were fun"
 - Correct output: "The fireworks were fun." (only lightly tidied into first person, nothing added)
 - Never output something like: "Watching the fireworks was such a genuinely fun time. The way they lit up the night sky was so striking, and having everyone there together made it even better." (inventing people like "everyone" and scene details the speaker never said is a violation)`;
 
+const CATEGORY_LABEL_JA: Record<AllowedCategory, string> = {
+  diary: "感情ログ（日記）",
+  idea: "アイデア",
+  task: "タスク",
+};
+const CATEGORY_LABEL_EN: Record<AllowedCategory, string> = {
+  diary: "感情ログ (diary)",
+  idea: "アイデア (idea)",
+  task: "タスク (task)",
+};
+const NOTE_CATEGORY_JA: Record<"diary" | "idea", string> = {
+  diary: "感情ログ",
+  idea: "アイデア",
+};
+
+/** 3カテゴリのうち一部だけをユーザーが録音前に選んだ場合、プロンプトに
+ * 追加する制限の説明。全カテゴリ選択時（デフォルト・後方互換）は空文字を
+ * 返し、今までの挙動を一切変えない。 */
+function buildCategoryRestrictionNote(allowed: Set<AllowedCategory>, locale: Locale): string {
+  if (allowed.size >= 3) return "";
+  const fallback = ALL_CATEGORIES.find((c) => allowed.has(c)) ?? "diary";
+  if (locale === "en") {
+    const labels = ALL_CATEGORIES.filter((c) => allowed.has(c))
+      .map((c) => CATEGORY_LABEL_EN[c])
+      .join(", ");
+    return `\n\n[Category restriction for this recording]\nOnly these categories are enabled this time: ${labels}. Never use a disabled category. If content would normally belong to a disabled category, reassign it to whichever enabled category fits best, defaulting to ${CATEGORY_LABEL_EN[fallback]} when in doubt. Never drop or silently omit content just because its natural category is disabled — everything the speaker said must still end up in tasks or notes.`;
+  }
+  const labels = ALL_CATEGORIES.filter((c) => allowed.has(c))
+    .map((c) => CATEGORY_LABEL_JA[c])
+    .join("、");
+  return `\n\n【今回のカテゴリ制限】\n今回有効なカテゴリは${labels}のみです。無効なカテゴリは絶対に使わないでください。本来そのカテゴリに分類されるはずだった内容も、有効なカテゴリの中から最も近いものに割り当ててください（迷ったら${CATEGORY_LABEL_JA[fallback]}にしてください）。カテゴリが無効だからといって内容を書き漏らさないこと — 話された内容は必ずtasksかnotesのどちらかに残してください。`;
+}
+
+/** AIがカテゴリ制限のプロンプト指示に従わず無効なカテゴリを返してしまった
+ * 場合の保険。全カテゴリ選択時は何もしない（呼び出し元でチェック済み）。 */
+function enforceCategoryRestriction(
+  structured: StructuredResult,
+  allowed: Set<AllowedCategory>
+): StructuredResult {
+  if (allowed.size >= 3) return structured;
+  const fallback = ALL_CATEGORIES.find((c) => allowed.has(c)) ?? "diary";
+
+  const tasks: StructuredResult["tasks"] = [];
+  const notes: StructuredResult["notes"] = [];
+
+  for (const task of structured.tasks ?? []) {
+    if (allowed.has("task")) {
+      tasks.push(task);
+      continue;
+    }
+    // taskが無効なので、fallbackは必ず"diary"か"idea"のどちらか。
+    notes.push({
+      category: NOTE_CATEGORY_JA[fallback as "diary" | "idea"],
+      title: task.title,
+      content: task.title,
+    });
+  }
+
+  for (const note of structured.notes ?? []) {
+    const category: AllowedCategory = note.category === "アイデア" ? "idea" : "diary";
+    if (allowed.has(category)) {
+      notes.push(note);
+    } else if (fallback === "task") {
+      tasks.push({
+        title: note.title ?? note.content.slice(0, 40),
+        due_hint: null,
+        due_date: null,
+        reminder_at: null,
+        reminder_end_at: null,
+      });
+    } else {
+      notes.push({ ...note, category: NOTE_CATEGORY_JA[fallback as "diary" | "idea"] });
+    }
+  }
+
+  return { ...structured, tasks, notes };
+}
+
 function buildSystemPrompt(
   todayJst: string,
   weekdayJst: string,
   summaryLevel: SummaryLevel,
+  categoryNote: string,
   glossary?: string
 ): string {
   const glossarySection = glossary
@@ -229,6 +322,7 @@ ${todayJst}（${weekdayJst}曜日、日本時間）。期限の相対表現は�
    - 【notes category="アイデア"】: 未確定な思いつき・疑問・アイデア・検討事項。
    - 【notes category="感情ログ"】: 感情・気分・愚痴・モヤモヤ・出来事の振り返りなど、行動を伴わない心情の吐露。
 4. 話が脱線している場合は、文脈ごとに適切に分類を分けてください。
+${categoryNote}
 
 ${buildNotesStyleSection(summaryLevel)}
 
@@ -272,6 +366,7 @@ function buildSystemPromptEn(
   today: string,
   weekday: string,
   summaryLevel: SummaryLevel,
+  categoryNote: string,
   glossary?: string
 ): string {
   const glossarySection = glossary
@@ -297,6 +392,7 @@ ${today} (${weekday}, Japan time). Interpret any relative due-date expressions a
    - [notes category="アイデア"]: an unconfirmed idea, question, thought, or something to consider.
    - [notes category="感情ログ"]: a feeling, mood, complaint, or reflection on something that happened, with no associated action.
 4. If the speaker jumps between topics, split them into separate entries classified appropriately.
+${categoryNote}
 
 ${buildNotesStyleSectionEn(summaryLevel)}
 
@@ -899,21 +995,25 @@ async function structure(
   transcript: string,
   summaryLevel: SummaryLevel,
   locale: Locale,
+  allowedCategories: Set<AllowedCategory>,
   glossary?: string
 ): Promise<StructuredResult> {
   const now = new Date();
+  const categoryNote = buildCategoryRestrictionNote(allowedCategories, locale);
   const systemPrompt =
     locale === "en"
       ? buildSystemPromptEn(
           jstDateString(now),
           jstWeekdayString(locale, now),
           summaryLevel,
+          categoryNote,
           glossary
         )
       : buildSystemPrompt(
           jstDateString(now),
           jstWeekdayString(locale, now),
           summaryLevel,
+          categoryNote,
           glossary
         );
 
@@ -943,7 +1043,8 @@ async function structure(
   const data = (await response.json()) as {
     choices: { message: { content: string } }[];
   };
-  return JSON.parse(data.choices[0].message.content) as StructuredResult;
+  const parsed = JSON.parse(data.choices[0].message.content) as StructuredResult;
+  return enforceCategoryRestriction(parsed, allowedCategories);
 }
 
 function toClientResponse(structured: StructuredResult) {
@@ -985,6 +1086,7 @@ interface ProcessVoiceMemoRequest {
   customWords?: (string | CustomWordEntry)[];
   summaryLevel?: string;
   locale?: string;
+  allowedCategories?: string[];
 }
 
 export const processVoiceMemo = onCall(
@@ -1002,9 +1104,10 @@ export const processVoiceMemo = onCall(
     enforceAppCheck: false,
   },
   async (request) => {
-    const { audioBase64, mimeType, customWords, summaryLevel, locale } =
+    const { audioBase64, mimeType, customWords, summaryLevel, locale, allowedCategories } =
       (request.data ?? {}) as ProcessVoiceMemoRequest;
     const loc = normalizeLocale(locale);
+    const allowed = normalizeAllowedCategories(allowedCategories);
 
     const uid = request.auth?.uid;
     if (!uid) {
@@ -1054,6 +1157,7 @@ export const processVoiceMemo = onCall(
         transcript,
         normalizeSummaryLevel(summaryLevel),
         loc,
+        allowed,
         glossary
       );
       return toClientResponse(structured);
@@ -1685,6 +1789,7 @@ interface ProcessTextMemoRequest {
   text: string;
   summaryLevel?: string;
   locale?: string;
+  allowedCategories?: string[];
 }
 
 export const processTextMemo = onCall(
@@ -1695,9 +1800,10 @@ export const processTextMemo = onCall(
     enforceAppCheck: APP_CHECK_ENFORCED,
   },
   async (request) => {
-    const { text, summaryLevel, locale } =
+    const { text, summaryLevel, locale, allowedCategories } =
       (request.data ?? {}) as ProcessTextMemoRequest;
     const loc = normalizeLocale(locale);
+    const allowed = normalizeAllowedCategories(allowedCategories);
 
     const uid = request.auth?.uid;
     if (!uid) {
@@ -1715,7 +1821,8 @@ export const processTextMemo = onCall(
         apiKey,
         text.trim(),
         normalizeSummaryLevel(summaryLevel),
-        loc
+        loc,
+        allowed
       );
       return toClientResponse(structured);
     } catch (err) {

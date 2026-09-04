@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/journal_entry.dart';
+import '../models/review_category.dart';
 import '../utils/task_format.dart';
 
 enum DraftItemType { diary, task }
@@ -36,22 +37,21 @@ class DraftItem {
   final String? noteTitle;
 }
 
-/// レビュー画面上でカードをどの列に置くかの3分類。[DraftItem.type]が
-/// タスクかどうか、日記側なら[DraftItem.noteCategory]がアイデアか感情ログかで決まる。
-enum _ReviewBucket { feeling, idea, task }
-
-_ReviewBucket _bucketOf(DraftItem item) {
-  if (item.type == DraftItemType.task) return _ReviewBucket.task;
+ReviewCategory _bucketOf(DraftItem item) {
+  if (item.type == DraftItemType.task) return ReviewCategory.task;
   return item.noteCategory == kNoteCategoryIdea
-      ? _ReviewBucket.idea
-      : _ReviewBucket.feeling;
+      ? ReviewCategory.idea
+      : ReviewCategory.diary;
 }
 
-/// 録音結果を「日記」「アイデア」「タスク」の3カテゴリに分けて表示し、テキスト修正と
-/// ドラッグ＆ドロップによるカテゴリの入れ替えができるレビューUI。
+/// 録音結果を「日記」「アイデア」「タスク」のカテゴリに分けて表示し、テキスト修正と
+/// ドラッグ＆ドロップによるカテゴリの入れ替えができるレビューUI。[enabledCategories]は
+/// 録音前にユーザーが絞り込んだカテゴリ（1〜3個）で、それ以外のセクションは表示しない。
+/// 1個だけの場合は移動先が無いのでドラッグ＆ドロップ自体を無効にする。
 class EntryReview extends StatefulWidget {
   final String summary;
   final List<DraftItem> initialItems;
+  final Set<ReviewCategory> enabledCategories;
   final void Function(List<TaskItem> tasks, List<NoteItem> notes) onSave;
   final VoidCallback onDiscard;
 
@@ -59,6 +59,7 @@ class EntryReview extends StatefulWidget {
     super.key,
     required this.summary,
     required this.initialItems,
+    required this.enabledCategories,
     required this.onSave,
     required this.onDiscard,
   });
@@ -72,21 +73,21 @@ class _EntryReviewState extends State<EntryReview> {
   int _newItemSeq = 0;
   String? _autofocusId;
 
-  void _addItem(_ReviewBucket bucket) {
+  void _addItem(ReviewCategory bucket) {
     final id = 'new_${_newItemSeq++}';
     final item = switch (bucket) {
-      _ReviewBucket.task => DraftItem(
+      ReviewCategory.task => DraftItem(
         id: id,
         type: DraftItemType.task,
         text: '',
       ),
-      _ReviewBucket.idea => DraftItem(
+      ReviewCategory.idea => DraftItem(
         id: id,
         type: DraftItemType.diary,
         text: '',
         noteCategory: kNoteCategoryIdea,
       ),
-      _ReviewBucket.feeling => DraftItem(
+      ReviewCategory.diary => DraftItem(
         id: id,
         type: DraftItemType.diary,
         text: '',
@@ -99,16 +100,16 @@ class _EntryReviewState extends State<EntryReview> {
     });
   }
 
-  void _moveTo(DraftItem item, _ReviewBucket bucket) {
+  void _moveTo(DraftItem item, ReviewCategory bucket) {
     if (_bucketOf(item) == bucket) return;
     setState(() {
       switch (bucket) {
-        case _ReviewBucket.task:
+        case ReviewCategory.task:
           item.type = DraftItemType.task;
-        case _ReviewBucket.idea:
+        case ReviewCategory.idea:
           item.type = DraftItemType.diary;
           item.noteCategory = kNoteCategoryIdea;
-        case _ReviewBucket.feeling:
+        case ReviewCategory.diary:
           item.type = DraftItemType.diary;
           item.noteCategory = kNoteCategoryFeeling;
       }
@@ -151,15 +152,13 @@ class _EntryReviewState extends State<EntryReview> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final feelingItems = _items
-        .where((i) => _bucketOf(i) == _ReviewBucket.feeling)
-        .toList();
-    final ideaItems = _items
-        .where((i) => _bucketOf(i) == _ReviewBucket.idea)
-        .toList();
-    final taskItems = _items
-        .where((i) => _bucketOf(i) == _ReviewBucket.task)
-        .toList();
+    // 表示順は常に日記→アイデア→タスクで固定（[widget.enabledCategories]が
+    // 絞り込んだ集合なので、含まれるものだけを表示する）。
+    final visibleCategories = [
+      for (final c in ReviewCategory.values)
+        if (widget.enabledCategories.contains(c)) c,
+    ];
+    final allowDrag = visibleCategories.length > 1;
     final hasContent = _items.any((i) => i.text.trim().isNotEmpty);
 
     return Column(
@@ -181,7 +180,7 @@ class _EntryReviewState extends State<EntryReview> {
               ],
               const SizedBox(height: 2),
               Text(
-                l10n.reviewDescription,
+                allowDrag ? l10n.reviewDescription : l10n.reviewDescriptionNoDrag,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.outline,
                 ),
@@ -193,32 +192,18 @@ class _EntryReviewState extends State<EntryReview> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             children: [
-              _buildSection(
-                theme,
-                bucket: _ReviewBucket.feeling,
-                title: l10n.sectionDiary,
-                icon: Icons.menu_book_outlined,
-                items: feelingItems,
-                l10n: l10n,
-              ),
-              const SizedBox(height: 16),
-              _buildSection(
-                theme,
-                bucket: _ReviewBucket.idea,
-                title: l10n.sectionIdea,
-                icon: Icons.lightbulb_outline,
-                items: ideaItems,
-                l10n: l10n,
-              ),
-              const SizedBox(height: 16),
-              _buildSection(
-                theme,
-                bucket: _ReviewBucket.task,
-                title: l10n.sectionTask,
-                icon: Icons.checklist_outlined,
-                items: taskItems,
-                l10n: l10n,
-              ),
+              for (final category in visibleCategories) ...[
+                _buildSection(
+                  theme,
+                  bucket: category,
+                  title: category.labelFor(l10n),
+                  icon: category.icon,
+                  items: _items.where((i) => _bucketOf(i) == category).toList(),
+                  allowDrag: allowDrag,
+                  l10n: l10n,
+                ),
+                if (category != visibleCategories.last) const SizedBox(height: 16),
+              ],
             ],
           ),
         ),
@@ -248,82 +233,90 @@ class _EntryReviewState extends State<EntryReview> {
 
   Widget _buildSection(
     ThemeData theme, {
-    required _ReviewBucket bucket,
+    required ReviewCategory bucket,
     required String title,
     required IconData icon,
     required List<DraftItem> items,
+    required bool allowDrag,
     required AppLocalizations l10n,
   }) {
+    Widget buildContent(bool isHover) {
+      return Container(
+        decoration: BoxDecoration(
+          color: isHover
+              ? theme.colorScheme.primary.withValues(alpha: 0.08)
+              : theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
+                ),
+          border: Border.all(
+            color: isHover
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outlineVariant,
+            width: isHover ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 18, color: theme.colorScheme.primary),
+                const SizedBox(width: 6),
+                Text(title, style: theme.textTheme.labelLarge),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (items.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Text(
+                  allowDrag ? l10n.dragCardHere : l10n.sectionEmptyPlaceholder,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.outline,
+                  ),
+                ),
+              )
+            else
+              ...items.map(
+                (item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _buildCard(theme, item, allowDrag: allowDrag),
+                ),
+              ),
+            _AddCardButton(
+              label: l10n.addCardButton,
+              onTap: () => _addItem(bucket),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (!allowDrag) return buildContent(false);
+
     return DragTarget<DraftItem>(
       onWillAcceptWithDetails: (details) => _bucketOf(details.data) != bucket,
       onAcceptWithDetails: (details) => _moveTo(details.data, bucket),
-      builder: (context, candidateData, rejectedData) {
-        final isHover = candidateData.isNotEmpty;
-        return Container(
-          decoration: BoxDecoration(
-            color: isHover
-                ? theme.colorScheme.primary.withValues(alpha: 0.08)
-                : theme.colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.3,
-                  ),
-            border: Border.all(
-              color: isHover
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.outlineVariant,
-              width: isHover ? 2 : 1,
-            ),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(icon, size: 18, color: theme.colorScheme.primary),
-                  const SizedBox(width: 6),
-                  Text(title, style: theme.textTheme.labelLarge),
-                ],
-              ),
-              const SizedBox(height: 8),
-              if (items.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Text(
-                    l10n.dragCardHere,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.outline,
-                    ),
-                  ),
-                )
-              else
-                ...items.map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _buildCard(theme, item),
-                  ),
-                ),
-              _AddCardButton(
-                label: l10n.addCardButton,
-                onTap: () => _addItem(bucket),
-              ),
-            ],
-          ),
-        );
-      },
+      builder: (context, candidateData, rejectedData) =>
+          buildContent(candidateData.isNotEmpty),
     );
   }
 
-  Widget _buildCard(ThemeData theme, DraftItem item) {
-    final handle = Icon(Icons.drag_indicator, color: theme.colorScheme.outline);
+  Widget _buildCard(ThemeData theme, DraftItem item, {required bool allowDrag}) {
     final cardShell = _CardShell(
       theme: theme,
-      dragHandle: handle,
+      dragHandle: allowDrag
+          ? Icon(Icons.drag_indicator, color: theme.colorScheme.outline)
+          : null,
       item: item,
       autofocus: item.id == _autofocusId,
       onChanged: (value) => item.text = value,
       onRemove: () => _removeItem(item),
     );
+
+    if (!allowDrag) return cardShell;
 
     return LongPressDraggable<DraftItem>(
       data: item,
