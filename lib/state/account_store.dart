@@ -79,7 +79,22 @@ class AccountStore extends ChangeNotifier {
       } on FirebaseAuthException catch (e) {
         if (e.code != 'credential-already-in-use' &&
             e.code != 'email-already-in-use') {
-          rethrow;
+          // TODO(debug): linkWithCredential特有の不具合切り分けのため、
+          // 想定外のエラーでも通常サインインへフォールバックしてみる。
+          // 原因特定後、このtry/catchを外しrethrowに戻すこと。
+          try {
+            final result = await FirebaseAuth.instance.signInWithCredential(
+              credential,
+            );
+            notifyListeners();
+            return result.user!.uid;
+          } on FirebaseAuthException catch (e2) {
+            throw AccountException(
+              _reasonFor(e2),
+              'link failed (${e.code}: ${e.message}); '
+              'plain signIn also failed (${e2.code}: ${e2.message})',
+            );
+          }
         }
         final result = await FirebaseAuth.instance.signInWithCredential(
           credential,
