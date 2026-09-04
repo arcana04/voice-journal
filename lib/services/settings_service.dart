@@ -6,7 +6,6 @@ class SettingsService {
   static const _summaryLevelPref = 'summary_level';
   static const _darkModePref = 'dark_mode';
   static const _hasSeenOnboardingPref = 'has_seen_onboarding';
-  static const _customBackgroundPathPref = 'custom_background_path';
 
   Future<SummaryLevel> getSummaryLevel() async {
     final prefs = await SharedPreferences.getInstance();
@@ -26,20 +25,6 @@ class SettingsService {
   Future<void> setDarkMode(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_darkModePref, value);
-  }
-
-  Future<String?> getCustomBackgroundPath() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_customBackgroundPathPref);
-  }
-
-  Future<void> setCustomBackgroundPath(String? value) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (value == null) {
-      await prefs.remove(_customBackgroundPathPref);
-    } else {
-      await prefs.setString(_customBackgroundPathPref, value);
-    }
   }
 
   Future<bool> getHasSeenOnboarding() async {

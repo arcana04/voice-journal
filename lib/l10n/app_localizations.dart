@@ -518,30 +518,6 @@ abstract class AppLocalizations {
   /// **'Switch to an easier-on-the-eyes look'**
   String get darkModeSubtitle;
 
-  /// No description provided for @settingsCustomBackgroundTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Background Image'**
-  String get settingsCustomBackgroundTitle;
-
-  /// No description provided for @settingsCustomBackgroundSubtitleUnset.
-  ///
-  /// In en, this message translates to:
-  /// **'Not set'**
-  String get settingsCustomBackgroundSubtitleUnset;
-
-  /// No description provided for @settingsCustomBackgroundSubtitleSet.
-  ///
-  /// In en, this message translates to:
-  /// **'Custom photo set (tap to change)'**
-  String get settingsCustomBackgroundSubtitleSet;
-
-  /// No description provided for @settingsCustomBackgroundClearTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Reset to default'**
-  String get settingsCustomBackgroundClearTooltip;
-
   /// No description provided for @settingsProBadge.
   ///
   /// In en, this message translates to:

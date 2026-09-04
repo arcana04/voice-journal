@@ -239,19 +239,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get darkModeSubtitle => 'Switch to an easier-on-the-eyes look';
 
   @override
-  String get settingsCustomBackgroundTitle => 'Background Image';
-
-  @override
-  String get settingsCustomBackgroundSubtitleUnset => 'Not set';
-
-  @override
-  String get settingsCustomBackgroundSubtitleSet =>
-      'Custom photo set (tap to change)';
-
-  @override
-  String get settingsCustomBackgroundClearTooltip => 'Reset to default';
-
-  @override
   String get settingsProBadge => 'Pro only';
 
   @override

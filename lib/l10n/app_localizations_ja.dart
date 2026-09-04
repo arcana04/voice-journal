@@ -230,18 +230,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get darkModeSubtitle => '目にやさしい表示に切り替えます';
 
   @override
-  String get settingsCustomBackgroundTitle => '背景画像';
-
-  @override
-  String get settingsCustomBackgroundSubtitleUnset => '未設定';
-
-  @override
-  String get settingsCustomBackgroundSubtitleSet => '設定済み（タップで変更）';
-
-  @override
-  String get settingsCustomBackgroundClearTooltip => '元に戻す';
-
-  @override
   String get settingsProBadge => 'Pro限定';
 
   @override
