@@ -59,7 +59,17 @@ enum DiaryBackground {
   deepSea(
     'deep_sea',
     'assets/images/diary_backgrounds/diary_bg_deep_sea.png',
-  );
+  ),
+  snow('snow', 'assets/images/diary_backgrounds/diary_bg_snow.png'),
+  soccerBall(
+    'soccer_ball',
+    'assets/images/diary_backgrounds/diary_bg_soccer_ball.png',
+  ),
+  luxuryFrame(
+    'luxury_frame',
+    'assets/images/diary_backgrounds/diary_bg_luxury_frame.png',
+  ),
+  clock('clock', 'assets/images/diary_backgrounds/diary_bg_clock.png');
 
   final String id;
   final String asset;
@@ -87,6 +97,10 @@ enum DiaryBackground {
     DiaryBackground.musicNote => l10n.diaryBgMusicNote,
     DiaryBackground.letter => l10n.diaryBgLetter,
     DiaryBackground.deepSea => l10n.diaryBgDeepSea,
+    DiaryBackground.snow => l10n.diaryBgSnow,
+    DiaryBackground.soccerBall => l10n.diaryBgSoccerBall,
+    DiaryBackground.luxuryFrame => l10n.diaryBgLuxuryFrame,
+    DiaryBackground.clock => l10n.diaryBgClock,
   };
 
   /// 未設定（背景なし）を表すnullを含め、保存済みIDから復元する。

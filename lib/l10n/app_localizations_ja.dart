@@ -723,6 +723,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get diaryBgDeepSea => '深海';
 
   @override
+  String get diaryBgSnow => '雪';
+
+  @override
+  String get diaryBgSoccerBall => 'サッカーボール';
+
+  @override
+  String get diaryBgLuxuryFrame => '豪華な枠';
+
+  @override
+  String get diaryBgClock => '時計';
+
+  @override
   String get fontSheetTitle => 'フォント';
 
   @override

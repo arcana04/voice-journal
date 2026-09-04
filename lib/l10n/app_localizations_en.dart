@@ -752,6 +752,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diaryBgDeepSea => 'Deep Sea';
 
   @override
+  String get diaryBgSnow => 'Snow';
+
+  @override
+  String get diaryBgSoccerBall => 'Soccer Ball';
+
+  @override
+  String get diaryBgLuxuryFrame => 'Luxury Frame';
+
+  @override
+  String get diaryBgClock => 'Clock';
+
+  @override
   String get fontSheetTitle => 'Font';
 
   @override

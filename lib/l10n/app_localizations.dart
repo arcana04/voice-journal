@@ -1466,6 +1466,30 @@ abstract class AppLocalizations {
   /// **'Deep Sea'**
   String get diaryBgDeepSea;
 
+  /// No description provided for @diaryBgSnow.
+  ///
+  /// In en, this message translates to:
+  /// **'Snow'**
+  String get diaryBgSnow;
+
+  /// No description provided for @diaryBgSoccerBall.
+  ///
+  /// In en, this message translates to:
+  /// **'Soccer Ball'**
+  String get diaryBgSoccerBall;
+
+  /// No description provided for @diaryBgLuxuryFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Luxury Frame'**
+  String get diaryBgLuxuryFrame;
+
+  /// No description provided for @diaryBgClock.
+  ///
+  /// In en, this message translates to:
+  /// **'Clock'**
+  String get diaryBgClock;
+
   /// No description provided for @fontSheetTitle.
   ///
   /// In en, this message translates to:
