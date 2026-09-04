@@ -1106,7 +1106,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weeklyReportEmotionSectionTitle => 'Emotional trends';
 
   @override
-  String get weeklyReportNoEmotionData => 'No emotional entries yet this week';
+  String get weeklyReportNoEmotionData => 'No mood entries yet this week';
 
   @override
   String get weeklyReportConstellationSectionTitle => 'Weekly Constellation';
@@ -1124,14 +1124,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weeklyReportKeywordsSectionTitle => 'Brain Map';
 
   @override
-  String get weeklyReportNoKeywords => 'No standout keywords found this week';
-
-  @override
   String get weeklyReportBrainMapSubtitle =>
-      'What\'s been driving your feelings and thoughts';
+      'How your week split across positive, normal, and negative moods';
 
   @override
-  String get weeklyReportBrainMapSheetEmpty => 'No related entries found';
+  String get emotionCategoryPositive => 'Positive';
+
+  @override
+  String get emotionCategoryNormal => 'Normal';
+
+  @override
+  String get emotionCategoryNegative => 'Negative';
 
   @override
   String get weeklyReportIdeasSectionTitle => 'Ideas that shined';

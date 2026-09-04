@@ -4,9 +4,10 @@ import 'package:intl/intl.dart';
 import 'package:screenshot/screenshot.dart';
 
 import '../l10n/app_localizations.dart';
+import '../models/emotion_tag.dart';
 import '../models/weekly_report.dart';
-import 'brain_map.dart';
 import 'category_donut_chart.dart';
+import 'emotion_category_breakdown.dart';
 import 'mental_wave_chart.dart';
 import 'weekly_constellation.dart';
 
@@ -26,7 +27,7 @@ class WeeklyReportContent extends StatelessWidget {
   final DateTime weekStart;
   final DateTime weekEnd;
   final List<MoodMoment> moodMoments;
-  final List<BrainMapBubble> brainMapBubbles;
+  final Map<EmotionTag, int> emotionCounts;
   final int diaryCount;
   final int ideaCount;
   final int totalTasks;
@@ -39,7 +40,7 @@ class WeeklyReportContent extends StatelessWidget {
     required this.weekStart,
     required this.weekEnd,
     required this.moodMoments,
-    required this.brainMapBubbles,
+    required this.emotionCounts,
     required this.diaryCount,
     required this.ideaCount,
     required this.totalTasks,
@@ -100,7 +101,7 @@ class WeeklyReportContent extends StatelessWidget {
               icon: Icons.bubble_chart_outlined,
               title: l10n.weeklyReportKeywordsSectionTitle,
               subtitle: l10n.weeklyReportBrainMapSubtitle,
-              child: BrainMap(bubbles: brainMapBubbles, locale: locale),
+              child: EmotionCategoryBreakdown(emotionCounts: emotionCounts),
             ),
             const SizedBox(height: 16),
             _SectionCard(

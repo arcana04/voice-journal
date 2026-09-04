@@ -2141,7 +2141,7 @@ abstract class AppLocalizations {
   /// No description provided for @weeklyReportNoEmotionData.
   ///
   /// In en, this message translates to:
-  /// **'No emotional entries yet this week'**
+  /// **'No mood entries yet this week'**
   String get weeklyReportNoEmotionData;
 
   /// No description provided for @weeklyReportConstellationSectionTitle.
@@ -2174,23 +2174,29 @@ abstract class AppLocalizations {
   /// **'Brain Map'**
   String get weeklyReportKeywordsSectionTitle;
 
-  /// No description provided for @weeklyReportNoKeywords.
-  ///
-  /// In en, this message translates to:
-  /// **'No standout keywords found this week'**
-  String get weeklyReportNoKeywords;
-
   /// No description provided for @weeklyReportBrainMapSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'What\'s been driving your feelings and thoughts'**
+  /// **'How your week split across positive, normal, and negative moods'**
   String get weeklyReportBrainMapSubtitle;
 
-  /// No description provided for @weeklyReportBrainMapSheetEmpty.
+  /// No description provided for @emotionCategoryPositive.
   ///
   /// In en, this message translates to:
-  /// **'No related entries found'**
-  String get weeklyReportBrainMapSheetEmpty;
+  /// **'Positive'**
+  String get emotionCategoryPositive;
+
+  /// No description provided for @emotionCategoryNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get emotionCategoryNormal;
+
+  /// No description provided for @emotionCategoryNegative.
+  ///
+  /// In en, this message translates to:
+  /// **'Negative'**
+  String get emotionCategoryNegative;
 
   /// No description provided for @weeklyReportIdeasSectionTitle.
   ///

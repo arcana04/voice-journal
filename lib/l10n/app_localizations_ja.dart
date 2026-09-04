@@ -1086,13 +1086,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get weeklyReportKeywordsSectionTitle => '脳内マップ';
 
   @override
-  String get weeklyReportNoKeywords => '今週は目立ったキーワードが見つかりませんでした';
+  String get weeklyReportBrainMapSubtitle => '今週の感情はポジティブ・ノーマル・ネガティブどれが多かったか';
 
   @override
-  String get weeklyReportBrainMapSubtitle => '何が自分の感情や思考を動かしていたのか';
+  String get emotionCategoryPositive => 'ポジティブ';
 
   @override
-  String get weeklyReportBrainMapSheetEmpty => '関連する記録が見つかりませんでした';
+  String get emotionCategoryNormal => 'ノーマル';
+
+  @override
+  String get emotionCategoryNegative => 'ネガティブ';
 
   @override
   String get weeklyReportIdeasSectionTitle => '輝いていたアイデア';
