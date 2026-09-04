@@ -50,7 +50,9 @@ class _AccountScreenState extends State<AccountScreen> {
         ? _messageFor(l10n, error.reason)
         : l10n.accountErrorUnknown;
     if (!mounted) return;
-    await _showMessage(l10n.accountErrorTitle, message);
+    // TODO(debug): Apple/Googleサインインの原因不明のエラーを切り分けるための
+    // 一時的な診断表示。原因特定後に削除すること。
+    await _showMessage(l10n.accountErrorTitle, '$message\n\n[debug] $error');
   }
 
   Future<void> _afterAuthSuccess(String uid) async {
