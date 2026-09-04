@@ -8,7 +8,13 @@ import '../services/auth_service.dart';
 /// アカウント連携エラーの理由。UI側でメッセージ出し分けに使う。
 class AccountException implements Exception {
   final AccountErrorReason reason;
-  AccountException(this.reason);
+  // TODO(debug): 原因切り分け用に元のFirebaseAuthExceptionの内容を保持している。
+  // 原因特定後、debugDetailごと削除すること。
+  final String? debugDetail;
+  AccountException(this.reason, [this.debugDetail]);
+
+  @override
+  String toString() => 'AccountException($reason, $debugDetail)';
 }
 
 enum AccountErrorReason { networkError, unknown }
@@ -82,7 +88,7 @@ class AccountStore extends ChangeNotifier {
         return result.user!.uid;
       }
     } on FirebaseAuthException catch (e) {
-      throw AccountException(_reasonFor(e));
+      throw AccountException(_reasonFor(e), '${e.code}: ${e.message}');
     }
   }
 
