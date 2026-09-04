@@ -1777,12 +1777,9 @@ export const generateWeeklyReport = onCall(
     if (!uid) {
       throw new HttpsError("unauthenticated", MESSAGES[loc].authRequired);
     }
-    // TEMPORARY: Pro gate disabled at the user's request so they can repeatedly
-    // test the weekly report / weekly aurora feature without needing real Pro
-    // entitlement on every test device. Restore before release:
-    // if (!(await isProUser(uid))) {
-    //   throw new HttpsError("permission-denied", MESSAGES[loc].proRequired);
-    // }
+    if (!(await isProUser(uid))) {
+      throw new HttpsError("permission-denied", MESSAGES[loc].proRequired);
+    }
 
     try {
       const apiKey = openAiApiKey.value();
