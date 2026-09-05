@@ -27,6 +27,7 @@ import '../widgets/record_button.dart';
 import '../widgets/scrim_text.dart';
 import '../widgets/waveform.dart';
 import 'custom_dictionary_screen.dart';
+import 'buy_minutes_screen.dart';
 import 'paywall_screen.dart';
 import 'settings_screen.dart';
 
@@ -314,11 +315,14 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     final isQuotaExceeded =
         e is BackendServiceException && e.code == 'resource-exhausted';
+    final isMonthlyMinutesExceeded =
+        e is BackendServiceException && e.isMonthlyMinutesExceeded;
     final isPro = context.read<SubscriptionStore>().isPro;
     _showResultDialog(
       l10n.processingErrorTitle,
       message,
-      showUpgrade: isQuotaExceeded && !isPro,
+      showUpgrade: isQuotaExceeded && !isPro && !isMonthlyMinutesExceeded,
+      showBuyMinutes: isMonthlyMinutesExceeded,
     );
   }
 
@@ -385,6 +389,7 @@ class _HomeScreenState extends State<HomeScreen> {
     String title,
     String message, {
     bool showUpgrade = false,
+    bool showBuyMinutes = false,
   }) {
     final l10n = AppLocalizations.of(context)!;
     const radius = 24.0;
@@ -398,7 +403,7 @@ class _HomeScreenState extends State<HomeScreen> {
         content: SingleChildScrollView(child: Text(message)),
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
-          if (showUpgrade)
+          if (showUpgrade || showBuyMinutes)
             OutlinedButton(
               style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(
@@ -420,9 +425,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const PaywallScreen()),
                 );
+              } else if (showBuyMinutes) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const BuyMinutesScreen()),
+                );
               }
             },
-            child: Text(showUpgrade ? l10n.planUpgrade : 'OK'),
+            child: Text(
+              showUpgrade
+                  ? l10n.planUpgrade
+                  : showBuyMinutes
+                  ? l10n.buyMinutesCta
+                  : 'OK',
+            ),
           ),
         ],
       ),
@@ -556,6 +571,37 @@ class _HomeScreenState extends State<HomeScreen> {
                                           l10n.homeUsageToday(
                                             usage.used,
                                             usage.limit,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .outline,
+                                              ),
+                                        );
+                                      },
+                                    ),
+                                    FutureBuilder<UsageStatus>(
+                                      future: _usageFuture,
+                                      builder: (context, snapshot) {
+                                        final usage = snapshot.data;
+                                        if (usage == null ||
+                                            !usage.hasMonthlyBudget) {
+                                          return const SizedBox.shrink();
+                                        }
+                                        final usedMinutes =
+                                            (usage.monthlyUsedSeconds ?? 0) ~/
+                                            60;
+                                        final limitMinutes =
+                                            (usage.monthlyLimitSeconds ?? 0) ~/
+                                            60;
+                                        return Text(
+                                          l10n.homeUsageMonth(
+                                            usedMinutes,
+                                            limitMinutes,
                                           ),
                                           textAlign: TextAlign.center,
                                           style: Theme.of(context)

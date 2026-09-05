@@ -97,6 +97,39 @@ class PurchaseService {
     }
   }
 
+  /// 追加60分パックのように、現在のOfferingの中から特定の商品IDを持つ
+  /// Packageを1つ探す（サブスク/買い切りの3枠固定レイアウトである
+  /// PaywallScreenとは別の、消費型IAP専用の小さな購入画面から使う）。
+  Future<Package?> findPackageByProductId(String productId) async {
+    final offering = await fetchCurrentOffering();
+    if (offering == null) return null;
+    for (final package in offering.availablePackages) {
+      if (package.storeProduct.identifier == productId) return package;
+    }
+    return null;
+  }
+
+  /// 消費型IAP（追加分数パックなど）の購入。サブスク/買い切りと違い
+  /// エンタイトルメントが付与されないため、[purchasePackage]のような
+  /// entitlement判定はできない——例外が投げられなければ購入成功とみなす。
+  /// 実際の残高反映はRevenueCat Webhook経由でサーバー側が行うため、ここでは
+  /// StoreKit/Play課金が完了したことだけを確認する。
+  ///
+  /// 戻り値: 購入成功ならtrue、ユーザーが自分でキャンセルしたならfalse
+  /// （エラー扱いしない）。それ以外の失敗は例外をそのまま投げる。
+  Future<bool> purchaseConsumable(Package package) async {
+    try {
+      await Purchases.purchasePackage(package);
+      return true;
+    } on PlatformException catch (e) {
+      if (PurchasesErrorHelper.getErrorCode(e) ==
+          PurchasesErrorCode.purchaseCancelledError) {
+        return false;
+      }
+      rethrow;
+    }
+  }
+
   /// 購入成功でPro付与済みならtrue。ユーザーが自分でキャンセルした場合はnullを返す
   /// （エラー扱いしない）。それ以外の失敗は例外をそのまま投げる。
   Future<bool?> purchasePackage(Package package) async {

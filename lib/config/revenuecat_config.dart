@@ -12,4 +12,12 @@ class RevenueCatConfig {
 
   /// RevenueCatダッシュボードで作成する「Pro」プランのエンタイトルメントID。
   static const String proEntitlementId = 'voice_journal_pro';
+
+  /// 月間録音時間の上限超過時に購入できる消費型IAP「追加60分パック」の
+  /// 商品ID。App Store Connect/RevenueCat側の商品IDと完全に一致させること
+  /// （`functions/src/index.ts`の`EXTRA_MINUTES_PACK_PRODUCT_ID`と同じ値）。
+  /// 過去に月額プランのApple Product Id不一致で価格取得に失敗したバグが
+  /// あるため、ここは特に慎重に。エンタイトルメントは持たない（消費型のため）。
+  static const String extraMinutesPackProductId =
+      'com.arcana04.voicejournal.extra_minutes_60';
 }

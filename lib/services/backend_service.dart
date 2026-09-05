@@ -17,10 +17,27 @@ import 'auth_service.dart';
 class BackendServiceException implements Exception {
   final String message;
   final String? code;
-  BackendServiceException(this.message, {this.code});
+
+  /// HttpsErrorの第3引数(details)由来の追加情報。今のところ`reason`フィールド
+  /// (例: "monthly_minutes")で、同じcode="resource-exhausted"の中で
+  /// 「日次回数の上限」と「月間録音時間の上限」を区別するために使う。
+  final Map<String, dynamic>? details;
+  BackendServiceException(this.message, {this.code, this.details});
+
+  bool get isMonthlyMinutesExceeded => details?['reason'] == 'monthly_minutes';
 
   @override
   String toString() => message;
+}
+
+/// FirebaseFunctionsException.detailsはdynamic（プラットフォームによって
+/// `Map<Object?, Object?>`で返ることがある）なので、安全に`Map<String, dynamic>?`へ
+/// 変換する。
+Map<String, dynamic>? _detailsAsMap(dynamic details) {
+  if (details is Map) {
+    return details.map((key, value) => MapEntry(key.toString(), value));
+  }
+  return null;
 }
 
 class BackendService {
@@ -54,6 +71,7 @@ class BackendService {
       throw BackendServiceException(
         e.message ?? currentLocalizations().genericProcessingError,
         code: e.code,
+        details: _detailsAsMap(e.details),
       );
     }
   }
@@ -160,6 +178,9 @@ class BackendService {
       return UsageStatus(
         used: (data['used'] as num?)?.toInt() ?? 0,
         limit: (data['limit'] as num?)?.toInt() ?? 0,
+        monthlyUsedSeconds: (data['monthlyUsedSeconds'] as num?)?.toInt(),
+        monthlyLimitSeconds: (data['monthlyLimitSeconds'] as num?)?.toInt(),
+        bonusSecondsBalance: (data['bonusSecondsBalance'] as num?)?.toInt(),
       );
     } on FirebaseFunctionsException catch (e) {
       throw BackendServiceException(e.message ?? currentLocalizations().usageFetchError);

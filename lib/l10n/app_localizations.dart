@@ -962,6 +962,12 @@ abstract class AppLocalizations {
   /// **'Capture every thought, whenever it strikes'**
   String get paywallBenefitCountDesc;
 
+  /// No description provided for @paywallMonthlyCapNote.
+  ///
+  /// In en, this message translates to:
+  /// **'* Total recording time is capped at 240 minutes per month. If you reach the limit, you can buy an extra minutes pack to keep going.'**
+  String get paywallMonthlyCapNote;
+
   /// No description provided for @paywallBenefitCustomBackgroundTitle.
   ///
   /// In en, this message translates to:
@@ -1103,7 +1109,7 @@ abstract class AppLocalizations {
   /// No description provided for @paywallPlanLifetimeCaption.
   ///
   /// In en, this message translates to:
-  /// **'Everything except cloud photo/video sync'**
+  /// **'Cloud photo/video sync not included'**
   String get paywallPlanLifetimeCaption;
 
   /// No description provided for @paywallPlanComingSoon.
@@ -1123,6 +1129,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Today {used} / {limit}'**
   String homeUsageToday(int used, int limit);
+
+  /// No description provided for @homeUsageMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month {usedMinutes} / {limitMinutes} min'**
+  String homeUsageMonth(int usedMinutes, int limitMinutes);
+
+  /// No description provided for @buyMinutesCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy more minutes'**
+  String get buyMinutesCta;
+
+  /// No description provided for @buyMinutesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy extra minutes'**
+  String get buyMinutesTitle;
+
+  /// No description provided for @buyMinutesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve reached this month\'s recording-time limit. Buy an extra minutes pack to keep recording right away, without waiting for next month.'**
+  String get buyMinutesDescription;
+
+  /// No description provided for @buyMinutesUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The extra minutes pack isn\'t available right now. Please try again later.'**
+  String get buyMinutesUnavailable;
+
+  /// No description provided for @buyMinutesPurchaseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The purchase failed. Please try again.'**
+  String get buyMinutesPurchaseFailed;
+
+  /// No description provided for @buyMinutesPurchaseSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra minutes added. You can keep recording now.'**
+  String get buyMinutesPurchaseSuccess;
+
+  /// No description provided for @buyMinutesPurchaseButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy +60 min ({price})'**
+  String buyMinutesPurchaseButton(String price);
 
   /// No description provided for @notificationSectionTitle.
   ///

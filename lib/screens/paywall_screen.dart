@@ -125,6 +125,15 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   valueAfter: l10n.paywallBenefitCountAfter,
                   description: l10n.paywallBenefitCountDesc,
                 ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 14),
+                  child: Text(
+                    l10n.paywallMonthlyCapNote,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.outline,
+                    ),
+                  ),
+                ),
                 _BenefitCard(
                   index: 3,
                   icon: Icons.image_rounded,

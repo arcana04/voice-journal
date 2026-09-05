@@ -46,6 +46,19 @@ const PRO_DAILY_LIMIT = 30;
 /** 写真・動画クラウド同期（サブスクプラン限定）の合計容量上限。定額課金なのに
  * Firebase Storage代が青天井になるのを防ぐための安全弁。 */
 const MEDIA_STORAGE_CAP_BYTES = 5 * 1024 * 1024 * 1024; // 5GB
+/** Pro/買い切みプラン共通の月間録音時間の上限（分）。1回15分×1日30回のような
+ * 理論上限には合計時間の歯止めが無く、Whisper API（$0.006/分）の従量課金が
+ * サブスク収益を大きく超えかねないため導入（2026-09-05）。無料プランは既存の
+ * 日次回数制限だけで十分小さいため対象外。優良ユーザーが真面目に長めの日記を
+ * 毎日書いただけで数日で上限に達してユーザー体験を壊さないよう、単純な
+ * ハードブロックではなく下記の消費型追加パックで継続利用できるようにする。 */
+const PRO_MONTHLY_MINUTES = 240;
+/** 上限超過時に購入できる消費型IAP「追加60分パック」の内容。 */
+const EXTRA_MINUTES_PACK_SECONDS = 60 * 60;
+/** RevenueCat/App Store Connect側の商品IDと完全に一致させること。過去に
+ * 月額プランのApple Product Id不一致（"pro.mon" vs "pro.monthly"）で
+ * StoreKitから価格を取得できなかったバグを踏んでいるため、ここは特に注意。 */
+const EXTRA_MINUTES_PACK_PRODUCT_ID = "com.arcana04.voicejournal.extra_minutes_60";
 /** RevenueCatダッシュボードで作成する「Pro」プランのエンタイトルメントID。クライアント側
  * （lib/config/revenuecat_config.dart）の値と一致させること。 */
 const PRO_ENTITLEMENT_ID = "voice_journal_pro";
@@ -101,6 +114,7 @@ const MESSAGES: Record<
     noText: string;
     transcriptionEmpty: string;
     quotaExceeded: (limit: number) => string;
+    monthlyMinutesExceeded: (limitMinutes: number) => string;
     watchRateLimited: string;
     unknownWatchDevice: string;
     proRequired: string;
@@ -116,6 +130,8 @@ const MESSAGES: Record<
     transcriptionEmpty: "音声を認識できませんでした。",
     quotaExceeded: (limit) =>
       `本日の無料利用回数（${limit}回）の上限に達しました。また明日お試しください。`,
+    monthlyMinutesExceeded: (limitMinutes) =>
+      `今月の録音時間の上限（${limitMinutes}分）に達しました。追加の録音パックを購入するか、来月までお待ちください。`,
     watchRateLimited:
       "Apple Watchからのリクエストが多すぎます。少し時間をおいてから再度お試しください。",
     unknownWatchDevice: "このApple Watchはまだペアリングされていません。iPhoneアプリで再度ペアリングしてください。",
@@ -131,6 +147,8 @@ const MESSAGES: Record<
     transcriptionEmpty: "Couldn't recognize any speech in the recording.",
     quotaExceeded: (limit) =>
       `You've reached today's free limit of ${limit} recordings. Please try again tomorrow.`,
+    monthlyMinutesExceeded: (limitMinutes) =>
+      `You've reached this month's recording limit of ${limitMinutes} minutes. Buy an extra minutes pack, or wait until next month.`,
     watchRateLimited:
       "Too many requests from Apple Watch. Please wait a moment and try again.",
     unknownWatchDevice:
@@ -445,6 +463,17 @@ function jstDateString(date: Date = new Date()): string {
   }).format(date);
 }
 
+/** usageMonth/{uid}_{yyyyMM}ドキュメントのキーに使う「YYYYMM」形式。 */
+function jstMonthString(date: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+  })
+    .format(date)
+    .replace("-", "");
+}
+
 function jstWeekdayString(locale: Locale, date: Date = new Date()): string {
   return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ja-JP", {
     timeZone: "Asia/Tokyo",
@@ -487,6 +516,91 @@ async function consumeDailyQuota(uid: string, locale: Locale): Promise<void> {
       { merge: true }
     );
   });
+}
+
+function usageMonthRef(uid: string) {
+  return getFirestore().collection("usageMonth").doc(`${uid}_${jstMonthString()}`);
+}
+
+/**
+ * Pro/買い切みプラン限定の月間録音時間チェック。無料プランは対象外
+ * （既存の日次回数制限で十分小さいコストに収まるため）。実際の音声長は
+ * ffmpeg処理後にしか分からないため、ここでは「前回までの累計」だけを見て、
+ * 既に使い切っている場合にWhisper呼び出し前に弾く事前チェックを行う
+ * （1回の録音の途中で上限を跨ぐケース自体は許容し、事後にrecordMonthlyMinutesUsageで
+ * 加算する——完全な事前ブロックにはできないが、無駄なWhisper課金を防ぐには十分）。
+ */
+async function checkMonthlyMinutesBudget(uid: string, locale: Locale): Promise<void> {
+  if (!(await isProUser(uid))) return;
+
+  const db = getFirestore();
+  const [usageSnap, userSnap] = await Promise.all([
+    usageMonthRef(uid).get(),
+    db.collection("users").doc(uid).get(),
+  ]);
+  const audioSecondsUsed = (usageSnap.data()?.audioSecondsUsed as number | undefined) ?? 0;
+  const bonusSecondsBalance = (userSnap.data()?.bonusSecondsBalance as number | undefined) ?? 0;
+
+  if (audioSecondsUsed >= PRO_MONTHLY_MINUTES * 60 && bonusSecondsBalance <= 0) {
+    throw new HttpsError(
+      "resource-exhausted",
+      MESSAGES[locale].monthlyMinutesExceeded(PRO_MONTHLY_MINUTES),
+      { reason: "monthly_minutes" }
+    );
+  }
+}
+
+/**
+ * 実際の音声長が分かった後に呼ぶ、月間利用量の事後加算。まず月間の基本枠
+ * （PRO_MONTHLY_MINUTES、月をまたぐとリセットされる）から差し引き、それを
+ * 使い切っている分だけ購入済みのbonusSecondsBalance（月をまたいでも減るまで
+ * 持ち越す）から差し引く。無料プランは対象外（呼び出し元でisProUserを見て
+ * スキップする想定だが、念のためここでも確認する）。
+ */
+async function recordMonthlyMinutesUsage(uid: string, durationSeconds: number): Promise<void> {
+  if (durationSeconds <= 0) return;
+  if (!(await isProUser(uid))) return;
+
+  const db = getFirestore();
+  const usageRef = usageMonthRef(uid);
+  const userRef = db.collection("users").doc(uid);
+
+  await db.runTransaction(async (tx) => {
+    const [usageSnap, userSnap] = await Promise.all([tx.get(usageRef), tx.get(userRef)]);
+    const audioSecondsUsed = (usageSnap.data()?.audioSecondsUsed as number | undefined) ?? 0;
+    const bonusSecondsBalance = (userSnap.data()?.bonusSecondsBalance as number | undefined) ?? 0;
+
+    const monthlyBudgetSeconds = PRO_MONTHLY_MINUTES * 60;
+    const remainingBase = Math.max(0, monthlyBudgetSeconds - audioSecondsUsed);
+    const fromBase = Math.min(durationSeconds, remainingBase);
+    const fromBonus = durationSeconds - fromBase;
+
+    tx.set(
+      usageRef,
+      {
+        audioSecondsUsed: audioSecondsUsed + fromBase,
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+    if (fromBonus > 0) {
+      tx.set(
+        userRef,
+        { bonusSecondsBalance: bonusSecondsBalance - fromBonus },
+        { merge: true }
+      );
+    }
+  });
+}
+
+/** 追加分数パック購入時に、購入者のボーナス残高へ加算する。月をまたいでも
+ * 消費されるまで減らない（月間の基本枠PRO_MONTHLY_MINUTESとは別枠）。 */
+async function grantBonusMinutes(uid: string, seconds: number): Promise<void> {
+  const db = getFirestore();
+  await db
+    .collection("users")
+    .doc(uid)
+    .set({ bonusSecondsBalance: FieldValue.increment(seconds) }, { merge: true });
 }
 
 function hashWatchDeviceSecret(secret: string): string {
@@ -578,10 +692,31 @@ export const getUsageStatus = onCall(
 
     const db = getFirestore();
     const usageRef = db.collection("usage").doc(`${uid}_${jstDateString()}`);
-    const [snap, limit] = await Promise.all([usageRef.get(), dailyLimitFor(uid)]);
+    const [snap, limit, isPro] = await Promise.all([
+      usageRef.get(),
+      dailyLimitFor(uid),
+      isProUser(uid),
+    ]);
     const used = (snap.data()?.count as number | undefined) ?? 0;
 
-    return { used, limit };
+    if (!isPro) {
+      return { used, limit };
+    }
+
+    const [monthSnap, userSnap] = await Promise.all([
+      usageMonthRef(uid).get(),
+      db.collection("users").doc(uid).get(),
+    ]);
+    const monthlyUsedSeconds = (monthSnap.data()?.audioSecondsUsed as number | undefined) ?? 0;
+    const bonusSecondsBalance = (userSnap.data()?.bonusSecondsBalance as number | undefined) ?? 0;
+
+    return {
+      used,
+      limit,
+      monthlyUsedSeconds,
+      monthlyLimitSeconds: PRO_MONTHLY_MINUTES * 60,
+      bonusSecondsBalance,
+    };
   }
 );
 
@@ -771,12 +906,28 @@ export const revenueCatWebhook = onRequest(
 
     try {
       const event = req.body?.event as
-        | { type?: string; app_user_id?: string; entitlement_ids?: string[] }
+        | {
+            type?: string;
+            app_user_id?: string;
+            entitlement_ids?: string[];
+            product_id?: string;
+          }
         | undefined;
       const uid = event?.app_user_id;
       const eventType = event?.type;
       if (!uid || !eventType) {
         res.status(400).send("bad request");
+        return;
+      }
+
+      // 追加分数パック（消費型IAP、エンタイトルメント無し）の購入はPro付与とは
+      // 無関係なので、既存のisPro判定ロジックに触れる前にここで分岐して抜ける。
+      // 既存ロジックは「entitlement_idsが無ければisPro=trueとみなす」フォール
+      // バックを持っており、これを変えずに新しいNON_RENEWING_PURCHASE系の
+      // 商品を追加すると、パック購入者に誤ってProが付与されてしまうため。
+      if (eventType === "NON_RENEWING_PURCHASE" && event?.product_id === EXTRA_MINUTES_PACK_PRODUCT_ID) {
+        await grantBonusMinutes(uid, EXTRA_MINUTES_PACK_SECONDS);
+        res.status(200).send("ok");
         return;
       }
 
@@ -996,6 +1147,21 @@ function buildGlossaryContext(words: CustomWordEntry[], locale: Locale): string 
 interface EnhancedAudio {
   buffer: Buffer;
   mimeType: string;
+  /** 入力音声の実際の長さ（秒）。ffmpegの標準エラー出力にある
+   * "Duration: HH:MM:SS.xx" 行から取得。パースできなければnull
+   * （月間利用量の集計はその回だけスキップする——文字起こし自体は止めない）。 */
+  durationSeconds: number | null;
+}
+
+/** ffmpegの標準エラー出力に含まれる"Duration: HH:MM:SS.xx"を秒数に変換する。
+ * ffprobe等の追加バイナリを増やさず、既に実行しているffmpeg呼び出しの出力を
+ * そのまま流用できる。 */
+function parseFfmpegDurationSeconds(stderr: string | undefined | null): number | null {
+  if (!stderr) return null;
+  const match = /Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(stderr);
+  if (!match) return null;
+  const [, hours, minutes, seconds] = match;
+  return Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds);
 }
 
 /**
@@ -1004,7 +1170,7 @@ interface EnhancedAudio {
  * 処理に失敗した場合は元の音声データのまま続行する（文字起こし自体は止めない）。
  */
 async function enhanceAudio(inputBuffer: Buffer, mimeType: string): Promise<EnhancedAudio> {
-  if (!ffmpegPath) return { buffer: inputBuffer, mimeType };
+  if (!ffmpegPath) return { buffer: inputBuffer, mimeType, durationSeconds: null };
 
   const dir = await mkdtemp(join(tmpdir(), "voicejournal-"));
   const inputPath = join(dir, "input.m4a");
@@ -1012,7 +1178,7 @@ async function enhanceAudio(inputBuffer: Buffer, mimeType: string): Promise<Enha
 
   try {
     await writeFile(inputPath, inputBuffer);
-    await execFileAsync(ffmpegPath, [
+    const { stderr } = await execFileAsync(ffmpegPath, [
       "-y",
       "-i",
       inputPath,
@@ -1025,10 +1191,15 @@ async function enhanceAudio(inputBuffer: Buffer, mimeType: string): Promise<Enha
       outputPath,
     ]);
     const buffer = await readFile(outputPath);
-    return { buffer, mimeType: "audio/wav" };
+    return {
+      buffer,
+      mimeType: "audio/wav",
+      durationSeconds: parseFfmpegDurationSeconds(stderr),
+    };
   } catch (err) {
     logger.warn("enhanceAudio failed, using original audio", err);
-    return { buffer: inputBuffer, mimeType };
+    const stderr = (err as { stderr?: string } | null)?.stderr;
+    return { buffer: inputBuffer, mimeType, durationSeconds: parseFfmpegDurationSeconds(stderr) };
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -1289,10 +1460,14 @@ export const processVoiceMemo = onCall(
       }
 
       await consumeDailyQuota(uid, loc);
+      await checkMonthlyMinutesBudget(uid, loc);
 
       const apiKey = openAiApiKey.value();
       const rawAudioBuffer = Buffer.from(audioBase64, "base64");
       const enhanced = await enhanceAudio(rawAudioBuffer, mimeType ?? "audio/m4a");
+      if (enhanced.durationSeconds !== null) {
+        await recordMonthlyMinutesUsage(uid, enhanced.durationSeconds);
+      }
       const words = normalizeCustomWords(customWords);
       const prompt = buildTranscriptionPrompt(words, loc);
 

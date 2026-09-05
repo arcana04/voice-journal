@@ -169,6 +169,7 @@
   "paywallBenefitCountBefore": "3 / day",
   "paywallBenefitCountAfter": "30 / day",
   "paywallBenefitCountDesc": "Capture every thought, whenever it strikes",
+  "paywallMonthlyCapNote": "* Total recording time is capped at 240 minutes per month. If you reach the limit, you can buy an extra minutes pack to keep going.",
   "paywallBenefitCustomBackgroundTitle": "Add ",
   "paywallBenefitCustomBackgroundHighlight": "your own photo",
   "paywallBenefitCustomBackgroundDesc": "Make every entry feel like yours",
@@ -192,13 +193,30 @@
   "paywallPlanAnnual": "Annual",
   "paywallPlanLifetime": "Lifetime",
   "paywallPlanRecommended": "Recommended",
-  "paywallPlanLifetimeCaption": "Everything except cloud photo/video sync",
+  "paywallPlanLifetimeCaption": "Cloud photo/video sync not included",
   "paywallPlanComingSoon": "Coming soon",
   "paywallContinueButton": "Continue",
 
   "homeUsageToday": "Today {used} / {limit}",
   "@homeUsageToday": {
     "placeholders": { "used": { "type": "int" }, "limit": { "type": "int" } }
+  },
+  "homeUsageMonth": "This month {usedMinutes} / {limitMinutes} min",
+  "@homeUsageMonth": {
+    "placeholders": {
+      "usedMinutes": { "type": "int" },
+      "limitMinutes": { "type": "int" }
+    }
+  },
+  "buyMinutesCta": "Buy more minutes",
+  "buyMinutesTitle": "Buy extra minutes",
+  "buyMinutesDescription": "You've reached this month's recording-time limit. Buy an extra minutes pack to keep recording right away, without waiting for next month.",
+  "buyMinutesUnavailable": "The extra minutes pack isn't available right now. Please try again later.",
+  "buyMinutesPurchaseFailed": "The purchase failed. Please try again.",
+  "buyMinutesPurchaseSuccess": "Extra minutes added. You can keep recording now.",
+  "buyMinutesPurchaseButton": "Buy +60 min ({price})",
+  "@buyMinutesPurchaseButton": {
+    "placeholders": { "price": { "type": "String" } }
   },
   "notificationSectionTitle": "Notifications",
   "reminderNotificationsTitle": "Reminder notifications",

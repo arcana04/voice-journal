@@ -484,6 +484,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Capture every thought, whenever it strikes';
 
   @override
+  String get paywallMonthlyCapNote =>
+      '* Total recording time is capped at 240 minutes per month. If you reach the limit, you can buy an extra minutes pack to keep going.';
+
+  @override
   String get paywallBenefitCustomBackgroundTitle => 'Add ';
 
   @override
@@ -561,7 +565,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paywallPlanLifetimeCaption =>
-      'Everything except cloud photo/video sync';
+      'Cloud photo/video sync not included';
 
   @override
   String get paywallPlanComingSoon => 'Coming soon';
@@ -572,6 +576,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String homeUsageToday(int used, int limit) {
     return 'Today $used / $limit';
+  }
+
+  @override
+  String homeUsageMonth(int usedMinutes, int limitMinutes) {
+    return 'This month $usedMinutes / $limitMinutes min';
+  }
+
+  @override
+  String get buyMinutesCta => 'Buy more minutes';
+
+  @override
+  String get buyMinutesTitle => 'Buy extra minutes';
+
+  @override
+  String get buyMinutesDescription =>
+      'You\'ve reached this month\'s recording-time limit. Buy an extra minutes pack to keep recording right away, without waiting for next month.';
+
+  @override
+  String get buyMinutesUnavailable =>
+      'The extra minutes pack isn\'t available right now. Please try again later.';
+
+  @override
+  String get buyMinutesPurchaseFailed =>
+      'The purchase failed. Please try again.';
+
+  @override
+  String get buyMinutesPurchaseSuccess =>
+      'Extra minutes added. You can keep recording now.';
+
+  @override
+  String buyMinutesPurchaseButton(String price) {
+    return 'Buy +60 min ($price)';
   }
 
   @override

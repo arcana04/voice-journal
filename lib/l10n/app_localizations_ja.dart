@@ -466,6 +466,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get paywallBenefitCountDesc => '思いついた時に、いつでもたくさん使える';
 
   @override
+  String get paywallMonthlyCapNote =>
+      '※録音時間は月の合計で240分までです。上限に達した場合は、追加の録音パックを購入して続けて使えます。';
+
+  @override
   String get paywallBenefitCustomBackgroundTitle => '日記背景に';
 
   @override
@@ -535,7 +539,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get paywallPlanRecommended => 'おすすめ';
 
   @override
-  String get paywallPlanLifetimeCaption => '写真・動画のクラウド同期以外は使い放題';
+  String get paywallPlanLifetimeCaption => '写真・動画のクラウド同期は対象外';
 
   @override
   String get paywallPlanComingSoon => '近日公開';
@@ -546,6 +550,35 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String homeUsageToday(int used, int limit) {
     return '本日 $used / $limit回';
+  }
+
+  @override
+  String homeUsageMonth(int usedMinutes, int limitMinutes) {
+    return '今月 $usedMinutes / $limitMinutes分';
+  }
+
+  @override
+  String get buyMinutesCta => '追加パックを購入';
+
+  @override
+  String get buyMinutesTitle => '追加分数を購入';
+
+  @override
+  String get buyMinutesDescription =>
+      '今月の録音時間の上限に達しました。追加の録音パックを購入すれば、来月まで待たずにすぐ録音を続けられます。';
+
+  @override
+  String get buyMinutesUnavailable => '現在、追加パックを購入できません。しばらくしてからもう一度お試しください。';
+
+  @override
+  String get buyMinutesPurchaseFailed => '購入に失敗しました。もう一度お試しください。';
+
+  @override
+  String get buyMinutesPurchaseSuccess => '追加分数を反映しました。続けて録音できます。';
+
+  @override
+  String buyMinutesPurchaseButton(String price) {
+    return '+60分を購入（$price）';
   }
 
   @override
