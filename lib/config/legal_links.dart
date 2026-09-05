@@ -6,5 +6,5 @@
 class LegalLinks {
   static const String termsOfServiceUrl = 'https://voicejournal-bbafa.web.app/terms.html';
   static const String privacyPolicyUrl = 'https://voicejournal-bbafa.web.app/privacy.html';
-  static const String supportEmail = 'voicejournal1004@gmail.com';
+  static const String supportEmail = 'VoiceBrain1004@gmail.com';
 }
