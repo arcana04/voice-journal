@@ -724,24 +724,49 @@ export const getUsageStatus = onCall(
  * 対象に、[uid]と抽出してマッチさせる。それ以外のパスにはマッチしない。 */
 const MEDIA_OBJECT_PATH_RE = /^users\/([^/]+)\/entries\/[^/]+\/media\/[^/]+$/;
 
-async function adjustMediaBytesUsed(uid: string, deltaBytes: number): Promise<void> {
-  if (deltaBytes === 0) return;
+/** users/{uid}.mediaBytesUsedを加算/減算し、更新後の値を返す。トランザクション
+ * にしているのは、onMediaObjectFinalizedが更新直後の値を見て5GB上限
+ * （MEDIA_STORAGE_CAP_BYTES）超過を判定する必要があるため
+ * （FieldValue.incrementだけでは呼び出し側が結果値を取得できない）。 */
+async function adjustMediaBytesUsed(uid: string, deltaBytes: number): Promise<number> {
   const db = getFirestore();
-  await db
-    .collection("users")
-    .doc(uid)
-    .set(
-      { mediaBytesUsed: FieldValue.increment(deltaBytes) },
-      { merge: true }
-    );
+  const userRef = db.collection("users").doc(uid);
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(userRef);
+    const current = (snap.data()?.mediaBytesUsed as number | undefined) ?? 0;
+    const next = Math.max(0, current + deltaBytes);
+    tx.set(userRef, { mediaBytesUsed: next }, { merge: true });
+    return next;
+  });
 }
 
 /** 写真・動画のアップロード完了のたびに、そのユーザーの合計使用量
- * （users/{uid}.mediaBytesUsed）を加算する。 */
+ * （users/{uid}.mediaBytesUsed）を加算する。Storage Security Rulesは
+ * Firestoreの集計値をクロスサービス参照できず、1ファイルごとのサイズしか
+ * 判定できないため、合計5GB上限（MEDIA_STORAGE_CAP_BYTES）はここで
+ * 事後的に強制する——上限を超えた場合、アップロードされたファイル自体を
+ * 削除して差し戻す（削除は下のonMediaObjectDeletedを発火させ、
+ * mediaBytesUsedも正しく戻る）。以前はこの上限がクライアント表示用の
+ * 数字でしかなく、有効なPro認証さえあれば理論上無制限にアップロードできて
+ * しまう抜け穴だった（2026-09-05に修正）。 */
 export const onMediaObjectFinalized = onObjectFinalized(async (event) => {
   const match = MEDIA_OBJECT_PATH_RE.exec(event.data.name);
   if (!match) return;
-  await adjustMediaBytesUsed(match[1], Number(event.data.size ?? 0));
+  const uid = match[1];
+  const newTotal = await adjustMediaBytesUsed(uid, Number(event.data.size ?? 0));
+
+  if (newTotal > MEDIA_STORAGE_CAP_BYTES) {
+    try {
+      await getStorage().bucket(event.data.bucket).file(event.data.name).delete();
+      logger.warn("media storage cap exceeded, deleted upload", {
+        uid,
+        file: event.data.name,
+        newTotal,
+      });
+    } catch (err) {
+      logger.error("failed to delete over-cap media upload", { uid, err });
+    }
+  }
 });
 
 /** 写真・動画の削除のたびに、そのユーザーの合計使用量を差し引く。 */
@@ -849,41 +874,56 @@ async function setUserMediaStorageClass(
 }
 
 /**
- * users/{uid}.isPro とカスタムクレームを更新する共通処理。RevenueCatのWebhook
- * （revenueCatWebhook）と、クライアント起点の自己修復用同期（syncProStatus、
- * webhook配信が届かなかった場合のフォールバック）の両方から呼ばれる。
+ * users/{uid}.isPro/hasMediaSync とカスタムクレームを更新する共通処理。
+ * RevenueCatのWebhook（revenueCatWebhook）と、クライアント起点の自己修復用
+ * 同期（syncProStatus、webhook配信が届かなかった場合のフォールバック）の
+ * 両方から呼ばれる。
+ *
+ * [hasMediaSync]はisProとは別軸——写真・動画のクラウド同期は継続的な
+ * Storage課金が発生する機能なので、単発収益の買い切りプランには提供しない
+ * 方針（PurchaseService.hasMediaSyncEntitlement()のクライアント側チェックと
+ * 同じ「有効期限があるサブスクかどうか」で判定）。以前はStorage Security
+ * Rulesが`isPro`カスタムクレームだけを見ており、買い切み購入者を区別
+ * できていなかった（クライアントのUIが出し分けているだけで、サーバー側の
+ * 強制ではなかった）ため、この専用クレームを追加した（2026-09-05）。
  */
 async function applyProStatus(
   uid: string,
   isPro: boolean,
+  hasMediaSync: boolean,
   source: string
 ): Promise<void> {
   const db = getFirestore();
   const userRef = db.collection("users").doc(uid);
-  const previousIsPro = (await userRef.get()).data()?.isPro === true;
+  const previousData = (await userRef.get()).data();
+  const previousHasMediaSync = previousData?.hasMediaSync === true;
   await userRef.set(
     {
       isPro,
+      hasMediaSync,
       revenueCatSource: source,
       revenueCatUpdatedAt: FieldValue.serverTimestamp(),
     },
     { merge: true }
   );
   // Storage Security Rulesはfirestore.get()によるクロスサービス参照が
-  // 使えないため、カスタムクレームでisProを持たせて`request.auth.token.isPro`
+  // 使えないため、カスタムクレームで持たせて`request.auth.token.hasMediaSync`
   // として直接参照できるようにする（Firestore側のisProUser()はこれまで通り
   // Firestoreドキュメントを見る）。
   try {
-    await getAuth().setCustomUserClaims(uid, { isPro });
+    await getAuth().setCustomUserClaims(uid, { isPro, hasMediaSync });
   } catch (claimErr) {
     logger.error("applyProStatus setCustomUserClaims failed", claimErr);
   }
 
   // 失効/復帰の「遷移」のときだけメディアのストレージクラスを移動する
   // （書き換えのたびに課金が発生するオペレーションなので不要な実行を避ける）。
-  if (isPro && !previousIsPro) {
+  // isProではなくhasMediaSyncの遷移で判定する——買い切み購入者はisProが
+  // trueのままメディア同期の対象外なので、そもそも移動対象のファイルを
+  // 持たない想定。
+  if (hasMediaSync && !previousHasMediaSync) {
     await setUserMediaStorageClass(uid, "STANDARD");
-  } else if (!isPro && previousIsPro) {
+  } else if (!hasMediaSync && previousHasMediaSync) {
     await setUserMediaStorageClass(uid, "COLDLINE");
   }
 }
@@ -911,6 +951,9 @@ export const revenueCatWebhook = onRequest(
             app_user_id?: string;
             entitlement_ids?: string[];
             product_id?: string;
+            /** 非nullなら有効期限つき＝サブスク、nullなら買い切み等の
+             * 非失効購入。RevenueCat Webhookのイベントペイロードに含まれる。 */
+            expiration_at_ms?: number | null;
           }
         | undefined;
       const uid = event?.app_user_id;
@@ -948,7 +991,11 @@ export const revenueCatWebhook = onRequest(
           activeEventTypes.has(eventType) &&
           (!event?.entitlement_ids ||
             event.entitlement_ids.includes(PRO_ENTITLEMENT_ID));
-        await applyProStatus(uid, isPro, `webhook:${eventType}`);
+        const hasMediaSync =
+          isPro &&
+          event?.expiration_at_ms !== null &&
+          event?.expiration_at_ms !== undefined;
+        await applyProStatus(uid, isPro, hasMediaSync, `webhook:${eventType}`);
       }
 
       res.status(200).send("ok");
@@ -1019,8 +1066,11 @@ export const syncProStatus = onCall(
       !!entitlement &&
       (entitlement.expires_date === null ||
         new Date(entitlement.expires_date).getTime() > Date.now());
+    // 買い切みプラン（expires_date: null）はisProではあるがメディア同期の
+    // 対象外——applyProStatusのhasMediaSync解説コメント参照。
+    const hasMediaSync = isPro && entitlement?.expires_date !== null;
 
-    await applyProStatus(uid, isPro, "client-sync");
+    await applyProStatus(uid, isPro, hasMediaSync, "client-sync");
     return { isPro };
   }
 );

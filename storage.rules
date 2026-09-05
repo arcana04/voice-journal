@@ -8,16 +8,30 @@ service firebase.storage {
     // Proユーザーのみ許可。Storage Rulesはfirestore.get()によるFirestoreへの
     // クロスサービス参照が使えないため、カスタムクレームで判定する
     // （revenueCatWebhook Cloud Functionが購入イベントのたびに
-    // getAuth().setCustomUserClaims(uid, { isPro }) を呼んで更新する。
-    // クライアントからは書き換え不可）。
+    // getAuth().setCustomUserClaims(uid, { isPro, hasMediaSync }) を呼んで
+    // 更新する。クライアントからは書き換え不可）。
     function isPro() {
       return request.auth.token.isPro == true;
     }
 
-    // 日記に添付した写真・動画のクラウドバックアップ（Pro限定機能）。
+    // 写真・動画のクラウド同期は継続的なStorage課金が発生する機能のため、
+    // サブスク（月額/年額）限定——買い切みプラン（isProはtrueだが有効期限が
+    // ないため対象外）には提供しない方針。以前はisPro()だけで判定しており
+    // 買い切み購入者を区別できていなかった（クライアントUIが出し分けて
+    // いるだけでサーバー側の強制ではなかった）ため、専用クレームを追加した
+    // （2026-09-05）。
+    function hasMediaSync() {
+      return request.auth.token.hasMediaSync == true;
+    }
+
+    // 日記に添付した写真・動画のクラウドバックアップ（サブスク限定機能）。
+    // 合計容量の5GB上限（MEDIA_STORAGE_CAP_BYTES）はここでは判定できない
+    // （Firestoreの集計値をクロスサービス参照できないため）——
+    // functions/src/index.tsのonMediaObjectFinalizedが、アップロード後に
+    // 上限超過を検知して当該ファイルを削除する形で事後的に強制する。
     match /users/{uid}/entries/{entryId}/media/{fileName} {
       allow read: if isOwner(uid) && isPro();
-      allow create, update: if isOwner(uid) && isPro()
+      allow create, update: if isOwner(uid) && hasMediaSync()
         && request.resource.size < 100 * 1024 * 1024;
       allow delete: if isOwner(uid) && isPro();
     }
