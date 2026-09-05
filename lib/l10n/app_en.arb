@@ -14,7 +14,11 @@
   "onboardingPage1Title": "The moment it crosses your mind,\njust say it out loud",
   "onboardingPage1Body": "Tap the record button and speak — Voice Brain takes care of the rest",
   "onboardingPage2Title": "AI sorts it out for you",
-  "onboardingPage2Body": "What you say is automatically sorted into a diary entry, idea, or task",
+  "onboardingPage2Body": "What you say is transcribed by AI and automatically sorted into a diary entry, idea, or task. Your voice is handled securely, as data that belongs only to you.",
+  "onboardingFreeTierTitle": "Free to start using right away",
+  "onboardingFreeTierBody": "The free plan includes 3 recordings a day, up to 60 seconds each. Want more? Check out the Pro plan for longer, more frequent recording.",
+  "onboardingMicTitle": "We'll need microphone access",
+  "onboardingMicBody": "Voice Brain uses your microphone to record. When the permission prompt appears next, please tap \"Allow.\"",
   "onboardingPage3Title": "Let's get started",
   "onboardingPage3Body": "Whenever something's on your mind, just tap and talk",
 

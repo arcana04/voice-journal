@@ -14,7 +14,11 @@
   "onboardingPage1Title": "思いついた瞬間に、\nつぶやくだけ",
   "onboardingPage1Body": "録音ボタンをタップして話すだけで、Voice Brainが記録してくれます",
   "onboardingPage2Title": "AIが自動で仕分けします",
-  "onboardingPage2Body": "話した内容から、日記・アイデア・タスクに自動で振り分けます",
+  "onboardingPage2Body": "話した内容をAIが文字起こしして、日記・アイデア・タスクに自動で振り分けます。あなたの声はご自身専用のデータとして安全に扱われます。",
+  "onboardingFreeTierTitle": "無料でも今すぐ使えます",
+  "onboardingFreeTierBody": "1日3回・1回60秒まで無料でお使いいただけます。もっとたくさん、長く話したくなったらProプランもご用意しています。",
+  "onboardingMicTitle": "マイクへのアクセスをお願いします",
+  "onboardingMicBody": "録音のためにマイクを使用します。このあと表示される確認画面で「許可」を選んでください。",
   "onboardingPage3Title": "さあ、はじめましょう",
   "onboardingPage3Body": "気になったことがあれば、いつでもタップして話しかけてください",
 

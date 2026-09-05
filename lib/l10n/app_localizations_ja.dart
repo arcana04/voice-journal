@@ -46,7 +46,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get onboardingPage2Title => 'AIが自動で仕分けします';
 
   @override
-  String get onboardingPage2Body => '話した内容から、日記・アイデア・タスクに自動で振り分けます';
+  String get onboardingPage2Body =>
+      '話した内容をAIが文字起こしして、日記・アイデア・タスクに自動で振り分けます。あなたの声はご自身専用のデータとして安全に扱われます。';
+
+  @override
+  String get onboardingFreeTierTitle => '無料でも今すぐ使えます';
+
+  @override
+  String get onboardingFreeTierBody =>
+      '1日3回・1回60秒まで無料でお使いいただけます。もっとたくさん、長く話したくなったらProプランもご用意しています。';
+
+  @override
+  String get onboardingMicTitle => 'マイクへのアクセスをお願いします';
+
+  @override
+  String get onboardingMicBody => '録音のためにマイクを使用します。このあと表示される確認画面で「許可」を選んでください。';
 
   @override
   String get onboardingPage3Title => 'さあ、はじめましょう';

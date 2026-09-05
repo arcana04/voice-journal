@@ -50,7 +50,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingPage2Body =>
-      'What you say is automatically sorted into a diary entry, idea, or task';
+      'What you say is transcribed by AI and automatically sorted into a diary entry, idea, or task. Your voice is handled securely, as data that belongs only to you.';
+
+  @override
+  String get onboardingFreeTierTitle => 'Free to start using right away';
+
+  @override
+  String get onboardingFreeTierBody =>
+      'The free plan includes 3 recordings a day, up to 60 seconds each. Want more? Check out the Pro plan for longer, more frequent recording.';
+
+  @override
+  String get onboardingMicTitle => 'We\'ll need microphone access';
+
+  @override
+  String get onboardingMicBody =>
+      'Voice Brain uses your microphone to record. When the permission prompt appears next, please tap \"Allow.\"';
 
   @override
   String get onboardingPage3Title => 'Let\'s get started';

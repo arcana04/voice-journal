@@ -16,7 +16,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _controller = PageController();
   int _page = 0;
 
-  static const _pageCount = 3;
+  static const _pageCount = 5;
 
   @override
   void dispose() {
@@ -75,6 +75,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     title: l10n.onboardingPage2Title,
                     body: l10n.onboardingPage2Body,
                     trailing: const _SortPreviewIcons(),
+                  ),
+                  _OnboardingPage(
+                    icon: Icons.card_giftcard_rounded,
+                    title: l10n.onboardingFreeTierTitle,
+                    body: l10n.onboardingFreeTierBody,
+                  ),
+                  _OnboardingPage(
+                    icon: Icons.mic_none_rounded,
+                    title: l10n.onboardingMicTitle,
+                    body: l10n.onboardingMicBody,
                   ),
                   _OnboardingPage(
                     icon: Icons.waving_hand,
@@ -153,36 +163,46 @@ class _OnboardingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 96,
-            height: 96,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer,
-              shape: BoxShape.circle,
+    // 本文が長いページ(プライバシー説明・無料枠説明など)が小さい画面で
+    // オーバーフローしないよう、はみ出す場合だけスクロール可能にする
+    // （収まる画面では従来通り中央寄せに見える）。
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: IntrinsicHeight(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, size: 44, color: theme.colorScheme.onPrimaryContainer),
+                ),
+                const SizedBox(height: 32),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  body,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                if (trailing != null) ...[const SizedBox(height: 32), trailing!],
+              ],
             ),
-            child: Icon(icon, size: 44, color: theme.colorScheme.onPrimaryContainer),
           ),
-          const SizedBox(height: 32),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            body,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          if (trailing != null) ...[const SizedBox(height: 32), trailing!],
-        ],
+        ),
       ),
     );
   }

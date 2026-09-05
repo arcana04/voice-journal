@@ -173,8 +173,32 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingPage2Body.
   ///
   /// In en, this message translates to:
-  /// **'What you say is automatically sorted into a diary entry, idea, or task'**
+  /// **'What you say is transcribed by AI and automatically sorted into a diary entry, idea, or task. Your voice is handled securely, as data that belongs only to you.'**
   String get onboardingPage2Body;
+
+  /// No description provided for @onboardingFreeTierTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free to start using right away'**
+  String get onboardingFreeTierTitle;
+
+  /// No description provided for @onboardingFreeTierBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The free plan includes 3 recordings a day, up to 60 seconds each. Want more? Check out the Pro plan for longer, more frequent recording.'**
+  String get onboardingFreeTierBody;
+
+  /// No description provided for @onboardingMicTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll need microphone access'**
+  String get onboardingMicTitle;
+
+  /// No description provided for @onboardingMicBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Brain uses your microphone to record. When the permission prompt appears next, please tap \"Allow.\"'**
+  String get onboardingMicBody;
 
   /// No description provided for @onboardingPage3Title.
   ///
