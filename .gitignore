@@ -44,6 +44,13 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Androidリリース署名鍵。紛失するとPlay Storeで同じアプリを二度と更新できなくなる
+# 重大な秘密情報なので、パスワードも含め絶対にコミットしない（別途安全な場所に
+# バックアップすること）。
+/android/key.properties
+*.jks
+*.keystore
+
 # Widget Preview related
 .widget_preview/
 
