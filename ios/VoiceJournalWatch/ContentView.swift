@@ -10,6 +10,7 @@ private enum FlowState {
     case idle
     case uploading
     case reviewing(ReviewContext)
+    case saved
     case error(String)
 }
 
@@ -27,6 +28,10 @@ struct ContentView: View {
     @State private var flow: FlowState = .idle
     @State private var draftItems: [DraftItem] = []
     @State private var isSaving = false
+    /// 録音前の「何について話すか」の絞り込み。iPhone側(home_screen.dartの
+    /// _selectedCategories)と同じルール: 常に1つ以上は選択された状態を保ち、
+    /// 使い終えたら次の録音のために全選択へ戻す。
+    @State private var selectedCategories: Set<EntryCategory> = Set(EntryCategory.allCases)
 
     var body: some View {
         VStack(spacing: 10) {
@@ -54,6 +59,9 @@ struct ContentView: View {
     private var content: some View {
         switch flow {
         case .idle:
+            if !recorder.isRecording {
+                categoryFilterRow
+            }
             recordButton
             if recorder.isRecording {
                 Text(elapsedLabel)
@@ -68,6 +76,13 @@ struct ContentView: View {
                 .foregroundColor(.secondary)
         case .reviewing(let context):
             reviewView(context: context)
+        case .saved:
+            Image(systemName: "checkmark.circle.fill")
+                .resizable()
+                .frame(width: 40, height: 40)
+                .foregroundColor(.green)
+            Text("保存できました")
+                .font(.footnote)
         case .error(let message):
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundColor(.red)
@@ -83,6 +98,35 @@ struct ContentView: View {
     private var elapsedLabel: String {
         let seconds = recorder.elapsedSeconds
         return String(format: "%d:%02d", seconds / 60, seconds % 60)
+    }
+
+    /// 「何について話すか」を録音前に絞り込むチップ。iPhone側の
+    /// _CategoryFilterRow(home_screen.dart)に相当する、Watch向けの
+    /// アイコンのみの小さいトグルボタン版。
+    private var categoryFilterRow: some View {
+        HStack(spacing: 6) {
+            ForEach(EntryCategory.allCases, id: \.self) { category in
+                let isSelected = selectedCategories.contains(category)
+                Button(action: { toggleCategory(category) }) {
+                    Image(systemName: category.iconName)
+                        .font(.footnote)
+                        .frame(width: 34, height: 26)
+                }
+                .buttonStyle(.bordered)
+                .tint(isSelected ? .accentColor : .gray)
+            }
+        }
+    }
+
+    /// 少なくとも1つは選択された状態を保つ(iPhone側の_toggleCategoryと同じルール)。
+    private func toggleCategory(_ category: EntryCategory) {
+        if selectedCategories.contains(category) {
+            if selectedCategories.count > 1 {
+                selectedCategories.remove(category)
+            }
+        } else {
+            selectedCategories.insert(category)
+        }
     }
 
     private var recordButton: some View {
@@ -147,7 +191,13 @@ struct ContentView: View {
                 )
                 await MainActor.run {
                     isSaving = false
-                    flow = .idle
+                    flow = .saved
+                }
+                try? await Task.sleep(nanoseconds: 1_200_000_000)
+                await MainActor.run {
+                    if case .saved = flow {
+                        flow = .idle
+                    }
                 }
             } catch {
                 await MainActor.run {
@@ -161,10 +211,17 @@ struct ContentView: View {
     private func toggleRecording() {
         if recorder.isRecording {
             guard let url = recorder.stop() else { return }
+            // 今回の絞り込みをアップロードに使う分だけ確保してから、次の録音のために
+            // チップを全選択へ戻す(iPhone側home_screen.dartの_toggleRecordingと同じ流れ)。
+            let allowedForThisUpload = selectedCategories
+            selectedCategories = Set(EntryCategory.allCases)
             flow = .uploading
             Task {
                 do {
-                    let result = try await VoiceMemoUploader.upload(audioFileURL: url)
+                    let result = try await VoiceMemoUploader.upload(
+                        audioFileURL: url,
+                        allowedCategories: allowedForThisUpload
+                    )
                     let createdAt = Date()
                     let entryId = EntryStore.generateEntryId()
                     // まずAIの分類結果をそのまま保存する(データを失わないことを優先)。

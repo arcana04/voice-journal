@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
 import '../widgets/app_background_image.dart';
+import '../widgets/screen_label_badge.dart';
 import '../widgets/scrim_text.dart';
 import '../widgets/task_entry_card.dart';
 import 'manual_task_screen.dart';
@@ -146,6 +147,9 @@ class _TaskScreenState extends State<TaskScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                ScreenLabelBadge(
+                  label: AppLocalizations.of(context)!.navTask,
+                ),
                 _buildFilterRow(theme),
                 Expanded(
                   child: Consumer<JournalStore>(

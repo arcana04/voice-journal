@@ -7,6 +7,7 @@ import '../models/journal_entry.dart';
 import '../state/journal_store.dart';
 import '../widgets/app_background_image.dart';
 import '../widgets/idea_entry_card.dart';
+import '../widgets/screen_label_badge.dart';
 import '../widgets/scrim_text.dart';
 import 'idea_edit_screen.dart';
 import 'manual_idea_screen.dart';
@@ -167,6 +168,9 @@ class _IdeaScreenState extends State<IdeaScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                ScreenLabelBadge(
+                  label: AppLocalizations.of(context)!.navIdea,
+                ),
                 _buildSearchField(theme),
                 _buildFilterRow(theme),
                 Expanded(

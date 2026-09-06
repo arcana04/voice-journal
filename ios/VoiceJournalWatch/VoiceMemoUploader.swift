@@ -34,7 +34,11 @@ struct ProcessVoiceMemoResult: Decodable {
 /// Authorizationヘッダーに加え、functions/src/index.tsの
 /// verifyWatchDeviceSecretが検証するX-Watch-Device-*ヘッダーを付与する。
 enum VoiceMemoUploader {
-    static func upload(audioFileURL: URL, locale: String = "ja") async throws -> ProcessVoiceMemoResult {
+    static func upload(
+        audioFileURL: URL,
+        locale: String = "ja",
+        allowedCategories: Set<EntryCategory> = Set(EntryCategory.allCases)
+    ) async throws -> ProcessVoiceMemoResult {
         guard let creds = await FirebaseAuthClient.shared.deviceCredentials else {
             throw UploadError.notPaired
         }
@@ -53,6 +57,9 @@ enum VoiceMemoUploader {
                 "audioBase64": audioData.base64EncodedString(),
                 "mimeType": "audio/m4a",
                 "locale": locale,
+                // iPhone側(lib/services/backend_service.dart)と同じワイヤー形式
+                // (EntryCategory.rawValueがdiary/idea/taskでReviewCategory.wireValueと一致)。
+                "allowedCategories": allowedCategories.map { $0.rawValue },
             ],
         ])
 
