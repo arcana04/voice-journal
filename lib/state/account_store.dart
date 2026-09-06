@@ -10,7 +10,13 @@ import '../services/db_service.dart';
 /// アカウント連携エラーの理由。UI側でメッセージ出し分けに使う。
 class AccountException implements Exception {
   final AccountErrorReason reason;
-  AccountException(this.reason);
+  // 表示用にはreasonで大雑把に丸めるが、調査中はこちらで元の例外の
+  // code/messageを確認できるようにしておく。
+  final Object? cause;
+  AccountException(this.reason, [this.cause]);
+
+  @override
+  String toString() => 'AccountException($reason, cause: $cause)';
 }
 
 enum AccountErrorReason { networkError, unknown }
@@ -84,7 +90,7 @@ class AccountStore extends ChangeNotifier {
         return result.user!.uid;
       }
     } on FirebaseAuthException catch (e) {
-      throw AccountException(_reasonFor(e));
+      throw AccountException(_reasonFor(e), e);
     }
   }
 
@@ -120,6 +126,7 @@ class AccountStore extends ChangeNotifier {
         e.code == 'unavailable' || e.code == 'deadline-exceeded'
             ? AccountErrorReason.networkError
             : AccountErrorReason.unknown,
+        e,
       );
     }
     await DbService.instance.wipeAllLocalData();
