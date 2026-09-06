@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -44,7 +46,19 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  Future<void> _showError(Object error) async {
+  Future<void> _showError(Object error, [StackTrace? stackTrace]) async {
+    // アプリ側では原因を種類ごとに大雑把な文言に丸めて表示するため、Apple
+    // サインイン失敗などの生の原因（FirebaseAuthExceptionのcode等）が画面上
+    // からは分からなくなる。Crashlytics(非致命)に残しておき、後から実際の
+    // エラー内容をダッシュボードで確認できるようにする。
+    unawaited(
+      FirebaseCrashlytics.instance.recordError(
+        error,
+        stackTrace,
+        reason: 'account_screen',
+        fatal: false,
+      ),
+    );
     final l10n = AppLocalizations.of(context)!;
     final message = error is AccountException
         ? _messageFor(l10n, error.reason)
@@ -75,8 +89,8 @@ class _AccountScreenState extends State<AccountScreen> {
       await _afterAuthSuccess(uid);
     } on SignInCancelledException {
       // ユーザーがピッカーを閉じただけなのでエラー表示はしない。
-    } catch (e) {
-      await _showError(e);
+    } catch (e, st) {
+      await _showError(e, st);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -91,8 +105,8 @@ class _AccountScreenState extends State<AccountScreen> {
       await _afterAuthSuccess(uid);
     } on SignInCancelledException {
       // ユーザーが認証をキャンセルしただけなのでエラー表示はしない。
-    } catch (e) {
-      await _showError(e);
+    } catch (e, st) {
+      await _showError(e, st);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -164,8 +178,8 @@ class _AccountScreenState extends State<AccountScreen> {
       await _showMessage(l10n.accountDeleteCompleteTitle, l10n.accountDeleteCompleteMessage);
       if (!mounted) return;
       Navigator.of(context).pop();
-    } catch (e) {
-      await _showError(e);
+    } catch (e, st) {
+      await _showError(e, st);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -182,8 +196,8 @@ class _AccountScreenState extends State<AccountScreen> {
     } on WatchPairingException catch (e) {
       if (!mounted) return;
       await _showMessage(l10n.accountErrorTitle, e.message);
-    } catch (e) {
-      await _showError(e);
+    } catch (e, st) {
+      await _showError(e, st);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
