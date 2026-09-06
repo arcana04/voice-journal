@@ -58,14 +58,25 @@ class AccountStore extends ChangeNotifier {
     }
   }
 
-  /// [credential]で認証する。現在が匿名ユーザーならまずそのアカウントへ
-  /// リンクを試み（uidが変わらないため既存のPro状態・利用回数トラッキングは
-  /// そのまま引き継がれる）、そのクレデンシャルが既に別の既存アカウントに
-  /// 紐付いている場合（2台目の端末で同じGoogle/Appleアカウントを選んだ場合
-  /// など）は、そちらの既存アカウントへのサインインにフォールバックする。
-  /// 戻り値は最終的なuid。
-  Future<String> signInWithCredential(AuthCredential credential) async {
+  /// [credentialProvider]が返すクレデンシャルで認証する。現在が匿名ユーザー
+  /// ならまずそのアカウントへリンクを試み（uidが変わらないため既存のPro状態・
+  /// 利用回数トラッキングはそのまま引き継がれる）、そのクレデンシャルが既に
+  /// 別の既存アカウントに紐付いている場合（2台目の端末で同じGoogle/Apple
+  /// アカウントを選んだ場合など）は、そちらの既存アカウントへのサインインに
+  /// フォールバックする。戻り値は最終的なuid。
+  ///
+  /// クレデンシャルを呼び出し元から関数として受け取るのは、Appleの
+  /// クレデンシャルはリプレイ対策のnonceを含んでおり、一度
+  /// linkWithCredentialに使うとFirebase側でそのnonceが消費済み扱いになる
+  /// ため——同じインスタンスをフォールバックのsignInWithCredentialに使い回すと
+  /// missing-or-invalid-nonce（"Duplicate credential received"）で必ず失敗
+  /// する。フォールバック時は[credentialProvider]を呼び直して新しい
+  /// クレデンシャルを取得する。
+  Future<String> signInWithCredential(
+    Future<AuthCredential> Function() credentialProvider,
+  ) async {
     try {
+      final credential = await credentialProvider();
       final user = FirebaseAuth.instance.currentUser;
       if (user == null || !user.isAnonymous) {
         final result = await FirebaseAuth.instance.signInWithCredential(
@@ -83,8 +94,9 @@ class AccountStore extends ChangeNotifier {
             e.code != 'email-already-in-use') {
           rethrow;
         }
+        final freshCredential = await credentialProvider();
         final result = await FirebaseAuth.instance.signInWithCredential(
-          credential,
+          freshCredential,
         );
         notifyListeners();
         return result.user!.uid;

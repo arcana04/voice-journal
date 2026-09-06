@@ -47,12 +47,10 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _showError(Object error, [StackTrace? stackTrace]) async {
-    // アプリ側では原因を種類ごとに大雑把な文言に丸めて表示するため、Apple
-    // サインイン失敗などの生の原因（FirebaseAuthExceptionのcode等）が画面上
-    // からは分からなくなる。Crashlytics(非致命)への記録はダッシュボード反映に
-    // 時間がかかるため、調査のあいだは画面にも生のエラー内容を併記する
-    // （原因特定できたら [debug] 行は削除すること）。
-    debugPrint('[account_screen] error: $error\n$stackTrace');
+    // アプリ側では原因を種類ごとに大雑把な文言に丸めて表示するため、生の原因
+    // （FirebaseAuthExceptionのcode等）が画面上からは分からなくなる。
+    // Crashlytics(非致命)に残しておき、後から実際のエラー内容をダッシュボード
+    // で確認できるようにする。
     unawaited(
       FirebaseCrashlytics.instance.recordError(
         error,
@@ -66,7 +64,7 @@ class _AccountScreenState extends State<AccountScreen> {
         ? _messageFor(l10n, error.reason)
         : l10n.accountErrorUnknown;
     if (!mounted) return;
-    await _showMessage(l10n.accountErrorTitle, '$message\n\n[debug] $error');
+    await _showMessage(l10n.accountErrorTitle, message);
   }
 
   Future<void> _afterAuthSuccess(String uid) async {
@@ -86,8 +84,9 @@ class _AccountScreenState extends State<AccountScreen> {
     setState(() => _busy = true);
     try {
       final accountStore = context.read<AccountStore>();
-      final credential = await accountStore.googleCredential();
-      final uid = await accountStore.signInWithCredential(credential);
+      final uid = await accountStore.signInWithCredential(
+        accountStore.googleCredential,
+      );
       await _afterAuthSuccess(uid);
     } on SignInCancelledException {
       // ユーザーがピッカーを閉じただけなのでエラー表示はしない。
@@ -102,8 +101,9 @@ class _AccountScreenState extends State<AccountScreen> {
     setState(() => _busy = true);
     try {
       final accountStore = context.read<AccountStore>();
-      final credential = await accountStore.appleCredential();
-      final uid = await accountStore.signInWithCredential(credential);
+      final uid = await accountStore.signInWithCredential(
+        accountStore.appleCredential,
+      );
       await _afterAuthSuccess(uid);
     } on SignInCancelledException {
       // ユーザーが認証をキャンセルしただけなのでエラー表示はしない。
