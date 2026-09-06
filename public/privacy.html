@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>プライバシーポリシー / Privacy Policy - VoiceJournal</title>
+<title>プライバシーポリシー / Privacy Policy - Voice Brain</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", sans-serif; line-height: 1.8; max-width: 720px; margin: 0 auto; padding: 32px 20px 80px; color: #222; }
   h1 { font-size: 1.5rem; margin-top: 0; }
@@ -26,7 +26,7 @@
 <h1>プライバシーポリシー</h1>
 <p class="updated">最終更新日: 2026年8月29日</p>
 
-<p>VoiceJournal（つぶやきAIメモ、以下「本アプリ」）は、ユーザーのプライバシーを尊重し、以下の方針に基づいて情報を取り扱います。</p>
+<p>Voice Brain（以下「本アプリ」）は、ユーザーのプライバシーを尊重し、以下の方針に基づいて情報を取り扱います。</p>
 
 <h2>1. 収集する情報</h2>
 <table>
@@ -59,8 +59,15 @@
 <h2>4. データの保存期間</h2>
 <p>端末内のデータはアプリを削除するまで保持されます。クラウドに同期したデータは、アカウントを削除するかユーザーからの削除依頼があるまで保持されます。</p>
 
-<h2>5. データの削除・開示請求</h2>
-<p>アカウントおよびクラウド上のデータの削除、保有情報の開示をご希望の場合は、下記のお問い合わせ先までご連絡ください。確認の上、合理的な期間内に対応します。</p>
+<h2 id="delete-account">5. アカウント・データの削除</h2>
+<p>Voice Brainアプリ内の「設定」→「アカウント」→「アカウントを削除」から、ご自身でいつでもアカウントとクラウド上のデータを削除できます。削除を実行すると、以下がすべて完全に削除されます。</p>
+<ul>
+  <li>クラウド(Firestore)に保存された記録内容(日記・アイデア・タスク)のバックアップ、および検索用の数値ベクトル(embedding)</li>
+  <li>クラウド(Storage)に保存された写真・動画のバックアップ</li>
+  <li>Firebase Authのアカウント本体(メールアドレス等の認証情報)</li>
+</ul>
+<p>削除操作の直後に、端末内のデータも消去され、新しい未ログイン状態としてアプリの利用を継続できます。この削除は取り消せません。</p>
+<p>アプリを起動できない等の理由でアプリ内から削除操作ができない場合は、下記のお問い合わせ先までご連絡いただければ、確認の上、合理的な期間内(通常30日以内)に代行して削除します。</p>
 
 <h2>6. お子様のプライバシー</h2>
 <p>本アプリは13歳未満のお子様を対象としていません。13歳未満のお子様の個人情報を意図的に収集することはありません。</p>
@@ -76,7 +83,7 @@
 <h1>Privacy Policy</h1>
 <p class="updated">Last updated: August 29, 2026</p>
 
-<p>VoiceJournal (the "App") respects your privacy. This policy explains what information we collect and how we use it.</p>
+<p>Voice Brain (the "App") respects your privacy. This policy explains what information we collect and how we use it.</p>
 
 <h2>1. Information We Collect</h2>
 <table>
@@ -109,8 +116,15 @@
 <h2>4. Data Retention</h2>
 <p>On-device data is kept until you delete the app. Cloud-synced data is kept until you delete your account or request deletion.</p>
 
-<h2>5. Data Deletion & Access Requests</h2>
-<p>To request deletion of your account/cloud data, or to request a copy of the information we hold about you, contact us at the address below. We will respond within a reasonable time after verifying your request.</p>
+<h2 id="delete-account-en">5. Account & Data Deletion</h2>
+<p>You can delete your account and all cloud data yourself at any time from inside the Voice Brain app: Settings → Account → "Delete Account." Deleting your account permanently removes:</p>
+<ul>
+  <li>Your cloud (Firestore) backup of entries (diary, ideas, tasks) and their search embeddings</li>
+  <li>Your cloud (Storage) backup of photos and videos</li>
+  <li>Your Firebase Auth account itself (email address and other credentials)</li>
+</ul>
+<p>Immediately after deletion, on-device data is also cleared and you can keep using the app as a new, signed-out user. This action cannot be undone.</p>
+<p>If you're unable to access the app to delete your account yourself, contact us at the address below and we will verify your request and delete it on your behalf within a reasonable time (typically within 30 days).</p>
 
 <h2>6. Children's Privacy</h2>
 <p>The App is not directed at children under 13, and we do not knowingly collect personal information from children under 13.</p>
