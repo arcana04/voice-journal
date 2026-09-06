@@ -608,6 +608,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'You\'ve reached this month\'s recording-time limit. Buy an extra minutes pack to keep recording right away, without waiting for next month.';
 
   @override
+  String get buyMinutesDescriptionProactive =>
+      'Pro and Lifetime plans include 240 minutes of recording per month. You can also buy an extra 60-minute pack in advance, for when you reach that limit.';
+
+  @override
   String get buyMinutesUnavailable =>
       'The extra minutes pack isn\'t available right now. Please try again later.';
 

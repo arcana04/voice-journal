@@ -9,7 +9,11 @@ import '../services/purchase_service.dart';
 /// 「追加60分パック」購入画面。PaywallScreenはサブスク/買い切りの3枠固定
 /// レイアウトで消費型商品を扱えないため、専用の小さな画面として分ける。
 class BuyMinutesScreen extends StatefulWidget {
-  const BuyMinutesScreen({super.key});
+  /// 月間上限に達して表示されたのか（true）、設定画面から上限到達前に
+  /// 事前購入するために開いたのか（false）で説明文を出し分ける。
+  final bool reachedLimit;
+
+  const BuyMinutesScreen({super.key, this.reachedLimit = true});
 
   @override
   State<BuyMinutesScreen> createState() => _BuyMinutesScreenState();
@@ -71,7 +75,9 @@ class _BuyMinutesScreenState extends State<BuyMinutesScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  l10n.buyMinutesDescription,
+                  widget.reachedLimit
+                      ? l10n.buyMinutesDescription
+                      : l10n.buyMinutesDescriptionProactive,
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 28),

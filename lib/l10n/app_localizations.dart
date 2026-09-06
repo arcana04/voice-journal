@@ -1178,6 +1178,12 @@ abstract class AppLocalizations {
   /// **'You\'ve reached this month\'s recording-time limit. Buy an extra minutes pack to keep recording right away, without waiting for next month.'**
   String get buyMinutesDescription;
 
+  /// No description provided for @buyMinutesDescriptionProactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro and Lifetime plans include 240 minutes of recording per month. You can also buy an extra 60-minute pack in advance, for when you reach that limit.'**
+  String get buyMinutesDescriptionProactive;
+
   /// No description provided for @buyMinutesUnavailable.
   ///
   /// In en, this message translates to:

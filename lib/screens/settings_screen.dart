@@ -16,6 +16,7 @@ import '../state/settings_store.dart';
 import '../state/subscription_store.dart';
 import 'account_screen.dart';
 import 'apple_reminders_select_screen.dart';
+import 'buy_minutes_screen.dart';
 import 'integration_select_screen.dart';
 import 'paywall_screen.dart';
 import 'weekly_report_screen.dart';
@@ -283,6 +284,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             MaterialPageRoute(
                               builder: (_) => const PaywallScreen(),
                             ),
+                          ),
+                        ),
+                      ),
+                    if (subscription.isPro)
+                      _SettingsTile(
+                        icon: Icons.add_circle_outline_rounded,
+                        color: _SettingsColors.rose,
+                        title: l10n.buyMinutesCta,
+                        subtitle: l10n.buyMinutesDescriptionProactive,
+                        trailing: const _ChevronIcon(),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const BuyMinutesScreen(reachedLimit: false),
                           ),
                         ),
                       ),

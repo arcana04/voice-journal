@@ -582,6 +582,10 @@ class AppLocalizationsJa extends AppLocalizations {
       '今月の録音時間の上限に達しました。追加の録音パックを購入すれば、来月まで待たずにすぐ録音を続けられます。';
 
   @override
+  String get buyMinutesDescriptionProactive =>
+      'Pro・買い切りプランは月間240分まで録音できます。上限に達したときのために、追加の60分パックをあらかじめ購入しておくこともできます。';
+
+  @override
   String get buyMinutesUnavailable => '現在、追加パックを購入できません。しばらくしてからもう一度お試しください。';
 
   @override
