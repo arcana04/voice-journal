@@ -110,10 +110,14 @@ struct ContentView: View {
                 Button(action: { toggleCategory(category) }) {
                     Image(systemName: category.iconName)
                         .font(.footnote)
+                        .foregroundColor(isSelected ? .white : .gray)
                         .frame(width: 34, height: 26)
+                        .background(
+                            Capsule()
+                                .fill(isSelected ? Color.accentColor : Color.gray.opacity(0.2))
+                        )
                 }
-                .buttonStyle(.bordered)
-                .tint(isSelected ? .accentColor : .gray)
+                .buttonStyle(.plain)
             }
         }
     }
