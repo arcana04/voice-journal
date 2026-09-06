@@ -49,8 +49,10 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _showError(Object error, [StackTrace? stackTrace]) async {
     // アプリ側では原因を種類ごとに大雑把な文言に丸めて表示するため、Apple
     // サインイン失敗などの生の原因（FirebaseAuthExceptionのcode等）が画面上
-    // からは分からなくなる。Crashlytics(非致命)に残しておき、後から実際の
-    // エラー内容をダッシュボードで確認できるようにする。
+    // からは分からなくなる。Crashlytics(非致命)への記録はダッシュボード反映に
+    // 時間がかかるため、調査のあいだは画面にも生のエラー内容を併記する
+    // （原因特定できたら [debug] 行は削除すること）。
+    debugPrint('[account_screen] error: $error\n$stackTrace');
     unawaited(
       FirebaseCrashlytics.instance.recordError(
         error,
@@ -64,7 +66,7 @@ class _AccountScreenState extends State<AccountScreen> {
         ? _messageFor(l10n, error.reason)
         : l10n.accountErrorUnknown;
     if (!mounted) return;
-    await _showMessage(l10n.accountErrorTitle, message);
+    await _showMessage(l10n.accountErrorTitle, '$message\n\n[debug] $error');
   }
 
   Future<void> _afterAuthSuccess(String uid) async {
