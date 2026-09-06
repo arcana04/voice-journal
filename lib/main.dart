@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -24,6 +25,17 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // debugビルド(ホットリロード中の例外等)でノイズになるクラッシュを本番の
+  // 統計に混ぜないよう、収集自体はリリースビルドでのみ有効化する。ハンドラは
+  // 常に登録しておき、無効時は記録が単に破棄される形にする。
+  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+    !kDebugMode,
+  );
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
   // botや自動化ツールがアプリを介さず直接Cloud Functions/Firestore/Storageを
   // 叩くのを防ぐApp Check。debugビルドではストア審査用の実証明書（Play
   // Integrity/App Attest）が使えないため、debugトークン方式にフォールバックする

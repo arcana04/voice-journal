@@ -134,8 +134,8 @@ class PurchaseService {
   /// （エラー扱いしない）。それ以外の失敗は例外をそのまま投げる。
   Future<bool?> purchasePackage(Package package) async {
     try {
-      final info = await Purchases.purchasePackage(package);
-      return info.entitlements.active.containsKey(
+      final result = await Purchases.purchasePackage(package);
+      return result.customerInfo.entitlements.active.containsKey(
         RevenueCatConfig.proEntitlementId,
       );
     } on PlatformException catch (e) {
