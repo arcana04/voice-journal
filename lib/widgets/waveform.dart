@@ -5,11 +5,14 @@ import 'package:provider/provider.dart';
 
 import '../state/settings_store.dart';
 
+enum WaveformMode { idle, recording, processing }
+
 /// 録音画面の飾りとなる波のリボン。録音していない間も常にゆったり漂い、
-/// 録音中だけ振幅が大きくなって反応する。
+/// 録音中は振幅が大きくなって反応、AI処理中は「考えている」ように
+/// 呼吸するような明滅で脈打つ。
 class Waveform extends StatefulWidget {
-  final bool active;
-  const Waveform({super.key, required this.active});
+  final WaveformMode mode;
+  const Waveform({super.key, required this.mode});
 
   @override
   State<Waveform> createState() => _WaveformState();
@@ -46,7 +49,7 @@ class _WaveformState extends State<Waveform>
           return CustomPaint(
             painter: _WavePainter(
               phase: _controller.value * 2 * pi,
-              active: widget.active,
+              mode: widget.mode,
               color: accent,
             ),
             size: Size.infinite,
@@ -77,7 +80,7 @@ class _WaveLayer {
 
 class _WavePainter extends CustomPainter {
   final double phase;
-  final bool active;
+  final WaveformMode mode;
   final Color color;
 
   // speedは必ず整数にする。AnimationControllerのrepeat()はvalue(=phaseの元)を
@@ -109,14 +112,21 @@ class _WavePainter extends CustomPainter {
     ),
   ];
 
-  _WavePainter({required this.phase, required this.active, required this.color});
+  _WavePainter({required this.phase, required this.mode, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
     if (size.width <= 0 || size.height <= 0) return;
     final midY = size.height / 2;
-    // アイドル時も飾りのリボンとして見せつつ、録音中は振幅を大きくして反応させる。
-    final amplitude = active ? size.height * 0.34 : size.height * 0.17;
+    // アイドル時も飾りのリボンとして見せつつ、録音中は振幅を大きくして反応、
+    // 処理中はゆっくり呼吸するように振幅そのものを上下させて「考えている」感を出す。
+    final isProcessing = mode == WaveformMode.processing;
+    final breathe = isProcessing ? 0.5 + 0.5 * sin(phase * 0.6) : 0.0;
+    final baseAmplitude = switch (mode) {
+      WaveformMode.recording => size.height * 0.34,
+      WaveformMode.processing => size.height * (0.20 + 0.10 * breathe),
+      WaveformMode.idle => size.height * 0.17,
+    };
 
     for (final layer in _layers) {
       final path = Path();
@@ -125,7 +135,7 @@ class _WavePainter extends CustomPainter {
         final y = midY +
             layer.verticalOffset +
             sin(t * 2 * pi * layer.frequency + phase * layer.speed) *
-                amplitude *
+                baseAmplitude *
                 layer.amplitudeScale;
         if (x == 0) {
           path.moveTo(x, y);
@@ -133,8 +143,14 @@ class _WavePainter extends CustomPainter {
           path.lineTo(x, y);
         }
       }
+      // 処理中は各レイヤーの明滅タイミングをずらし、光がリボンの上を
+      // 流れていくようなシマー(shimmer)効果を作る。
+      final opacity = isProcessing
+          ? layer.opacity *
+                (0.5 + 0.5 * sin(phase * 1.4 + layer.frequency * 3))
+          : layer.opacity;
       final paint = Paint()
-        ..color = color.withValues(alpha: layer.opacity)
+        ..color = color.withValues(alpha: opacity.clamp(0.0, 1.0))
         ..style = PaintingStyle.stroke
         ..strokeWidth = layer.strokeWidth
         ..strokeCap = StrokeCap.round
@@ -146,7 +162,7 @@ class _WavePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _WavePainter oldDelegate) {
     return oldDelegate.phase != phase ||
-        oldDelegate.active != active ||
+        oldDelegate.mode != mode ||
         oldDelegate.color != color;
   }
 }

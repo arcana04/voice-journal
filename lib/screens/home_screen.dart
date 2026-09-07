@@ -49,6 +49,9 @@ class _HomeScreenState extends State<HomeScreen> {
   StreamSubscription<RecordingAmplitude>? _amplitudeSub;
   DateTime? _lastSoundAt;
   String? _statusMessage;
+  Timer? _processingPhraseTimer;
+  int _processingPhraseIndex = 0;
+  static const int _processingPhraseCount = 3;
 
   String _draftSummary = '';
   DateTime? _draftCreatedAt;
@@ -103,8 +106,56 @@ class _HomeScreenState extends State<HomeScreen> {
     _recordTrigger?.removeListener(_onRecordTriggered);
     _timer?.cancel();
     _amplitudeSub?.cancel();
+    _processingPhraseTimer?.cancel();
     _recorder.dispose();
     super.dispose();
+  }
+
+  /// 歩きながら・画面を見ずに操作する場面が多いコンセプトのため、目視確認しなくても
+  /// 指先の感覚だけで「録音開始/停止/仕分け完了」が分かるようハプティクスを添える。
+  void _hapticRecordingStarted() => HapticFeedback.mediumImpact();
+
+  /// 手動タップでの停止はタップ自体が触覚フィードバックを兼ねるので軽く1回、
+  /// 無音/最大時間到達による自動停止はユーザーが触れていない状態で起きるため
+  /// 気づきやすいよう2回連続で鳴らして区別する。
+  Future<void> _hapticRecordingStopped({required bool auto}) async {
+    if (auto) {
+      HapticFeedback.mediumImpact();
+      await Future.delayed(const Duration(milliseconds: 120));
+      HapticFeedback.mediumImpact();
+    } else {
+      HapticFeedback.lightImpact();
+    }
+  }
+
+  Future<void> _hapticSortingComplete() async {
+    HapticFeedback.lightImpact();
+    await Future.delayed(const Duration(milliseconds: 90));
+    HapticFeedback.mediumImpact();
+  }
+
+  void _hapticError() => HapticFeedback.heavyImpact();
+
+  /// AI処理中、待機時間のストレスを軽減するため数秒おきに文言を切り替えて
+  /// 「今まさに考えている」臨場感を出す。
+  void _startProcessingPhraseCycle() {
+    _processingPhraseTimer?.cancel();
+    setState(() => _processingPhraseIndex = 0);
+    _processingPhraseTimer = Timer.periodic(
+      const Duration(milliseconds: 1600),
+      (_) {
+        if (!mounted) return;
+        setState(() {
+          _processingPhraseIndex =
+              (_processingPhraseIndex + 1) % _processingPhraseCount;
+        });
+      },
+    );
+  }
+
+  void _stopProcessingPhraseCycle() {
+    _processingPhraseTimer?.cancel();
+    _processingPhraseTimer = null;
   }
 
   /// アクションボタン/ロック画面ウィジェットからの起動時、待機中であれば
@@ -173,6 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _maxDuration = maxRecordingDurationFor(isPro);
       _statusMessage = null;
     });
+    _hapticRecordingStarted();
     BackgroundRecordingService.updateNotificationText(
       '${_formatDuration(_elapsed)} / ${_formatDuration(_maxDuration)}',
     );
@@ -188,13 +240,13 @@ class _HomeScreenState extends State<HomeScreen> {
       final next = _elapsed + const Duration(seconds: 1);
       if (next >= _maxDuration) {
         setState(() => _elapsed = _maxDuration);
-        _stopAndProcess();
+        _stopAndProcess(auto: true);
         return;
       }
       if (_lastSoundAt != null &&
           DateTime.now().difference(_lastSoundAt!) >=
               kSilenceAutoStopDuration) {
-        _stopAndProcess();
+        _stopAndProcess(auto: true);
         return;
       }
       setState(() => _elapsed = next);
@@ -204,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _stopAndProcess() async {
+  Future<void> _stopAndProcess({bool auto = false}) async {
     _timer?.cancel();
     _amplitudeSub?.cancel();
     _amplitudeSub = null;
@@ -225,8 +277,11 @@ class _HomeScreenState extends State<HomeScreen> {
       _state = RecordButtonState.processing;
       _selectedCategories = {...ReviewCategory.values};
     });
+    _hapticRecordingStopped(auto: auto);
+    _startProcessingPhraseCycle();
 
     if (path == null) {
+      _stopProcessingPhraseCycle();
       if (!mounted) return;
       setState(() => _state = RecordButtonState.idle);
       _showResultDialog(
@@ -274,6 +329,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _statusMessage = null;
       _selectedCategories = {...ReviewCategory.values};
     });
+    _startProcessingPhraseCycle();
 
     try {
       final settings = context.read<SettingsStore>();
@@ -293,6 +349,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _applyDraft(JournalEntry entry, Set<ReviewCategory> enabledCategories) {
+    _stopProcessingPhraseCycle();
     setState(() {
       _state = RecordButtonState.idle;
       _statusMessage = null;
@@ -303,10 +360,13 @@ class _HomeScreenState extends State<HomeScreen> {
       _draftItems = _buildDraftItems(entry);
       _draftEnabledCategories = enabledCategories;
     });
+    _hapticSortingComplete();
     _refreshUsage();
   }
 
   void _handleProcessingError(Object e) {
+    _stopProcessingPhraseCycle();
+    _hapticError();
     final l10n = AppLocalizations.of(context)!;
     final message = e is BackendServiceException ? e.message : '$e';
     setState(() {
@@ -462,7 +522,13 @@ class _HomeScreenState extends State<HomeScreen> {
       case RecordButtonState.recording:
         return l10n.statusRecording;
       case RecordButtonState.processing:
-        return l10n.statusProcessing;
+        // 待機時間のストレスを和らげるため、AIが今どの段階を処理しているか
+        // 数秒おきに文言を切り替えて臨場感を出す。
+        return [
+          l10n.statusProcessing,
+          l10n.statusProcessingSorting,
+          l10n.statusProcessingFinishing,
+        ][_processingPhraseIndex % _processingPhraseCount];
     }
   }
 
@@ -508,7 +574,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             const SizedBox(height: 16),
                             Waveform(
-                              active: _state == RecordButtonState.recording,
+                              mode: switch (_state) {
+                                RecordButtonState.recording =>
+                                  WaveformMode.recording,
+                                RecordButtonState.processing =>
+                                  WaveformMode.processing,
+                                RecordButtonState.idle => WaveformMode.idle,
+                              },
                             ),
                             const SizedBox(height: 32),
                             Visibility(
@@ -532,12 +604,32 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
-                                    _statusLabel(l10n),
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium,
+                                  AnimatedSwitcher(
+                                    duration: const Duration(
+                                      milliseconds: 250,
+                                    ),
+                                    transitionBuilder: (child, animation) =>
+                                        FadeTransition(
+                                          opacity: animation,
+                                          child: SlideTransition(
+                                            position:
+                                                Tween<Offset>(
+                                                  begin: const Offset(0, 0.15),
+                                                  end: Offset.zero,
+                                                ).animate(animation),
+                                            child: child,
+                                          ),
+                                        ),
+                                    child: Text(
+                                      _statusLabel(l10n),
+                                      key: ValueKey(
+                                        '$_state-${_state == RecordButtonState.processing ? _processingPhraseIndex : 0}',
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
+                                    ),
                                   ),
                                   if (_state == RecordButtonState.idle) ...[
                                     const SizedBox(height: 4),
