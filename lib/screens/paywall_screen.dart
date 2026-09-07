@@ -7,7 +7,9 @@ import '../config/legal_links.dart';
 import '../config/theme_colors.dart';
 import '../l10n/app_localizations.dart';
 import '../services/purchase_service.dart';
+import '../state/account_store.dart';
 import '../state/subscription_store.dart';
+import '../widgets/require_sign_in_sheet.dart';
 
 /// Proプランへの加入を促す画面。RevenueCatの「現在のOffering」に設定された
 /// パッケージ（月額・年額・買い切り）を1枚ずつ選べるカードとして一覧表示し、
@@ -29,6 +31,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
     final package = _selected;
     if (package == null) return;
     final l10n = AppLocalizations.of(context)!;
+    // 匿名のまま課金すると、再インストール等で匿名uidがリセットされた際に
+    // 購入を復元する手段が無くなるため、購入前にアカウントへのログインを必須にする。
+    if (!context.read<AccountStore>().isSignedIn) {
+      final signedIn = await showRequireSignInSheet(context);
+      if (!mounted || !signedIn) return;
+    }
     setState(() => _busy = true);
     try {
       final granted = await _purchases.purchasePackage(package);

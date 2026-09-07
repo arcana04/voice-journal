@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../config/revenuecat_config.dart';
 import '../l10n/app_localizations.dart';
 import '../services/purchase_service.dart';
+import '../state/account_store.dart';
+import '../widgets/require_sign_in_sheet.dart';
 
 /// Pro/買い切みプランの月間録音時間の上限に達したユーザー向けの、消費型IAP
 /// 「追加60分パック」購入画面。PaywallScreenはサブスク/買い切りの3枠固定
@@ -28,6 +31,12 @@ class _BuyMinutesScreenState extends State<BuyMinutesScreen> {
 
   Future<void> _purchase(Package package) async {
     final l10n = AppLocalizations.of(context)!;
+    // 匿名のまま課金すると、再インストール等で匿名uidがリセットされた際に
+    // 購入を復元する手段が無くなるため、購入前にアカウントへのログインを必須にする。
+    if (!context.read<AccountStore>().isSignedIn) {
+      final signedIn = await showRequireSignInSheet(context);
+      if (!mounted || !signedIn) return;
+    }
     setState(() => _busy = true);
     try {
       final purchased = await _purchases.purchaseConsumable(package);
