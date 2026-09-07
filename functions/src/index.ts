@@ -99,12 +99,13 @@ function normalizeAllowedCategories(value: unknown): Set<AllowedCategory> {
 
 /** クライアント（Flutterアプリ）の表示言語。UIの多言語対応に合わせてサーバー側の
  * 音声認識言語・AIプロンプト・エラーメッセージを切り替えるために使う。 */
-type Locale = "ja" | "en" | "es" | "de";
+type Locale = "ja" | "en" | "es" | "de" | "ko";
 
 function normalizeLocale(value: unknown): Locale {
   if (value === "en") return "en";
   if (value === "es") return "es";
   if (value === "de") return "de";
+  if (value === "ko") return "ko";
   return "ja";
 }
 
@@ -114,6 +115,7 @@ const INTL_LOCALE: Record<Locale, string> = {
   en: "en-US",
   es: "es-ES",
   de: "de-DE",
+  ko: "ko-KR",
 };
 
 /** ユーザー向けエラーメッセージ。localeごとに文面を分ける。 */
@@ -212,6 +214,24 @@ const MESSAGES: Record<
     ttsFailed: (body) => `Audio konnte nicht erzeugt werden: ${body}`,
     unexpectedError: (message) =>
       `Bei der Verarbeitung ist ein unerwarteter Fehler aufgetreten: ${message}`,
+  },
+  ko: {
+    authRequired: "인증이 필요합니다.",
+    noAudio: "오디오 데이터가 없습니다.",
+    noText: "텍스트가 없습니다.",
+    transcriptionEmpty: "녹음에서 음성을 인식할 수 없었습니다.",
+    quotaExceeded: (limit) =>
+      `오늘의 무료 이용 횟수(${limit}회)에 도달했습니다. 내일 다시 시도해 주세요.`,
+    monthlyMinutesExceeded: (limitMinutes) =>
+      `이번 달 녹음 시간 한도(${limitMinutes}분)에 도달했습니다. 추가 녹음 팩을 구매하거나 다음 달까지 기다려 주세요.`,
+    watchRateLimited: "Apple Watch에서 온 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+    unknownWatchDevice:
+      "이 Apple Watch는 아직 페어링되지 않았습니다. iPhone 앱에서 다시 페어링해 주세요.",
+    proRequired: "이 기능은 Pro 플랜 전용입니다.",
+    transcriptionFailed: (body) => `문자 변환에 실패했습니다: ${body}`,
+    analysisFailed: (body) => `AI 분석에 실패했습니다: ${body}`,
+    ttsFailed: (body) => `음성 생성에 실패했습니다: ${body}`,
+    unexpectedError: (message) => `처리 중 예기치 않은 오류가 발생했습니다: ${message}`,
   },
 };
 
@@ -347,6 +367,37 @@ ${FABRICATION_EXAMPLE_DE}`;
   }
 }
 
+function buildNotesStyleSectionKo(level: SummaryLevel): string {
+  switch (level) {
+    case "compact":
+      return `[노트 본문("content") 작성 방식: 매우 간결하게]
+tasks와 마찬가지로 핵심만 남기고 압축하세요.
+- 필러(추임새)와 반복 표현뿐 아니라, 사소한 묘사나 중복된 설명도 삭제해도 됩니다.
+- 노트 하나당 1~2문장 정도로, 핵심 사건·아이디어·감정만 담으세요.
+- 1인칭 시점("~라고 느꼈다", "~였다")을 유지하세요.
+- 화자가 말하지 않은 인물·사건·감정·세부사항을 절대 지어내지 마세요. 요약은 "덜어내는" 것이지 "더하는" 것이 아닙니다.
+${FABRICATION_EXAMPLE_KO}`;
+    case "standard":
+      return `[노트 본문("content") 작성 방식: 표준]
+tasks만큼 짧게 줄이지 말고, 반복되는 표현이나 곁길로 샌 이야기는 정리하되 일기다운 자연스러운 길이는 유지하세요.
+- 감정을 드러내는 단서, 이름, 인상적인 표현은 가능한 한 남기세요. 그대로 받아쓸 필요는 없고, 읽기 좋게 살짝 다듬는 정도는 괜찮습니다.
+- 객관적인 3인칭 서술이 아니라 화자 본인의 1인칭 시점("~라고 느꼈다", "~였다")으로 쓰세요.
+- 감정이 고조된 장면에서는 부자연스럽지 않은 범위에서 "!"를 사용해도 됩니다.
+- "일기다운 자연스러운 길이"는 어디까지나 문장을 다듬는 기준일 뿐, 분량을 채우기 위해 화자가 말하지 않은 인물·사건·감정·세부사항을 덧붙이지 마세요. 입력이 "바비큐 다녀왔다" 같은 짧은 한마디라면 content도 그만큼 짧게 두어도 됩니다 — 지어낸 디테일이 담긴 긴 노트보다 짧고 정확한 노트가 항상 낫습니다.
+${FABRICATION_EXAMPLE_KO}`;
+    case "preserve":
+    default:
+      return `[노트 본문("content") 작성 방식: 원형 유지]
+tasks와 달리 notes는 요약하거나 압축하지 마세요.
+- 화자의 날것 그대로의 감정, 독특한 말투, 장면 묘사, 구체적인 이름은 가능한 한 그대로 보존하세요. 핵심만 뽑은 짧은 요약으로 만들지 마세요.
+- 제거해도 되는 것은 필러(추임새, 예: "음", "어")와 완전히 동일하게 반복된 표현뿐입니다. 그 외에는 내용·순서·디테일의 정도를 그대로 유지하며, 읽기 좋게 문장만 살짝 다듬으세요.
+- 객관적인 3인칭 서술이 아니라 화자 본인의 1인칭 시점("~라고 느꼈다", "~였다", "~일지도")으로 다시 쓰세요.
+- 흥분·놀람·기쁨이 느껴지는 장면에서는 실제로 말했을 때의 자연스러운 톤을 살리기 위해 "!"를 사용해도 됩니다.
+- 화자가 말하지 않은 인물·사건·감정·세부사항을 절대 지어내지 마세요. 입력이 짧다면 다듬은 후의 content도 그만큼 짧게 두어도 됩니다.
+${FABRICATION_EXAMPLE_KO}`;
+  }
+}
+
 /** Same fabrication-prevention example as the Japanese prompt, in English —
  * abstract rules alone weren't reliably followed by gpt-4o-mini for very
  * short inputs, so a concrete example is included at every summary level. */
@@ -373,6 +424,14 @@ Eingabe: "das Feuerwerk hat Spaß gemacht"
 - Richtige Ausgabe: "Das Feuerwerk hat Spaß gemacht." (nur leicht in die Ich-Form gebracht, nichts hinzugefügt)
 - Gib niemals etwas aus wie: "Das Feuerwerk anzusehen war eine wirklich schöne Zeit. Die Art, wie es den Nachthimmel erleuchtete, war beeindruckend, und dass alle zusammen dort waren, machte es noch besser." (das Erfinden von Personen wie "alle" und Szenendetails, die die sprechende Person nie erwähnt hat, ist ein Verstoß)`;
 
+/** 일본어/영어/스페인어/독일어 버전과 동일한 날조 방지 예시 — 추상적인
+ * 규칙만으로는 gpt-4o-mini가 아주 짧은 입력에서 규칙을 안정적으로 따르지
+ * 않았기 때문에, 모든 요약 단계에 구체적인 예시를 포함한다. */
+const FABRICATION_EXAMPLE_KO = `[구체적인 예시 — 이대로 지켜야 함]
+입력: "불꽃놀이가 재미있었다"
+- 올바른 출력 예: "불꽃놀이가 재미있었다." (1인칭으로 가볍게 다듬는 정도의 사소한 변경만 허용)
+- 절대 이렇게 출력하면 안 되는 예: "불꽃놀이를 보는 시간이 정말 즐거웠다. 밤하늘에 아름다운 불꽃이 펼쳐지는 것이 인상적이었고, 다 함께 신나게 즐길 수 있었다." ("다 함께"처럼 화자가 한마디도 하지 않은 인물·정경을 지어낸 것으로 위반)`;
+
 const CATEGORY_LABEL_JA: Record<AllowedCategory, string> = {
   diary: "感情ログ（日記）",
   idea: "アイデア",
@@ -392,6 +451,11 @@ const CATEGORY_LABEL_DE: Record<AllowedCategory, string> = {
   diary: "感情ログ (Tagebuch)",
   idea: "アイデア (Idee)",
   task: "タスク (Aufgabe)",
+};
+const CATEGORY_LABEL_KO: Record<AllowedCategory, string> = {
+  diary: "感情ログ (일기)",
+  idea: "アイデア (아이디어)",
+  task: "タスク (할 일)",
 };
 const NOTE_CATEGORY_JA: Record<"diary" | "idea", string> = {
   diary: "感情ログ",
@@ -421,6 +485,12 @@ function buildCategoryRestrictionNote(allowed: Set<AllowedCategory>, locale: Loc
       .map((c) => CATEGORY_LABEL_DE[c])
       .join(", ");
     return `\n\n[Kategorieeinschränkung für diese Aufnahme]\nDieses Mal sind nur diese Kategorien aktiviert: ${labels}. Verwende niemals eine deaktivierte Kategorie. Wenn Inhalt normalerweise zu einer deaktivierten Kategorie gehören würde, ordne ihn der am besten passenden aktivierten Kategorie zu, im Zweifel standardmäßig ${CATEGORY_LABEL_DE[fallback]}. Lasse niemals Inhalt weg, nur weil seine natürliche Kategorie deaktiviert ist — alles, was die sprechende Person gesagt hat, muss trotzdem in tasks oder notes landen.`;
+  }
+  if (locale === "ko") {
+    const labels = ALL_CATEGORIES.filter((c) => allowed.has(c))
+      .map((c) => CATEGORY_LABEL_KO[c])
+      .join(", ");
+    return `\n\n[이번 녹음의 카테고리 제한]\n이번에는 다음 카테고리만 활성화되어 있습니다: ${labels}. 비활성화된 카테고리는 절대 사용하지 마세요. 원래 비활성화된 카테고리에 속했을 내용은 활성화된 카테고리 중 가장 적합한 곳으로 재분류하고, 애매하면 기본값으로 ${CATEGORY_LABEL_KO[fallback]}를 사용하세요. 카테고리가 비활성화되어 있다는 이유만으로 내용을 누락하지 마세요 — 화자가 말한 내용은 반드시 tasks나 notes 중 하나에 남아 있어야 합니다.`;
   }
   const labels = ALL_CATEGORIES.filter((c) => allowed.has(c))
     .map((c) => CATEGORY_LABEL_JA[c])
@@ -747,6 +817,76 @@ Gib AUSSCHLIESSLICH das folgende JSON-Format aus, ohne zusätzlichen Kommentar. 
   ],
   "comfort_message": "kurze tröstende Nachricht auf Deutsch, nur wenn es eine 感情ログ-Notiz gibt, sonst null",
   "emotion": "eines von satisfaction/gratitude/happy/love/funny/joy/excited/relief/calm/neutral/boredom/anxious/sadness/fatigue/regret/anger/dislike, nur wenn es eine 感情ログ-Notiz gibt, sonst null"
+}`;
+}
+
+function buildSystemPromptKo(
+  today: string,
+  weekday: string,
+  summaryLevel: SummaryLevel,
+  categoryNote: string,
+  glossary?: string
+): string {
+  const glossarySection = glossary
+    ? `\n\n[이름·용어 표기]\n입력 텍스트는 음성 인식 결과이므로, 다음 이름/용어가 잘못 표기되어 있을 수 있습니다. 문맥상 화자가 그중 하나를 의도했다고 분명히 판단되면, 처리하기 전에 표기를 바로잡으세요.\n${glossary}`
+    : "";
+
+  return `당신은 일상적인 한국어 대화·혼잣말을 분석하여 구조화된 데이터로 변환하는 AI 어시스턴트입니다.${glossarySection}
+
+[출력 언어 — 가장 먼저 읽으세요]
+화자는 한국어로 말하고 있으며, 당신이 작성하는 모든 텍스트 필드(summary, task title, due_hint, note title, note content, comfort_message)는 반드시 한국어로 작성되어야 합니다. 어떤 것도 일본어로 번역하지 마세요. 유일한 예외는 노트의 "category" 필드로, 이는 고정된 내부 라벨이며 항상 표시된 그대로의 일본어 원문 アイデア 또는 感情ログ여야 하고, 절대 번역하거나 한글로 표기하거나 한국어로 쓰면 안 됩니다 — 그 외 모든 필드는 한국어로 유지됩니다.
+
+[입력 텍스트의 특성]
+입력 텍스트는 음성 인식 결과이므로 필러(추임새, "음", "어"), 말끝을 흐리거나 미완성인 표현("...인 것 같아요", "...뭐 그런"), 곁길로 새는 이야기, 생략된 주어가 포함됩니다.
+
+[오늘 날짜]
+${today} (${weekday}요일, 일본 시간). 상대적인 날짜 표현은 이 날짜를 기준으로 해석하세요.
+
+[분류 규칙 (3가지 카테고리)]
+1. 필러("음", "어" 등)와 완전히 동일하게 반복된 표현을 제거하세요.
+2. tasks의 경우 문맥에서 빠진 주어나 시점을 보완하여 간결한 행동으로 요약하세요.
+3. 각 발화를 다음 세 카테고리 중 정확히 하나로 분류하세요:
+   - [tasks (할 일)]: "확정된 행동" — 화자가 하겠다고 말했거나 해야 한다고 말한 것.
+   - [notes category="アイデア"]: 아직 확정되지 않은 아이디어, 질문, 생각, 또는 고려해볼 만한 것.
+   - [notes category="感情ログ"]: 관련된 행동 없이, 감정·기분·불평·있었던 일에 대한 회고.
+4. 화자가 화제를 넘나들면, 각 문맥에 맞게 별도의 항목으로 나누어 분류하세요.
+${categoryNote}
+
+${buildNotesStyleSectionKo(summaryLevel)}
+
+[마감일 자동 추론]
+tasks에 마감일처럼 보이는 표현("내일", "다음 주 월요일까지", "이번 달 중")이 있으면, 위의 오늘 날짜를 기준으로 실제 날짜(YYYY-MM-DD)를 계산해 due_date에 넣으세요. 날짜를 명확히 정할 수 없거나 마감일 언급이 전혀 없으면 due_date는 null로 두세요. due_hint에는 원래 표현을 짧게 남기세요.
+
+[시각이 있는 리마인더]
+tasks 중 "오후 3시에", "내일 아침 9시", "저녁 7시 병원" 처럼 시각까지 명시된 것이 있으면, 위의 오늘 날짜와 일본 시간을 기준으로 실제 날짜/시각을 계산해 reminder_at에 "YYYY-MM-DDTHH:mm:00" 형식(24시간제, 초는 00 고정)으로 넣으세요. 날짜 없이 시각만 있으면 오늘 날짜를 사용하고, 그 시각이 오늘 이미 지났다면 내일 날짜를 사용하세요. 명시적인 시각이 없는 경우(날짜만 있거나 "오전 중", "언젠가" 같은 모호한 표현만 있는 경우)는 reminder_at을 null로 두세요.
+"10시부터 5시까지", "오후 3시~4시 반"처럼 종료 시각까지 명시되어 있으면, 같은 형식과 날짜로 reminder_end_at에도 종료 일시를 넣으세요. 종료 시각이 다음 날로 넘어가는 경우(예: "밤 10시부터 다음 날 아침 6시까지")는 날짜를 하루 늘리세요. 종료 시각 언급이 없으면 reminder_end_at은 null로 두세요.
+
+[위로 메시지]
+category="感情ログ"인 note가 하나 이상 있을 때만, 그 내용에 공감하는 짧고 따뜻한 한마디(약 10~25단어 분량)를 설교나 해결책 강요 없이 작성하여 comfort_message에 넣으세요. 感情ログ가 없으면 comfort_message는 null로 두세요.
+
+[감정 태그]
+comfort_message와 같은 조건(category="感情ログ"인 note가 하나 이상 있을 때만)에서, 그 내용에서 읽히는 가장 중심이 되는 감정을 하나만 골라 emotion에 다음 영어 식별자 중 정확히 하나로(표기된 그대로, 절대 번역하지 말고) 넣으세요:
+satisfaction, gratitude, happy, love, funny, joy, excited, relief, calm, neutral, boredom, anxious, sadness, fatigue, regret, anger, dislike (다른 어느 것에도 명확히 해당하지 않는 애매한 경우는 neutral을 사용).
+[중요] 화자가 문자 그대로 "재미있다", "즐거웠다"라고 말했다는 이유만으로 안이하게 joy를 선택하지 마세요 — 표면적인 단어가 아니라 실제로 읽히는 감정의 내용으로 판단하세요. 더 정확한 선택지가 있다면 그쪽을 우선하세요: 누군가 친절을 베풀거나 무언가를 해줬다 → gratitude; 목표를 달성하거나 해냈다 → satisfaction; 사람이나 사물에 대한 애정 → love; 농담이나 우스운 일로 웃었다 → funny; 다가올 일에 대한 설렘·긴장 → excited; 걱정이 해소되어 안심했다 → relief. joy는 활동 자체를 만끽하고 있다는 의미에 명확히 해당할 때만 선택하고, 긍정적인 감정 전반의 기본값으로 쓰지 마세요.
+happy, joy, satisfaction은 서로 비슷하지만 구분됩니다: happy는 타인이나 일어난 일에 대한 기쁨, joy는 활동 자체를 즐기는 느낌, satisfaction은 성취감을 동반한 만족입니다. calm, relief, neutral도 비슷하지만 구분됩니다: calm은 차분하고 안정된 상태, relief는 불안이 해소되어 놓인 상태, neutral은 둘 중 어디에도 해당하지 않는 중립적인 심정입니다.
+感情ログ가 없으면 emotion은 null로 두세요.
+
+[노트 제목]
+각 note에 일기 제목처럼 어울리는 짧은 제목(약 3~8단어)을 title에 넣으세요. 예: "불꽃축제가 즐거웠다", "새로운 카페 아이디어".
+
+[출력 형식]
+반드시 다음 JSON 형식으로만 출력하세요(불필요한 설명 문구는 포함하지 마세요). "category"를 제외한 모든 필드는 한국어이며, category는 항상 고정된 일본어 라벨 アイデア 또는 感情ログ임을 기억하세요:
+
+{
+  "summary": "전체를 한 줄로 요약, 한국어로",
+  "tasks": [
+    {"title": "할 일 내용, 한국어로", "due_hint": "마감일의 원래 표현(없으면 null)", "due_date": "YYYY-MM-DD (추론할 수 없으면 null)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (명시적인 시각이 없으면 null)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (명시적인 종료 시각이 없으면 null)"}
+  ],
+  "notes": [
+    {"category": "アイデア 또는 感情ログ (반드시 일본어 그대로 유지)", "title": "짧은 제목, 한국어로", "content": "위의 노트 스타일 규칙에 따라 1인칭으로 다시 쓴 문장, 한국어로"}
+  ],
+  "comfort_message": "感情ログ note가 있을 때만 한국어로 된 짧은 위로 메시지, 없으면 null",
+  "emotion": "感情ログ note가 있을 때만 satisfaction/gratitude/happy/love/funny/joy/excited/relief/calm/neutral/boredom/anxious/sadness/fatigue/regret/anger/dislike 중 하나, 없으면 null"
 }`;
 }
 
@@ -1705,11 +1845,32 @@ const EMOTION_LABEL_DE: Record<string, string> = {
   dislike: "Abneigung",
 };
 
+const EMOTION_LABEL_KO: Record<string, string> = {
+  satisfaction: "만족",
+  gratitude: "감사",
+  happy: "행복",
+  love: "사랑",
+  funny: "재미있음",
+  joy: "즐거움",
+  excited: "설렘",
+  relief: "안심",
+  calm: "차분함",
+  neutral: "보통",
+  boredom: "지루함",
+  anxious: "불안",
+  sadness: "슬픔",
+  fatigue: "피곤함",
+  regret: "후회",
+  anger: "분노",
+  dislike: "싫음",
+};
+
 const EMOTION_LABEL_BY_LOCALE: Record<Locale, Record<string, string>> = {
   ja: EMOTION_LABEL_JA,
   en: EMOTION_LABEL_EN,
   es: EMOTION_LABEL_ES,
   de: EMOTION_LABEL_DE,
+  ko: EMOTION_LABEL_KO,
 };
 
 const TASK_LABEL: Record<Locale, string> = {
@@ -1717,12 +1878,14 @@ const TASK_LABEL: Record<Locale, string> = {
   en: "Task",
   es: "Tarea",
   de: "Aufgabe",
+  ko: "할 일",
 };
 const TASK_DONE_MARK: Record<Locale, string> = {
   ja: "(完了) ",
   en: "(done) ",
   es: "(hecho) ",
   de: "(erledigt) ",
+  ko: "(완료) ",
 };
 
 /** noteの`category`はDBには常に固定の日本語文字列（アイデア／感情ログ）で
@@ -1737,6 +1900,8 @@ function noteCategoryDisplayLabel(category: string | undefined, locale: Locale):
       return isIdea ? "Idea" : "Sentimiento";
     case "de":
       return isIdea ? "Idee" : "Gefühl";
+    case "ko":
+      return isIdea ? "아이디어" : "기분";
   }
 }
 
@@ -1755,6 +1920,7 @@ async function structure(
     en: buildSystemPromptEn,
     es: buildSystemPromptEs,
     de: buildSystemPromptDe,
+    ko: buildSystemPromptKo,
   }[locale];
   const systemPrompt = promptBuilder(
     jstDateString(now),
@@ -1977,6 +2143,22 @@ Beantworte die Frage auf Deutsch, wobei du AUSSCHLIESSLICH die Informationen aus
 ${conciseness}`;
   }
 
+  if (locale === "ko") {
+    const conciseness = isBroad
+      ? "이번 질문은 광범위하고 포괄적인 정리/요약 요청으로 보입니다. 이 경우에는 간결함보다 누락 없는 것을 우선하세요 — 하나의 짧은 문단으로 만들려 하지 말고 날짜별 소제목과 글머리 기호로 정리해도 괜찮습니다."
+      : "답변은 간결하고 대화체로 하세요. 장황한 설명문은 피하세요.";
+    return `당신은 사용자 본인이 과거에 기록한 음성 메모·일기를 종합적으로 참조하여 질문에 답하는 AI 어시스턴트입니다.
+
+아래에 사용자가 과거에 기록한 일기·아이디어·할 일 목록을 날짜와 함께 전달합니다. 감정 태그가 지정된 일기는 날짜 바로 뒤에 "— <감정>" 형태로 표시되어 있습니다.
+이 내용만을 근거로, 사용자의 질문에 한국어로 답변하세요.
+- 해당하는 기록이 있으면 언제 기록인지(날짜)를 언급하세요.
+- 해당하는 기록이 보이지 않으면 추측으로 답을 만들지 말고, 찾지 못했다고 솔직하게 전하세요.
+- 경향이나 빈도를 질문받으면 건수 등 구체적인 근거를 제시하세요.
+- 목록화를 요청받으면 간결한 글머리 기호로 정리하세요.
+- "요즘 왜 불안하지", "뭐가 이렇게 답답하지" 처럼 감정의 원인 분석을 요청받은 경우, 단순히 해당 기록을 나열하는 데 그치지 마세요. 해당 감정 태그 전후·주변의 기록도 종합적으로 살펴 반복적으로 등장하는 사건·인물·장소·상황 등의 패턴을 찾고, 발견한 경향을 "~할 때 ~한 기분이 되는 경우가 많아 보입니다" 처럼 기록에서 읽어낼 수 있는 추측으로서 조리 있게 제시하세요. 단정하지 말고, 기록이 너무 적어 패턴이라 부르기 어려우면 무리하게 단정하지 말고 솔직하게 그렇게 전하세요.
+${conciseness}`;
+  }
+
   const conciseness = isBroad
     ? "今回は「まとめて」のような、範囲を網羅的にコンパイルする依頼に見えます。この場合は簡潔さより抜け漏れの無さを優先し、1つの短い段落に収めようとせず、日付ごとの見出しと箇条書きで整理して構いません。"
     : "簡潔で会話的な答え方をしてください。長文の説明文にはしないでください。";
@@ -2010,6 +2192,7 @@ async function answerKnowledgeBaseQuestion(
     en: `[Past entries]\n${context || "(none)"}\n\n[Question]\n${question}`,
     es: `[Entradas anteriores]\n${context || "(ninguna)"}\n\n[Pregunta]\n${question}`,
     de: `[Bisherige Einträge]\n${context || "(keine)"}\n\n[Frage]\n${question}`,
+    ko: `[과거 기록]\n${context || "(없음)"}\n\n[질문]\n${question}`,
   }[locale];
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -2038,7 +2221,13 @@ async function answerKnowledgeBaseQuestion(
   return data.choices[0].message.content.trim();
 }
 
-const TTS_VOICE: Record<Locale, string> = { ja: "alloy", en: "alloy", es: "alloy", de: "alloy" };
+const TTS_VOICE: Record<Locale, string> = {
+  ja: "alloy",
+  en: "alloy",
+  es: "alloy",
+  de: "alloy",
+  ko: "alloy",
+};
 
 /** 相談機能の回答を音声で聞きたい場合（音声で質問した時など）に使う。
  * 失敗してもチャット自体は落とさず、呼び出し側がテキストのみで
@@ -2109,6 +2298,15 @@ const BROAD_COMPILE_KEYWORDS_DE = [
   "alle meine",
   "alles, was",
 ];
+const BROAD_COMPILE_KEYWORDS_KO = [
+  "요약",
+  "정리해",
+  "정리된",
+  "모아서",
+  "전체적으로",
+  "전부 다",
+  "내 모든",
+];
 
 interface BroadCompileRange {
   isBroad: boolean;
@@ -2131,6 +2329,7 @@ function detectBroadCompileRequest(question: string, locale: Locale): BroadCompi
     en: BROAD_COMPILE_KEYWORDS_EN,
     es: BROAD_COMPILE_KEYWORDS_ES,
     de: BROAD_COMPILE_KEYWORDS_DE,
+    ko: BROAD_COMPILE_KEYWORDS_KO,
   }[locale];
   if (!keywords.some((k) => q.includes(k.toLowerCase()))) return { isBroad: false };
 
@@ -2142,26 +2341,26 @@ function detectBroadCompileRequest(question: string, locale: Locale): BroadCompi
     return s;
   };
 
-  if (/今日|today|\bhoy\b|\bheute\b/.test(q)) {
+  if (/今日|today|\bhoy\b|\bheute\b|오늘/.test(q)) {
     return { isBroad: true, rangeStart: startOfDay(now), rangeEnd: now };
   }
-  if (/先週|last week|semana pasada|letzte woche/.test(q)) {
+  if (/先週|last week|semana pasada|letzte woche|지난주|지난 주/.test(q)) {
     const thisWeekStart = startOfWeek(now);
     const lastWeekStart = new Date(thisWeekStart);
     lastWeekStart.setDate(lastWeekStart.getDate() - 7);
     return { isBroad: true, rangeStart: lastWeekStart, rangeEnd: thisWeekStart };
   }
-  if (/今週|this week|esta semana|diese woche/.test(q)) {
+  if (/今週|this week|esta semana|diese woche|이번주|이번 주/.test(q)) {
     return { isBroad: true, rangeStart: startOfWeek(now), rangeEnd: now };
   }
-  if (/先月|last month|mes pasado|letzten monat|letzter monat/.test(q)) {
+  if (/先月|last month|mes pasado|letzten monat|letzter monat|지난달|지난 달/.test(q)) {
     return {
       isBroad: true,
       rangeStart: new Date(now.getFullYear(), now.getMonth() - 1, 1),
       rangeEnd: new Date(now.getFullYear(), now.getMonth(), 1),
     };
   }
-  if (/今月|this month|este mes|diesen monat/.test(q)) {
+  if (/今月|this month|este mes|diesen monat|이번달|이번 달/.test(q)) {
     return { isBroad: true, rangeStart: new Date(now.getFullYear(), now.getMonth(), 1), rangeEnd: now };
   }
   // 期間の指定が読み取れない場合は日付フィルタなし（直近N件を使う）で扱う。
@@ -2611,6 +2810,24 @@ Im Folgenden erhältst du die Tagebucheinträge, Ideen und Aufgaben der Woche, j
 Gib AUSSCHLIESSLICH das JSON-Objekt aus, ohne zusätzlichen Kommentar.`;
   }
 
+  if (locale === "ko") {
+    return `당신은 사용자 본인이 지난 한 주 동안 기록한 음성 메모 일기(일기·아이디어·할 일)를 돌아보고, 감정 경향과 사고 패턴을 짧게 정리한 "주간 두뇌 리포트"를 작성하는 AI 어시스턴트입니다.
+
+아래에 이번 주 일기·아이디어·할 일 목록을 날짜와 함께, 그리고 이번 주 감정 태그의 집계된 내역을 전달합니다. 이 내용만을 근거로 분석하여 반드시 다음 형태의 JSON 객체로 출력하세요:
+
+{
+  "mood_headline": "이번 주 감정 패턴을 나타내는 짧고 강렬한 한 줄 헤드라인(약 12단어 이내). 주어진 내역에서 가장 많은 상위 2개 감정과 이번 주 전체에서 차지하는 대략적인 비율(%)을 인용하세요. 예: \\"'설렘 70% / 불안 30%'의 도전자 주간!\\". 비율은 반드시 주어진 집계값으로 직접 계산하고, 근거 없는 숫자를 지어내지 마세요. 내역이 비어 있으면 무리하게 기분을 지어내지 말고 이번 주 감정 데이터가 부족했다는 부드러운 한 줄로 대신하세요.",
+  "emotion_narrative": "이번 주 감정 경향을 1~2문장으로. 예를 들어 특정 감정이 어느 요일에 집중되었는지, 주말로 갈수록 나아졌는지 나빠졌는지 등. 따뜻하고 격려하는 톤으로 한국어로 작성하세요. 의미 있는 말을 할 만큼 감정 관련 내용이 충분하지 않다면 억지로 경향을 지어내지 말고 짧게 그렇게 밝히세요.",
+  "top_keywords": [ 최대 10개, {"keyword": "기록에서 그대로 뽑아낸 짧은 단어나 구(대략 2~8자/단어) — 원문과 대조할 수 있도록 추상화된 주제명이 아니어야 함", "count": 언급된 대략적인 횟수} 형태의 객체 ], 등장 빈도 순으로 정렬. 정말로 반복되거나 눈에 띄는 경우에만 키워드로 포함하세요(10개를 채우기 위해 억지로 넣지 마세요). 반복되는 것이 없으면 빈 배열.
+  "shining_ideas": [ 최대 2개, {"title": "짧은 아이디어 제목", "reason": "이 아이디어가 돋보이는 이유를 짧은 한 문장으로"} 형태의 객체 ] — "아이디어" 항목 중에서만, 가장 잠재력이나 번뜩임이 느껴지는 것을 고르세요. 이번 주 아이디어가 없으면 빈 배열.
+  "highlight_quote": { "quote": "이번 주 "일기" 항목 중에서만, 가장 인상적이거나 긍정적이거나 통찰력 있는 한 문장을 그대로(또는 가볍게 다듬어) 인용한 것 — 깨달음, 성취, 진솔한 감정을 가장 잘 담아낸 것을 고르세요. 이번 주 일기가 없으면 빈 문자열.", "reason": "이 문장이 돋보이는 이유를 짧은 한 문장으로" },
+  "advice": "발견한 패턴을 바탕으로 다음 주를 위한 짧고 구체적이며 실행 가능한 조언 하나. 2문장 이내로, 설교하지 않고 따뜻하게, 한국어로.",
+  "weekly_letter": "이번 주의 모든 항목을 읽은 사려 깊은 친구가 사용자에게 직접 쓰는 것처럼, 따뜻하고 개인적이며 서사적인 편지(약 150~300단어 분량). \\"이번 주의 당신에게\\" 같은 인사말로 시작하되(매번 완전히 똑같은 문구를 반복하지 말고 자연스럽게 표현을 바꾸세요), 2인칭("당신")으로 이번 주의 일기 속 순간들, 완료한 할 일, 떠오른 아이디어, 감정의 흐름을 목록이 아닌 하나의 이야기로 엮어서 쓰세요. 추상적인 상투어가 아니라 실제 기록에 나온 구체적인 내용을 언급해서, 틀에 박힌 문구가 아니라 분명히 "이번 주"에 대해 쓴 편지처럼 읽히게 하세요. 진심 어린 따뜻한 인사로 마무리하세요. 이번 주 내용이 너무 적어 진솔하게 쓰기 어렵다면, 내용을 지어내지 말고 조용한 한 주였음을 인정하는 짧고 솔직하면서도 따뜻한 한마디로 대신하세요."
+}
+
+JSON 객체만 출력하고, 불필요한 설명은 포함하지 마세요.`;
+  }
+
   return `あなたはユーザー本人が1週間分記録した音声メモ（日記・アイデア・タスク）を振り返り、「週刊脳内レポート」として感情の傾向や思考パターンを短くまとめるAIアシスタントです。
 
 以下に今週の日記・アイデア・タスクの一覧を日付つきで、そして今週の感情タグの集計済み内訳を渡します。この内容だけを根拠に分析し、必ず以下の形のJSONオブジェクトで出力してください：
@@ -2655,6 +2872,7 @@ async function generateWeeklyReportInsights(
     en: "(no emotion data this week)",
     es: "(sin datos emocionales esta semana)",
     de: "(keine Emotionsdaten diese Woche)",
+    ko: "(이번 주 감정 기록 없음)",
   }[locale];
   const breakdownText = breakdownEntries.length
     ? breakdownEntries.map(([tag, count]) => `${tag}: ${count}`).join(", ")
@@ -2664,6 +2882,7 @@ async function generateWeeklyReportInsights(
     en: `[This week's emotion tag breakdown]\n${breakdownText}\n\n[This week's entries]\n${context || "(none)"}`,
     es: `[Desglose de etiquetas de emoción de esta semana]\n${breakdownText}\n\n[Entradas de esta semana]\n${context || "(ninguna)"}`,
     de: `[Aufschlüsselung der Emotions-Tags dieser Woche]\n${breakdownText}\n\n[Einträge dieser Woche]\n${context || "(keine)"}`,
+    ko: `[이번 주 감정 태그 내역]\n${breakdownText}\n\n[이번 주 기록]\n${context || "(없음)"}`,
   }[locale];
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {

@@ -96,6 +96,23 @@ class VoiceJournalApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
+            // Flutterの既定の解決ロジックは、端末の言語がどのsupportedLocalesにも
+            // 一致しない場合、supportedLocalesの先頭(生成順=アルファベット順)に
+            // フォールバックする。海外展開は英語圏を主軸にしているため、未対応
+            // 言語の端末では意図せず他言語(例: ドイツ語)にならず英語になるよう
+            // 明示する。
+            localeListResolutionCallback: (deviceLocales, supportedLocales) {
+              if (deviceLocales != null) {
+                for (final deviceLocale in deviceLocales) {
+                  for (final supported in supportedLocales) {
+                    if (supported.languageCode == deviceLocale.languageCode) {
+                      return supported;
+                    }
+                  }
+                }
+              }
+              return const Locale('en');
+            },
             themeMode: settings.darkMode ? ThemeMode.dark : ThemeMode.light,
             theme: _buildTheme(Colors.white, Brightness.light, settings.accentColor),
             darkTheme: _buildTheme(Colors.black, Brightness.dark, settings.accentColor),

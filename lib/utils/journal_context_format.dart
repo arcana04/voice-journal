@@ -16,12 +16,14 @@ String formatEntriesAsContext(
     'en' => 'Task',
     'es' => 'Tarea',
     'de' => 'Aufgabe',
+    'ko' => '할 일',
     _ => 'タスク',
   };
   final doneMark = switch (locale) {
     'en' => '(done) ',
     'es' => '(hecho) ',
     'de' => '(erledigt) ',
+    'ko' => '(완료) ',
     _ => '(完了) ',
   };
   final buffer = StringBuffer();
@@ -53,6 +55,7 @@ String _categoryLabel(String category, String locale) {
     'en' => isIdea ? 'Idea' : 'Feeling',
     'es' => isIdea ? 'Idea' : 'Sentimiento',
     'de' => isIdea ? 'Idee' : 'Gefühl',
+    'ko' => isIdea ? '아이디어' : '기분',
     _ => category,
   };
 }
@@ -122,6 +125,27 @@ String _emotionLabel(EmotionTag tag, String locale) {
       EmotionTag.regret => 'Bedauern',
       EmotionTag.anger => 'Wut',
       EmotionTag.dislike => 'Abneigung',
+    };
+  }
+  if (locale == 'ko') {
+    return switch (tag) {
+      EmotionTag.satisfaction => '만족',
+      EmotionTag.gratitude => '감사',
+      EmotionTag.happy => '행복',
+      EmotionTag.love => '사랑',
+      EmotionTag.funny => '재미있음',
+      EmotionTag.joy => '즐거움',
+      EmotionTag.excited => '설렘',
+      EmotionTag.relief => '안심',
+      EmotionTag.calm => '차분함',
+      EmotionTag.neutral => '보통',
+      EmotionTag.boredom => '지루함',
+      EmotionTag.anxious => '불안',
+      EmotionTag.sadness => '슬픔',
+      EmotionTag.fatigue => '피곤함',
+      EmotionTag.regret => '후회',
+      EmotionTag.anger => '분노',
+      EmotionTag.dislike => '싫음',
     };
   }
   return switch (tag) {
