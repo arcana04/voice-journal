@@ -20,7 +20,7 @@
 </head>
 <body>
 
-<div class="lang-switch"><a href="#en">English</a><a href="#ja">日本語</a><a href="#es">Español</a><a href="#de">Deutsch</a><a href="#ko">한국어</a></div>
+<div class="lang-switch"><a href="#en">English</a><a href="#ja">日本語</a><a href="#es">Español</a><a href="#de">Deutsch</a><a href="#ko">한국어</a><a href="#fr">Français</a></div>
 
 <section id="en">
 <h1>Privacy Policy</h1>
@@ -305,6 +305,63 @@
 
 <h2>8. 문의</h2>
 <p>본 방침에 관한 문의는 <a href="mailto:VoiceBrain1004@gmail.com">VoiceBrain1004@gmail.com</a>으로 연락해 주세요.</p>
+</section>
+
+<section id="fr" class="secondary">
+<h1>Politique de confidentialité</h1>
+<p class="updated">Dernière mise à jour : 29 août 2026</p>
+
+<p>Voice Brain (l'"Application") respecte ta vie privée. Cette politique explique quelles informations nous collectons et comment nous les utilisons.</p>
+
+<h2>1. Informations que nous collectons</h2>
+<table>
+<tr><th>Type</th><th>Détails / Moment de la collecte</th></tr>
+<tr><td>Enregistrements vocaux</td><td>Envoyés à notre serveur lorsque tu enregistres, et traités temporairement pour la transcription. L'audio lui-même est supprimé après traitement et n'est pas stocké sur nos serveurs.</td></tr>
+<tr><td>Contenu des entrées (journal, idées, tâches)</td><td>Stocké sur ton appareil. Si tu te connectes avec un compte e-mail, il est également stocké dans le cloud (Firestore) à des fins de sauvegarde. Pour la fonctionnalité de recherche IA entre toutes les entrées, une représentation vectorielle numérique (embedding) générée à partir du texte de ton entrée peut aussi être stockée dans le cloud. Le texte original ne peut pas être reconstruit directement à partir de ce vecteur, et il est supprimé chaque fois que l'entrée sous-jacente est supprimée.</td></tr>
+<tr><td>Photos et vidéos</td><td>Stockées uniquement sur ton appareil ; jamais envoyées à nos serveurs.</td></tr>
+<tr><td>Adresse e-mail</td><td>Collectée uniquement si tu choisis de créer un compte, à des fins d'authentification.</td></tr>
+<tr><td>Statut d'achat/abonnement</td><td>Géré pour le droit au plan Pro. Le paiement est traité par l'App Store / Google Play et le statut de l'abonnement est géré via RevenueCat.</td></tr>
+<tr><td>Paramètre de langue de l'appareil</td><td>Utilisé pour que les réponses de l'IA correspondent à ta langue.</td></tr>
+</table>
+
+<h2>2. Comment nous utilisons les informations</h2>
+<ul>
+  <li>Transcrire ta voix et générer des classifications/résumés/réponses de chat par IA</li>
+  <li>Sauvegarder et synchroniser tes entrées entre appareils</li>
+  <li>Gérer les abonnements et prévenir les abus</li>
+  <li>Répondre aux demandes d'assistance</li>
+</ul>
+
+<h2>3. Services tiers</h2>
+<p>Nous utilisons les services tiers suivants pour fournir l'Application, et pouvons partager des données avec eux en tant que sous-traitants :</p>
+<ul>
+  <li><strong>OpenAI</strong> (l'audio et le texte des entrées sont envoyés pour la transcription, la classification/le résumé/le chat par IA, et pour générer des embeddings vectoriels numériques du texte des entrées pour la recherche IA entre toutes les entrées)</li>
+  <li><strong>Google Firebase / Google Cloud Platform</strong> (authentification, base de données et infrastructure de fonctions sans serveur)</li>
+  <li><strong>RevenueCat</strong> (gestion du statut d'achat des abonnements)</li>
+</ul>
+<p>En dehors de ces sous-traitants, nous ne partageons pas tes informations avec des tiers sans ton consentement, sauf si la loi l'exige. L'Application n'inclut aucun SDK publicitaire ou d'analyse de suivi comportemental.</p>
+
+<h2>4. Conservation des données</h2>
+<p>Les données sur l'appareil sont conservées jusqu'à ce que tu supprimes l'application. Les données synchronisées dans le cloud sont conservées jusqu'à ce que tu supprimes ton compte ou demandes leur suppression.</p>
+
+<h2 id="delete-account-fr">5. Suppression du compte et des données</h2>
+<p>Tu peux supprimer ton compte et toutes les données du cloud toi-même à tout moment depuis l'application Voice Brain : Réglages → Compte → "Supprimer le compte". La suppression de ton compte élimine définitivement :</p>
+<ul>
+  <li>Ta sauvegarde cloud (Firestore) des entrées (journal, idées, tâches) et leurs embeddings de recherche</li>
+  <li>Ta sauvegarde cloud (Storage) de photos et vidéos</li>
+  <li>Ton compte Firebase Auth lui-même (adresse e-mail et autres identifiants)</li>
+</ul>
+<p>Immédiatement après la suppression, les données sur l'appareil sont également effacées et tu peux continuer à utiliser l'application en tant que nouvel utilisateur non connecté. Cette action est irréversible.</p>
+<p>Si tu ne peux pas accéder à l'application pour supprimer ton compte toi-même, contacte-nous à l'adresse ci-dessous et nous vérifierons ta demande et la supprimerons en ton nom dans un délai raisonnable (généralement sous 30 jours).</p>
+
+<h2>6. Confidentialité des enfants</h2>
+<p>L'Application ne s'adresse pas aux enfants de moins de 13 ans, et nous ne collectons pas sciemment d'informations personnelles auprès d'enfants de moins de 13 ans.</p>
+
+<h2>7. Modifications de cette politique</h2>
+<p>Nous pouvons mettre à jour cette politique de temps à autre. Les modifications prennent effet dès leur publication sur cette page.</p>
+
+<h2>8. Contact</h2>
+<p>Pour toute question concernant cette politique, contacte <a href="mailto:VoiceBrain1004@gmail.com">VoiceBrain1004@gmail.com</a>.</p>
 </section>
 
 </body>
