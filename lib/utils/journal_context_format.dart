@@ -12,8 +12,16 @@ String formatEntriesAsContext(
   int maxChars = 24000,
 }) {
   final dateFormat = DateFormat.yMMMd(locale);
-  final taskLabel = locale == 'en' ? 'Task' : 'タスク';
-  final doneMark = locale == 'en' ? '(done) ' : '(完了) ';
+  final taskLabel = switch (locale) {
+    'en' => 'Task',
+    'es' => 'Tarea',
+    _ => 'タスク',
+  };
+  final doneMark = switch (locale) {
+    'en' => '(done) ',
+    'es' => '(hecho) ',
+    _ => '(完了) ',
+  };
   final buffer = StringBuffer();
 
   for (final entry in entries.take(maxEntries)) {
@@ -35,9 +43,15 @@ String formatEntriesAsContext(
   return text.length > maxChars ? text.substring(0, maxChars) : text;
 }
 
+/// noteの[category]はDBには常に固定の日本語文字列（アイデア／感情ログ）で
+/// 保存されているため、表示用ラベルはロケールごとにここで変換する。
 String _categoryLabel(String category, String locale) {
-  if (locale != 'en') return category;
-  return category == kNoteCategoryIdea ? 'Idea' : 'Feeling';
+  final isIdea = category == kNoteCategoryIdea;
+  return switch (locale) {
+    'en' => isIdea ? 'Idea' : 'Feeling',
+    'es' => isIdea ? 'Idea' : 'Sentimiento',
+    _ => category,
+  };
 }
 
 /// AIへのコンテキスト整形専用のラベル。l10n（BuildContext）を使えない純粋な
@@ -63,6 +77,27 @@ String _emotionLabel(EmotionTag tag, String locale) {
       EmotionTag.regret => 'Regret',
       EmotionTag.anger => 'Anger',
       EmotionTag.dislike => 'Dislike',
+    };
+  }
+  if (locale == 'es') {
+    return switch (tag) {
+      EmotionTag.satisfaction => 'Satisfacción',
+      EmotionTag.gratitude => 'Gratitud',
+      EmotionTag.happy => 'Feliz',
+      EmotionTag.love => 'Amor',
+      EmotionTag.funny => 'Divertido',
+      EmotionTag.joy => 'Alegría',
+      EmotionTag.excited => 'Emocionado',
+      EmotionTag.relief => 'Alivio',
+      EmotionTag.calm => 'Tranquilo',
+      EmotionTag.neutral => 'Neutral',
+      EmotionTag.boredom => 'Aburrimiento',
+      EmotionTag.anxious => 'Ansioso',
+      EmotionTag.sadness => 'Triste',
+      EmotionTag.fatigue => 'Cansado',
+      EmotionTag.regret => 'Arrepentimiento',
+      EmotionTag.anger => 'Enojo',
+      EmotionTag.dislike => 'Disgusto',
     };
   }
   return switch (tag) {

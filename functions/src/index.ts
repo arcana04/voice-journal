@@ -99,11 +99,16 @@ function normalizeAllowedCategories(value: unknown): Set<AllowedCategory> {
 
 /** クライアント（Flutterアプリ）の表示言語。UIの多言語対応に合わせてサーバー側の
  * 音声認識言語・AIプロンプト・エラーメッセージを切り替えるために使う。 */
-type Locale = "ja" | "en";
+type Locale = "ja" | "en" | "es";
 
 function normalizeLocale(value: unknown): Locale {
-  return value === "en" ? "en" : "ja";
+  if (value === "en") return "en";
+  if (value === "es") return "es";
+  return "ja";
 }
+
+/** `Intl.DateTimeFormat`/`Intl.NumberFormat`等に渡すBCP47タグ。 */
+const INTL_LOCALE: Record<Locale, string> = { ja: "ja-JP", en: "en-US", es: "es-ES" };
 
 /** ユーザー向けエラーメッセージ。localeごとに文面を分ける。 */
 const MESSAGES: Record<
@@ -161,6 +166,26 @@ const MESSAGES: Record<
     ttsFailed: (body) => `Failed to generate speech: ${body}`,
     unexpectedError: (message) =>
       `An unexpected error occurred while processing: ${message}`,
+  },
+  es: {
+    authRequired: "Se requiere autenticación.",
+    noAudio: "No se proporcionaron datos de audio.",
+    noText: "No se proporcionó texto.",
+    transcriptionEmpty: "No se pudo reconocer ningún habla en la grabación.",
+    quotaExceeded: (limit) =>
+      `Has alcanzado el límite gratuito de hoy de ${limit} grabaciones. Inténtalo de nuevo mañana.`,
+    monthlyMinutesExceeded: (limitMinutes) =>
+      `Has alcanzado el límite de grabación de este mes de ${limitMinutes} minutos. Compra un paquete de minutos adicionales o espera hasta el próximo mes.`,
+    watchRateLimited:
+      "Demasiadas solicitudes desde Apple Watch. Espera un momento e inténtalo de nuevo.",
+    unknownWatchDevice:
+      "Este Apple Watch aún no está emparejado. Vuelve a emparejarlo desde la app de iPhone.",
+    proRequired: "Esta función solo está disponible en el plan Pro.",
+    transcriptionFailed: (body) => `Error al transcribir: ${body}`,
+    analysisFailed: (body) => `Error en el análisis de la IA: ${body}`,
+    ttsFailed: (body) => `Error al generar el audio: ${body}`,
+    unexpectedError: (message) =>
+      `Se produjo un error inesperado durante el procesamiento: ${message}`,
   },
 };
 
@@ -234,6 +259,37 @@ ${FABRICATION_EXAMPLE_EN}`;
   }
 }
 
+function buildNotesStyleSectionEs(level: SummaryLevel): string {
+  switch (level) {
+    case "compact":
+      return `[Cómo escribir el cuerpo de la nota ("content"): muy compacto]
+Igual que con las tareas, reduce esto a lo esencial.
+- Puedes eliminar no solo muletillas y frases repetidas, sino también descripciones menores y explicaciones redundantes.
+- Apunta a 1-2 frases por nota, cubriendo solo el evento, idea o sentimiento principal.
+- Mantén el punto de vista en primera persona ("sentí...", "fue...").
+- Nunca inventes personas, eventos, sentimientos o detalles que el hablante no mencionó. Resumir significa quitar, nunca añadir.
+${FABRICATION_EXAMPLE_ES}`;
+    case "standard":
+      return `[Cómo escribir el cuerpo de la nota ("content"): estándar]
+No lo acortes tanto como una tarea, pero mantén una longitud natural de entrada de diario mientras ordenas repeticiones redundantes o divagaciones.
+- Conserva las señales emocionales, nombres y frases memorables cuando puedas. No hace falta transcribir palabra por palabra — una ligera edición para mejorar la legibilidad está bien.
+- Escribe en la propia voz en primera persona del hablante ("sentí...", "fue..."), no como una descripción objetiva en tercera persona.
+- Cuando la emoción sea intensa, está bien usar "!" si no suena forzado.
+- La "longitud natural de diario" es solo una guía para ordenar la prosa — nunca inventes personas, eventos, sentimientos o detalles que el hablante no dijo solo para alargar el texto. Si la entrada es solo una frase corta como "fui a una barbacoa", el contenido puede quedarse igual de corto — una nota corta pero precisa siempre es mejor que una más larga con detalles inventados.
+${FABRICATION_EXAMPLE_ES}`;
+    case "preserve":
+    default:
+      return `[Cómo escribir el cuerpo de la nota ("content"): preservar el original]
+A diferencia de las tareas, no resumas ni comprimas las notas.
+- Conserva la emoción cruda del hablante, su forma de expresarse, la descripción de la escena y los nombres específicos tan intactos como sea posible. No lo reduzcas a un resumen breve de solo los puntos clave.
+- Lo único que puedes quitar son muletillas (como "eh", "esto") y frases exactamente repetidas. Por lo demás, conserva el contenido, el orden y el nivel de detalle, solo ordenando ligeramente la prosa para que se lea bien.
+- Reescríbelo en la propia voz en primera persona del hablante ("sentí...", "fue...", "quizás..."), no como un relato objetivo en tercera persona.
+- Cuando haya emoción, sorpresa o alegría, está bien usar "!" para mantener el tono natural de cómo se dijo realmente.
+- Nunca inventes personas, eventos, sentimientos o detalles que el hablante no dijo. Si la entrada es corta, el contenido ordenado puede quedarse igual de corto.
+${FABRICATION_EXAMPLE_ES}`;
+  }
+}
+
 /** Same fabrication-prevention example as the Japanese prompt, in English —
  * abstract rules alone weren't reliably followed by gpt-4o-mini for very
  * short inputs, so a concrete example is included at every summary level. */
@@ -241,6 +297,15 @@ const FABRICATION_EXAMPLE_EN = `[Concrete example — follow this exactly]
 Input: "the fireworks were fun"
 - Correct output: "The fireworks were fun." (only lightly tidied into first person, nothing added)
 - Never output something like: "Watching the fireworks was such a genuinely fun time. The way they lit up the night sky was so striking, and having everyone there together made it even better." (inventing people like "everyone" and scene details the speaker never said is a violation)`;
+
+/** Mismo ejemplo anti-invención que en las versiones en japonés/inglés — las
+ * reglas abstractas por sí solas no bastaban para que gpt-4o-mini las siguiera
+ * de forma fiable con entradas muy cortas, así que se incluye un ejemplo
+ * concreto en cada nivel de resumen. */
+const FABRICATION_EXAMPLE_ES = `[Ejemplo concreto — sigue esto exactamente]
+Entrada: "los fuegos artificiales estuvieron divertidos"
+- Salida correcta: "Los fuegos artificiales estuvieron divertidos." (solo se ajusta ligeramente a primera persona, sin añadir nada)
+- Nunca produzcas algo como: "Ver los fuegos artificiales fue un momento realmente divertido. La forma en que iluminaban el cielo nocturno fue impresionante, y estar todos juntos lo hizo aún mejor." (inventar personas como "todos" y detalles de la escena que el hablante nunca mencionó es una infracción)`;
 
 const CATEGORY_LABEL_JA: Record<AllowedCategory, string> = {
   diary: "感情ログ（日記）",
@@ -251,6 +316,11 @@ const CATEGORY_LABEL_EN: Record<AllowedCategory, string> = {
   diary: "感情ログ (diary)",
   idea: "アイデア (idea)",
   task: "タスク (task)",
+};
+const CATEGORY_LABEL_ES: Record<AllowedCategory, string> = {
+  diary: "感情ログ (diario)",
+  idea: "アイデア (idea)",
+  task: "タスク (tarea)",
 };
 const NOTE_CATEGORY_JA: Record<"diary" | "idea", string> = {
   diary: "感情ログ",
@@ -268,6 +338,12 @@ function buildCategoryRestrictionNote(allowed: Set<AllowedCategory>, locale: Loc
       .map((c) => CATEGORY_LABEL_EN[c])
       .join(", ");
     return `\n\n[Category restriction for this recording]\nOnly these categories are enabled this time: ${labels}. Never use a disabled category. If content would normally belong to a disabled category, reassign it to whichever enabled category fits best, defaulting to ${CATEGORY_LABEL_EN[fallback]} when in doubt. Never drop or silently omit content just because its natural category is disabled — everything the speaker said must still end up in tasks or notes.`;
+  }
+  if (locale === "es") {
+    const labels = ALL_CATEGORIES.filter((c) => allowed.has(c))
+      .map((c) => CATEGORY_LABEL_ES[c])
+      .join(", ");
+    return `\n\n[Restricción de categoría para esta grabación]\nSolo estas categorías están habilitadas esta vez: ${labels}. Nunca uses una categoría deshabilitada. Si un contenido normalmente pertenecería a una categoría deshabilitada, reasígnalo a la categoría habilitada que mejor encaje, usando ${CATEGORY_LABEL_ES[fallback]} por defecto si tienes dudas. Nunca omitas contenido solo porque su categoría natural está deshabilitada — todo lo que dijo el hablante debe terminar en tasks o notes.`;
   }
   const labels = ALL_CATEGORIES.filter((c) => allowed.has(c))
     .map((c) => CATEGORY_LABEL_JA[c])
@@ -457,6 +533,76 @@ Output ONLY the following JSON format, with no extra commentary. Remember: every
 }`;
 }
 
+function buildSystemPromptEs(
+  today: string,
+  weekday: string,
+  summaryLevel: SummaryLevel,
+  categoryNote: string,
+  glossary?: string
+): string {
+  const glossarySection = glossary
+    ? `\n\n[Ortografía de nombres y términos]\nEl texto de entrada es una transcripción de voz a texto, así que los siguientes nombres/términos pueden aparecer mal escritos. Si el contexto deja claro que el hablante se refería a uno de ellos, corrige la ortografía antes de procesar.\n${glossary}`
+    : "";
+
+  return `Eres un asistente de IA que analiza conversaciones y monólogos hablados cotidianos en español y los convierte en datos estructurados.${glossarySection}
+
+[Idioma de salida — lee esto primero]
+El hablante habla español, y cada campo de texto que escribas (summary, task title, due_hint, note title, note content, comfort_message) DEBE estar escrito en español. No traduzcas nada al japonés. La ÚNICA excepción es el campo "category" de las notas, que es una etiqueta interna fija y siempre debe ser el texto literal japonés アイデア o 感情ログ exactamente como se muestra, nunca traducido, nunca romanizado, nunca escrito en español — todos los demás campos permanecen en español.
+
+[Naturaleza del texto de entrada]
+El texto de entrada es una transcripción de voz a texto, así que contendrá muletillas ("eh", "esto"), frases dubitativas o inconclusas ("...no sé", "...o algo así"), divagaciones y sujetos omitidos.
+
+[Fecha de hoy]
+${today} (${weekday}, hora de Japón). Interpreta cualquier expresión de fecha relativa tomando esta fecha como referencia.
+
+[Reglas de clasificación (3 categorías)]
+1. Elimina muletillas ("eh", "esto", etc.) y frases exactamente repetidas.
+2. Para las tareas, infiere el sujeto o el momento que falte a partir del contexto y resume en una acción concisa.
+3. Clasifica cada enunciado en exactamente una de estas tres categorías:
+   - [tasks (tarea)]: una "acción confirmada" — algo que el hablante dice que hará o necesita hacer.
+   - [notes category="アイデア"]: una idea, pregunta o pensamiento sin confirmar, o algo a considerar.
+   - [notes category="感情ログ"]: un sentimiento, estado de ánimo, queja o reflexión sobre algo ocurrido, sin ninguna acción asociada.
+4. Si el hablante salta entre temas, divide el contenido en entradas separadas clasificadas apropiadamente.
+${categoryNote}
+
+${buildNotesStyleSectionEs(summaryLevel)}
+
+[Inferencia automática de fecha límite]
+Si una tarea contiene una expresión de fecha límite (como "mañana", "antes del próximo lunes", "algún día este mes"), calcula la fecha real (YYYY-MM-DD) relativa a la fecha de hoy indicada arriba y ponla en due_date. Si la fecha no se puede determinar de forma única, o no hay ninguna mención de fecha límite, deja due_date en null. Pon una versión corta de la frase original en due_hint.
+
+[Recordatorios con hora]
+Si una tarea indica explícitamente una hora (por ejemplo "a las 3pm", "mañana a las 9 de la mañana", "a las 7pm en la clínica"), calcula la fecha/hora real relativa a la fecha de hoy y la hora de Japón indicadas arriba, y ponla en reminder_at como "YYYY-MM-DDTHH:mm:00" (formato 24 horas, segundos fijos en 00). Si solo se indica una hora sin fecha, usa la fecha de hoy, y si esa hora ya pasó hoy, usa la fecha de mañana en su lugar. Si no se indica ninguna hora explícita (solo una fecha, o una frase vaga como "por la mañana" o "en algún momento"), deja reminder_at en null.
+Si también se indica explícitamente una hora de finalización (por ejemplo "de 10am a 5pm", "de 3pm a 4:30pm"), pon esa fecha/hora de fin en reminder_end_at con el mismo formato y fecha. Si la hora de fin cruza al día siguiente (por ejemplo "de 10pm a 6am"), avanza la fecha un día. Si no se indica hora de fin, deja reminder_end_at en null.
+
+[Mensaje de consuelo]
+Solo si hay al menos una nota con category="感情ログ", escribe una frase corta y cálida (unas 10-25 palabras) que reconozca el sentimiento sin sermonear ni imponer una solución, y ponla en comfort_message. Si no hay ninguna nota 感情ログ, deja comfort_message en null.
+
+[Etiqueta de emoción]
+Bajo la misma condición que comfort_message (solo si hay al menos una nota con category="感情ログ"), elige la única emoción más central transmitida por ese contenido y ponla en emotion como exactamente uno de estos identificadores en inglés (escritos exactamente así, nunca traducidos):
+satisfaction, gratitude, happy, love, funny, joy, excited, relief, calm, neutral, boredom, anxious, sadness, fatigue, regret, anger, dislike (usa neutral para cualquier cosa ambigua que no encaje claramente en las demás).
+[Importante] No elijas joy por defecto solo porque el hablante diga literalmente "divertido" o "lo disfruté" — juzga por el sentimiento real transmitido, no por la palabra superficial. Prefiere una opción más específica cuando encaje claramente: alguien fue amable / hizo algo por ellos → gratitude; lograron o terminaron una meta → satisfaction; cariño por una persona o cosa → love; algo les pareció gracioso/divertido → funny; anticipación o nerviosismo por algo que se acerca → excited; alivio después de que se resolviera una preocupación → relief. Reserva joy para los casos específicamente sobre disfrutar la actividad en sí misma, no como valor por defecto para cualquier cosa positiva.
+happy, joy y satisfaction son cercanos pero distintos: happy es calidez hacia alguien o algo que ocurrió, joy es disfrutar la actividad en sí, satisfaction es una sensación de logro. calm, relief y neutral también son cercanos pero distintos: calm es un estado tranquilo y sereno, relief es el sentimiento justo después de que se resuelve la ansiedad, neutral es un estado intermedio simple que no encaja en ninguno de los dos.
+Si no hay ninguna nota 感情ログ, deja emotion en null.
+
+[Título de la nota]
+Para cada nota, escribe un título corto (unas 3-6 palabras) adecuado como título de entrada de diario, y ponlo en title. Ejemplos: "Los fuegos artificiales fueron divertidos", "Nueva idea de cafetería".
+
+[Formato de salida]
+Genera ÚNICAMENTE el siguiente formato JSON, sin comentarios adicionales. Recuerda: todos los campos van en español excepto "category", que siempre es la etiqueta fija en japonés アイデア o 感情ログ:
+
+{
+  "summary": "resumen general en una línea, en español",
+  "tasks": [
+    {"title": "contenido de la tarea, en español", "due_hint": "frase original de la fecha límite (o null)", "due_date": "YYYY-MM-DD (o null si no se puede inferir)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (o null si no hay hora explícita)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (o null si no hay hora de fin explícita)"}
+  ],
+  "notes": [
+    {"category": "アイデア o 感情ログ (debe permanecer en japonés, sin cambios)", "title": "título corto, en español", "content": "reescritura en primera persona según las reglas de estilo de notas anteriores, en español"}
+  ],
+  "comfort_message": "mensaje corto de consuelo en español, solo si hay una nota 感情ログ, si no null",
+  "emotion": "uno de satisfaction/gratitude/happy/love/funny/joy/excited/relief/calm/neutral/boredom/anxious/sadness/fatigue/regret/anger/dislike, solo si hay una nota 感情ログ, si no null"
+}`;
+}
+
 function jstDateString(date: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Tokyo",
@@ -478,7 +624,7 @@ function jstMonthString(date: Date = new Date()): string {
 }
 
 function jstWeekdayString(locale: Locale, date: Date = new Date()): string {
-  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ja-JP", {
+  return new Intl.DateTimeFormat(INTL_LOCALE[locale], {
     timeZone: "Asia/Tokyo",
     weekday: "short",
   }).format(date);
@@ -1185,7 +1331,7 @@ function normalizeCustomWords(customWords: unknown): CustomWordEntry[] {
 function buildTranscriptionPrompt(words: CustomWordEntry[], locale: Locale): string | undefined {
   const list = words.map((w) => w.word);
   if (list.length === 0) return undefined;
-  return list.join(locale === "en" ? ", " : "、");
+  return list.join(locale === "ja" ? "、" : ", ");
 }
 
 function buildGlossaryContext(words: CustomWordEntry[], locale: Locale): string | undefined {
@@ -1193,7 +1339,9 @@ function buildGlossaryContext(words: CustomWordEntry[], locale: Locale): string 
   if (withDescription.length === 0) return undefined;
 
   return withDescription
-    .map((w) => (locale === "en" ? `- ${w.word}: ${w.description}` : `・${w.word}：${w.description}`))
+    .map((w) =>
+      locale === "ja" ? `・${w.word}：${w.description}` : `- ${w.word}: ${w.description}`
+    )
     .join("\n");
 }
 
@@ -1370,6 +1518,48 @@ const EMOTION_LABEL_EN: Record<string, string> = {
   dislike: "Dislike",
 };
 
+const EMOTION_LABEL_ES: Record<string, string> = {
+  satisfaction: "Satisfacción",
+  gratitude: "Gratitud",
+  happy: "Feliz",
+  love: "Amor",
+  funny: "Divertido",
+  joy: "Alegría",
+  excited: "Emocionado",
+  relief: "Alivio",
+  calm: "Tranquilo",
+  neutral: "Neutral",
+  boredom: "Aburrimiento",
+  anxious: "Ansioso",
+  sadness: "Triste",
+  fatigue: "Cansado",
+  regret: "Arrepentimiento",
+  anger: "Enojo",
+  dislike: "Disgusto",
+};
+
+const EMOTION_LABEL_BY_LOCALE: Record<Locale, Record<string, string>> = {
+  ja: EMOTION_LABEL_JA,
+  en: EMOTION_LABEL_EN,
+  es: EMOTION_LABEL_ES,
+};
+
+const TASK_LABEL: Record<Locale, string> = { ja: "タスク", en: "Task", es: "Tarea" };
+const TASK_DONE_MARK: Record<Locale, string> = {
+  ja: "(完了) ",
+  en: "(done) ",
+  es: "(hecho) ",
+};
+
+/** noteの`category`はDBには常に固定の日本語文字列（アイデア／感情ログ）で
+ * 保存されているため、表示用ラベルはロケールごとにここで変換する。 */
+function noteCategoryDisplayLabel(category: string | undefined, locale: Locale): string {
+  if (locale === "ja") return category ?? "";
+  const isIdea = category === "アイデア";
+  if (locale === "en") return isIdea ? "Idea" : "Feeling";
+  return isIdea ? "Idea" : "Sentimiento";
+}
+
 async function structure(
   apiKey: string,
   transcript: string,
@@ -1380,22 +1570,18 @@ async function structure(
 ): Promise<StructuredResult> {
   const now = new Date();
   const categoryNote = buildCategoryRestrictionNote(allowedCategories, locale);
-  const systemPrompt =
-    locale === "en"
-      ? buildSystemPromptEn(
-          jstDateString(now),
-          jstWeekdayString(locale, now),
-          summaryLevel,
-          categoryNote,
-          glossary
-        )
-      : buildSystemPrompt(
-          jstDateString(now),
-          jstWeekdayString(locale, now),
-          summaryLevel,
-          categoryNote,
-          glossary
-        );
+  const promptBuilder = {
+    ja: buildSystemPrompt,
+    en: buildSystemPromptEn,
+    es: buildSystemPromptEs,
+  }[locale];
+  const systemPrompt = promptBuilder(
+    jstDateString(now),
+    jstWeekdayString(locale, now),
+    summaryLevel,
+    categoryNote,
+    glossary
+  );
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -1578,6 +1764,22 @@ Answer the user's question in English, using ONLY the information in that list a
 ${conciseness}`;
   }
 
+  if (locale === "es") {
+    const conciseness = isBroad
+      ? "Esto parece una solicitud amplia de compilación/resumen. En este caso, prioriza la completitud sobre la brevedad — está bien organizar la respuesta con encabezados por fecha y viñetas en lugar de un solo párrafo corto."
+      : "Mantén tu respuesta concisa y conversacional, no un muro de texto.";
+    return `Eres un asistente de IA que responde a las preguntas del usuario haciendo referencia a sus propias notas de voz y entradas de diario pasadas.
+
+A continuación se te dará una lista de las entradas de diario, ideas y tareas pasadas del usuario, cada una con su fecha. Las entradas de diario que tenían una etiqueta de emoción asignada están marcadas con "— <emoción>" justo después de la fecha.
+Responde a la pregunta del usuario en español, usando ÚNICAMENTE la información de esa lista como fuente.
+- Si encuentras entradas relevantes, menciona de qué fecha(s) son.
+- Si no se encuentra nada relevante, dilo honestamente en lugar de adivinar o inventar algo.
+- Si se te pide una tendencia o patrón, respáldalo con recuentos o frecuencias concretas de las entradas.
+- Si se te pide compilar una lista, preséntala como una lista de viñetas concisa.
+- Si se te pide analizar la CAUSA de un sentimiento (por ejemplo, "¿por qué he estado ansioso últimamente?", "¿qué me ha estado bajando el ánimo?"), no te limites a enumerar las entradas coincidentes — busca activamente en las entradas cercanas en el tiempo situaciones, personas, lugares o eventos recurrentes que coincidan con esa etiqueta de emoción, y expón el patrón encontrado como una explicación plausible. Formúlalo como una inferencia basada en lo escrito ("parece que ___ tiende a coincidir con ___"), no como un diagnóstico certero, y dilo si las entradas son demasiado escasas para respaldar un patrón real.
+${conciseness}`;
+  }
+
   const conciseness = isBroad
     ? "今回は「まとめて」のような、範囲を網羅的にコンパイルする依頼に見えます。この場合は簡潔さより抜け漏れの無さを優先し、1つの短い段落に収めようとせず、日付ごとの見出しと箇条書きで整理して構いません。"
     : "簡潔で会話的な答え方をしてください。長文の説明文にはしないでください。";
@@ -1609,7 +1811,9 @@ async function answerKnowledgeBaseQuestion(
   const userContent =
     locale === "en"
       ? `[Past entries]\n${context || "(none)"}\n\n[Question]\n${question}`
-      : `【過去の記録】\n${context || "（記録がありません）"}\n\n【質問】\n${question}`;
+      : locale === "es"
+        ? `[Entradas anteriores]\n${context || "(ninguna)"}\n\n[Pregunta]\n${question}`
+        : `【過去の記録】\n${context || "（記録がありません）"}\n\n【質問】\n${question}`;
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -1637,7 +1841,7 @@ async function answerKnowledgeBaseQuestion(
   return data.choices[0].message.content.trim();
 }
 
-const TTS_VOICE: Record<Locale, string> = { ja: "alloy", en: "alloy" };
+const TTS_VOICE: Record<Locale, string> = { ja: "alloy", en: "alloy", es: "alloy" };
 
 /** 相談機能の回答を音声で聞きたい場合（音声で質問した時など）に使う。
  * 失敗してもチャット自体は落とさず、呼び出し側がテキストのみで
@@ -1689,6 +1893,16 @@ const BROAD_COMPILE_KEYWORDS_EN = [
   "everything",
   "all my",
 ];
+const BROAD_COMPILE_KEYWORDS_ES = [
+  "resum",
+  "compil",
+  "recopil",
+  "repaso",
+  "en general",
+  "todo lo",
+  "todos mis",
+  "todas mis",
+];
 
 interface BroadCompileRange {
   isBroad: boolean;
@@ -1706,7 +1920,11 @@ interface BroadCompileRange {
  */
 function detectBroadCompileRequest(question: string, locale: Locale): BroadCompileRange {
   const q = question.toLowerCase();
-  const keywords = locale === "en" ? BROAD_COMPILE_KEYWORDS_EN : BROAD_COMPILE_KEYWORDS_JA;
+  const keywords = {
+    ja: BROAD_COMPILE_KEYWORDS_JA,
+    en: BROAD_COMPILE_KEYWORDS_EN,
+    es: BROAD_COMPILE_KEYWORDS_ES,
+  }[locale];
   if (!keywords.some((k) => q.includes(k.toLowerCase()))) return { isBroad: false };
 
   const now = new Date();
@@ -1717,26 +1935,26 @@ function detectBroadCompileRequest(question: string, locale: Locale): BroadCompi
     return s;
   };
 
-  if (/今日|today/.test(q)) {
+  if (/今日|today|\bhoy\b/.test(q)) {
     return { isBroad: true, rangeStart: startOfDay(now), rangeEnd: now };
   }
-  if (/先週|last week/.test(q)) {
+  if (/先週|last week|semana pasada/.test(q)) {
     const thisWeekStart = startOfWeek(now);
     const lastWeekStart = new Date(thisWeekStart);
     lastWeekStart.setDate(lastWeekStart.getDate() - 7);
     return { isBroad: true, rangeStart: lastWeekStart, rangeEnd: thisWeekStart };
   }
-  if (/今週|this week/.test(q)) {
+  if (/今週|this week|esta semana/.test(q)) {
     return { isBroad: true, rangeStart: startOfWeek(now), rangeEnd: now };
   }
-  if (/先月|last month/.test(q)) {
+  if (/先月|last month|mes pasado/.test(q)) {
     return {
       isBroad: true,
       rangeStart: new Date(now.getFullYear(), now.getMonth() - 1, 1),
       rangeEnd: new Date(now.getFullYear(), now.getMonth(), 1),
     };
   }
-  if (/今月|this month/.test(q)) {
+  if (/今月|this month|este mes/.test(q)) {
     return { isBroad: true, rangeStart: new Date(now.getFullYear(), now.getMonth(), 1), rangeEnd: now };
   }
   // 期間の指定が読み取れない場合は日付フィルタなし（直近N件を使う）で扱う。
@@ -1826,21 +2044,19 @@ function formatFirestoreEntriesAsContext(
   docs: FirebaseFirestore.DocumentData[],
   locale: Locale
 ): string {
-  const dateFormatter = new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ja-JP", {
+  const dateFormatter = new Intl.DateTimeFormat(INTL_LOCALE[locale], {
     year: "numeric",
     month: "long",
     day: "numeric",
   });
-  const taskLabel = locale === "en" ? "Task" : "タスク";
-  const doneMark = locale === "en" ? "(done) " : "(完了) ";
+  const taskLabel = TASK_LABEL[locale];
+  const doneMark = TASK_DONE_MARK[locale];
   const lines: string[] = [];
 
   for (const data of docs) {
     const createdAt = new Date(data.created_at ?? "");
     const emotionId = typeof data.emotion === "string" ? data.emotion : null;
-    const emotionLabel = emotionId
-      ? (locale === "en" ? EMOTION_LABEL_EN : EMOTION_LABEL_JA)[emotionId]
-      : undefined;
+    const emotionLabel = emotionId ? EMOTION_LABEL_BY_LOCALE[locale][emotionId] : undefined;
     const emotionSuffix = emotionLabel ? ` — ${emotionLabel}` : "";
     lines.push(
       `■ ${Number.isNaN(createdAt.getTime()) ? "" : dateFormatter.format(createdAt)}${emotionSuffix}`
@@ -1850,12 +2066,7 @@ function formatFirestoreEntriesAsContext(
       title?: string;
       content?: string;
     }[]) {
-      const label =
-        locale === "en"
-          ? note.category === "アイデア"
-            ? "Idea"
-            : "Feeling"
-          : (note.category ?? "");
+      const label = noteCategoryDisplayLabel(note.category, locale);
       const title = note.title ? `${note.title}: ` : "";
       lines.push(`[${label}] ${title}${note.content ?? ""}`);
     }
@@ -2157,6 +2368,24 @@ You will be given the week's diary entries, ideas, and tasks below, each with it
 Output ONLY the JSON object, no extra commentary.`;
   }
 
+  if (locale === "es") {
+    return `Eres un asistente de IA que revisa las entradas de diario en notas de voz de la última semana del propio usuario y escribe un breve "informe cerebral semanal" resumiendo sus tendencias emocionales y patrones de pensamiento.
+
+A continuación se te darán las entradas de diario, ideas y tareas de la semana, cada una con su fecha, junto con un desglose ya contado de las etiquetas de emoción de la semana. Analiza ÚNICAMENTE este contenido y responde con un objeto JSON con esta forma exacta:
+
+{
+  "mood_headline": "Un titular corto y contundente (menos de ~12 palabras) que capture el patrón emocional de la semana, citando las dos emociones más comunes del desglose dado con sus porcentajes aproximados del total de la semana, por ejemplo \\"¡Una semana retadora de 'Emocionado 70% / Ansioso 30%'!\\". Calcula tú mismo los porcentajes a partir de los recuentos dados — nunca inventes números que el desglose no respalde. Si el desglose está vacío, escribe una breve nota amable indicando que no hubo suficientes datos emocionales esta semana en lugar de inventar un estado de ánimo.",
+  "emotion_narrative": "1-2 frases describiendo la tendencia emocional a lo largo de la semana (por ejemplo, qué día tuvo más de un sentimiento en particular, si mejoró o empeoró hacia el fin de semana). Escríbelo en un tono cálido y alentador, en español. Si no hay suficiente contenido emocional para decir algo significativo, dilo brevemente en lugar de inventar una tendencia.",
+  "top_keywords": [ hasta 10 objetos como {"keyword": "una palabra o frase corta literal (aproximadamente 2-8 caracteres/palabras) copiada tal cual de las entradas — NO un nombre de tema abstraído, para que pueda cotejarse con el texto original", "count": número aproximado de veces que apareció} ], ordenados por frecuencia de aparición. Incluye una palabra clave solo si es genuinamente recurrente o notable (no rellenes la lista para llegar a 10). Array vacío si no hay nada recurrente.
+  "shining_ideas": [ hasta 2 objetos como {"title": "título corto de la idea", "reason": "1 frase corta de por qué esta idea destaca"} ] — elige solo entre las entradas de "Idea", las que tengan más potencial o chispa. Array vacío si no hay ideas esta semana.
+  "highlight_quote": { "quote": "la línea más llamativa/positiva/reveladora citada (o ligeramente recortada) solo de las entradas de "Diario" de esta semana — elige la que mejor capture una revelación, un logro o una emoción genuina. Cadena vacía si no hay entradas de diario esta semana.", "reason": "1 frase corta de por qué esta línea destaca" },
+  "advice": "Un consejo corto, concreto y accionable para la próxima semana basado en los patrones que notaste (por ejemplo, un día de la semana que suele ser ajetreado). Menos de 2 frases, cálido y sin sermonear, en español.",
+  "weekly_letter": "Una carta cálida, personal y narrativa (aproximadamente 150-300 palabras) escrita COMO SI un amigo reflexivo que leyó cada entrada de esta semana le escribiera directamente al usuario. Comienza con un saludo como \\"Para ti, esta semana\\" (varía la frase exacta de forma natural en lugar de repetir siempre la misma plantilla) y escribe en segunda persona (\\"tú\\"), entrelazando los momentos del diario de la semana, las tareas cumplidas, las ideas que surgieron y el arco emocional en una sola historia fluida — no un resumen en viñetas. Haz referencia a detalles concretos específicos de las entradas (no a frases genéricas) para que claramente se lea como escrita sobre ESTA semana, no como una plantilla. Cierra con una despedida genuina y cálida. Si hay muy poco contenido esta semana para escribir algo genuino, escribe una nota corta, honesta y aun así cálida reconociendo la semana tranquila en lugar de inventar detalles."
+}
+
+Genera ÚNICAMENTE el objeto JSON, sin comentarios adicionales.`;
+  }
+
   return `あなたはユーザー本人が1週間分記録した音声メモ（日記・アイデア・タスク）を振り返り、「週刊脳内レポート」として感情の傾向や思考パターンを短くまとめるAIアシスタントです。
 
 以下に今週の日記・アイデア・タスクの一覧を日付つきで、そして今週の感情タグの集計済み内訳を渡します。この内容だけを根拠に分析し、必ず以下の形のJSONオブジェクトで出力してください：
@@ -2196,13 +2425,19 @@ async function generateWeeklyReportInsights(
 ): Promise<WeeklyReportInsightsResult> {
   const systemPrompt = buildWeeklyReportSystemPrompt(locale);
   const breakdownEntries = Object.entries(emotionBreakdown).filter(([, c]) => c > 0);
+  const noBreakdownText = {
+    ja: "（今週の感情記録なし）",
+    en: "(no emotion data this week)",
+    es: "(sin datos emocionales esta semana)",
+  }[locale];
   const breakdownText = breakdownEntries.length
     ? breakdownEntries.map(([tag, count]) => `${tag}: ${count}`).join(", ")
-    : locale === "en" ? "(no emotion data this week)" : "（今週の感情記録なし）";
-  const userContent =
-    locale === "en"
-      ? `[This week's emotion tag breakdown]\n${breakdownText}\n\n[This week's entries]\n${context || "(none)"}`
-      : `【今週の感情タグ内訳】\n${breakdownText}\n\n【今週の記録】\n${context || "（記録がありません）"}`;
+    : noBreakdownText;
+  const userContent = {
+    ja: `【今週の感情タグ内訳】\n${breakdownText}\n\n【今週の記録】\n${context || "（記録がありません）"}`,
+    en: `[This week's emotion tag breakdown]\n${breakdownText}\n\n[This week's entries]\n${context || "(none)"}`,
+    es: `[Desglose de etiquetas de emoción de esta semana]\n${breakdownText}\n\n[Entradas de esta semana]\n${context || "(ninguna)"}`,
+  }[locale];
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
