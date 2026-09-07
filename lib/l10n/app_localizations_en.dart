@@ -540,7 +540,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'AI digs through everything you\'ve recorded to help';
 
   @override
-  String get paywallBenefitWeeklyReportTitle => 'Weekly Brain Report';
+  String get paywallBenefitWeeklyReportTitle => 'Weekly Recap';
 
   @override
   String get paywallBenefitWeeklyReportDesc =>
@@ -680,7 +680,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wordLabel => 'Word';
 
   @override
-  String get wordHint => 'e.g. Taro Yamada';
+  String get wordHint => 'e.g. John Smith';
 
   @override
   String get descriptionLabelOptional => 'Description (optional)';
@@ -1111,8 +1111,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Time-based reminders for to-dos created from your voice notes';
 
   @override
-  String get weeklyReportNotificationTitle =>
-      'Your Weekly Brain Report is ready!';
+  String get weeklyReportNotificationTitle => 'Your Weekly Recap is ready!';
 
   @override
   String get weeklyReportNotificationBody =>
@@ -1120,20 +1119,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weeklyReportNotificationChannelName =>
-      'Weekly report notifications';
+      'Weekly recap notifications';
 
   @override
   String get weeklyReportNotificationChannelDescription =>
-      'Notifies you every Sunday at 8pm when your Weekly Brain Report is ready';
+      'Notifies you every Sunday at 8pm when your Weekly Recap is ready';
 
   @override
-  String get weeklyReportHistoryTooltip => 'Past reports';
+  String get weeklyReportHistoryTooltip => 'Past recaps';
 
   @override
-  String get weeklyReportHistoryTitle => 'Weekly Report History';
+  String get weeklyReportHistoryTitle => 'Weekly Recap History';
 
   @override
-  String get weeklyReportHistoryEmpty => 'No saved reports yet';
+  String get weeklyReportHistoryEmpty => 'No saved recaps yet';
 
   @override
   String get knowledgeBaseTitle => 'Second Brain';
@@ -1144,7 +1143,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get knowledgeBaseInputHint =>
-      'e.g. What was that app idea I mentioned last month?';
+      'e.g. What was that restaurant I wanted to try?';
 
   @override
   String get knowledgeBaseSend => 'Send';
@@ -1196,17 +1195,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get knowledgeBaseStopAnswer => 'Stop playing';
 
   @override
-  String get weeklyReportSettingsTitle => 'Weekly Brain Report';
+  String get weeklyReportSettingsTitle => 'Weekly Recap';
 
   @override
   String get weeklyReportSettingsSubtitle => 'Delivered every week';
 
   @override
-  String get weeklyReportTitle => 'Weekly Brain Report';
+  String get weeklyReportTitle => 'Weekly Recap';
 
   @override
   String get weeklyReportProLockedDescription =>
-      'The Weekly Brain Report is a Pro feature. Upgrade to unlock it.';
+      'The Weekly Recap is a Pro feature. Upgrade to unlock it.';
 
   @override
   String get weeklyReportRetry => 'Retry';
@@ -1215,7 +1214,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weeklyReportLoadingInsights => 'AI is reflecting on your week…';
 
   @override
-  String get weeklyReportErrorTitle => 'Couldn\'t load the report';
+  String get weeklyReportErrorTitle => 'Couldn\'t load the recap';
 
   @override
   String get weeklyReportEmotionSectionTitle => 'Emotional trends';
@@ -1224,7 +1223,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weeklyReportNoEmotionData => 'No mood entries yet this week';
 
   @override
-  String get weeklyReportConstellationSectionTitle => 'Emotion Graph';
+  String get weeklyReportConstellationSectionTitle => 'Mood Constellation';
 
   @override
   String get weeklyReportCategorySectionTitle => 'Category mix';

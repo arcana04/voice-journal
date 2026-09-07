@@ -410,7 +410,7 @@
 
   "knowledgeBaseTitle": "Deuxième cerveau",
   "knowledgeBaseDescription": "L'IA repasse en revue toutes tes entrées de journal, idées et tâches pour te répondre.",
-  "knowledgeBaseInputHint": "p. ex. C'était quoi déjà cette idée d'application dont j'ai parlé le mois dernier ?",
+  "knowledgeBaseInputHint": "p. ex. C'était quoi déjà ce restaurant que je voulais essayer ?",
   "knowledgeBaseSend": "Envoyer",
   "knowledgeBaseThinking": "Recherche dans tes entrées passées…",
   "knowledgeBaseEmpty": "Il n'y a encore rien d'enregistré. Enregistre quelque chose, puis redemande.",

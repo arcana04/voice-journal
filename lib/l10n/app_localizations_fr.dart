@@ -1161,7 +1161,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get knowledgeBaseInputHint =>
-      'p. ex. C\'était quoi déjà cette idée d\'application dont j\'ai parlé le mois dernier ?';
+      'p. ex. C\'était quoi déjà ce restaurant que je voulais essayer ?';
 
   @override
   String get knowledgeBaseSend => 'Envoyer';

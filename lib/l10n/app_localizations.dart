@@ -1069,7 +1069,7 @@ abstract class AppLocalizations {
   /// No description provided for @paywallBenefitWeeklyReportTitle.
   ///
   /// In en, this message translates to:
-  /// **'Weekly Brain Report'**
+  /// **'Weekly Recap'**
   String get paywallBenefitWeeklyReportTitle;
 
   /// No description provided for @paywallBenefitWeeklyReportDesc.
@@ -1309,7 +1309,7 @@ abstract class AppLocalizations {
   /// No description provided for @wordHint.
   ///
   /// In en, this message translates to:
-  /// **'e.g. Taro Yamada'**
+  /// **'e.g. John Smith'**
   String get wordHint;
 
   /// No description provided for @descriptionLabelOptional.
@@ -2149,7 +2149,7 @@ abstract class AppLocalizations {
   /// No description provided for @weeklyReportNotificationTitle.
   ///
   /// In en, this message translates to:
-  /// **'Your Weekly Brain Report is ready!'**
+  /// **'Your Weekly Recap is ready!'**
   String get weeklyReportNotificationTitle;
 
   /// No description provided for @weeklyReportNotificationBody.
@@ -2161,31 +2161,31 @@ abstract class AppLocalizations {
   /// No description provided for @weeklyReportNotificationChannelName.
   ///
   /// In en, this message translates to:
-  /// **'Weekly report notifications'**
+  /// **'Weekly recap notifications'**
   String get weeklyReportNotificationChannelName;
 
   /// No description provided for @weeklyReportNotificationChannelDescription.
   ///
   /// In en, this message translates to:
-  /// **'Notifies you every Sunday at 8pm when your Weekly Brain Report is ready'**
+  /// **'Notifies you every Sunday at 8pm when your Weekly Recap is ready'**
   String get weeklyReportNotificationChannelDescription;
 
   /// No description provided for @weeklyReportHistoryTooltip.
   ///
   /// In en, this message translates to:
-  /// **'Past reports'**
+  /// **'Past recaps'**
   String get weeklyReportHistoryTooltip;
 
   /// No description provided for @weeklyReportHistoryTitle.
   ///
   /// In en, this message translates to:
-  /// **'Weekly Report History'**
+  /// **'Weekly Recap History'**
   String get weeklyReportHistoryTitle;
 
   /// No description provided for @weeklyReportHistoryEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No saved reports yet'**
+  /// **'No saved recaps yet'**
   String get weeklyReportHistoryEmpty;
 
   /// No description provided for @knowledgeBaseTitle.
@@ -2203,7 +2203,7 @@ abstract class AppLocalizations {
   /// No description provided for @knowledgeBaseInputHint.
   ///
   /// In en, this message translates to:
-  /// **'e.g. What was that app idea I mentioned last month?'**
+  /// **'e.g. What was that restaurant I wanted to try?'**
   String get knowledgeBaseInputHint;
 
   /// No description provided for @knowledgeBaseSend.
@@ -2299,7 +2299,7 @@ abstract class AppLocalizations {
   /// No description provided for @weeklyReportSettingsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Weekly Brain Report'**
+  /// **'Weekly Recap'**
   String get weeklyReportSettingsTitle;
 
   /// No description provided for @weeklyReportSettingsSubtitle.
@@ -2311,13 +2311,13 @@ abstract class AppLocalizations {
   /// No description provided for @weeklyReportTitle.
   ///
   /// In en, this message translates to:
-  /// **'Weekly Brain Report'**
+  /// **'Weekly Recap'**
   String get weeklyReportTitle;
 
   /// No description provided for @weeklyReportProLockedDescription.
   ///
   /// In en, this message translates to:
-  /// **'The Weekly Brain Report is a Pro feature. Upgrade to unlock it.'**
+  /// **'The Weekly Recap is a Pro feature. Upgrade to unlock it.'**
   String get weeklyReportProLockedDescription;
 
   /// No description provided for @weeklyReportRetry.
@@ -2335,7 +2335,7 @@ abstract class AppLocalizations {
   /// No description provided for @weeklyReportErrorTitle.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t load the report'**
+  /// **'Couldn\'t load the recap'**
   String get weeklyReportErrorTitle;
 
   /// No description provided for @weeklyReportEmotionSectionTitle.
@@ -2353,7 +2353,7 @@ abstract class AppLocalizations {
   /// No description provided for @weeklyReportConstellationSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Emotion Graph'**
+  /// **'Mood Constellation'**
   String get weeklyReportConstellationSectionTitle;
 
   /// No description provided for @weeklyReportCategorySectionTitle.

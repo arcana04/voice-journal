@@ -380,7 +380,7 @@
 
   "knowledgeBaseTitle": "思考、記憶の検索",
   "knowledgeBaseDescription": "これまでの日記・アイデア・タスクをAIが振り返って答えます。",
-  "knowledgeBaseInputHint": "例：先月話してたアプリのアイデアってなんだっけ？",
+  "knowledgeBaseInputHint": "例：気になってたあのレストランってどこだっけ？",
   "knowledgeBaseSend": "送信",
   "knowledgeBaseThinking": "過去の記録を振り返っています…",
   "knowledgeBaseEmpty": "まだ記録がありません。録音してからまた聞いてみてください。",

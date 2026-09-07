@@ -410,7 +410,7 @@
 
   "knowledgeBaseTitle": "Segundo cerebro",
   "knowledgeBaseDescription": "La IA repasa todas tus entradas de diario, ideas y tareas para responderte.",
-  "knowledgeBaseInputHint": "p. ej. ¿Cuál era esa idea de app que mencioné el mes pasado?",
+  "knowledgeBaseInputHint": "p. ej. ¿Cuál era ese restaurante que quería probar?",
   "knowledgeBaseSend": "Enviar",
   "knowledgeBaseThinking": "Repasando tus entradas anteriores…",
   "knowledgeBaseEmpty": "Aún no hay nada grabado. Graba algo y luego vuelve a preguntar.",

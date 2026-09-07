@@ -1155,7 +1155,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get knowledgeBaseInputHint =>
-      'p. ej. ¿Cuál era esa idea de app que mencioné el mes pasado?';
+      'p. ej. ¿Cuál era ese restaurante que quería probar?';
 
   @override
   String get knowledgeBaseSend => 'Enviar';

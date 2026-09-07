@@ -1108,7 +1108,7 @@ class AppLocalizationsKo extends AppLocalizations {
       'AI가 지금까지의 일기·아이디어·할 일을 모두 살펴보고 답해드려요.';
 
   @override
-  String get knowledgeBaseInputHint => '예: 지난달에 말했던 그 앱 아이디어가 뭐였지?';
+  String get knowledgeBaseInputHint => '예: 가보고 싶었던 그 식당이 어디였지?';
 
   @override
   String get knowledgeBaseSend => '전송';

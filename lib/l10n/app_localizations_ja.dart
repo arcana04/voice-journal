@@ -1103,7 +1103,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get knowledgeBaseDescription => 'これまでの日記・アイデア・タスクをAIが振り返って答えます。';
 
   @override
-  String get knowledgeBaseInputHint => '例：先月話してたアプリのアイデアってなんだっけ？';
+  String get knowledgeBaseInputHint => '例：気になってたあのレストランってどこだっけ？';
 
   @override
   String get knowledgeBaseSend => '送信';

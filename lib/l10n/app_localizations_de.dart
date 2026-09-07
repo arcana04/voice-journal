@@ -1157,7 +1157,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get knowledgeBaseInputHint =>
-      'z. B. Wie hieß nochmal die App-Idee, die ich letzten Monat erwähnt habe?';
+      'z. B. Wie hieß nochmal das Restaurant, das ich ausprobieren wollte?';
 
   @override
   String get knowledgeBaseSend => 'Senden';

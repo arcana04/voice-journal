@@ -410,7 +410,7 @@
 
   "knowledgeBaseTitle": "Zweites Gehirn",
   "knowledgeBaseDescription": "Die KI durchsucht all deine Tagebucheinträge, Ideen und Aufgaben, um dir zu antworten.",
-  "knowledgeBaseInputHint": "z. B. Wie hieß nochmal die App-Idee, die ich letzten Monat erwähnt habe?",
+  "knowledgeBaseInputHint": "z. B. Wie hieß nochmal das Restaurant, das ich ausprobieren wollte?",
   "knowledgeBaseSend": "Senden",
   "knowledgeBaseThinking": "Durchsucht deine früheren Einträge…",
   "knowledgeBaseEmpty": "Es ist noch nichts aufgenommen. Nimm etwas auf und frage dann erneut.",
