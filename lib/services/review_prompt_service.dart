@@ -9,12 +9,13 @@ class ReviewPromptService {
   static const _lastShownPref = 'review_prompt_last_shown_epoch_ms';
 
   /// この日数だけ経てば再度依頼して良い。OS側の年間上限とは別に、
-  /// こちらからは無闇に呼ばないための自主的な間隔。
-  static const _minGapDays = 120;
+  /// こちらからは無闇に呼ばないための自主的な間隔。_milestones同士の最短間隔
+  /// (3日→14日の11日)より短くして、どの節目も潰されずに機会を持てるようにする。
+  static const _minGapDays = 7;
 
   /// 依頼して良いと判断するstreak(連続記録日数)の節目。「今ちょうど記録を
   /// 続けられて嬉しい」瞬間に限定するため、キリの良い日数だけを対象にする。
-  static const Set<int> _milestones = {3, 7, 14, 30, 60, 100, 180, 365};
+  static const Set<int> _milestones = {3, 14, 60};
 
   final InAppReview _inAppReview;
 
