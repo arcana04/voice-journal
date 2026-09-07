@@ -74,6 +74,10 @@
   "@maxRecordingMinutes": {
     "placeholders": { "minutes": { "type": "int" } }
   },
+  "streakTooltip": "{days}-day streak",
+  "@streakTooltip": {
+    "placeholders": { "days": { "type": "int" } }
+  },
   "textComposeTooltip": "Enter as text",
   "settingsTooltip": "Settings",
   "menuCustomDictionary": "Custom dictionary",

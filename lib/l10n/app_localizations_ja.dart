@@ -188,6 +188,11 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String streakTooltip(int days) {
+    return '$days日連続で記録中';
+  }
+
+  @override
   String get textComposeTooltip => 'テキストで入力';
 
   @override

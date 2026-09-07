@@ -94,6 +94,33 @@ class JournalStore extends ChangeNotifier {
     }
   }
 
+  /// 今日まで(または昨日まで)連続で何日記録が続いているか。日付が変わった
+  /// 瞬間に0へ戻る違和感を避けるため、今日まだ記録が無くても最後の記録が
+  /// 昨日なら連続記録はまだ途切れていない扱いにする。
+  int get currentStreak {
+    if (entries.isEmpty) return 0;
+    final dates = <DateTime>{};
+    for (final entry in entries) {
+      final createdAt = entry.createdAt;
+      dates.add(DateTime(createdAt.year, createdAt.month, createdAt.day));
+    }
+
+    final today = DateTime.now();
+    var cursor = DateTime(today.year, today.month, today.day);
+    if (!dates.contains(cursor)) {
+      final yesterday = cursor.subtract(const Duration(days: 1));
+      if (!dates.contains(yesterday)) return 0;
+      cursor = yesterday;
+    }
+
+    var streak = 0;
+    while (dates.contains(cursor)) {
+      streak++;
+      cursor = cursor.subtract(const Duration(days: 1));
+    }
+    return streak;
+  }
+
   /// 指定idのエントリを[entries]から探す。複数画面（編集画面など）で
   /// 同じ線形探索が重複していたのをまとめたもの。
   JournalEntry? findById(int id) {

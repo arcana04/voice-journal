@@ -193,6 +193,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String streakTooltip(int days) {
+    return '$days-day streak';
+  }
+
+  @override
   String get textComposeTooltip => 'Enter as text';
 
   @override

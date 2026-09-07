@@ -434,6 +434,12 @@ abstract class AppLocalizations {
   /// **'Each recording can be up to {minutes} minutes'**
   String maxRecordingMinutes(int minutes);
 
+  /// No description provided for @streakTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}-day streak'**
+  String streakTooltip(int days);
+
   /// No description provided for @textComposeTooltip.
   ///
   /// In en, this message translates to:

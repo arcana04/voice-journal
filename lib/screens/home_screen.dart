@@ -15,6 +15,7 @@ import '../models/usage_status.dart';
 import '../services/backend_service.dart';
 import '../services/background_recording_service.dart';
 import '../services/recorder_service.dart';
+import '../services/review_prompt_service.dart';
 import '../state/custom_words_store.dart';
 import '../state/journal_store.dart';
 import '../state/record_trigger_store.dart';
@@ -41,6 +42,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final RecorderService _recorder = RecorderService();
   final BackendService _backend = BackendService();
+  final ReviewPromptService _reviewPrompt = ReviewPromptService();
   RecordButtonState _state = RecordButtonState.idle;
   bool _isStartingRecording = false;
   Duration _elapsed = Duration.zero;
@@ -429,13 +431,17 @@ class _HomeScreenState extends State<HomeScreen> {
       emotion: _draftEmotion,
     );
     setState(() => _draftItems = null);
-    await context.read<JournalStore>().addEntry(entry);
+    final store = context.read<JournalStore>();
+    await store.addEntry(entry);
     if (!mounted) return;
     setState(
       () =>
           _statusMessage = AppLocalizations.of(context)!
               .statusOrganized(entry.summary),
     );
+    // 記録の保存に成功し、ユーザーが満足しているはずのこの瞬間だけ、節目の
+    // streakに達していればストア評価を依頼する(エラー直後などでは呼ばない)。
+    unawaited(_reviewPrompt.maybeRequestForStreak(store.currentStreak));
   }
 
   void _discardDraft() {
@@ -737,6 +743,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 if (draftItems == null)
                   Positioned(
+                    top: 8,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: _StreakChip(
+                        streak: context.watch<JournalStore>().currentStreak,
+                      ),
+                    ),
+                  ),
+                if (draftItems == null)
+                  Positioned(
                     top: 4,
                     left: 4,
                     child: IconButton(
@@ -988,6 +1005,40 @@ class _TextComposerSheetState extends State<_TextComposerSheet> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 録音画面上部中央に出す「🔥 N」の連続記録日数バッジ。streakが0の間は
+/// 何も表示しない（記録を始めたばかりのユーザーに「0日」を見せて
+/// 気落ちさせないため）。
+class _StreakChip extends StatelessWidget {
+  final int streak;
+
+  const _StreakChip({required this.streak});
+
+  @override
+  Widget build(BuildContext context) {
+    if (streak <= 0) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context)!;
+    return Tooltip(
+      message: l10n.streakTooltip(streak),
+      child: ScrimText(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🔥', style: TextStyle(fontSize: 14)),
+            const SizedBox(width: 4),
+            Text(
+              '$streak',
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
       ),
     );
   }

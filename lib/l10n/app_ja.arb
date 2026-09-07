@@ -62,6 +62,10 @@
   "statusProcessingFinishing": "仕上げています…",
   "maxRecordingSeconds": "1回の録音は最大{seconds}秒です",
   "maxRecordingMinutes": "1回の録音は最大{minutes}分です",
+  "streakTooltip": "{days}日連続で記録中",
+  "@streakTooltip": {
+    "placeholders": { "days": { "type": "int" } }
+  },
   "textComposeTooltip": "テキストで入力",
   "settingsTooltip": "設定",
   "menuCustomDictionary": "カスタム辞書",
