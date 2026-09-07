@@ -166,6 +166,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get statusTapToRecord => 'タップして録音開始';
 
   @override
+  String get recordPromptQuestion1 => '今日、思わずクスッと笑ったこと・嬉しかった瞬間は？';
+
+  @override
+  String get recordPromptQuestion2 => '今日一日、自分の体や心は疲れてる？正直な感覚を教えて。';
+
+  @override
+  String get recordPromptQuestion3 => '今日、誰か（または自分）に「ありがとう」を言うなら？';
+
+  @override
+  String get recordPromptQuestion4 => '今週の自分に、一言声をかけるなら？';
+
+  @override
+  String get recordPromptQuestion5 => '今日のうちにやっておかなきゃいけないことはある？';
+
+  @override
   String get statusRecording => '録音中… もう一度タップで停止';
 
   @override
@@ -262,6 +277,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get themeColorSheetTitle => 'テーマカラーを選ぶ';
+
+  @override
+  String get languageTitle => '言語';
+
+  @override
+  String get languageSubtitle => 'アプリの表示言語を選びます';
+
+  @override
+  String get languageSheetTitle => '言語を選ぶ';
+
+  @override
+  String get languageSystemDefault => '端末の言語設定に従う';
 
   @override
   String get settingsProBadge => 'Pro限定';
@@ -571,6 +598,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get paywallContinueButton => '続ける';
+
+  @override
+  String get paywallSignInRequiredTitle => '購入にはログインが必要です';
+
+  @override
+  String get paywallSignInRequiredDescription =>
+      'ログインしておくと、アプリを再インストールしても購入内容を復元できます。';
 
   @override
   String homeUsageToday(int used, int limit) {

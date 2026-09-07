@@ -11,11 +11,7 @@ class RecordButton extends StatefulWidget {
   final RecordButtonState state;
   final VoidCallback onTap;
 
-  const RecordButton({
-    super.key,
-    required this.state,
-    required this.onTap,
-  });
+  const RecordButton({super.key, required this.state, required this.onTap});
 
   @override
   State<RecordButton> createState() => _RecordButtonState();
@@ -56,8 +52,8 @@ class _RecordButtonState extends State<RecordButton>
     return GestureDetector(
       onTap: isProcessing ? null : widget.onTap,
       child: SizedBox(
-        width: 216,
-        height: 216,
+        width: 188,
+        height: 188,
         child: Stack(
           alignment: Alignment.center,
           children: [
@@ -73,8 +69,8 @@ class _RecordButtonState extends State<RecordButton>
                 return Transform.scale(
                   scale: scale,
                   child: Container(
-                    width: 216,
-                    height: 216,
+                    width: 188,
+                    height: 188,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
@@ -91,8 +87,8 @@ class _RecordButtonState extends State<RecordButton>
             // 本体: つや感のあるグラデーション球。
             AnimatedContainer(
               duration: const Duration(milliseconds: 250),
-              width: 176,
-              height: 176,
+              width: 152,
+              height: 152,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
@@ -115,7 +111,7 @@ class _RecordButtonState extends State<RecordButton>
                     : Icon(
                         isRecording ? Icons.stop_rounded : Icons.mic_rounded,
                         color: Colors.white,
-                        size: 64,
+                        size: 56,
                       ),
               ),
             ),

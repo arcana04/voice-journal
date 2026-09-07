@@ -7,6 +7,7 @@ class SettingsService {
   static const _darkModePref = 'dark_mode';
   static const _hasSeenOnboardingPref = 'has_seen_onboarding';
   static const _accentColorIndexPref = 'accent_color_index';
+  static const _languageCodePref = 'language_code';
 
   Future<SummaryLevel> getSummaryLevel() async {
     final prefs = await SharedPreferences.getInstance();
@@ -36,6 +37,21 @@ class SettingsService {
   Future<void> setAccentColorIndex(int index) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_accentColorIndexPref, index);
+  }
+
+  /// nullは「端末の言語設定に従う」を意味する。
+  Future<String?> getLanguageCode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_languageCodePref);
+  }
+
+  Future<void> setLanguageCode(String? value) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (value == null) {
+      await prefs.remove(_languageCodePref);
+    } else {
+      await prefs.setString(_languageCodePref, value);
+    }
   }
 
   Future<bool> getHasSeenOnboarding() async {

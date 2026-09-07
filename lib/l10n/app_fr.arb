@@ -62,6 +62,11 @@
     "placeholders": { "summary": { "type": "String" } }
   },
   "statusTapToRecord": "Appuyer pour commencer l'enregistrement",
+  "recordPromptQuestion1": "Qu'est-ce qui t'a fait sourire ou t'a rendu heureux aujourd'hui ?",
+  "recordPromptQuestion2": "Sois honnête : comment se sentent ton corps et ton esprit aujourd'hui ?",
+  "recordPromptQuestion3": "Si tu pouvais dire \"merci\" à quelqu'un (ou à toi-même) aujourd'hui, à qui serait-ce ?",
+  "recordPromptQuestion4": "Que dirais-tu à toi-même cette semaine ?",
+  "recordPromptQuestion5": "Reste-t-il quelque chose que tu dois absolument faire aujourd'hui ?",
   "statusRecording": "Enregistrement… appuyer à nouveau pour arrêter",
   "statusProcessing": "L'IA analyse…",
   "statusProcessingSorting": "Tri en journal, idées et tâches…",
@@ -103,6 +108,10 @@
   "themeColorTitle": "Couleur du thème",
   "themeColorSubtitle": "Changer la couleur d'accent générale de l'application",
   "themeColorSheetTitle": "Choisir une couleur de thème",
+  "languageTitle": "Langue",
+  "languageSubtitle": "Choisir la langue d'affichage de l'application",
+  "languageSheetTitle": "Choisir une langue",
+  "languageSystemDefault": "Suivre la langue de l'appareil",
   "settingsProBadge": "Pro uniquement",
   "integrationsSettingsTitle": "Intégrations",
   "integrationsCalendarRowTitle": "Intégration du calendrier",
@@ -206,6 +215,8 @@
   "paywallPlanLifetimeCaption": "Synchronisation cloud des photos/vidéos non incluse",
   "paywallPlanComingSoon": "Bientôt disponible",
   "paywallContinueButton": "Continuer",
+  "paywallSignInRequiredTitle": "Connectez-vous pour continuer",
+  "paywallSignInRequiredDescription": "La connexion protège votre achat, afin de pouvoir le restaurer même après avoir réinstallé l'application.",
 
   "homeUsageToday": "Aujourd'hui {used} / {limit}",
   "@homeUsageToday": {

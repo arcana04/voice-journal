@@ -175,6 +175,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get statusTapToRecord => 'Appuyer pour commencer l\'enregistrement';
 
   @override
+  String get recordPromptQuestion1 =>
+      'Qu\'est-ce qui t\'a fait sourire ou t\'a rendu heureux aujourd\'hui ?';
+
+  @override
+  String get recordPromptQuestion2 =>
+      'Sois honnête : comment se sentent ton corps et ton esprit aujourd\'hui ?';
+
+  @override
+  String get recordPromptQuestion3 =>
+      'Si tu pouvais dire \"merci\" à quelqu\'un (ou à toi-même) aujourd\'hui, à qui serait-ce ?';
+
+  @override
+  String get recordPromptQuestion4 =>
+      'Que dirais-tu à toi-même cette semaine ?';
+
+  @override
+  String get recordPromptQuestion5 =>
+      'Reste-t-il quelque chose que tu dois absolument faire aujourd\'hui ?';
+
+  @override
   String get statusRecording =>
       'Enregistrement… appuyer à nouveau pour arrêter';
 
@@ -278,6 +298,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get themeColorSheetTitle => 'Choisir une couleur de thème';
+
+  @override
+  String get languageTitle => 'Langue';
+
+  @override
+  String get languageSubtitle =>
+      'Choisir la langue d\'affichage de l\'application';
+
+  @override
+  String get languageSheetTitle => 'Choisir une langue';
+
+  @override
+  String get languageSystemDefault => 'Suivre la langue de l\'appareil';
 
   @override
   String get settingsProBadge => 'Pro uniquement';
@@ -610,6 +643,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get paywallContinueButton => 'Continuer';
+
+  @override
+  String get paywallSignInRequiredTitle => 'Connectez-vous pour continuer';
+
+  @override
+  String get paywallSignInRequiredDescription =>
+      'La connexion protège votre achat, afin de pouvoir le restaurer même après avoir réinstallé l\'application.';
 
   @override
   String homeUsageToday(int used, int limit) {

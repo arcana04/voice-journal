@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,6 +33,8 @@ import 'buy_minutes_screen.dart';
 import 'paywall_screen.dart';
 import 'settings_screen.dart';
 
+const int kRecordPromptQuestionCount = 5;
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -54,6 +57,30 @@ class _HomeScreenState extends State<HomeScreen> {
   Timer? _processingPhraseTimer;
   int _processingPhraseIndex = 0;
   static const int _processingPhraseCount = 3;
+
+  /// 何を話せばいいか迷わないよう、待機中の波形の上にランダムな問いかけを表示する。
+  /// 録音の保存/破棄で待機状態へ戻るたびに次の問いへ差し替える([_rerollPrompt])。
+  final Random _promptRandom = Random();
+  int _promptIndex = Random().nextInt(kRecordPromptQuestionCount);
+
+  void _rerollPrompt() {
+    if (kRecordPromptQuestionCount <= 1) return;
+    // 同じ問いが連続で出て「変わっていない」ように見えるのを避けるため、
+    // 直前と異なるインデックスが出るまで引き直す。
+    int next;
+    do {
+      next = _promptRandom.nextInt(kRecordPromptQuestionCount);
+    } while (next == _promptIndex);
+    _promptIndex = next;
+  }
+
+  String _promptQuestion(AppLocalizations l10n) => switch (_promptIndex) {
+    0 => l10n.recordPromptQuestion1,
+    1 => l10n.recordPromptQuestion2,
+    2 => l10n.recordPromptQuestion3,
+    3 => l10n.recordPromptQuestion4,
+    _ => l10n.recordPromptQuestion5,
+  };
 
   String _draftSummary = '';
   DateTime? _draftCreatedAt;
@@ -374,6 +401,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _state = RecordButtonState.idle;
       _statusMessage = l10n.statusError(message);
+      _rerollPrompt();
     });
     final isQuotaExceeded =
         e is BackendServiceException && e.code == 'resource-exhausted';
@@ -430,7 +458,10 @@ class _HomeScreenState extends State<HomeScreen> {
       comfortMessage: _draftComfortMessage,
       emotion: _draftEmotion,
     );
-    setState(() => _draftItems = null);
+    setState(() {
+      _draftItems = null;
+      _rerollPrompt();
+    });
     final store = context.read<JournalStore>();
     await store.addEntry(entry);
     if (!mounted) return;
@@ -448,6 +479,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _draftItems = null;
       _statusMessage = null;
+      _rerollPrompt();
     });
   }
 
@@ -552,184 +584,223 @@ class _HomeScreenState extends State<HomeScreen> {
           SafeArea(
             child: Stack(
               children: [
-                draftItems != null
-                    ? EntryReview(
-                        summary: _draftSummary,
-                        initialItems: draftItems,
-                        enabledCategories: _draftEnabledCategories,
-                        onSave: _saveDraft,
-                        onDiscard: _discardDraft,
-                      )
-                    : Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Visibility(
-                              visible: _state == RecordButtonState.recording,
-                              maintainState: true,
-                              maintainAnimation: true,
-                              maintainSize: true,
-                              child: ScrimText(
-                                child: Text(
-                                  '${_formatDuration(_elapsed)} / ${_formatDuration(_maxDuration)}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineMedium,
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 260),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  child: draftItems != null
+                      ? EntryReview(
+                          key: const ValueKey('review'),
+                          summary: _draftSummary,
+                          initialItems: draftItems,
+                          enabledCategories: _draftEnabledCategories,
+                          onSave: _saveDraft,
+                          onDiscard: _discardDraft,
+                        )
+                      : Center(
+                          key: const ValueKey('record'),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // 何を話せばいいか迷わないよう、待機中だけ波形の上に
+                              // ランダムな問いかけを表示する。maintainSizeで
+                              // 録音中も高さを確保し、下のボタン/波形の位置が
+                              // 録音開始のたびにガタつくのを防ぐ。
+                              Visibility(
+                                visible: _state == RecordButtonState.idle,
+                                maintainState: true,
+                                maintainAnimation: true,
+                                maintainSize: true,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 36,
+                                  ),
+                                  child: Text(
+                                    _promptQuestion(l10n),
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          fontStyle: FontStyle.italic,
+                                          fontSize: 14.5,
+                                          height: 1.4,
+                                          letterSpacing: 0.15,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .outline,
+                                        ),
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 16),
-                            Waveform(
-                              mode: switch (_state) {
-                                RecordButtonState.recording =>
-                                  WaveformMode.recording,
-                                RecordButtonState.processing =>
-                                  WaveformMode.processing,
-                                RecordButtonState.idle => WaveformMode.idle,
-                              },
-                            ),
-                            const SizedBox(height: 32),
-                            Visibility(
-                              visible: _state == RecordButtonState.idle,
-                              maintainState: true,
-                              maintainAnimation: true,
-                              maintainSize: true,
-                              child: _CategoryFilterRow(
-                                selected: _selectedCategories,
-                                onToggle: _toggleCategory,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            RecordButton(state: _state, onTap: _onTap),
-                            const SizedBox(height: 32),
-                            ScrimText(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  AnimatedSwitcher(
-                                    duration: const Duration(
-                                      milliseconds: 250,
-                                    ),
-                                    transitionBuilder: (child, animation) =>
-                                        FadeTransition(
-                                          opacity: animation,
-                                          child: SlideTransition(
-                                            position:
-                                                Tween<Offset>(
-                                                  begin: const Offset(0, 0.15),
-                                                  end: Offset.zero,
-                                                ).animate(animation),
-                                            child: child,
-                                          ),
-                                        ),
-                                    child: Text(
-                                      _statusLabel(l10n),
-                                      key: ValueKey(
-                                        '$_state-${_state == RecordButtonState.processing ? _processingPhraseIndex : 0}',
-                                      ),
-                                      textAlign: TextAlign.center,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium,
-                                    ),
+                              const SizedBox(height: 12),
+                              Visibility(
+                                visible: _state == RecordButtonState.recording,
+                                maintainState: true,
+                                maintainAnimation: true,
+                                maintainSize: true,
+                                child: ScrimText(
+                                  child: Text(
+                                    '${_formatDuration(_elapsed)} / ${_formatDuration(_maxDuration)}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineMedium,
                                   ),
-                                  if (_state == RecordButtonState.idle) ...[
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      isPro
-                                          ? l10n.maxRecordingMinutes(
-                                              kProMaxRecordingSeconds ~/ 60,
-                                            )
-                                          : l10n.maxRecordingSeconds(
-                                              kMaxRecordingSeconds,
-                                            ),
-                                      textAlign: TextAlign.center,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .outline,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    FutureBuilder<UsageStatus>(
-                                      future: _usageFuture,
-                                      builder: (context, snapshot) {
-                                        final usage = snapshot.data;
-                                        if (usage == null) {
-                                          return const SizedBox.shrink();
-                                        }
-                                        return Text(
-                                          l10n.homeUsageToday(
-                                            usage.used,
-                                            usage.limit,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .outline,
-                                              ),
-                                        );
-                                      },
-                                    ),
-                                    FutureBuilder<UsageStatus>(
-                                      future: _usageFuture,
-                                      builder: (context, snapshot) {
-                                        final usage = snapshot.data;
-                                        if (usage == null ||
-                                            !usage.hasMonthlyBudget) {
-                                          return const SizedBox.shrink();
-                                        }
-                                        final usedMinutes =
-                                            (usage.monthlyUsedSeconds ?? 0) ~/
-                                            60;
-                                        final limitMinutes =
-                                            (usage.monthlyLimitSeconds ?? 0) ~/
-                                            60;
-                                        return Text(
-                                          l10n.homeUsageMonth(
-                                            usedMinutes,
-                                            limitMinutes,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .outline,
-                                              ),
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                  if (_statusMessage != null) ...[
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      _statusMessage!,
-                                      textAlign: TextAlign.center,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall,
-                                    ),
-                                  ],
-                                ],
+                                ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 16),
+                              Waveform(
+                                mode: switch (_state) {
+                                  RecordButtonState.recording =>
+                                    WaveformMode.recording,
+                                  RecordButtonState.processing =>
+                                    WaveformMode.processing,
+                                  RecordButtonState.idle => WaveformMode.idle,
+                                },
+                              ),
+                              const SizedBox(height: 24),
+                              Visibility(
+                                visible: _state == RecordButtonState.idle,
+                                maintainState: true,
+                                maintainAnimation: true,
+                                maintainSize: true,
+                                child: _CategoryFilterRow(
+                                  selected: _selectedCategories,
+                                  onToggle: _toggleCategory,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              RecordButton(state: _state, onTap: _onTap),
+                              const SizedBox(height: 24),
+                              ScrimText(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    AnimatedSwitcher(
+                                      duration: const Duration(
+                                        milliseconds: 250,
+                                      ),
+                                      transitionBuilder: (child, animation) =>
+                                          FadeTransition(
+                                            opacity: animation,
+                                            child: SlideTransition(
+                                              position: Tween<Offset>(
+                                                begin: const Offset(0, 0.15),
+                                                end: Offset.zero,
+                                              ).animate(animation),
+                                              child: child,
+                                            ),
+                                          ),
+                                      child: Text(
+                                        _statusLabel(l10n),
+                                        key: ValueKey(
+                                          '$_state-${_state == RecordButtonState.processing ? _processingPhraseIndex : 0}',
+                                        ),
+                                        textAlign: TextAlign.center,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium,
+                                      ),
+                                    ),
+                                    if (_state == RecordButtonState.idle) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        isPro
+                                            ? l10n.maxRecordingMinutes(
+                                                kProMaxRecordingSeconds ~/ 60,
+                                              )
+                                            : l10n.maxRecordingSeconds(
+                                                kMaxRecordingSeconds,
+                                              ),
+                                        textAlign: TextAlign.center,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .outline,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      FutureBuilder<UsageStatus>(
+                                        future: _usageFuture,
+                                        builder: (context, snapshot) {
+                                          final usage = snapshot.data;
+                                          if (usage == null) {
+                                            return const SizedBox.shrink();
+                                          }
+                                          return Text(
+                                            l10n.homeUsageToday(
+                                              usage.used,
+                                              usage.limit,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .outline,
+                                                ),
+                                          );
+                                        },
+                                      ),
+                                      FutureBuilder<UsageStatus>(
+                                        future: _usageFuture,
+                                        builder: (context, snapshot) {
+                                          final usage = snapshot.data;
+                                          if (usage == null ||
+                                              !usage.hasMonthlyBudget) {
+                                            return const SizedBox.shrink();
+                                          }
+                                          final usedMinutes =
+                                              (usage.monthlyUsedSeconds ?? 0) ~/
+                                              60;
+                                          final limitMinutes =
+                                              (usage.monthlyLimitSeconds ??
+                                                  0) ~/
+                                              60;
+                                          return Text(
+                                            l10n.homeUsageMonth(
+                                              usedMinutes,
+                                              limitMinutes,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .outline,
+                                                ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                    if (_statusMessage != null) ...[
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        _statusMessage!,
+                                        textAlign: TextAlign.center,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                ),
                 if (showComposerFab)
                   Positioned(
                     right: 16,
@@ -1033,9 +1104,8 @@ class _StreakChip extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               '$streak',
-              style: Theme.of(
-                context,
-              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(context).textTheme.labelLarge
+                  ?.copyWith(fontWeight: FontWeight.w700),
             ),
           ],
         ),

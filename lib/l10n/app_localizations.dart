@@ -406,6 +406,36 @@ abstract class AppLocalizations {
   /// **'Tap to start recording'**
   String get statusTapToRecord;
 
+  /// No description provided for @recordPromptQuestion1.
+  ///
+  /// In en, this message translates to:
+  /// **'What made you smile or feel happy today?'**
+  String get recordPromptQuestion1;
+
+  /// No description provided for @recordPromptQuestion2.
+  ///
+  /// In en, this message translates to:
+  /// **'Be honest — how are your body and mind feeling today?'**
+  String get recordPromptQuestion2;
+
+  /// No description provided for @recordPromptQuestion3.
+  ///
+  /// In en, this message translates to:
+  /// **'If you could say \"thank you\" to someone (or yourself) today, who would it be?'**
+  String get recordPromptQuestion3;
+
+  /// No description provided for @recordPromptQuestion4.
+  ///
+  /// In en, this message translates to:
+  /// **'What would you say to yourself this week?'**
+  String get recordPromptQuestion4;
+
+  /// No description provided for @recordPromptQuestion5.
+  ///
+  /// In en, this message translates to:
+  /// **'Is there anything you still need to get done today?'**
+  String get recordPromptQuestion5;
+
   /// No description provided for @statusRecording.
   ///
   /// In en, this message translates to:
@@ -585,6 +615,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a theme color'**
   String get themeColorSheetTitle;
+
+  /// No description provided for @languageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get languageTitle;
+
+  /// No description provided for @languageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the app\'s display language'**
+  String get languageSubtitle;
+
+  /// No description provided for @languageSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a language'**
+  String get languageSheetTitle;
+
+  /// No description provided for @languageSystemDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow device language'**
+  String get languageSystemDefault;
 
   /// No description provided for @settingsProBadge.
   ///
@@ -1173,6 +1227,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue'**
   String get paywallContinueButton;
+
+  /// No description provided for @paywallSignInRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to continue'**
+  String get paywallSignInRequiredTitle;
+
+  /// No description provided for @paywallSignInRequiredDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in protects your purchase, so you can restore it even after reinstalling the app.'**
+  String get paywallSignInRequiredDescription;
 
   /// No description provided for @homeUsageToday.
   ///

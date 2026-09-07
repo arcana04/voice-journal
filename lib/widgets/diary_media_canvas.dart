@@ -13,7 +13,6 @@ import 'media_gallery.dart';
 
 const double _kBaseTileSize = 110;
 const double _kMinScale = 0.5;
-const double _kMaxScale = 2.0;
 const double _kDefaultCanvasHeight = 260;
 
 /// 日記に添付された写真・動画を表示するキャンバス。[editable]がtrue
@@ -47,7 +46,8 @@ class _DiaryMediaCanvasState extends State<DiaryMediaCanvas> {
   void _openViewer(int index) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => MediaViewer(paths: widget.entry.imagePaths, initialIndex: index),
+        builder: (_) =>
+            MediaViewer(paths: widget.entry.imagePaths, initialIndex: index),
       ),
     );
   }
@@ -86,10 +86,19 @@ class _DiaryMediaCanvasState extends State<DiaryMediaCanvas> {
       builder: (context, constraints) {
         final canvasW = constraints.maxWidth;
         final canvasH = widget.height;
+        // 「横幅いっぱいまで拡大したい」という要望に対応するため、最大拡大率を
+        // 固定値ではなくキャンバス幅から逆算する（スライダー最大＝画像が
+        // 画面幅ぴったりになる大きさ）。タイルは常に正方形なので、その場合は
+        // 高さも同じだけ必要になる（下のneededCanvasHで対応）。
+        final maxScale = math.max(_kMinScale, canvasW / _kBaseTileSize);
 
         EntryImage? selected;
         var unarrangedIndex = 0;
         final tiles = <Widget>[];
+        // 拡大したタイルが既定の高さ(canvasH)からはみ出す場合、切り取らずに
+        // キャンバス自体をその分だけ縦に伸ばす。既存の位置正規化(x/y)は
+        // 変えずcanvasH基準のまま保つため、表示用の高さだけ別に持つ。
+        var neededCanvasH = canvasH;
 
         for (var i = 0; i < images.length; i++) {
           final image = images[i];
@@ -98,7 +107,7 @@ class _DiaryMediaCanvasState extends State<DiaryMediaCanvas> {
 
           final scale = (isSelected && _liveScale != null)
               ? _liveScale!
-              : (image.scale ?? 1.0).clamp(_kMinScale, _kMaxScale);
+              : (image.scale ?? 1.0).clamp(_kMinScale, maxScale);
           final size = _kBaseTileSize * scale;
 
           final Offset centerPx;
@@ -111,10 +120,18 @@ class _DiaryMediaCanvasState extends State<DiaryMediaCanvas> {
             unarrangedIndex++;
           }
 
+          final left = (centerPx.dx - size / 2)
+              .clamp(0.0, math.max(0.0, canvasW - size))
+              .toDouble();
+          final top = (centerPx.dy - size / 2)
+              .clamp(0.0, math.max(0.0, canvasH - size))
+              .toDouble();
+          neededCanvasH = math.max(neededCanvasH, top + size);
+
           tiles.add(
             Positioned(
-              left: (centerPx.dx - size / 2).clamp(0.0, math.max(0.0, canvasW - size)),
-              top: (centerPx.dy - size / 2).clamp(0.0, math.max(0.0, canvasH - size)),
+              left: left,
+              top: top,
               width: size,
               height: size,
               child: GestureDetector(
@@ -125,7 +142,9 @@ class _DiaryMediaCanvasState extends State<DiaryMediaCanvas> {
                     return;
                   }
                   setState(() {
-                    _selectedPath = _selectedPath == image.path ? null : image.path;
+                    _selectedPath = _selectedPath == image.path
+                        ? null
+                        : image.path;
                     _liveScale = null;
                   });
                 },
@@ -141,7 +160,8 @@ class _DiaryMediaCanvasState extends State<DiaryMediaCanvas> {
                     ? null
                     : (details) => setState(() {
                         _liveDragCenters[image.path] =
-                            (_liveDragCenters[image.path] ?? centerPx) + details.delta;
+                            (_liveDragCenters[image.path] ?? centerPx) +
+                            details.delta;
                       }),
                 onPanEnd: !widget.editable
                     ? null
@@ -149,14 +169,23 @@ class _DiaryMediaCanvasState extends State<DiaryMediaCanvas> {
                         final finalCenter = _liveDragCenters[image.path];
                         setState(() => _liveDragCenters.remove(image.path));
                         if (finalCenter != null) {
-                          _commitPosition(image, finalCenter, scale, canvasW, canvasH);
+                          _commitPosition(
+                            image,
+                            finalCenter,
+                            scale,
+                            canvasW,
+                            canvasH,
+                          );
                         }
                       },
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     border: isSelected
-                        ? Border.all(color: theme.colorScheme.primary, width: 2.5)
+                        ? Border.all(
+                            color: theme.colorScheme.primary,
+                            width: 2.5,
+                          )
                         : null,
                   ),
                   child: Stack(
@@ -179,7 +208,11 @@ class _DiaryMediaCanvasState extends State<DiaryMediaCanvas> {
                             child: const CircleAvatar(
                               radius: 11,
                               backgroundColor: Colors.black54,
-                              child: Icon(Icons.close, size: 14, color: Colors.white),
+                              child: Icon(
+                                Icons.close,
+                                size: 14,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -200,7 +233,7 @@ class _DiaryMediaCanvasState extends State<DiaryMediaCanvas> {
                 _liveScale = null;
               }),
               child: Container(
-                height: canvasH,
+                height: neededCanvasH,
                 width: double.infinity,
                 clipBehavior: Clip.hardEdge,
                 decoration: BoxDecoration(
@@ -212,13 +245,19 @@ class _DiaryMediaCanvasState extends State<DiaryMediaCanvas> {
             if (selected != null) ...[
               const SizedBox(height: 6),
               _ScaleSlider(
-                value: _liveScale ?? (selected.scale ?? 1.0).clamp(_kMinScale, _kMaxScale),
+                value:
+                    _liveScale ??
+                    (selected.scale ?? 1.0).clamp(_kMinScale, maxScale),
+                max: maxScale,
                 onChanged: (v) => setState(() => _liveScale = v),
                 onChangeEnd: (v) {
                   final image = selected!;
                   final centerPx = image.x != null && image.y != null
                       ? Offset(image.x! * canvasW, image.y! * canvasH)
-                      : _autoPosition(unarrangedIndex > 0 ? unarrangedIndex - 1 : 0, canvasW);
+                      : _autoPosition(
+                          unarrangedIndex > 0 ? unarrangedIndex - 1 : 0,
+                          canvasW,
+                        );
                   _commitPosition(image, centerPx, v, canvasW, canvasH);
                   setState(() => _liveScale = null);
                 },
@@ -233,11 +272,13 @@ class _DiaryMediaCanvasState extends State<DiaryMediaCanvas> {
 
 class _ScaleSlider extends StatelessWidget {
   final double value;
+  final double max;
   final ValueChanged<double> onChanged;
   final ValueChanged<double> onChangeEnd;
 
   const _ScaleSlider({
     required this.value,
+    required this.max,
     required this.onChanged,
     required this.onChangeEnd,
   });
@@ -249,9 +290,11 @@ class _ScaleSlider extends StatelessWidget {
         const Icon(Icons.photo_size_select_small_rounded, size: 18),
         Expanded(
           child: Slider(
-            value: value,
+            // valueがビルド間の一瞬だけ新しいmaxを超えることがある
+            // （画面回転等でcanvasWが変わりmaxScaleが縮んだ直後等）のを防ぐ。
+            value: value.clamp(_kMinScale, max),
             min: _kMinScale,
-            max: _kMaxScale,
+            max: max,
             onChanged: onChanged,
             onChangeEnd: onChangeEnd,
           ),

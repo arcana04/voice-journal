@@ -174,6 +174,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get statusTapToRecord => 'Toca para empezar a grabar';
 
   @override
+  String get recordPromptQuestion1 =>
+      '¿Qué te hizo sonreír o sentirte feliz hoy?';
+
+  @override
+  String get recordPromptQuestion2 =>
+      'Sé honesto/a: ¿cómo se sienten tu cuerpo y tu mente hoy?';
+
+  @override
+  String get recordPromptQuestion3 =>
+      'Si pudieras decir \"gracias\" a alguien (o a ti mismo/a) hoy, ¿a quién sería?';
+
+  @override
+  String get recordPromptQuestion4 => '¿Qué le dirías a tu yo de esta semana?';
+
+  @override
+  String get recordPromptQuestion5 => '¿Hay algo que todavía debas hacer hoy?';
+
+  @override
   String get statusRecording => 'Grabando… toca de nuevo para detener';
 
   @override
@@ -276,6 +294,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get themeColorSheetTitle => 'Elige un color de tema';
+
+  @override
+  String get languageTitle => 'Idioma';
+
+  @override
+  String get languageSubtitle => 'Elige el idioma de visualización de la app';
+
+  @override
+  String get languageSheetTitle => 'Elige un idioma';
+
+  @override
+  String get languageSystemDefault => 'Seguir el idioma del dispositivo';
 
   @override
   String get settingsProBadge => 'Solo Pro';
@@ -607,6 +637,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get paywallContinueButton => 'Continuar';
+
+  @override
+  String get paywallSignInRequiredTitle => 'Inicia sesión para continuar';
+
+  @override
+  String get paywallSignInRequiredDescription =>
+      'Iniciar sesión protege tu compra, para que puedas restaurarla incluso si reinstalas la app.';
 
   @override
   String homeUsageToday(int used, int limit) {

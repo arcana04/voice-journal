@@ -168,6 +168,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get statusTapToRecord => '탭하여 녹음 시작';
 
   @override
+  String get recordPromptQuestion1 => '오늘 나도 모르게 웃었던 순간, 기뻤던 순간은?';
+
+  @override
+  String get recordPromptQuestion2 => '솔직히 오늘 몸과 마음은 좀 피곤한가요?';
+
+  @override
+  String get recordPromptQuestion3 => '오늘 누군가에게(혹은 나 자신에게) \"고마워\"라고 말한다면?';
+
+  @override
+  String get recordPromptQuestion4 => '이번 주의 나에게 한마디 건넨다면?';
+
+  @override
+  String get recordPromptQuestion5 => '오늘 안에 꼭 해야 할 일이 있나요?';
+
+  @override
   String get statusRecording => '녹음 중… 다시 탭하면 중지';
 
   @override
@@ -266,6 +281,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get themeColorSheetTitle => '테마 색상 선택';
+
+  @override
+  String get languageTitle => '언어';
+
+  @override
+  String get languageSubtitle => '앱의 표시 언어를 선택합니다';
+
+  @override
+  String get languageSheetTitle => '언어 선택';
+
+  @override
+  String get languageSystemDefault => '기기 언어 설정 따르기';
 
   @override
   String get settingsProBadge => 'Pro 전용';
@@ -575,6 +602,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get paywallContinueButton => '계속';
+
+  @override
+  String get paywallSignInRequiredTitle => '계속하려면 로그인하세요';
+
+  @override
+  String get paywallSignInRequiredDescription =>
+      '로그인하면 구매 내역이 보호되어 앱을 재설치해도 복원할 수 있습니다.';
 
   @override
   String homeUsageToday(int used, int limit) {

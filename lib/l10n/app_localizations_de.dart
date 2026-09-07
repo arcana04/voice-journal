@@ -174,6 +174,26 @@ class AppLocalizationsDe extends AppLocalizations {
   String get statusTapToRecord => 'Zum Aufnehmen tippen';
 
   @override
+  String get recordPromptQuestion1 =>
+      'Was hat dich heute zum Lächeln gebracht oder glücklich gemacht?';
+
+  @override
+  String get recordPromptQuestion2 =>
+      'Sei ehrlich: Wie fühlen sich Körper und Geist heute an?';
+
+  @override
+  String get recordPromptQuestion3 =>
+      'Wenn du heute jemandem (oder dir selbst) \"Danke\" sagen könntest, wem?';
+
+  @override
+  String get recordPromptQuestion4 =>
+      'Was würdest du deinem Ich dieser Woche sagen?';
+
+  @override
+  String get recordPromptQuestion5 =>
+      'Gibt es noch etwas, das du heute erledigen musst?';
+
+  @override
   String get statusRecording => 'Aufnahme läuft… nochmal tippen zum Stoppen';
 
   @override
@@ -275,6 +295,18 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get themeColorSheetTitle => 'Eine Designfarbe wählen';
+
+  @override
+  String get languageTitle => 'Sprache';
+
+  @override
+  String get languageSubtitle => 'Die Anzeigesprache der App auswählen';
+
+  @override
+  String get languageSheetTitle => 'Eine Sprache wählen';
+
+  @override
+  String get languageSystemDefault => 'Gerätesprache verwenden';
 
   @override
   String get settingsProBadge => 'Nur Pro';
@@ -606,6 +638,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get paywallContinueButton => 'Weiter';
+
+  @override
+  String get paywallSignInRequiredTitle => 'Zum Fortfahren anmelden';
+
+  @override
+  String get paywallSignInRequiredDescription =>
+      'Durch die Anmeldung ist dein Kauf geschützt und kann auch nach einer Neuinstallation der App wiederhergestellt werden.';
 
   @override
   String homeUsageToday(int used, int limit) {

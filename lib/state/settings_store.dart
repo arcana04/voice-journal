@@ -11,21 +11,29 @@ class SettingsStore extends ChangeNotifier {
   bool darkMode = true;
   bool hasSeenOnboarding = false;
   int accentColorIndex = 0;
+  String? languageCode;
   bool _loaded = false;
   bool get loaded => _loaded;
+
+  /// nullは「端末の言語設定に従う」。[MaterialApp.locale]にそのまま渡す。
+  Locale? get locale => languageCode == null ? null : Locale(languageCode!);
 
   /// アプリ全体のテーマカラー([kAccentColorPresets]から選んだもの)。設定画面の
   /// 「テーマカラー」で変更でき、[ColorScheme.fromSeed]のシードとしても
   /// 使われる(録音ボタン・波形など、あえて素のブランドカラーを使う数箇所も
   /// この値を参照する)。
   Color get accentColor =>
-      kAccentColorPresets[accentColorIndex.clamp(0, kAccentColorPresets.length - 1)];
+      kAccentColorPresets[accentColorIndex.clamp(
+        0,
+        kAccentColorPresets.length - 1,
+      )];
 
   Future<void> load() async {
     summaryLevel = await _service.getSummaryLevel();
     darkMode = await _service.getDarkMode();
     hasSeenOnboarding = await _service.getHasSeenOnboarding();
     accentColorIndex = await _service.getAccentColorIndex();
+    languageCode = await _service.getLanguageCode();
     _loaded = true;
     notifyListeners();
   }
@@ -33,6 +41,13 @@ class SettingsStore extends ChangeNotifier {
   Future<void> setAccentColorIndex(int index) async {
     accentColorIndex = index;
     await _service.setAccentColorIndex(index);
+    notifyListeners();
+  }
+
+  /// nullを渡すと「端末の言語設定に従う」に戻る。
+  Future<void> setLanguageCode(String? value) async {
+    languageCode = value;
+    await _service.setLanguageCode(value);
     notifyListeners();
   }
 

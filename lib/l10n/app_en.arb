@@ -62,6 +62,11 @@
     "placeholders": { "summary": { "type": "String" } }
   },
   "statusTapToRecord": "Tap to start recording",
+  "recordPromptQuestion1": "What made you smile or feel happy today?",
+  "recordPromptQuestion2": "Be honest — how are your body and mind feeling today?",
+  "recordPromptQuestion3": "If you could say \"thank you\" to someone (or yourself) today, who would it be?",
+  "recordPromptQuestion4": "What would you say to yourself this week?",
+  "recordPromptQuestion5": "Is there anything you still need to get done today?",
   "statusRecording": "Recording… tap again to stop",
   "statusProcessing": "AI is analyzing…",
   "statusProcessingSorting": "Sorting into diary, ideas, and tasks…",
@@ -103,6 +108,10 @@
   "themeColorTitle": "Theme Color",
   "themeColorSubtitle": "Change the app's overall accent color",
   "themeColorSheetTitle": "Choose a theme color",
+  "languageTitle": "Language",
+  "languageSubtitle": "Choose the app's display language",
+  "languageSheetTitle": "Choose a language",
+  "languageSystemDefault": "Follow device language",
   "settingsProBadge": "Pro only",
   "integrationsSettingsTitle": "Integrations",
   "integrationsCalendarRowTitle": "Calendar integration",
@@ -206,6 +215,8 @@
   "paywallPlanLifetimeCaption": "Cloud photo/video sync not included",
   "paywallPlanComingSoon": "Coming soon",
   "paywallContinueButton": "Continue",
+  "paywallSignInRequiredTitle": "Sign in to continue",
+  "paywallSignInRequiredDescription": "Signing in protects your purchase, so you can restore it even after reinstalling the app.",
 
   "homeUsageToday": "Today {used} / {limit}",
   "@homeUsageToday": {

@@ -57,7 +57,10 @@ ThemeData _buildTheme(
   Brightness brightness,
   Color accent,
 ) {
-  final scheme = ColorScheme.fromSeed(seedColor: accent, brightness: brightness);
+  final scheme = ColorScheme.fromSeed(
+    seedColor: accent,
+    brightness: brightness,
+  );
   return ThemeData(
     colorScheme: scheme,
     scaffoldBackgroundColor: scaffoldBackgroundColor,
@@ -86,7 +89,9 @@ class VoiceJournalApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CustomWordsStore()..load()),
         ChangeNotifierProvider(create: (_) => TextStyleStore()..load()),
         ChangeNotifierProvider(create: (_) => RecordTriggerStore()),
-        ChangeNotifierProvider(create: (_) => SubscriptionStore()..initialize(uid)),
+        ChangeNotifierProvider(
+          create: (_) => SubscriptionStore()..initialize(uid),
+        ),
         ChangeNotifierProvider(create: (_) => AccountStore()),
       ],
       child: Consumer<SettingsStore>(
@@ -96,6 +101,9 @@ class VoiceJournalApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
+            // nullなら端末の言語設定に従う（下のlocaleListResolutionCallbackが働く）。
+            // 設定画面でユーザーが明示的に選んでいれば、そちらを常に優先する。
+            locale: settings.locale,
             // Flutterの既定の解決ロジックは、端末の言語がどのsupportedLocalesにも
             // 一致しない場合、supportedLocalesの先頭(生成順=アルファベット順)に
             // フォールバックする。海外展開は英語圏を主軸にしているため、未対応
@@ -114,8 +122,16 @@ class VoiceJournalApp extends StatelessWidget {
               return const Locale('en');
             },
             themeMode: settings.darkMode ? ThemeMode.dark : ThemeMode.light,
-            theme: _buildTheme(Colors.white, Brightness.light, settings.accentColor),
-            darkTheme: _buildTheme(Colors.black, Brightness.dark, settings.accentColor),
+            theme: _buildTheme(
+              Colors.white,
+              Brightness.light,
+              settings.accentColor,
+            ),
+            darkTheme: _buildTheme(
+              Colors.black,
+              Brightness.dark,
+              settings.accentColor,
+            ),
             // homeにsettings.loaded等で分岐する条件式を直接渡すと、
             // MaterialAppのNavigatorがルート遷移として扱ってしまい、
             // 古い方の画面がOffstageで生き残ったまま新しい画面と同時に
@@ -205,9 +221,10 @@ class _SplashViewState extends State<_SplashView>
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
-    _scale = Tween(begin: 0.82, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _scale = Tween(
+      begin: 0.82,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
     _opacity = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,

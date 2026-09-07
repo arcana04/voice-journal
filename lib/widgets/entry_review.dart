@@ -72,6 +72,7 @@ class _EntryReviewState extends State<EntryReview> {
   late final List<DraftItem> _items = List.of(widget.initialItems);
   int _newItemSeq = 0;
   String? _autofocusId;
+  int _cardStaggerIndex = 0;
 
   void _addItem(ReviewCategory bucket) {
     final id = 'new_${_newItemSeq++}';
@@ -160,7 +161,23 @@ class _EntryReviewState extends State<EntryReview> {
     ];
     final allowDrag = visibleCategories.length > 1;
     final hasContent = _items.any((i) => i.text.trim().isNotEmpty);
+    _cardStaggerIndex = 0;
 
+    return Stack(
+      children: [
+        _buildColumn(theme, l10n, visibleCategories, allowDrag, hasContent),
+        const Positioned.fill(child: IgnorePointer(child: _BurstOverlay())),
+      ],
+    );
+  }
+
+  Widget _buildColumn(
+    ThemeData theme,
+    AppLocalizations l10n,
+    List<ReviewCategory> visibleCategories,
+    bool allowDrag,
+    bool hasContent,
+  ) {
     return Column(
       children: [
         Padding(
@@ -180,7 +197,9 @@ class _EntryReviewState extends State<EntryReview> {
               ],
               const SizedBox(height: 2),
               Text(
-                allowDrag ? l10n.reviewDescription : l10n.reviewDescriptionNoDrag,
+                allowDrag
+                    ? l10n.reviewDescription
+                    : l10n.reviewDescriptionNoDrag,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.outline,
                 ),
@@ -202,7 +221,8 @@ class _EntryReviewState extends State<EntryReview> {
                   allowDrag: allowDrag,
                   l10n: l10n,
                 ),
-                if (category != visibleCategories.last) const SizedBox(height: 16),
+                if (category != visibleCategories.last)
+                  const SizedBox(height: 16),
               ],
             ],
           ),
@@ -304,7 +324,11 @@ class _EntryReviewState extends State<EntryReview> {
     );
   }
 
-  Widget _buildCard(ThemeData theme, DraftItem item, {required bool allowDrag}) {
+  Widget _buildCard(
+    ThemeData theme,
+    DraftItem item, {
+    required bool allowDrag,
+  }) {
     final cardShell = _CardShell(
       theme: theme,
       dragHandle: allowDrag
@@ -316,19 +340,144 @@ class _EntryReviewState extends State<EntryReview> {
       onRemove: () => _removeItem(item),
     );
 
-    if (!allowDrag) return cardShell;
+    final built = !allowDrag
+        ? cardShell
+        : LongPressDraggable<DraftItem>(
+            data: item,
+            feedback: Material(
+              color: Colors.transparent,
+              child: SizedBox(
+                width: 260,
+                child: _CardShell(theme: theme, item: item, dragging: true),
+              ),
+            ),
+            childWhenDragging: Opacity(opacity: 0.3, child: cardShell),
+            child: cardShell,
+          );
 
-    return LongPressDraggable<DraftItem>(
-      data: item,
-      feedback: Material(
-        color: Colors.transparent,
-        child: SizedBox(
-          width: 260,
-          child: _CardShell(theme: theme, item: item, dragging: true),
-        ),
+    // AIの仕分け結果が現れる瞬間を「光がカードへ収束する」演出にするため、
+    // カード出現時だけ表示順に少しずつ遅れてポップインさせる（キー付きなので
+    // 文字入力等の再ビルドでは初期化されず、一度きりのアニメーションになる）。
+    return _PopIn(
+      key: ValueKey('pop_${item.id}'),
+      index: _cardStaggerIndex++,
+      child: built,
+    );
+  }
+}
+
+/// [child]を、[index]に応じて少し遅れながら拡大・フェードでポップインさせる。
+/// 同じキーのインスタンスが再利用される限り(＝テキスト編集などでの再ビルド時)は
+/// 一度再生したら再アニメーションしない。
+class _PopIn extends StatefulWidget {
+  final int index;
+  final Widget child;
+
+  const _PopIn({super.key, required this.index, required this.child});
+
+  @override
+  State<_PopIn> createState() => _PopInState();
+}
+
+class _PopInState extends State<_PopIn> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 360),
+    );
+    _scale = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
+    _opacity = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0, 0.7, curve: Curves.easeOut),
+    );
+    Future.delayed(Duration(milliseconds: 60 + widget.index * 70), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      child: widget.child,
+      builder: (context, child) => Opacity(
+        opacity: _opacity.value.clamp(0.0, 1.0),
+        child: Transform.scale(scale: 0.82 + 0.18 * _scale.value, child: child),
       ),
-      childWhenDragging: Opacity(opacity: 0.3, child: cardShell),
-      child: cardShell,
+    );
+  }
+}
+
+/// AI処理中のオーブから光が弾けて画面に広がるような、レビュー画面出現時
+/// 一度きりのフラッシュ演出。タップを奪わないよう常に[IgnorePointer]配下で使う。
+class _BurstOverlay extends StatefulWidget {
+  const _BurstOverlay();
+
+  @override
+  State<_BurstOverlay> createState() => _BurstOverlayState();
+}
+
+class _BurstOverlayState extends State<_BurstOverlay>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 520),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = Theme.of(context).colorScheme.primary;
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final t = Curves.easeOut.transform(_controller.value);
+        if (t >= 1) return const SizedBox.shrink();
+        final scale = 0.05 + 1.6 * t;
+        final opacity = (1 - t) * 0.5;
+        return Align(
+          alignment: const Alignment(0, -0.55),
+          child: Transform.scale(
+            scale: scale,
+            child: Container(
+              width: 220,
+              height: 220,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    accent.withValues(alpha: opacity),
+                    accent.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

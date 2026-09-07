@@ -62,6 +62,11 @@
     "placeholders": { "summary": { "type": "String" } }
   },
   "statusTapToRecord": "Zum Aufnehmen tippen",
+  "recordPromptQuestion1": "Was hat dich heute zum Lächeln gebracht oder glücklich gemacht?",
+  "recordPromptQuestion2": "Sei ehrlich: Wie fühlen sich Körper und Geist heute an?",
+  "recordPromptQuestion3": "Wenn du heute jemandem (oder dir selbst) \"Danke\" sagen könntest, wem?",
+  "recordPromptQuestion4": "Was würdest du deinem Ich dieser Woche sagen?",
+  "recordPromptQuestion5": "Gibt es noch etwas, das du heute erledigen musst?",
   "statusRecording": "Aufnahme läuft… nochmal tippen zum Stoppen",
   "statusProcessing": "Die KI analysiert…",
   "statusProcessingSorting": "Wird in Tagebuch, Ideen und Aufgaben sortiert…",
@@ -103,6 +108,10 @@
   "themeColorTitle": "Designfarbe",
   "themeColorSubtitle": "Die allgemeine Akzentfarbe der App ändern",
   "themeColorSheetTitle": "Eine Designfarbe wählen",
+  "languageTitle": "Sprache",
+  "languageSubtitle": "Die Anzeigesprache der App auswählen",
+  "languageSheetTitle": "Eine Sprache wählen",
+  "languageSystemDefault": "Gerätesprache verwenden",
   "settingsProBadge": "Nur Pro",
   "integrationsSettingsTitle": "Integrationen",
   "integrationsCalendarRowTitle": "Kalenderintegration",
@@ -206,6 +215,8 @@
   "paywallPlanLifetimeCaption": "Cloud-Synchronisierung für Fotos/Videos nicht enthalten",
   "paywallPlanComingSoon": "Demnächst",
   "paywallContinueButton": "Weiter",
+  "paywallSignInRequiredTitle": "Zum Fortfahren anmelden",
+  "paywallSignInRequiredDescription": "Durch die Anmeldung ist dein Kauf geschützt und kann auch nach einer Neuinstallation der App wiederhergestellt werden.",
 
   "homeUsageToday": "Heute {used} / {limit}",
   "@homeUsageToday": {

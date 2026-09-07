@@ -171,6 +171,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusTapToRecord => 'Tap to start recording';
 
   @override
+  String get recordPromptQuestion1 =>
+      'What made you smile or feel happy today?';
+
+  @override
+  String get recordPromptQuestion2 =>
+      'Be honest — how are your body and mind feeling today?';
+
+  @override
+  String get recordPromptQuestion3 =>
+      'If you could say \"thank you\" to someone (or yourself) today, who would it be?';
+
+  @override
+  String get recordPromptQuestion4 =>
+      'What would you say to yourself this week?';
+
+  @override
+  String get recordPromptQuestion5 =>
+      'Is there anything you still need to get done today?';
+
+  @override
   String get statusRecording => 'Recording… tap again to stop';
 
   @override
@@ -271,6 +291,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeColorSheetTitle => 'Choose a theme color';
+
+  @override
+  String get languageTitle => 'Language';
+
+  @override
+  String get languageSubtitle => 'Choose the app\'s display language';
+
+  @override
+  String get languageSheetTitle => 'Choose a language';
+
+  @override
+  String get languageSystemDefault => 'Follow device language';
 
   @override
   String get settingsProBadge => 'Pro only';
@@ -597,6 +629,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paywallContinueButton => 'Continue';
+
+  @override
+  String get paywallSignInRequiredTitle => 'Sign in to continue';
+
+  @override
+  String get paywallSignInRequiredDescription =>
+      'Signing in protects your purchase, so you can restore it even after reinstalling the app.';
 
   @override
   String homeUsageToday(int used, int limit) {

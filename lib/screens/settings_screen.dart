@@ -93,6 +93,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await launchUrl(uri);
   }
 
+  void _openLanguageSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (_) => const _LanguageSheet(),
+    );
+  }
+
   void _openThemeColorSheet(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
@@ -148,13 +156,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: settings.accentColor,
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 2,
-                              ),
+                              border: Border.all(color: Colors.white, width: 2),
                               boxShadow: [
                                 BoxShadow(
-                                  color: settings.accentColor.withValues(alpha: 0.4),
+                                  color: settings.accentColor.withValues(
+                                    alpha: 0.4,
+                                  ),
                                   blurRadius: 6,
                                 ),
                               ],
@@ -165,6 +172,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ],
                       ),
                       onTap: () => _openThemeColorSheet(context),
+                    );
+                  },
+                ),
+                Consumer<SettingsStore>(
+                  builder: (context, settings, _) {
+                    return _SettingsTile(
+                      icon: Icons.language_rounded,
+                      color: _SettingsColors.blue,
+                      title: l10n.languageTitle,
+                      subtitle: l10n.languageSubtitle,
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            languageDisplayName(settings.languageCode, l10n),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const _ChevronIcon(),
+                        ],
+                      ),
+                      onTap: () => _openLanguageSheet(context),
                     );
                   },
                 ),
@@ -325,7 +356,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           : l10n.accountNotSignedInDescription,
                       trailing: const _ChevronIcon(),
                       onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const AccountScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => const AccountScreen(),
+                        ),
                       ),
                     );
                   },
@@ -396,6 +429,111 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 言語コード→その言語自身での表記(「日本語」「Español」等)。UIの現在の
+/// 言語に関わらず常に自国語表記にする(iOS設定アプリ等と同じ慣習)ため、
+/// l10nの翻訳キーではなくここに直接定数として持つ。[AppLocalizations.supportedLocales]
+/// と同じ6言語を維持すること。
+const Map<String, String> kLanguageNativeNames = {
+  'ja': '日本語',
+  'en': 'English',
+  'es': 'Español',
+  'de': 'Deutsch',
+  'ko': '한국어',
+  'fr': 'Français',
+};
+
+/// 設定画面の「言語」行に表示する現在値のラベル。[code]がnullなら
+/// 「端末の言語設定に従う」。
+String languageDisplayName(String? code, AppLocalizations l10n) => code == null
+    ? l10n.languageSystemDefault
+    : (kLanguageNativeNames[code] ?? code);
+
+/// 「言語」タイルから開く、[SettingsStore.setLanguageCode]で即座に切り替わる
+/// シンプルな言語ピッカー。テーマカラーの[_ThemeColorSheet]と同じ構成。
+class _LanguageSheet extends StatelessWidget {
+  const _LanguageSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final settings = context.watch<SettingsStore>();
+    // system default + 6言語で選択肢が7個あり、小さい画面では縦に収まりきらない
+    // （実機確認でBOTTOM OVERFLOWEDを確認済み）ため、他の選択シート
+    // （_DiaryStyleSheet等）と同じくシート自体の高さを画面の85%に制限し、
+    // はみ出す分はスクロールさせる。
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 24, right: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.languageSheetTitle,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).padding.bottom + 24,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _LanguageTile(
+                      label: l10n.languageSystemDefault,
+                      selected: settings.languageCode == null,
+                      onTap: () =>
+                          context.read<SettingsStore>().setLanguageCode(null),
+                    ),
+                    for (final locale in AppLocalizations.supportedLocales)
+                      _LanguageTile(
+                        label:
+                            kLanguageNativeNames[locale.languageCode] ??
+                            locale.languageCode,
+                        selected: settings.languageCode == locale.languageCode,
+                        onTap: () => context
+                            .read<SettingsStore>()
+                            .setLanguageCode(locale.languageCode),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LanguageTile extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _LanguageTile({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = Theme.of(context).colorScheme.primary;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(label),
+      trailing: selected ? Icon(Icons.check_rounded, color: accent) : null,
+      onTap: onTap,
     );
   }
 }
@@ -613,10 +751,8 @@ class _Pill extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w700,
-        ),
+        style: Theme.of(context).textTheme.labelSmall
+            ?.copyWith(color: color, fontWeight: FontWeight.w700),
       ),
     );
   }

@@ -62,6 +62,11 @@
     "placeholders": { "summary": { "type": "String" } }
   },
   "statusTapToRecord": "Toca para empezar a grabar",
+  "recordPromptQuestion1": "¿Qué te hizo sonreír o sentirte feliz hoy?",
+  "recordPromptQuestion2": "Sé honesto/a: ¿cómo se sienten tu cuerpo y tu mente hoy?",
+  "recordPromptQuestion3": "Si pudieras decir \"gracias\" a alguien (o a ti mismo/a) hoy, ¿a quién sería?",
+  "recordPromptQuestion4": "¿Qué le dirías a tu yo de esta semana?",
+  "recordPromptQuestion5": "¿Hay algo que todavía debas hacer hoy?",
   "statusRecording": "Grabando… toca de nuevo para detener",
   "statusProcessing": "La IA está analizando…",
   "statusProcessingSorting": "Organizando en diario, ideas y tareas…",
@@ -103,6 +108,10 @@
   "themeColorTitle": "Color del tema",
   "themeColorSubtitle": "Cambiar el color de acento general de la app",
   "themeColorSheetTitle": "Elige un color de tema",
+  "languageTitle": "Idioma",
+  "languageSubtitle": "Elige el idioma de visualización de la app",
+  "languageSheetTitle": "Elige un idioma",
+  "languageSystemDefault": "Seguir el idioma del dispositivo",
   "settingsProBadge": "Solo Pro",
   "integrationsSettingsTitle": "Integraciones",
   "integrationsCalendarRowTitle": "Integración con calendario",
@@ -206,6 +215,8 @@
   "paywallPlanLifetimeCaption": "No incluye sincronización de fotos/vídeos en la nube",
   "paywallPlanComingSoon": "Próximamente",
   "paywallContinueButton": "Continuar",
+  "paywallSignInRequiredTitle": "Inicia sesión para continuar",
+  "paywallSignInRequiredDescription": "Iniciar sesión protege tu compra, para que puedas restaurarla incluso si reinstalas la app.",
 
   "homeUsageToday": "Hoy {used} / {limit}",
   "@homeUsageToday": {
