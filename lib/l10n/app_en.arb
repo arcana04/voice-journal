@@ -64,6 +64,8 @@
   "statusTapToRecord": "Tap to start recording",
   "statusRecording": "Recording… tap again to stop",
   "statusProcessing": "AI is analyzing…",
+  "statusProcessingSorting": "Sorting into diary, ideas, and tasks…",
+  "statusProcessingFinishing": "Wrapping up…",
   "maxRecordingSeconds": "Each recording can be up to {seconds} seconds",
   "@maxRecordingSeconds": {
     "placeholders": { "seconds": { "type": "int" } }
@@ -410,6 +412,16 @@
   "knowledgeBaseEmpty": "There's nothing recorded yet. Record something, then ask again.",
   "knowledgeBaseErrorTitle": "Couldn't get an answer",
   "knowledgeBaseProLockedDescription": "Chatting across all your entries is a Pro feature. Upgrade to unlock it.",
+  "knowledgeBaseSourcesLabel": "Referenced entries",
+  "knowledgeBaseSourceSheetTitle": "Entry referenced for this answer",
+  "knowledgeBaseSourceNotFound": "This entry could not be found",
+  "knowledgeBaseSignInNudgeText": "Link an account so answers can cite your past entries for more accurate results.",
+  "knowledgeBaseSignInNudgeCta": "Link account",
+  "knowledgeBaseVoiceQuestion": "Ask by voice",
+  "knowledgeBaseRecordingQuestion": "Recording your question…",
+  "knowledgeBaseTranscribing": "Transcribing…",
+  "knowledgeBasePlayAnswer": "Play answer",
+  "knowledgeBaseStopAnswer": "Stop playing",
 
 
   "weeklyReportSettingsTitle": "Weekly Brain Report",

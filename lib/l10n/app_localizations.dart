@@ -410,6 +410,18 @@ abstract class AppLocalizations {
   /// **'AI is analyzing…'**
   String get statusProcessing;
 
+  /// No description provided for @statusProcessingSorting.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorting into diary, ideas, and tasks…'**
+  String get statusProcessingSorting;
+
+  /// No description provided for @statusProcessingFinishing.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrapping up…'**
+  String get statusProcessingFinishing;
+
   /// No description provided for @maxRecordingSeconds.
   ///
   /// In en, this message translates to:
@@ -2209,6 +2221,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Chatting across all your entries is a Pro feature. Upgrade to unlock it.'**
   String get knowledgeBaseProLockedDescription;
+
+  /// No description provided for @knowledgeBaseSourcesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Referenced entries'**
+  String get knowledgeBaseSourcesLabel;
+
+  /// No description provided for @knowledgeBaseSourceSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry referenced for this answer'**
+  String get knowledgeBaseSourceSheetTitle;
+
+  /// No description provided for @knowledgeBaseSourceNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This entry could not be found'**
+  String get knowledgeBaseSourceNotFound;
+
+  /// No description provided for @knowledgeBaseSignInNudgeText.
+  ///
+  /// In en, this message translates to:
+  /// **'Link an account so answers can cite your past entries for more accurate results.'**
+  String get knowledgeBaseSignInNudgeText;
+
+  /// No description provided for @knowledgeBaseSignInNudgeCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Link account'**
+  String get knowledgeBaseSignInNudgeCta;
+
+  /// No description provided for @knowledgeBaseVoiceQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask by voice'**
+  String get knowledgeBaseVoiceQuestion;
+
+  /// No description provided for @knowledgeBaseRecordingQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording your question…'**
+  String get knowledgeBaseRecordingQuestion;
+
+  /// No description provided for @knowledgeBaseTranscribing.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribing…'**
+  String get knowledgeBaseTranscribing;
+
+  /// No description provided for @knowledgeBasePlayAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Play answer'**
+  String get knowledgeBasePlayAnswer;
+
+  /// No description provided for @knowledgeBaseStopAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop playing'**
+  String get knowledgeBaseStopAnswer;
 
   /// No description provided for @weeklyReportSettingsTitle.
   ///

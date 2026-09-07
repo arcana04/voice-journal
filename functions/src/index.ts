@@ -120,6 +120,7 @@ const MESSAGES: Record<
     proRequired: string;
     transcriptionFailed: (body: string) => string;
     analysisFailed: (body: string) => string;
+    ttsFailed: (body: string) => string;
     unexpectedError: (message: string) => string;
   }
 > = {
@@ -138,6 +139,7 @@ const MESSAGES: Record<
     proRequired: "この機能はProプラン限定です。",
     transcriptionFailed: (body) => `文字起こしに失敗しました: ${body}`,
     analysisFailed: (body) => `AI解析に失敗しました: ${body}`,
+    ttsFailed: (body) => `音声の生成に失敗しました: ${body}`,
     unexpectedError: (message) => `処理中に予期しないエラーが発生しました: ${message}`,
   },
   en: {
@@ -156,6 +158,7 @@ const MESSAGES: Record<
     proRequired: "This feature is only available on the Pro plan.",
     transcriptionFailed: (body) => `Transcription failed: ${body}`,
     analysisFailed: (body) => `AI analysis failed: ${body}`,
+    ttsFailed: (body) => `Failed to generate speech: ${body}`,
     unexpectedError: (message) =>
       `An unexpected error occurred while processing: ${message}`,
   },
@@ -1555,8 +1558,14 @@ export const processVoiceMemo = onCall(
   }
 );
 
-function buildKnowledgeBaseSystemPrompt(locale: Locale): string {
+/** 「まとめて」のような網羅的なコンパイル依頼の時だけ上書きする指示。通常は
+ * 簡潔さを優先させているが、それだと本当に全体をまとめてほしい依頼にまで
+ * 適用され、抜け漏れのある短い回答になってしまうため個別に切り替える。 */
+function buildKnowledgeBaseSystemPrompt(locale: Locale, isBroad = false): string {
   if (locale === "en") {
+    const conciseness = isBroad
+      ? "This looks like a broad, comprehensive compile/summary request. For this one, prioritize completeness over brevity — it's fine to organize the answer with date headings and bullet points instead of a single short paragraph."
+      : "Keep your answer concise and conversational, not a wall of text.";
     return `You are an AI assistant that answers the user's questions by referencing their own past voice memos and journal entries.
 
 You will be given a list of the user's past diary entries, ideas, and tasks below, each with its date. Diary entries that had an emotion tag assigned are marked with "— <emotion>" right after the date.
@@ -1566,9 +1575,12 @@ Answer the user's question in English, using ONLY the information in that list a
 - If asked for a trend or pattern, back it up with concrete counts or frequency from the entries.
 - If asked to compile a list, present it as a concise bullet list.
 - If asked to analyze the CAUSE of a feeling (e.g. "why have I been anxious lately?", "what's been bringing me down?"), don't just list the matching entries — actively look across entries near each other in time for recurring situations, people, places, or events that line up with that emotion tag, and lay out the pattern you found as a plausible explanation. Phrase it as an inference grounded in what's written ("it looks like ___ tends to coincide with ___"), not as a certain diagnosis, and say so if the entries are too sparse to support any real pattern.
-Keep your answer concise and conversational, not a wall of text.`;
+${conciseness}`;
   }
 
+  const conciseness = isBroad
+    ? "今回は「まとめて」のような、範囲を網羅的にコンパイルする依頼に見えます。この場合は簡潔さより抜け漏れの無さを優先し、1つの短い段落に収めようとせず、日付ごとの見出しと箇条書きで整理して構いません。"
+    : "簡潔で会話的な答え方をしてください。長文の説明文にはしないでください。";
   return `あなたはユーザー本人が過去に記録した音声メモ・日記を横断的に参照して、質問に答えるAIアシスタントです。
 
 以下に、ユーザーが過去に記録した日記・アイデア・タスクの一覧を日付つきで渡します。感情タグが付いている日記には、日付の直後に「— <感情>」の形で付記されています。
@@ -1578,7 +1590,7 @@ Keep your answer concise and conversational, not a wall of text.`;
 - 傾向や頻度を尋ねられた場合は、件数など具体的な根拠を示してください。
 - リスト化を求められた場合は、簡潔な箇条書きでまとめてください。
 - 「最近なんで不安なんだろう」「何にモヤモヤしてるんだろう」のように感情の原因分析を求められた場合は、単に該当する記録を列挙するだけで終わらせないでください。該当する感情タグの前後・周辺の記録も横断的に見て、繰り返し出てくる出来事・人物・場所・状況などのパターンを探し、見つかった傾向を「〜という時に〜な気分になっていることが多いようです」のように、記録から読み取れる推測として筋道立てて提示してください。断定はせず、記録が少なすぎてパターンと呼べない場合は無理に決めつけず正直にそう伝えてください。
-簡潔で会話的な答え方をしてください。長文の説明文にはしないでください。`;
+${conciseness}`;
 }
 
 /**
@@ -1590,9 +1602,10 @@ async function answerKnowledgeBaseQuestion(
   apiKey: string,
   question: string,
   context: string,
-  locale: Locale
+  locale: Locale,
+  isBroad = false
 ): Promise<string> {
-  const systemPrompt = buildKnowledgeBaseSystemPrompt(locale);
+  const systemPrompt = buildKnowledgeBaseSystemPrompt(locale, isBroad);
   const userContent =
     locale === "en"
       ? `[Past entries]\n${context || "(none)"}\n\n[Question]\n${question}`
@@ -1624,10 +1637,111 @@ async function answerKnowledgeBaseQuestion(
   return data.choices[0].message.content.trim();
 }
 
+const TTS_VOICE: Record<Locale, string> = { ja: "alloy", en: "alloy" };
+
+/** 相談機能の回答を音声で聞きたい場合（音声で質問した時など）に使う。
+ * 失敗してもチャット自体は落とさず、呼び出し側がテキストのみで
+ * フォールバックできるようエラーを投げるだけにとどめる。 */
+async function synthesizeSpeech(
+  apiKey: string,
+  text: string,
+  locale: Locale
+): Promise<string> {
+  const response = await fetch("https://api.openai.com/v1/audio/speech", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini-tts",
+      voice: TTS_VOICE[locale],
+      input: text,
+      response_format: "mp3",
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new HttpsError("unavailable", MESSAGES[locale].ttsFailed(body));
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  return buffer.toString("base64");
+}
+
 const EMBEDDING_MODEL = "text-embedding-3-small";
 /** 相談機能の埋め込み検索で、質問に近い順に何件のエントリをコンテキストへ
  * 渡すか。多すぎるとコスト・精度が悪化し、少なすぎると見落としが増える。 */
 const KNOWLEDGE_BASE_TOP_K = 15;
+/** 「まとめて」のような網羅的コンパイル依頼で、埋め込み検索を経由せず
+ * 直接渡す件数の上限。通常の質問より広い範囲を拾う想定であえて多めにする。 */
+const KNOWLEDGE_BASE_BROAD_MAX_ENTRIES = 40;
+
+const BROAD_COMPILE_KEYWORDS_JA = ["まとめ", "総括", "振り返", "全部", "全て", "すべて", "総まとめ"];
+const BROAD_COMPILE_KEYWORDS_EN = [
+  "summar",
+  "compile",
+  "wrap up",
+  "wrap-up",
+  "recap",
+  "overview",
+  "everything",
+  "all my",
+];
+
+interface BroadCompileRange {
+  isBroad: boolean;
+  rangeStart?: Date;
+  rangeEnd?: Date;
+}
+
+/**
+ * 「資料をまとめて」のような曖昧な依頼は、質問文自体の埋め込みが特定の話題に
+ * 寄らないため類似度検索と相性が悪く、上位K件が実際にまとめてほしい記録とは
+ * 限らない。この手のキーワードを検知したら埋め込み検索を経由せず、
+ * 日付範囲が読み取れればその範囲、読み取れなければ直近の記録を直接
+ * コンテキストへ渡す（[[project_voicejournal_knowledge_base_chat]]で
+ * 指摘された「まとめて」問題への対処）。
+ */
+function detectBroadCompileRequest(question: string, locale: Locale): BroadCompileRange {
+  const q = question.toLowerCase();
+  const keywords = locale === "en" ? BROAD_COMPILE_KEYWORDS_EN : BROAD_COMPILE_KEYWORDS_JA;
+  if (!keywords.some((k) => q.includes(k.toLowerCase()))) return { isBroad: false };
+
+  const now = new Date();
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const startOfWeek = (d: Date) => {
+    const s = startOfDay(d);
+    s.setDate(s.getDate() - s.getDay());
+    return s;
+  };
+
+  if (/今日|today/.test(q)) {
+    return { isBroad: true, rangeStart: startOfDay(now), rangeEnd: now };
+  }
+  if (/先週|last week/.test(q)) {
+    const thisWeekStart = startOfWeek(now);
+    const lastWeekStart = new Date(thisWeekStart);
+    lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+    return { isBroad: true, rangeStart: lastWeekStart, rangeEnd: thisWeekStart };
+  }
+  if (/今週|this week/.test(q)) {
+    return { isBroad: true, rangeStart: startOfWeek(now), rangeEnd: now };
+  }
+  if (/先月|last month/.test(q)) {
+    return {
+      isBroad: true,
+      rangeStart: new Date(now.getFullYear(), now.getMonth() - 1, 1),
+      rangeEnd: new Date(now.getFullYear(), now.getMonth(), 1),
+    };
+  }
+  if (/今月|this month/.test(q)) {
+    return { isBroad: true, rangeStart: new Date(now.getFullYear(), now.getMonth(), 1), rangeEnd: now };
+  }
+  // 期間の指定が読み取れない場合は日付フィルタなし（直近N件を使う）で扱う。
+  return { isBroad: true };
+}
 
 async function embedText(apiKey: string, text: string): Promise<number[]> {
   const response = await fetch("https://api.openai.com/v1/embeddings", {
@@ -1658,6 +1772,35 @@ function cosineSimilarity(a: number[], b: number[]): number {
   }
   if (normA === 0 || normB === 0) return 0;
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+/** 相談機能の回答が実際にどの記録を参照したかをUIに提示するための1件分。
+ * 埋め込みは1エントリ丸ごとに1本しか作っていないため、粒度は個々の日記/
+ * アイデアではなく「その日の記録(日付+要約またはノート冒頭の抜粋)」単位になる。 */
+interface KnowledgeBaseSource {
+  id: string;
+  date: string;
+  excerpt: string;
+}
+
+const KNOWLEDGE_BASE_EXCERPT_MAX_LENGTH = 60;
+
+function truncateExcerpt(text: string): string {
+  const trimmed = text.trim();
+  if (trimmed.length <= KNOWLEDGE_BASE_EXCERPT_MAX_LENGTH) return trimmed;
+  return `${trimmed.slice(0, KNOWLEDGE_BASE_EXCERPT_MAX_LENGTH)}…`;
+}
+
+/** ソースカードに出す短い抜粋。summary→最初のノート→最初のタスクの順で拾う。 */
+function buildKnowledgeBaseExcerpt(data: FirebaseFirestore.DocumentData): string {
+  if (typeof data.summary === "string" && data.summary.trim()) {
+    return truncateExcerpt(data.summary);
+  }
+  const firstNote = ((data.notes ?? []) as { content?: string }[])[0];
+  if (firstNote?.content) return truncateExcerpt(firstNote.content);
+  const firstTask = ((data.tasks ?? []) as { title?: string }[])[0];
+  if (firstTask?.title) return truncateExcerpt(firstTask.title);
+  return "";
 }
 
 /** Firestore上のentryドキュメント1件分を、埋め込み対象のプレーンテキストに変換する。 */
@@ -1736,28 +1879,79 @@ function formatFirestoreEntriesAsContext(
  * から渡された全件詰め込みコンテキストにフォールバックする
  * （[[project_voicejournal_knowledge_base_chat]]のMVP方式）。
  */
+interface KnowledgeBaseContextResult {
+  context: string;
+  /** 埋め込み検索、または「まとめて」系の日付ベース直接取得で実際に選ばれた
+   * 記録。未同期ユーザーの全件詰め込みフォールバック時は、どの記録が
+   * 使われたか特定できないため常に空配列。 */
+  sources: KnowledgeBaseSource[];
+  /** detectBroadCompileRequestが「まとめて」系の依頼と判定したかどうか。
+   * 回答生成側のプロンプト（簡潔さより網羅性を優先するか）に使う。 */
+  isBroad: boolean;
+}
+
 async function buildKnowledgeBaseContext(
   apiKey: string,
   uid: string,
   question: string,
   fallbackContext: string,
   locale: Locale
-): Promise<string> {
+): Promise<KnowledgeBaseContextResult> {
   try {
     const snapshot = await getFirestore()
       .collection("users")
       .doc(uid)
       .collection("entries")
       .get();
-    if (snapshot.empty) return fallbackContext;
+    if (snapshot.empty) return { context: fallbackContext, sources: [], isBroad: false };
 
-    const withEmbeddings = snapshot.docs
-      .map((doc) => doc.data())
-      .filter(
-        (data): data is FirebaseFirestore.DocumentData & { embedding: number[] } =>
-          Array.isArray(data.embedding) && data.embedding.length > 0
-      );
-    if (withEmbeddings.length === 0) return fallbackContext;
+    const allDocs = snapshot.docs.map(
+      (doc) =>
+        ({ id: doc.id, ...doc.data() }) as FirebaseFirestore.DocumentData & { id: string }
+    );
+
+    const broad = detectBroadCompileRequest(question, locale);
+    if (broad.isBroad) {
+      const rangeStart = broad.rangeStart;
+      const rangeEnd = broad.rangeEnd ?? new Date();
+      const inRange = (data: FirebaseFirestore.DocumentData) => {
+        if (!rangeStart) return true;
+        const createdAt = new Date(data.created_at ?? "");
+        if (Number.isNaN(createdAt.getTime())) return false;
+        return createdAt >= rangeStart && createdAt <= rangeEnd;
+      };
+      const picked = allDocs
+        .filter(inRange)
+        .sort(
+          (a, b) =>
+            new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime()
+        )
+        .slice(0, KNOWLEDGE_BASE_BROAD_MAX_ENTRIES);
+
+      // 該当期間に記録が1件もなければ、通常の類似度検索にフォールバックする
+      // （「まとめて」の一言だけで期間の指定が無かった場合を含む）。
+      if (picked.length > 0) {
+        const sources: KnowledgeBaseSource[] = picked.map((data) => ({
+          id: data.id,
+          date: typeof data.created_at === "string" ? data.created_at : "",
+          excerpt: buildKnowledgeBaseExcerpt(data),
+        }));
+        return {
+          context: formatFirestoreEntriesAsContext(picked, locale),
+          sources,
+          isBroad: true,
+        };
+      }
+    }
+
+    const withEmbeddings = allDocs.filter(
+      (
+        data
+      ): data is FirebaseFirestore.DocumentData & { id: string; embedding: number[] } =>
+        Array.isArray(data.embedding) && data.embedding.length > 0
+    );
+    if (withEmbeddings.length === 0)
+      return { context: fallbackContext, sources: [], isBroad: broad.isBroad };
 
     const questionEmbedding = await embedText(apiKey, question);
     const ranked = withEmbeddings
@@ -1769,11 +1963,21 @@ async function buildKnowledgeBaseContext(
       .slice(0, KNOWLEDGE_BASE_TOP_K)
       .map((r) => r.data);
 
-    return formatFirestoreEntriesAsContext(ranked, locale);
+    const sources: KnowledgeBaseSource[] = ranked.map((data) => ({
+      id: data.id,
+      date: typeof data.created_at === "string" ? data.created_at : "",
+      excerpt: buildKnowledgeBaseExcerpt(data),
+    }));
+
+    return {
+      context: formatFirestoreEntriesAsContext(ranked, locale),
+      sources,
+      isBroad: broad.isBroad,
+    };
   } catch (err) {
     // 埋め込み検索が失敗しても機能自体は落とさず、全件詰め込みで回答を継続する。
     logger.error("buildKnowledgeBaseContext embedding search failed, falling back", err);
-    return fallbackContext;
+    return { context: fallbackContext, sources: [], isBroad: false };
   }
 }
 
@@ -1781,6 +1985,10 @@ interface AskKnowledgeBaseRequest {
   question: string;
   context?: string;
   locale?: string;
+  /** trueなら回答文をTTSで音声化して`audioBase64`として返す。質問が音声入力
+   * だった場合など、クライアント側の判断でオプトインさせる（コスト面で
+   * テキスト入力の全質問には既定でかけない）。 */
+  speak?: boolean;
 }
 
 // Proプラン限定機能。課金基盤（RevenueCat + revenueCatWebhook）が反映した
@@ -1793,7 +2001,7 @@ export const askKnowledgeBase = onCall(
     enforceAppCheck: APP_CHECK_ENFORCED,
   },
   async (request) => {
-    const { question, context, locale } = (request.data ?? {}) as AskKnowledgeBaseRequest;
+    const { question, context, locale, speak } = (request.data ?? {}) as AskKnowledgeBaseRequest;
     const loc = normalizeLocale(locale);
 
     const uid = request.auth?.uid;
@@ -1809,7 +2017,7 @@ export const askKnowledgeBase = onCall(
 
     try {
       const apiKey = openAiApiKey.value();
-      const effectiveContext = await buildKnowledgeBaseContext(
+      const { context: effectiveContext, sources, isBroad } = await buildKnowledgeBaseContext(
         apiKey,
         uid,
         question.trim(),
@@ -1820,14 +2028,80 @@ export const askKnowledgeBase = onCall(
         apiKey,
         question.trim(),
         effectiveContext,
-        loc
+        loc,
+        isBroad
       );
-      return { answer };
+
+      let audioBase64: string | undefined;
+      if (speak && answer.trim()) {
+        try {
+          audioBase64 = await synthesizeSpeech(apiKey, answer, loc);
+        } catch (err) {
+          // 音声化はあくまで付加機能。失敗してもテキストの回答自体は返す。
+          logger.error("askKnowledgeBase TTS failed, falling back to text-only", err);
+        }
+      }
+
+      return { answer, sources, audioBase64 };
     } catch (err) {
       if (err instanceof HttpsError) {
         throw err;
       }
       logger.error("askKnowledgeBase unexpected error", err);
+      const message = err instanceof Error ? err.message : String(err);
+      throw new HttpsError("unavailable", MESSAGES[loc].unexpectedError(message));
+    }
+  }
+);
+
+interface TranscribeQuestionRequest {
+  audioBase64: string;
+  mimeType?: string;
+  locale?: string;
+}
+
+/**
+ * 相談機能（第二の脳）を音声で質問するための文字起こし専用エンドポイント。
+ * processVoiceMemoと違って仕分け構造化はせず、日次クォータ・月間録音時間も
+ * 消費しない（askKnowledgeBase自体が無料枠を消費しないPro限定機能なので、
+ * それに合わせている）。
+ */
+export const transcribeQuestion = onCall(
+  {
+    secrets: [openAiApiKey],
+    timeoutSeconds: 60,
+    memory: "1GiB",
+    enforceAppCheck: APP_CHECK_ENFORCED,
+  },
+  async (request) => {
+    const { audioBase64, mimeType, locale } = (request.data ?? {}) as TranscribeQuestionRequest;
+    const loc = normalizeLocale(locale);
+
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", MESSAGES[loc].authRequired);
+    }
+    if (!(await isProUser(uid))) {
+      throw new HttpsError("permission-denied", MESSAGES[loc].proRequired);
+    }
+    if (!audioBase64) {
+      throw new HttpsError("invalid-argument", MESSAGES[loc].noAudio);
+    }
+
+    try {
+      const apiKey = openAiApiKey.value();
+      const rawAudioBuffer = Buffer.from(audioBase64, "base64");
+      const enhanced = await enhanceAudio(rawAudioBuffer, mimeType ?? "audio/m4a");
+      const transcript = await transcribe(apiKey, enhanced.buffer, enhanced.mimeType, loc);
+      if (!transcript.trim()) {
+        throw new HttpsError("invalid-argument", MESSAGES[loc].transcriptionEmpty);
+      }
+      return { text: transcript.trim() };
+    } catch (err) {
+      if (err instanceof HttpsError) {
+        throw err;
+      }
+      logger.error("transcribeQuestion unexpected error", err);
       const message = err instanceof Error ? err.message : String(err);
       throw new HttpsError("unavailable", MESSAGES[loc].unexpectedError(message));
     }

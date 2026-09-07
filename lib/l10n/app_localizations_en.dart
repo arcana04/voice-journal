@@ -177,6 +177,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusProcessing => 'AI is analyzing…';
 
   @override
+  String get statusProcessingSorting => 'Sorting into diary, ideas, and tasks…';
+
+  @override
+  String get statusProcessingFinishing => 'Wrapping up…';
+
+  @override
   String maxRecordingSeconds(int seconds) {
     return 'Each recording can be up to $seconds seconds';
   }
@@ -1151,6 +1157,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get knowledgeBaseProLockedDescription =>
       'Chatting across all your entries is a Pro feature. Upgrade to unlock it.';
+
+  @override
+  String get knowledgeBaseSourcesLabel => 'Referenced entries';
+
+  @override
+  String get knowledgeBaseSourceSheetTitle =>
+      'Entry referenced for this answer';
+
+  @override
+  String get knowledgeBaseSourceNotFound => 'This entry could not be found';
+
+  @override
+  String get knowledgeBaseSignInNudgeText =>
+      'Link an account so answers can cite your past entries for more accurate results.';
+
+  @override
+  String get knowledgeBaseSignInNudgeCta => 'Link account';
+
+  @override
+  String get knowledgeBaseVoiceQuestion => 'Ask by voice';
+
+  @override
+  String get knowledgeBaseRecordingQuestion => 'Recording your question…';
+
+  @override
+  String get knowledgeBaseTranscribing => 'Transcribing…';
+
+  @override
+  String get knowledgeBasePlayAnswer => 'Play answer';
+
+  @override
+  String get knowledgeBaseStopAnswer => 'Stop playing';
 
   @override
   String get weeklyReportSettingsTitle => 'Weekly Brain Report';

@@ -172,6 +172,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get statusProcessing => 'AIが解析中です…';
 
   @override
+  String get statusProcessingSorting => '日記・アイデア・タスクに仕分けています…';
+
+  @override
+  String get statusProcessingFinishing => '仕上げています…';
+
+  @override
   String maxRecordingSeconds(int seconds) {
     return '1回の録音は最大$seconds秒です';
   }
@@ -1109,6 +1115,37 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get knowledgeBaseProLockedDescription =>
       '記録を横断したAIチャットはProプラン限定の機能です。アップグレードすると使えるようになります。';
+
+  @override
+  String get knowledgeBaseSourcesLabel => '参照した記録';
+
+  @override
+  String get knowledgeBaseSourceSheetTitle => 'この回答が参照した記録';
+
+  @override
+  String get knowledgeBaseSourceNotFound => 'この記録は見つかりませんでした';
+
+  @override
+  String get knowledgeBaseSignInNudgeText =>
+      'アカウントと連携すると、過去の記録を根拠にもっと的確に答えられるようになります。';
+
+  @override
+  String get knowledgeBaseSignInNudgeCta => '連携する';
+
+  @override
+  String get knowledgeBaseVoiceQuestion => '音声で質問';
+
+  @override
+  String get knowledgeBaseRecordingQuestion => '質問を録音中…';
+
+  @override
+  String get knowledgeBaseTranscribing => '文字に起こしています…';
+
+  @override
+  String get knowledgeBasePlayAnswer => '回答を再生';
+
+  @override
+  String get knowledgeBaseStopAnswer => '再生を停止';
 
   @override
   String get weeklyReportSettingsTitle => '週刊脳内レポート';

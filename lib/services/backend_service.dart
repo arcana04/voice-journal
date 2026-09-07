@@ -7,6 +7,7 @@ import '../l10n/l10n_utils.dart';
 import '../models/custom_word.dart';
 import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
+import '../models/knowledge_base_source.dart';
 import '../models/media_usage.dart';
 import '../models/review_category.dart';
 import '../models/summary_level.dart';
@@ -125,10 +126,11 @@ class BackendService {
     );
   }
 
-  Future<String> askKnowledgeBase(
+  Future<KnowledgeBaseAnswer> askKnowledgeBase(
     String question, {
     required String context,
     required String locale,
+    bool speak = false,
   }) async {
     await _auth.ensureSignedIn();
 
@@ -139,10 +141,48 @@ class BackendService {
         'question': question,
         'context': context,
         'locale': locale,
+        'speak': speak,
       });
-      return (result.data['answer'] as String? ?? '').trim();
+      final answer = (result.data['answer'] as String? ?? '').trim();
+      final sourcesJson = result.data['sources'] as List<dynamic>? ?? const [];
+      final sources = sourcesJson
+          .map((s) => KnowledgeBaseSource.fromJson(Map<String, dynamic>.from(s as Map)))
+          .toList();
+      final audioBase64 = result.data['audioBase64'] as String?;
+      return KnowledgeBaseAnswer(
+        answer: answer,
+        sources: sources,
+        audioBytes: (audioBase64 != null && audioBase64.isNotEmpty)
+            ? base64Decode(audioBase64)
+            : null,
+      );
     } on FirebaseFunctionsException catch (e) {
       throw BackendServiceException(e.message ?? currentLocalizations().genericProcessingError);
+    }
+  }
+
+  /// 相談機能を音声で質問するための文字起こし。processVoiceMemoと違い
+  /// 仕分け構造化はせず、日次クォータ・月間録音時間も消費しない。
+  Future<String> transcribeQuestion(File audioFile, {required String locale}) async {
+    await _auth.ensureSignedIn();
+
+    final bytes = await audioFile.readAsBytes();
+    final audioBase64 = base64Encode(bytes);
+
+    try {
+      final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+      final callable = functions.httpsCallable('transcribeQuestion');
+      final result = await callable.call<Map<String, dynamic>>({
+        'audioBase64': audioBase64,
+        'mimeType': 'audio/m4a',
+        'locale': locale,
+      });
+      return (result.data['text'] as String? ?? '').trim();
+    } on FirebaseFunctionsException catch (e) {
+      throw BackendServiceException(
+        e.message ?? currentLocalizations().genericProcessingError,
+        code: e.code,
+      );
     }
   }
 
