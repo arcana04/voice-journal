@@ -130,7 +130,6 @@ class BackendService {
     String question, {
     required String context,
     required String locale,
-    bool speak = false,
   }) async {
     await _auth.ensureSignedIn();
 
@@ -141,21 +140,13 @@ class BackendService {
         'question': question,
         'context': context,
         'locale': locale,
-        'speak': speak,
       });
       final answer = (result.data['answer'] as String? ?? '').trim();
       final sourcesJson = result.data['sources'] as List<dynamic>? ?? const [];
       final sources = sourcesJson
           .map((s) => KnowledgeBaseSource.fromJson(Map<String, dynamic>.from(s as Map)))
           .toList();
-      final audioBase64 = result.data['audioBase64'] as String?;
-      return KnowledgeBaseAnswer(
-        answer: answer,
-        sources: sources,
-        audioBytes: (audioBase64 != null && audioBase64.isNotEmpty)
-            ? base64Decode(audioBase64)
-            : null,
-      );
+      return KnowledgeBaseAnswer(answer: answer, sources: sources);
     } on FirebaseFunctionsException catch (e) {
       throw BackendServiceException(e.message ?? currentLocalizations().genericProcessingError);
     }

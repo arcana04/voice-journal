@@ -394,9 +394,6 @@
   "knowledgeBaseVoiceQuestion": "音声で質問",
   "knowledgeBaseRecordingQuestion": "質問を録音中…",
   "knowledgeBaseTranscribing": "文字に起こしています…",
-  "knowledgeBasePlayAnswer": "回答を再生",
-  "knowledgeBaseStopAnswer": "再生を停止",
-
 
   "weeklyReportSettingsTitle": "週刊脳内レポート",
   "weeklyReportSettingsSubtitle": "毎週のレポートをお届けします",

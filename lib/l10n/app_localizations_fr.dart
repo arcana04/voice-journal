@@ -1207,12 +1207,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get knowledgeBaseTranscribing => 'Transcription…';
 
   @override
-  String get knowledgeBasePlayAnswer => 'Lire la réponse';
-
-  @override
-  String get knowledgeBaseStopAnswer => 'Arrêter la lecture';
-
-  @override
   String get weeklyReportSettingsTitle => 'Rapport cérébral hebdomadaire';
 
   @override

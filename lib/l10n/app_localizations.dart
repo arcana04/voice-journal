@@ -2284,18 +2284,6 @@ abstract class AppLocalizations {
   /// **'Transcribing…'**
   String get knowledgeBaseTranscribing;
 
-  /// No description provided for @knowledgeBasePlayAnswer.
-  ///
-  /// In en, this message translates to:
-  /// **'Play answer'**
-  String get knowledgeBasePlayAnswer;
-
-  /// No description provided for @knowledgeBaseStopAnswer.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop playing'**
-  String get knowledgeBaseStopAnswer;
-
   /// No description provided for @weeklyReportSettingsTitle.
   ///
   /// In en, this message translates to:

@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -29,9 +27,6 @@ class _ChatMessage {
   bool loading = true;
   List<KnowledgeBaseSource> sources = const [];
 
-  /// `speak: true`で質問した場合だけ入る、回答を読み上げたTTS音声(mp3)。
-  Uint8List? audioBytes;
-
   /// 匿名アカウントのまま埋め込み検索の同期記録が無く(≒[sources]が空のまま)
   /// 応答が返ってきた、まさにその瞬間だけアカウント連携を促す。セッション中に
   /// 一度出したら以降は繰り返さない([_KnowledgeBaseScreenState._signInNudgeShown]参照)。
@@ -55,23 +50,15 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final RecorderService _recorder = RecorderService();
-  final AudioPlayer _player = AudioPlayer();
   final List<_ChatMessage> _messages = [];
   bool _signInNudgeShown = false;
   _VoiceState _voiceState = _VoiceState.idle;
-
-  /// 現在TTS音声を再生中のメッセージ。同時に1つしか再生しない前提。
-  _ChatMessage? _playingMessage;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<JournalStore>().load();
-    });
-    _player.onPlayerComplete.listen((_) {
-      if (!mounted) return;
-      setState(() => _playingMessage = null);
     });
   }
 
@@ -80,7 +67,6 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
     _controller.dispose();
     _scrollController.dispose();
     _recorder.dispose();
-    _player.dispose();
     super.dispose();
   }
 
@@ -88,7 +74,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
     final question = _controller.text.trim();
     if (question.isEmpty) return;
     _controller.clear();
-    await _ask(question, isVoice: false);
+    await _ask(question);
   }
 
   /// マイクボタンのタップを録音開始/停止の2状態にトグルする。
@@ -137,7 +123,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
       if (!mounted) return;
       setState(() => _voiceState = _VoiceState.idle);
       if (question.isEmpty) return;
-      await _ask(question, isVoice: true);
+      await _ask(question);
     } catch (e) {
       if (!mounted) return;
       setState(() => _voiceState = _VoiceState.idle);
@@ -153,10 +139,13 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
     }
   }
 
-  /// テキスト入力・音声質問どちらもここに合流する。[isVoice]の時だけ回答の
-  /// TTS音声を要求し、届いたら自動再生する（歩きながらの利用を想定し、
-  /// 音声で聞いたのに読む前提の画面遷移を挟まないため）。
-  Future<void> _ask(String question, {required bool isVoice}) async {
+  /// 参照カードを出す最大件数。裏側の埋め込み検索自体はより多くの記録を
+  /// AIのコンテキストに渡すことがあるが、UI上は「答えの裏付け」がぱっと
+  /// 見て分かる程度の枚数に絞り、横スクロールが煩雑にならないようにする。
+  static const _maxDisplayedSources = 5;
+
+  /// テキスト入力・音声質問どちらもここに合流する。
+  Future<void> _ask(String question) async {
     final message = _ChatMessage(question: question);
     setState(() => _messages.add(message));
     _scrollToBottom();
@@ -170,23 +159,18 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
         question,
         context: contextText,
         locale: locale,
-        speak: isVoice,
       );
       if (!mounted) return;
       final isAnonymous = FirebaseAuth.instance.currentUser?.isAnonymous ?? false;
       setState(() {
         message.answer = result.answer;
-        message.sources = result.sources;
-        message.audioBytes = result.audioBytes;
+        message.sources = result.sources.take(_maxDisplayedSources).toList();
         message.loading = false;
         if (isAnonymous && result.sources.isEmpty && !_signInNudgeShown) {
           message.showSignInNudge = true;
           _signInNudgeShown = true;
         }
       });
-      if (result.audioBytes != null) {
-        unawaited(_playAudio(message));
-      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -197,19 +181,6 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
       });
     }
     _scrollToBottom();
-  }
-
-  Future<void> _playAudio(_ChatMessage message) async {
-    final bytes = message.audioBytes;
-    if (bytes == null) return;
-    setState(() => _playingMessage = message);
-    await _player.play(BytesSource(bytes));
-  }
-
-  Future<void> _stopAudio() async {
-    await _player.stop();
-    if (!mounted) return;
-    setState(() => _playingMessage = null);
   }
 
   void _scrollToBottom() {
@@ -274,18 +245,8 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
                           controller: _scrollController,
                           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                           itemCount: _messages.length,
-                          itemBuilder: (context, index) {
-                            final message = _messages[index];
-                            return _ChatBubbles(
-                              message: message,
-                              isPlaying: identical(_playingMessage, message),
-                              onTogglePlay: message.audioBytes == null
-                                  ? null
-                                  : () => identical(_playingMessage, message)
-                                        ? _stopAudio()
-                                        : _playAudio(message),
-                            );
-                          },
+                          itemBuilder: (context, index) =>
+                              _ChatBubbles(message: _messages[index]),
                         ),
                 ),
                 if (_voiceState != _VoiceState.idle)
@@ -376,14 +337,8 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
 
 class _ChatBubbles extends StatelessWidget {
   final _ChatMessage message;
-  final bool isPlaying;
-  final VoidCallback? onTogglePlay;
 
-  const _ChatBubbles({
-    required this.message,
-    this.isPlaying = false,
-    this.onTogglePlay,
-  });
+  const _ChatBubbles({required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -451,24 +406,6 @@ class _ChatBubbles extends StatelessWidget {
                     ),
             ),
           ),
-          if (!message.loading && onTogglePlay != null) ...[
-            const SizedBox(height: 4),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: onTogglePlay,
-                icon: Icon(isPlaying ? Icons.stop_circle_rounded : Icons.volume_up_rounded, size: 18),
-                label: Text(
-                  isPlaying ? l10n.knowledgeBaseStopAnswer : l10n.knowledgeBasePlayAnswer,
-                ),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-            ),
-          ],
           if (!message.loading && message.sources.isNotEmpty) ...[
             const SizedBox(height: 8),
             Align(

@@ -424,9 +424,6 @@
   "knowledgeBaseVoiceQuestion": "Ask by voice",
   "knowledgeBaseRecordingQuestion": "Recording your question…",
   "knowledgeBaseTranscribing": "Transcribing…",
-  "knowledgeBasePlayAnswer": "Play answer",
-  "knowledgeBaseStopAnswer": "Stop playing",
-
 
   "weeklyReportSettingsTitle": "Weekly Recap",
   "weeklyReportSettingsSubtitle": "Delivered every week",

@@ -1204,12 +1204,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get knowledgeBaseTranscribing => 'Wird transkribiert…';
 
   @override
-  String get knowledgeBasePlayAnswer => 'Antwort abspielen';
-
-  @override
-  String get knowledgeBaseStopAnswer => 'Wiedergabe stoppen';
-
-  @override
   String get weeklyReportSettingsTitle => 'Wöchentlicher Gehirnbericht';
 
   @override

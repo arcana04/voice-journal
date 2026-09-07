@@ -1189,12 +1189,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get knowledgeBaseTranscribing => 'Transcribing…';
 
   @override
-  String get knowledgeBasePlayAnswer => 'Play answer';
-
-  @override
-  String get knowledgeBaseStopAnswer => 'Stop playing';
-
-  @override
   String get weeklyReportSettingsTitle => 'Weekly Recap';
 
   @override

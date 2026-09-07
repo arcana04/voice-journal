@@ -424,9 +424,6 @@
   "knowledgeBaseVoiceQuestion": "Preguntar por voz",
   "knowledgeBaseRecordingQuestion": "Grabando tu pregunta…",
   "knowledgeBaseTranscribing": "Transcribiendo…",
-  "knowledgeBasePlayAnswer": "Reproducir respuesta",
-  "knowledgeBaseStopAnswer": "Detener reproducción",
-
 
   "weeklyReportSettingsTitle": "Informe Cerebral Semanal",
   "weeklyReportSettingsSubtitle": "Entregado cada semana",

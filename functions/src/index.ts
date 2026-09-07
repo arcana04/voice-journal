@@ -135,7 +135,6 @@ const MESSAGES: Record<
     proRequired: string;
     transcriptionFailed: (body: string) => string;
     analysisFailed: (body: string) => string;
-    ttsFailed: (body: string) => string;
     unexpectedError: (message: string) => string;
   }
 > = {
@@ -154,7 +153,6 @@ const MESSAGES: Record<
     proRequired: "この機能はProプラン限定です。",
     transcriptionFailed: (body) => `文字起こしに失敗しました: ${body}`,
     analysisFailed: (body) => `AI解析に失敗しました: ${body}`,
-    ttsFailed: (body) => `音声の生成に失敗しました: ${body}`,
     unexpectedError: (message) => `処理中に予期しないエラーが発生しました: ${message}`,
   },
   en: {
@@ -173,7 +171,6 @@ const MESSAGES: Record<
     proRequired: "This feature is only available on the Pro plan.",
     transcriptionFailed: (body) => `Transcription failed: ${body}`,
     analysisFailed: (body) => `AI analysis failed: ${body}`,
-    ttsFailed: (body) => `Failed to generate speech: ${body}`,
     unexpectedError: (message) =>
       `An unexpected error occurred while processing: ${message}`,
   },
@@ -193,7 +190,6 @@ const MESSAGES: Record<
     proRequired: "Esta función solo está disponible en el plan Pro.",
     transcriptionFailed: (body) => `Error al transcribir: ${body}`,
     analysisFailed: (body) => `Error en el análisis de la IA: ${body}`,
-    ttsFailed: (body) => `Error al generar el audio: ${body}`,
     unexpectedError: (message) =>
       `Se produjo un error inesperado durante el procesamiento: ${message}`,
   },
@@ -213,7 +209,6 @@ const MESSAGES: Record<
     proRequired: "Diese Funktion ist nur im Pro-Plan verfügbar.",
     transcriptionFailed: (body) => `Transkription fehlgeschlagen: ${body}`,
     analysisFailed: (body) => `KI-Analyse fehlgeschlagen: ${body}`,
-    ttsFailed: (body) => `Audio konnte nicht erzeugt werden: ${body}`,
     unexpectedError: (message) =>
       `Bei der Verarbeitung ist ein unerwarteter Fehler aufgetreten: ${message}`,
   },
@@ -232,7 +227,6 @@ const MESSAGES: Record<
     proRequired: "이 기능은 Pro 플랜 전용입니다.",
     transcriptionFailed: (body) => `문자 변환에 실패했습니다: ${body}`,
     analysisFailed: (body) => `AI 분석에 실패했습니다: ${body}`,
-    ttsFailed: (body) => `음성 생성에 실패했습니다: ${body}`,
     unexpectedError: (message) => `처리 중 예기치 않은 오류가 발생했습니다: ${message}`,
   },
   fr: {
@@ -251,7 +245,6 @@ const MESSAGES: Record<
     proRequired: "Cette fonctionnalité est réservée au plan Pro.",
     transcriptionFailed: (body) => `Échec de la transcription : ${body}`,
     analysisFailed: (body) => `Échec de l'analyse par l'IA : ${body}`,
-    ttsFailed: (body) => `Échec de la génération audio : ${body}`,
     unexpectedError: (message) =>
       `Une erreur inattendue s'est produite pendant le traitement : ${message}`,
   },
@@ -2407,46 +2400,6 @@ async function answerKnowledgeBaseQuestion(
   return data.choices[0].message.content.trim();
 }
 
-const TTS_VOICE: Record<Locale, string> = {
-  ja: "alloy",
-  en: "alloy",
-  es: "alloy",
-  de: "alloy",
-  ko: "alloy",
-  fr: "alloy",
-};
-
-/** 相談機能の回答を音声で聞きたい場合（音声で質問した時など）に使う。
- * 失敗してもチャット自体は落とさず、呼び出し側がテキストのみで
- * フォールバックできるようエラーを投げるだけにとどめる。 */
-async function synthesizeSpeech(
-  apiKey: string,
-  text: string,
-  locale: Locale
-): Promise<string> {
-  const response = await fetch("https://api.openai.com/v1/audio/speech", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini-tts",
-      voice: TTS_VOICE[locale],
-      input: text,
-      response_format: "mp3",
-    }),
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new HttpsError("unavailable", MESSAGES[locale].ttsFailed(body));
-  }
-
-  const buffer = Buffer.from(await response.arrayBuffer());
-  return buffer.toString("base64");
-}
-
 const EMBEDDING_MODEL = "text-embedding-3-small";
 /** 相談機能の埋め込み検索で、質問に近い順に何件のエントリをコンテキストへ
  * 渡すか。多すぎるとコスト・精度が悪化し、少なすぎると見落としが増える。 */
@@ -2800,10 +2753,6 @@ interface AskKnowledgeBaseRequest {
   question: string;
   context?: string;
   locale?: string;
-  /** trueなら回答文をTTSで音声化して`audioBase64`として返す。質問が音声入力
-   * だった場合など、クライアント側の判断でオプトインさせる（コスト面で
-   * テキスト入力の全質問には既定でかけない）。 */
-  speak?: boolean;
 }
 
 // Proプラン限定機能。課金基盤（RevenueCat + revenueCatWebhook）が反映した
@@ -2816,7 +2765,7 @@ export const askKnowledgeBase = onCall(
     enforceAppCheck: APP_CHECK_ENFORCED,
   },
   async (request) => {
-    const { question, context, locale, speak } = (request.data ?? {}) as AskKnowledgeBaseRequest;
+    const { question, context, locale } = (request.data ?? {}) as AskKnowledgeBaseRequest;
     const loc = normalizeLocale(locale);
 
     const uid = request.auth?.uid;
@@ -2847,17 +2796,7 @@ export const askKnowledgeBase = onCall(
         isBroad
       );
 
-      let audioBase64: string | undefined;
-      if (speak && answer.trim()) {
-        try {
-          audioBase64 = await synthesizeSpeech(apiKey, answer, loc);
-        } catch (err) {
-          // 音声化はあくまで付加機能。失敗してもテキストの回答自体は返す。
-          logger.error("askKnowledgeBase TTS failed, falling back to text-only", err);
-        }
-      }
-
-      return { answer, sources, audioBase64 };
+      return { answer, sources };
     } catch (err) {
       if (err instanceof HttpsError) {
         throw err;

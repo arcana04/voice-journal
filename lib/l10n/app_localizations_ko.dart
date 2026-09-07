@@ -1152,12 +1152,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get knowledgeBaseTranscribing => '텍스트로 변환하고 있어요…';
 
   @override
-  String get knowledgeBasePlayAnswer => '답변 재생';
-
-  @override
-  String get knowledgeBaseStopAnswer => '재생 중지';
-
-  @override
   String get weeklyReportSettingsTitle => '주간 두뇌 리포트';
 
   @override

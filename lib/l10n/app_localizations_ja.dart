@@ -1147,12 +1147,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get knowledgeBaseTranscribing => '文字に起こしています…';
 
   @override
-  String get knowledgeBasePlayAnswer => '回答を再生';
-
-  @override
-  String get knowledgeBaseStopAnswer => '再生を停止';
-
-  @override
   String get weeklyReportSettingsTitle => '週刊脳内レポート';
 
   @override

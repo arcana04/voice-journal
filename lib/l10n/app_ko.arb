@@ -424,9 +424,6 @@
   "knowledgeBaseVoiceQuestion": "음성으로 질문",
   "knowledgeBaseRecordingQuestion": "질문을 녹음하고 있어요…",
   "knowledgeBaseTranscribing": "텍스트로 변환하고 있어요…",
-  "knowledgeBasePlayAnswer": "답변 재생",
-  "knowledgeBaseStopAnswer": "재생 중지",
-
 
   "weeklyReportSettingsTitle": "주간 두뇌 리포트",
   "weeklyReportSettingsSubtitle": "매주 전달돼요",
