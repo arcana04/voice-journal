@@ -99,16 +99,22 @@ function normalizeAllowedCategories(value: unknown): Set<AllowedCategory> {
 
 /** クライアント（Flutterアプリ）の表示言語。UIの多言語対応に合わせてサーバー側の
  * 音声認識言語・AIプロンプト・エラーメッセージを切り替えるために使う。 */
-type Locale = "ja" | "en" | "es";
+type Locale = "ja" | "en" | "es" | "de";
 
 function normalizeLocale(value: unknown): Locale {
   if (value === "en") return "en";
   if (value === "es") return "es";
+  if (value === "de") return "de";
   return "ja";
 }
 
 /** `Intl.DateTimeFormat`/`Intl.NumberFormat`等に渡すBCP47タグ。 */
-const INTL_LOCALE: Record<Locale, string> = { ja: "ja-JP", en: "en-US", es: "es-ES" };
+const INTL_LOCALE: Record<Locale, string> = {
+  ja: "ja-JP",
+  en: "en-US",
+  es: "es-ES",
+  de: "de-DE",
+};
 
 /** ユーザー向けエラーメッセージ。localeごとに文面を分ける。 */
 const MESSAGES: Record<
@@ -186,6 +192,26 @@ const MESSAGES: Record<
     ttsFailed: (body) => `Error al generar el audio: ${body}`,
     unexpectedError: (message) =>
       `Se produjo un error inesperado durante el procesamiento: ${message}`,
+  },
+  de: {
+    authRequired: "Authentifizierung ist erforderlich.",
+    noAudio: "Es wurden keine Audiodaten übermittelt.",
+    noText: "Es wurde kein Text übermittelt.",
+    transcriptionEmpty: "In der Aufnahme konnte keine Sprache erkannt werden.",
+    quotaExceeded: (limit) =>
+      `Du hast das heutige kostenlose Limit von ${limit} Aufnahmen erreicht. Bitte versuche es morgen erneut.`,
+    monthlyMinutesExceeded: (limitMinutes) =>
+      `Du hast das monatliche Aufnahmelimit von ${limitMinutes} Minuten erreicht. Kaufe ein zusätzliches Minutenpaket oder warte bis zum nächsten Monat.`,
+    watchRateLimited:
+      "Zu viele Anfragen von der Apple Watch. Bitte warte einen Moment und versuche es erneut.",
+    unknownWatchDevice:
+      "Diese Apple Watch ist noch nicht gekoppelt. Bitte koppele sie erneut über die iPhone-App.",
+    proRequired: "Diese Funktion ist nur im Pro-Plan verfügbar.",
+    transcriptionFailed: (body) => `Transkription fehlgeschlagen: ${body}`,
+    analysisFailed: (body) => `KI-Analyse fehlgeschlagen: ${body}`,
+    ttsFailed: (body) => `Audio konnte nicht erzeugt werden: ${body}`,
+    unexpectedError: (message) =>
+      `Bei der Verarbeitung ist ein unerwarteter Fehler aufgetreten: ${message}`,
   },
 };
 
@@ -290,6 +316,37 @@ ${FABRICATION_EXAMPLE_ES}`;
   }
 }
 
+function buildNotesStyleSectionDe(level: SummaryLevel): string {
+  switch (level) {
+    case "compact":
+      return `[So schreibst du den Notiztext ("content"): sehr kompakt]
+Reduziere dies wie bei den Aufgaben auf das Wesentliche.
+- Du darfst nicht nur Füllwörter und Wiederholungen streichen, sondern auch kleinere Beschreibungen und redundante Erklärungen.
+- Ziel sind etwa 1-2 Sätze pro Notiz, die nur das Kernereignis, die Idee oder das Gefühl abdecken.
+- Behalte die Ich-Perspektive bei ("ich fühlte...", "es war...").
+- Erfinde niemals Personen, Ereignisse, Gefühle oder Details, die die sprechende Person nicht gesagt hat. Zusammenfassen bedeutet Kürzen, niemals Hinzufügen.
+${FABRICATION_EXAMPLE_DE}`;
+    case "standard":
+      return `[So schreibst du den Notiztext ("content"): Standard]
+Kürze nicht so stark wie bei einer Aufgabe, behalte aber eine natürliche Tagebuchlänge bei, während du redundante Wiederholungen oder Abschweifungen ordnest.
+- Behalte emotionale Hinweise, Namen und einprägsame Formulierungen möglichst bei. Eine wörtliche Transkription ist nicht nötig — eine leichte Überarbeitung für die Lesbarkeit ist in Ordnung.
+- Schreibe in der eigenen Ich-Perspektive der sprechenden Person ("ich fühlte...", "es war..."), nicht als objektive Beschreibung in dritter Person.
+- Bei starken Emotionen ist ein "!" in Ordnung, wenn es nicht aufgesetzt wirkt.
+- Die "natürliche Tagebuchlänge" ist nur eine Richtlinie für die Textpflege — erfinde niemals Personen, Ereignisse, Gefühle oder Details, die die sprechende Person nicht gesagt hat, nur um den Text zu verlängern. Wenn die Eingabe nur ein kurzer Satz ist wie "war beim Grillen", darf der Inhalt genauso kurz bleiben — eine kurze, aber genaue Notiz ist immer besser als eine längere mit erfundenen Details.
+${FABRICATION_EXAMPLE_DE}`;
+    case "preserve":
+    default:
+      return `[So schreibst du den Notiztext ("content"): Original bewahren]
+Anders als bei Aufgaben sollen Notizen nicht zusammengefasst oder komprimiert werden.
+- Bewahre die rohe Emotion, die charakteristische Ausdrucksweise, die Beschreibung der Szene und konkrete Namen so intakt wie möglich. Reduziere es nicht auf eine kurze Zusammenfassung der Kernpunkte.
+- Das Einzige, was du entfernen darfst, sind Füllwörter (wie "äh", "ähm") und exakt wiederholte Sätze. Ansonsten behalte Inhalt, Reihenfolge und Detailgrad bei und überarbeite den Text nur leicht für die Lesbarkeit.
+- Schreibe es in der eigenen Ich-Perspektive der sprechenden Person um ("ich fühlte...", "es war...", "vielleicht..."), nicht als objektiven Bericht in dritter Person.
+- Bei Aufregung, Überraschung oder Freude ist ein "!" in Ordnung, um den natürlichen Ton beizubehalten, wie es tatsächlich gesagt wurde.
+- Erfinde niemals Personen, Ereignisse, Gefühle oder Details, die die sprechende Person nicht gesagt hat. Wenn die Eingabe kurz ist, darf der überarbeitete Inhalt genauso kurz bleiben.
+${FABRICATION_EXAMPLE_DE}`;
+  }
+}
+
 /** Same fabrication-prevention example as the Japanese prompt, in English —
  * abstract rules alone weren't reliably followed by gpt-4o-mini for very
  * short inputs, so a concrete example is included at every summary level. */
@@ -307,6 +364,15 @@ Entrada: "los fuegos artificiales estuvieron divertidos"
 - Salida correcta: "Los fuegos artificiales estuvieron divertidos." (solo se ajusta ligeramente a primera persona, sin añadir nada)
 - Nunca produzcas algo como: "Ver los fuegos artificiales fue un momento realmente divertido. La forma en que iluminaban el cielo nocturno fue impresionante, y estar todos juntos lo hizo aún mejor." (inventar personas como "todos" y detalles de la escena que el hablante nunca mencionó es una infracción)`;
 
+/** Dasselbe Anti-Erfindungs-Beispiel wie in der japanischen/englischen/
+ * spanischen Version — abstrakte Regeln allein wurden von gpt-4o-mini bei
+ * sehr kurzen Eingaben nicht zuverlässig befolgt, daher ein konkretes
+ * Beispiel auf jeder Zusammenfassungsstufe. */
+const FABRICATION_EXAMPLE_DE = `[Konkretes Beispiel — halte dich genau daran]
+Eingabe: "das Feuerwerk hat Spaß gemacht"
+- Richtige Ausgabe: "Das Feuerwerk hat Spaß gemacht." (nur leicht in die Ich-Form gebracht, nichts hinzugefügt)
+- Gib niemals etwas aus wie: "Das Feuerwerk anzusehen war eine wirklich schöne Zeit. Die Art, wie es den Nachthimmel erleuchtete, war beeindruckend, und dass alle zusammen dort waren, machte es noch besser." (das Erfinden von Personen wie "alle" und Szenendetails, die die sprechende Person nie erwähnt hat, ist ein Verstoß)`;
+
 const CATEGORY_LABEL_JA: Record<AllowedCategory, string> = {
   diary: "感情ログ（日記）",
   idea: "アイデア",
@@ -321,6 +387,11 @@ const CATEGORY_LABEL_ES: Record<AllowedCategory, string> = {
   diary: "感情ログ (diario)",
   idea: "アイデア (idea)",
   task: "タスク (tarea)",
+};
+const CATEGORY_LABEL_DE: Record<AllowedCategory, string> = {
+  diary: "感情ログ (Tagebuch)",
+  idea: "アイデア (Idee)",
+  task: "タスク (Aufgabe)",
 };
 const NOTE_CATEGORY_JA: Record<"diary" | "idea", string> = {
   diary: "感情ログ",
@@ -344,6 +415,12 @@ function buildCategoryRestrictionNote(allowed: Set<AllowedCategory>, locale: Loc
       .map((c) => CATEGORY_LABEL_ES[c])
       .join(", ");
     return `\n\n[Restricción de categoría para esta grabación]\nSolo estas categorías están habilitadas esta vez: ${labels}. Nunca uses una categoría deshabilitada. Si un contenido normalmente pertenecería a una categoría deshabilitada, reasígnalo a la categoría habilitada que mejor encaje, usando ${CATEGORY_LABEL_ES[fallback]} por defecto si tienes dudas. Nunca omitas contenido solo porque su categoría natural está deshabilitada — todo lo que dijo el hablante debe terminar en tasks o notes.`;
+  }
+  if (locale === "de") {
+    const labels = ALL_CATEGORIES.filter((c) => allowed.has(c))
+      .map((c) => CATEGORY_LABEL_DE[c])
+      .join(", ");
+    return `\n\n[Kategorieeinschränkung für diese Aufnahme]\nDieses Mal sind nur diese Kategorien aktiviert: ${labels}. Verwende niemals eine deaktivierte Kategorie. Wenn Inhalt normalerweise zu einer deaktivierten Kategorie gehören würde, ordne ihn der am besten passenden aktivierten Kategorie zu, im Zweifel standardmäßig ${CATEGORY_LABEL_DE[fallback]}. Lasse niemals Inhalt weg, nur weil seine natürliche Kategorie deaktiviert ist — alles, was die sprechende Person gesagt hat, muss trotzdem in tasks oder notes landen.`;
   }
   const labels = ALL_CATEGORIES.filter((c) => allowed.has(c))
     .map((c) => CATEGORY_LABEL_JA[c])
@@ -600,6 +677,76 @@ Genera ÚNICAMENTE el siguiente formato JSON, sin comentarios adicionales. Recue
   ],
   "comfort_message": "mensaje corto de consuelo en español, solo si hay una nota 感情ログ, si no null",
   "emotion": "uno de satisfaction/gratitude/happy/love/funny/joy/excited/relief/calm/neutral/boredom/anxious/sadness/fatigue/regret/anger/dislike, solo si hay una nota 感情ログ, si no null"
+}`;
+}
+
+function buildSystemPromptDe(
+  today: string,
+  weekday: string,
+  summaryLevel: SummaryLevel,
+  categoryNote: string,
+  glossary?: string
+): string {
+  const glossarySection = glossary
+    ? `\n\n[Schreibweise von Namen und Begriffen]\nDer Eingabetext ist ein Sprache-zu-Text-Transkript, daher könnten die folgenden Namen/Begriffe falsch geschrieben erscheinen. Wenn der Kontext klar macht, dass die sprechende Person einen davon meinte, korrigiere die Schreibweise vor der Verarbeitung.\n${glossary}`
+    : "";
+
+  return `Du bist ein KI-Assistent, der alltägliche gesprochene deutsche Unterhaltungen/Monologe analysiert und in strukturierte Daten umwandelt.${glossarySection}
+
+[Ausgabesprache — zuerst lesen]
+Die sprechende Person spricht Deutsch, und jedes Textfeld, das du schreibst (summary, task title, due_hint, note title, note content, comfort_message), MUSS auf Deutsch verfasst sein. Übersetze nichts ins Japanische. Die EINZIGE Ausnahme ist das Feld "category" der Notizen, das ein festes internes Label ist und immer genau der wörtliche japanische Text アイデア oder 感情ログ sein muss, niemals übersetzt, niemals romanisiert, niemals auf Deutsch geschrieben — alle anderen Felder bleiben auf Deutsch.
+
+[Beschaffenheit des Eingabetexts]
+Der Eingabetext ist ein Sprache-zu-Text-Transkript und enthält daher Füllwörter ("äh", "ähm"), zögerliche oder unvollständige Formulierungen ("...glaube ich", "...oder so"), Abschweifungen und weggelassene Subjekte.
+
+[Heutiges Datum]
+${today} (${weekday}, japanische Zeit). Interpretiere alle relativen Datumsausdrücke bezogen auf dieses Datum.
+
+[Klassifizierungsregeln (3 Kategorien)]
+1. Entferne Füllwörter ("äh", "ähm" usw.) und exakt wiederholte Sätze.
+2. Ergänze bei Aufgaben das fehlende Subjekt/den fehlenden Zeitpunkt aus dem Kontext und fasse sie zu einer prägnanten Handlung zusammen.
+3. Klassifiziere jede Äußerung in genau eine dieser drei Kategorien:
+   - [tasks (Aufgabe)]: eine "bestätigte Handlung" — etwas, von dem die sprechende Person sagt, dass sie es tun wird oder muss.
+   - [notes category="アイデア"]: eine unbestätigte Idee, Frage oder ein Gedanke, oder etwas zum Nachdenken.
+   - [notes category="感情ログ"]: ein Gefühl, eine Stimmung, eine Beschwerde oder eine Reflexion über etwas Geschehenes, ohne zugehörige Handlung.
+4. Wenn die sprechende Person zwischen Themen springt, teile den Inhalt in separate, entsprechend klassifizierte Einträge auf.
+${categoryNote}
+
+${buildNotesStyleSectionDe(summaryLevel)}
+
+[Automatische Fälligkeitsdatum-Erkennung]
+Wenn eine Aufgabe einen fälligkeitsähnlichen Ausdruck enthält (z. B. "morgen", "bis nächsten Montag", "irgendwann diesen Monat"), berechne das tatsächliche Datum (YYYY-MM-DD) relativ zum oben angegebenen heutigen Datum und trage es in due_date ein. Wenn das Datum nicht eindeutig bestimmt werden kann oder keine Fälligkeitsangabe vorhanden ist, setze due_date auf null. Trage eine kurze Version der ursprünglichen Formulierung in due_hint ein.
+
+[Erinnerungen mit Uhrzeit]
+Wenn eine Aufgabe explizit eine Uhrzeit nennt (z. B. "um 15 Uhr", "morgen früh um 9", "um 19 Uhr in der Klinik"), berechne das tatsächliche Datum/die Uhrzeit relativ zum oben angegebenen heutigen Datum und der japanischen Zeit, und trage es in reminder_at als "YYYY-MM-DDTHH:mm:00" ein (24-Stunden-Format, Sekunden fest auf 00). Wenn nur eine Uhrzeit ohne Datum angegeben ist, verwende das heutige Datum, und wenn diese Uhrzeit heute bereits vergangen ist, verwende stattdessen das morgige Datum. Wenn keine explizite Uhrzeit angegeben ist (nur ein Datum oder eine vage Formulierung wie "vormittags" oder "irgendwann"), setze reminder_at auf null.
+Wenn auch explizit eine Endzeit angegeben ist (z. B. "von 10 bis 17 Uhr", "15 bis 16:30 Uhr"), trage dieses Enddatum/diese Endzeit im gleichen Format und Datum in reminder_end_at ein. Wenn die Endzeit auf den nächsten Tag übergreift (z. B. "22 Uhr bis 6 Uhr morgens"), erhöhe das Datum um einen Tag. Wenn keine Endzeit angegeben ist, setze reminder_end_at auf null.
+
+[Trostspendende Nachricht]
+Nur wenn es mindestens eine Notiz mit category="感情ログ" gibt, schreibe einen kurzen, warmherzigen Einzeiler (etwa 10-25 Wörter), der das Gefühl anerkennt, ohne zu belehren oder eine Lösung aufzudrängen, und trage ihn in comfort_message ein. Wenn es keine 感情ログ-Notiz gibt, setze comfort_message auf null.
+
+[Emotions-Tag]
+Unter derselben Bedingung wie comfort_message (nur wenn es mindestens eine Notiz mit category="感情ログ" gibt), wähle die eine zentralste Emotion, die durch diesen Inhalt vermittelt wird, und trage sie in emotion als genau einen dieser englischen Bezeichner ein (exakt wie gezeigt geschrieben, niemals übersetzt):
+satisfaction, gratitude, happy, love, funny, joy, excited, relief, calm, neutral, boredom, anxious, sadness, fatigue, regret, anger, dislike (verwende neutral für alles Mehrdeutige, das nicht eindeutig zu den anderen passt).
+[Wichtig] Wähle nicht standardmäßig joy, nur weil die sprechende Person wörtlich "lustig" oder "hat Spaß gemacht" sagt — beurteile anhand des tatsächlich vermittelten Gefühls, nicht anhand des oberflächlichen Wortes. Bevorzuge eine spezifischere Wahl, wenn sie eindeutig passt: jemand war freundlich / hat etwas für sie getan → gratitude; sie haben ein Ziel erreicht oder abgeschlossen → satisfaction; Zuneigung zu einer Person oder Sache → love; etwas kam ihnen lustig/amüsant vor → funny; Vorfreude oder nervöse Aufregung über etwas Bevorstehendes → excited; Erleichterung, nachdem sich eine Sorge aufgelöst hat → relief. Reserviere joy für Fälle, die sich speziell darauf beziehen, die Aktivität selbst zu genießen, nicht als Standardwert für alles Positive.
+happy, joy und satisfaction sind nah beieinander, aber unterschiedlich: happy ist Wärme gegenüber jemandem/etwas, das passiert ist, joy ist das Genießen der Aktivität selbst, satisfaction ist ein Gefühl der Leistung. calm, relief und neutral sind ebenfalls nah beieinander, aber unterschiedlich: calm ist ein ruhiger, gelassener Zustand, relief ist das Gefühl direkt nachdem sich Angst auflöst, neutral ist ein schlichter Zwischenzustand, der zu keinem der beiden passt.
+Wenn es keine 感情ログ-Notiz gibt, setze emotion auf null.
+
+[Notiztitel]
+Schreibe für jede Notiz eine kurze Überschrift (etwa 3-6 Wörter), die sich als Tagebucheintrag-Titel eignet, und trage sie in title ein. Beispiele: "Feuerwerk hat Spaß gemacht", "Neue Café-Idee".
+
+[Ausgabeformat]
+Gib AUSSCHLIESSLICH das folgende JSON-Format aus, ohne zusätzlichen Kommentar. Denk daran: Alle Felder sind auf Deutsch außer "category", das immer das feste japanische Label アイデア oder 感情ログ ist:
+
+{
+  "summary": "einzeilige Gesamtzusammenfassung, auf Deutsch",
+  "tasks": [
+    {"title": "Aufgabeninhalt, auf Deutsch", "due_hint": "ursprüngliche Formulierung des Fälligkeitsdatums (oder null)", "due_date": "YYYY-MM-DD (oder null, wenn nicht ableitbar)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (oder null, wenn keine explizite Uhrzeit)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (oder null, wenn keine explizite Endzeit)"}
+  ],
+  "notes": [
+    {"category": "アイデア oder 感情ログ (muss unverändert auf Japanisch bleiben)", "title": "kurze Überschrift, auf Deutsch", "content": "Umschreibung in der Ich-Form gemäß den obigen Notizstil-Regeln, auf Deutsch"}
+  ],
+  "comfort_message": "kurze tröstende Nachricht auf Deutsch, nur wenn es eine 感情ログ-Notiz gibt, sonst null",
+  "emotion": "eines von satisfaction/gratitude/happy/love/funny/joy/excited/relief/calm/neutral/boredom/anxious/sadness/fatigue/regret/anger/dislike, nur wenn es eine 感情ログ-Notiz gibt, sonst null"
 }`;
 }
 
@@ -1538,17 +1685,44 @@ const EMOTION_LABEL_ES: Record<string, string> = {
   dislike: "Disgusto",
 };
 
+const EMOTION_LABEL_DE: Record<string, string> = {
+  satisfaction: "Zufriedenheit",
+  gratitude: "Dankbarkeit",
+  happy: "Glücklich",
+  love: "Liebe",
+  funny: "Lustig",
+  joy: "Freude",
+  excited: "Aufgeregt",
+  relief: "Erleichterung",
+  calm: "Ruhig",
+  neutral: "Neutral",
+  boredom: "Langeweile",
+  anxious: "Ängstlich",
+  sadness: "Traurig",
+  fatigue: "Müde",
+  regret: "Bedauern",
+  anger: "Wut",
+  dislike: "Abneigung",
+};
+
 const EMOTION_LABEL_BY_LOCALE: Record<Locale, Record<string, string>> = {
   ja: EMOTION_LABEL_JA,
   en: EMOTION_LABEL_EN,
   es: EMOTION_LABEL_ES,
+  de: EMOTION_LABEL_DE,
 };
 
-const TASK_LABEL: Record<Locale, string> = { ja: "タスク", en: "Task", es: "Tarea" };
+const TASK_LABEL: Record<Locale, string> = {
+  ja: "タスク",
+  en: "Task",
+  es: "Tarea",
+  de: "Aufgabe",
+};
 const TASK_DONE_MARK: Record<Locale, string> = {
   ja: "(完了) ",
   en: "(done) ",
   es: "(hecho) ",
+  de: "(erledigt) ",
 };
 
 /** noteの`category`はDBには常に固定の日本語文字列（アイデア／感情ログ）で
@@ -1556,8 +1730,14 @@ const TASK_DONE_MARK: Record<Locale, string> = {
 function noteCategoryDisplayLabel(category: string | undefined, locale: Locale): string {
   if (locale === "ja") return category ?? "";
   const isIdea = category === "アイデア";
-  if (locale === "en") return isIdea ? "Idea" : "Feeling";
-  return isIdea ? "Idea" : "Sentimiento";
+  switch (locale) {
+    case "en":
+      return isIdea ? "Idea" : "Feeling";
+    case "es":
+      return isIdea ? "Idea" : "Sentimiento";
+    case "de":
+      return isIdea ? "Idee" : "Gefühl";
+  }
 }
 
 async function structure(
@@ -1574,6 +1754,7 @@ async function structure(
     ja: buildSystemPrompt,
     en: buildSystemPromptEn,
     es: buildSystemPromptEs,
+    de: buildSystemPromptDe,
   }[locale];
   const systemPrompt = promptBuilder(
     jstDateString(now),
@@ -1780,6 +1961,22 @@ Responde a la pregunta del usuario en español, usando ÚNICAMENTE la informaci�
 ${conciseness}`;
   }
 
+  if (locale === "de") {
+    const conciseness = isBroad
+      ? "Das sieht nach einer breiten, umfassenden Zusammenstellungs-/Zusammenfassungsanfrage aus. In diesem Fall priorisiere Vollständigkeit vor Kürze — es ist in Ordnung, die Antwort mit Datumsüberschriften und Aufzählungspunkten statt einem einzigen kurzen Absatz zu gliedern."
+      : "Halte deine Antwort prägnant und im Gesprächston, keine Textwand.";
+    return `Du bist ein KI-Assistent, der die Fragen der Nutzerin/des Nutzers beantwortet, indem er auf ihre/seine eigenen früheren Sprachnotizen und Tagebucheinträge zurückgreift.
+
+Im Folgenden erhältst du eine Liste der früheren Tagebucheinträge, Ideen und Aufgaben der Nutzerin/des Nutzers, jeweils mit Datum. Tagebucheinträge mit zugewiesenem Emotions-Tag sind direkt nach dem Datum mit "— <Emotion>" markiert.
+Beantworte die Frage auf Deutsch, wobei du AUSSCHLIESSLICH die Informationen aus dieser Liste als Quelle verwendest.
+- Wenn du relevante Einträge findest, erwähne, von welchem Datum/welchen Daten sie sind.
+- Wenn nichts Relevantes gefunden wird, sage das ehrlich, statt zu raten oder etwas zu erfinden.
+- Wenn nach einem Trend oder Muster gefragt wird, untermauere es mit konkreten Zahlen oder Häufigkeiten aus den Einträgen.
+- Wenn gebeten wird, eine Liste zusammenzustellen, präsentiere sie als prägnante Aufzählungsliste.
+- Wenn gebeten wird, die URSACHE eines Gefühls zu analysieren (z. B. "warum bin ich in letzter Zeit ängstlich?", "was drückt mich runter?"), liste nicht nur die passenden Einträge auf — suche aktiv in zeitlich nahen Einträgen nach wiederkehrenden Situationen, Personen, Orten oder Ereignissen, die mit diesem Emotions-Tag zusammenfallen, und lege das gefundene Muster als plausible Erklärung dar. Formuliere es als eine im Geschriebenen begründete Vermutung ("es sieht so aus, als würde ___ oft mit ___ zusammenfallen"), nicht als sichere Diagnose, und sage es, wenn die Einträge zu spärlich sind, um ein echtes Muster zu stützen.
+${conciseness}`;
+  }
+
   const conciseness = isBroad
     ? "今回は「まとめて」のような、範囲を網羅的にコンパイルする依頼に見えます。この場合は簡潔さより抜け漏れの無さを優先し、1つの短い段落に収めようとせず、日付ごとの見出しと箇条書きで整理して構いません。"
     : "簡潔で会話的な答え方をしてください。長文の説明文にはしないでください。";
@@ -1808,12 +2005,12 @@ async function answerKnowledgeBaseQuestion(
   isBroad = false
 ): Promise<string> {
   const systemPrompt = buildKnowledgeBaseSystemPrompt(locale, isBroad);
-  const userContent =
-    locale === "en"
-      ? `[Past entries]\n${context || "(none)"}\n\n[Question]\n${question}`
-      : locale === "es"
-        ? `[Entradas anteriores]\n${context || "(ninguna)"}\n\n[Pregunta]\n${question}`
-        : `【過去の記録】\n${context || "（記録がありません）"}\n\n【質問】\n${question}`;
+  const userContent = {
+    ja: `【過去の記録】\n${context || "（記録がありません）"}\n\n【質問】\n${question}`,
+    en: `[Past entries]\n${context || "(none)"}\n\n[Question]\n${question}`,
+    es: `[Entradas anteriores]\n${context || "(ninguna)"}\n\n[Pregunta]\n${question}`,
+    de: `[Bisherige Einträge]\n${context || "(keine)"}\n\n[Frage]\n${question}`,
+  }[locale];
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -1841,7 +2038,7 @@ async function answerKnowledgeBaseQuestion(
   return data.choices[0].message.content.trim();
 }
 
-const TTS_VOICE: Record<Locale, string> = { ja: "alloy", en: "alloy", es: "alloy" };
+const TTS_VOICE: Record<Locale, string> = { ja: "alloy", en: "alloy", es: "alloy", de: "alloy" };
 
 /** 相談機能の回答を音声で聞きたい場合（音声で質問した時など）に使う。
  * 失敗してもチャット自体は落とさず、呼び出し側がテキストのみで
@@ -1903,6 +2100,15 @@ const BROAD_COMPILE_KEYWORDS_ES = [
   "todos mis",
   "todas mis",
 ];
+const BROAD_COMPILE_KEYWORDS_DE = [
+  "zusammenfass",
+  "kompilier",
+  "überblick",
+  "rückblick",
+  "insgesamt",
+  "alle meine",
+  "alles, was",
+];
 
 interface BroadCompileRange {
   isBroad: boolean;
@@ -1924,6 +2130,7 @@ function detectBroadCompileRequest(question: string, locale: Locale): BroadCompi
     ja: BROAD_COMPILE_KEYWORDS_JA,
     en: BROAD_COMPILE_KEYWORDS_EN,
     es: BROAD_COMPILE_KEYWORDS_ES,
+    de: BROAD_COMPILE_KEYWORDS_DE,
   }[locale];
   if (!keywords.some((k) => q.includes(k.toLowerCase()))) return { isBroad: false };
 
@@ -1935,26 +2142,26 @@ function detectBroadCompileRequest(question: string, locale: Locale): BroadCompi
     return s;
   };
 
-  if (/今日|today|\bhoy\b/.test(q)) {
+  if (/今日|today|\bhoy\b|\bheute\b/.test(q)) {
     return { isBroad: true, rangeStart: startOfDay(now), rangeEnd: now };
   }
-  if (/先週|last week|semana pasada/.test(q)) {
+  if (/先週|last week|semana pasada|letzte woche/.test(q)) {
     const thisWeekStart = startOfWeek(now);
     const lastWeekStart = new Date(thisWeekStart);
     lastWeekStart.setDate(lastWeekStart.getDate() - 7);
     return { isBroad: true, rangeStart: lastWeekStart, rangeEnd: thisWeekStart };
   }
-  if (/今週|this week|esta semana/.test(q)) {
+  if (/今週|this week|esta semana|diese woche/.test(q)) {
     return { isBroad: true, rangeStart: startOfWeek(now), rangeEnd: now };
   }
-  if (/先月|last month|mes pasado/.test(q)) {
+  if (/先月|last month|mes pasado|letzten monat|letzter monat/.test(q)) {
     return {
       isBroad: true,
       rangeStart: new Date(now.getFullYear(), now.getMonth() - 1, 1),
       rangeEnd: new Date(now.getFullYear(), now.getMonth(), 1),
     };
   }
-  if (/今月|this month|este mes/.test(q)) {
+  if (/今月|this month|este mes|diesen monat/.test(q)) {
     return { isBroad: true, rangeStart: new Date(now.getFullYear(), now.getMonth(), 1), rangeEnd: now };
   }
   // 期間の指定が読み取れない場合は日付フィルタなし（直近N件を使う）で扱う。
@@ -2386,6 +2593,24 @@ A continuación se te darán las entradas de diario, ideas y tareas de la semana
 Genera ÚNICAMENTE el objeto JSON, sin comentarios adicionales.`;
   }
 
+  if (locale === "de") {
+    return `Du bist ein KI-Assistent, der die eigenen Sprachnotiz-Tagebucheinträge einer Nutzerin/eines Nutzers aus der vergangenen Woche durchsieht und einen kurzen "wöchentlichen Gehirnbericht" schreibt, der ihre/seine emotionalen Trends und Denkmuster zusammenfasst.
+
+Im Folgenden erhältst du die Tagebucheinträge, Ideen und Aufgaben der Woche, jeweils mit Datum, sowie eine bereits ausgezählte Aufschlüsselung der Emotions-Tags der Woche. Analysiere AUSSCHLIESSLICH diesen Inhalt und antworte mit einem JSON-Objekt in genau dieser Form:
+
+{
+  "mood_headline": "Eine kurze, prägnante Schlagzeile (unter ~12 Wörtern), die das emotionale Muster der Woche einfängt und die zwei häufigsten Emotionen aus der gegebenen Aufschlüsselung mit ihren ungefähren Prozentanteilen der Wochensumme zitiert, z. B. \\"Eine 'Aufgeregt 70% / Ängstlich 30%'-Herausforderungswoche!\\". Berechne die Prozentsätze selbst aus den gegebenen Zahlen — erfinde niemals Zahlen, die die Aufschlüsselung nicht stützt. Wenn die Aufschlüsselung leer ist, schreibe eine sanfte einzeilige Notiz, dass es diese Woche nicht genug emotionale Daten gab, anstatt eine Stimmung zu erfinden.",
+  "emotion_narrative": "1-2 Sätze, die den emotionalen Trend über die Woche beschreiben (z. B. an welchem Tag ein bestimmtes Gefühl am stärksten war, ob es sich zum Wochenende hin verbessert oder verschlechtert hat). Schreibe es in einem warmen, ermutigenden Ton, auf Deutsch. Wenn es nicht genug emotionalen Inhalt gibt, um etwas Bedeutsames zu sagen, sage das kurz, statt einen Trend zu erfinden.",
+  "top_keywords": [ bis zu 10 Objekte wie {"keyword": "ein wörtliches kurzes Wort oder eine Phrase (etwa 2-8 Zeichen/Wörter), unverändert aus den Einträgen kopiert — KEIN abstrahierter Themenname, damit es mit dem Originaltext abgeglichen werden kann", "count": ungefähre Anzahl, wie oft es vorkam} ], geordnet nach Häufigkeit des Vorkommens. Nimm ein Schlüsselwort nur auf, wenn es wirklich wiederkehrend oder bemerkenswert ist (fülle die Liste nicht künstlich auf 10 auf). Leeres Array, wenn nichts wiederkehrend ist.
+  "shining_ideas": [ bis zu 2 Objekte wie {"title": "kurzer Ideentitel", "reason": "1 kurzer Satz, warum diese Idee heraussticht"} ] — wähle nur aus den "Idee"-Einträgen diejenigen mit dem meisten Potenzial oder Funken aus. Leeres Array, wenn es diese Woche keine Ideen gibt.
+  "highlight_quote": { "quote": "die einzige auffälligste/positivste/aufschlussreichste Zeile, zitiert (oder leicht gekürzt) nur aus den "Tagebuch"-Einträgen dieser Woche — wähle die, die am besten eine Erkenntnis, einen Erfolg oder eine echte Emotion einfängt. Leerer String, wenn es diese Woche keine Tagebucheinträge gibt.", "reason": "1 kurzer Satz, warum diese Zeile heraussticht" },
+  "advice": "Ein kurzer, konkreter, umsetzbarer Tipp für die kommende Woche, basierend auf den bemerkten Mustern (z. B. ein Wochentag, der tendenziell hektisch ist). Halte es unter 2 Sätzen, warmherzig und nicht belehrend, auf Deutsch.",
+  "weekly_letter": "Ein warmherziger, persönlicher, erzählerischer Brief (etwa 150-300 Wörter), geschrieben SO ALS OB eine aufmerksame Freundin/ein aufmerksamer Freund, die/der jeden Eintrag dieser Woche gelesen hat, direkt an die Nutzerin/den Nutzer schreibt. Beginne mit einer Anrede wie \\"An dich, diese Woche\\" (variiere die genaue Formulierung natürlich, statt jedes Mal dieselbe feste Vorlage zu wiederholen) und schreibe in der zweiten Person ("du"), wobei du die Tagebuchmomente der Woche, erledigte Aufgaben, aufkommende Ideen und den emotionalen Bogen zu einer einzigen, fließenden Geschichte verwebst — keine stichpunktartige Zusammenfassung. Beziehe dich auf konkrete Details aus den Einträgen (keine generischen Plattitüden), damit es eindeutig wie über DIESE Woche geschrieben wirkt, nicht wie eine Vorlage. Schließe mit einem echten, warmherzigen Abschiedsgruß. Wenn es diese Woche zu wenig Inhalt gibt, um etwas Echtes zu schreiben, schreibe eine kurze, ehrliche und dennoch warmherzige Notiz, die die ruhige Woche anerkennt, statt Details zu erfinden."
+}
+
+Gib AUSSCHLIESSLICH das JSON-Objekt aus, ohne zusätzlichen Kommentar.`;
+  }
+
   return `あなたはユーザー本人が1週間分記録した音声メモ（日記・アイデア・タスク）を振り返り、「週刊脳内レポート」として感情の傾向や思考パターンを短くまとめるAIアシスタントです。
 
 以下に今週の日記・アイデア・タスクの一覧を日付つきで、そして今週の感情タグの集計済み内訳を渡します。この内容だけを根拠に分析し、必ず以下の形のJSONオブジェクトで出力してください：
@@ -2429,6 +2654,7 @@ async function generateWeeklyReportInsights(
     ja: "（今週の感情記録なし）",
     en: "(no emotion data this week)",
     es: "(sin datos emocionales esta semana)",
+    de: "(keine Emotionsdaten diese Woche)",
   }[locale];
   const breakdownText = breakdownEntries.length
     ? breakdownEntries.map(([tag, count]) => `${tag}: ${count}`).join(", ")
@@ -2437,6 +2663,7 @@ async function generateWeeklyReportInsights(
     ja: `【今週の感情タグ内訳】\n${breakdownText}\n\n【今週の記録】\n${context || "（記録がありません）"}`,
     en: `[This week's emotion tag breakdown]\n${breakdownText}\n\n[This week's entries]\n${context || "(none)"}`,
     es: `[Desglose de etiquetas de emoción de esta semana]\n${breakdownText}\n\n[Entradas de esta semana]\n${context || "(ninguna)"}`,
+    de: `[Aufschlüsselung der Emotions-Tags dieser Woche]\n${breakdownText}\n\n[Einträge dieser Woche]\n${context || "(keine)"}`,
   }[locale];
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {

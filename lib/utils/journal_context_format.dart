@@ -15,11 +15,13 @@ String formatEntriesAsContext(
   final taskLabel = switch (locale) {
     'en' => 'Task',
     'es' => 'Tarea',
+    'de' => 'Aufgabe',
     _ => 'タスク',
   };
   final doneMark = switch (locale) {
     'en' => '(done) ',
     'es' => '(hecho) ',
+    'de' => '(erledigt) ',
     _ => '(完了) ',
   };
   final buffer = StringBuffer();
@@ -50,6 +52,7 @@ String _categoryLabel(String category, String locale) {
   return switch (locale) {
     'en' => isIdea ? 'Idea' : 'Feeling',
     'es' => isIdea ? 'Idea' : 'Sentimiento',
+    'de' => isIdea ? 'Idee' : 'Gefühl',
     _ => category,
   };
 }
@@ -98,6 +101,27 @@ String _emotionLabel(EmotionTag tag, String locale) {
       EmotionTag.regret => 'Arrepentimiento',
       EmotionTag.anger => 'Enojo',
       EmotionTag.dislike => 'Disgusto',
+    };
+  }
+  if (locale == 'de') {
+    return switch (tag) {
+      EmotionTag.satisfaction => 'Zufriedenheit',
+      EmotionTag.gratitude => 'Dankbarkeit',
+      EmotionTag.happy => 'Glücklich',
+      EmotionTag.love => 'Liebe',
+      EmotionTag.funny => 'Lustig',
+      EmotionTag.joy => 'Freude',
+      EmotionTag.excited => 'Aufgeregt',
+      EmotionTag.relief => 'Erleichterung',
+      EmotionTag.calm => 'Ruhig',
+      EmotionTag.neutral => 'Neutral',
+      EmotionTag.boredom => 'Langeweile',
+      EmotionTag.anxious => 'Ängstlich',
+      EmotionTag.sadness => 'Traurig',
+      EmotionTag.fatigue => 'Müde',
+      EmotionTag.regret => 'Bedauern',
+      EmotionTag.anger => 'Wut',
+      EmotionTag.dislike => 'Abneigung',
     };
   }
   return switch (tag) {
