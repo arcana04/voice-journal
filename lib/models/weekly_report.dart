@@ -343,3 +343,57 @@ class SavedWeeklyReport {
     );
   }
 }
+
+/// 感情タグの集計のうち、ポジティブ([EmotionCategory.positive])が占める
+/// 割合(0〜100)。感情が1件も記録されていない週はnull(割合そのものが
+/// 定義できないため、0%と区別する)。
+double? positivePercentOf(Map<EmotionTag, int> emotionCounts) {
+  var total = 0;
+  var positive = 0;
+  for (final entry in emotionCounts.entries) {
+    total += entry.value;
+    if (entry.key.category == EmotionCategory.positive) positive += entry.value;
+  }
+  if (total == 0) return null;
+  return positive / total * 100;
+}
+
+/// 週刊レポートの「先週比」比較結果。前週の保存済みスナップショットが無い
+/// 場合(利用開始1週目、または前週にレポートを一度も開かなかった場合)は
+/// [hasPrevious]がfalseになり、呼び出し側は比較UIを丸ごと非表示にする想定。
+class WeeklyReportDelta {
+  final bool hasPrevious;
+  final int completedTasksChange;
+  final int diaryCountChange;
+  /// ポジティブ感情の割合(%)の変化。今週・前週のいずれかに感情記録が無い
+  /// 場合はnull。
+  final double? positivePercentChange;
+
+  const WeeklyReportDelta({
+    required this.hasPrevious,
+    this.completedTasksChange = 0,
+    this.diaryCountChange = 0,
+    this.positivePercentChange,
+  });
+
+  factory WeeklyReportDelta.compare({
+    required Map<EmotionTag, int> currentEmotionCounts,
+    required int currentCompletedTasks,
+    required int currentDiaryCount,
+    required SavedWeeklyReport? previous,
+  }) {
+    if (previous == null) {
+      return const WeeklyReportDelta(hasPrevious: false);
+    }
+    final currentPositive = positivePercentOf(currentEmotionCounts);
+    final previousPositive = positivePercentOf(previous.emotionCounts);
+    return WeeklyReportDelta(
+      hasPrevious: true,
+      completedTasksChange: currentCompletedTasks - previous.completedTasks,
+      diaryCountChange: currentDiaryCount - previous.diaryCount,
+      positivePercentChange: (currentPositive == null || previousPositive == null)
+          ? null
+          : currentPositive - previousPositive,
+    );
+  }
+}

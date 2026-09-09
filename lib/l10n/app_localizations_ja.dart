@@ -1393,6 +1393,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get weeklyReportEncouragement => '今週もよく頑張りました！';
 
   @override
+  String get weeklyReportVsLastWeek => '先週比';
+
+  @override
+  String get weeklyReportPositiveShareVsLastWeek => 'ポジティブ比率(先週比)';
+
+  @override
   String get weeklyReportAdviceSectionTitle => '来週へのアドバイス';
 
   @override

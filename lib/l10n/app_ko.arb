@@ -510,6 +510,8 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "weeklyReportEncouragement": "이번 주도 정말 잘했어요!",
+  "weeklyReportVsLastWeek": "지난주 대비",
+  "weeklyReportPositiveShareVsLastWeek": "긍정 비율(지난주 대비)",
   "weeklyReportAdviceSectionTitle": "다음 주를 위한 조언",
   "weeklyReportLetterSectionTitle": "이번 주의 편지",
   "weeklyReportLetterLocked": "이번 주의 편지는 일요일 오후 8시에 도착해요. 그때까지는 작은 비밀로 남겨둘게요.",

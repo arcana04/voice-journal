@@ -475,6 +475,8 @@
   "weeklyReportTasksCompleted": "完了したタスク {count}件",
   "weeklyReportDiaryCount": "書いた日記 {count}件",
   "weeklyReportEncouragement": "今週もよく頑張りました！",
+  "weeklyReportVsLastWeek": "先週比",
+  "weeklyReportPositiveShareVsLastWeek": "ポジティブ比率(先週比)",
   "weeklyReportAdviceSectionTitle": "来週へのアドバイス",
   "weeklyReportLetterSectionTitle": "AIからの週刊レター",
   "weeklyReportLetterLocked": "今週のレターは日曜20:00に届きます。それまで少し秘密にしておきますね。",

@@ -1399,6 +1399,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get weeklyReportEncouragement => '이번 주도 정말 잘했어요!';
 
   @override
+  String get weeklyReportVsLastWeek => '지난주 대비';
+
+  @override
+  String get weeklyReportPositiveShareVsLastWeek => '긍정 비율(지난주 대비)';
+
+  @override
   String get weeklyReportAdviceSectionTitle => '다음 주를 위한 조언';
 
   @override

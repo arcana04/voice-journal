@@ -511,6 +511,8 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "weeklyReportEncouragement": "You did great this week!",
+  "weeklyReportVsLastWeek": "vs last week",
+  "weeklyReportPositiveShareVsLastWeek": "Positive share (vs last week)",
   "weeklyReportAdviceSectionTitle": "Advice for next week",
   "weeklyReportLetterSectionTitle": "Your Weekly Letter",
   "weeklyReportLetterLocked": "This week's letter arrives Sunday at 8:00 PM. We'll keep it a little secret until then.",

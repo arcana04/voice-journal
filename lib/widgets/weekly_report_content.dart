@@ -39,6 +39,9 @@ class WeeklyReportContent extends StatefulWidget {
   /// 週刊レターが解禁済みか(日曜20:00を過ぎたか、または履歴閲覧)。falseの間は
   /// レター本文の代わりに「もうすぐ届きます」のティザーカードを表示する。
   final bool letterUnlocked;
+  /// 「先週比」比較。前週のスナップショットが無ければ
+  /// [WeeklyReportDelta.hasPrevious]がfalseになり、比較バッジは表示しない。
+  final WeeklyReportDelta comparison;
 
   const WeeklyReportContent({
     super.key,
@@ -53,6 +56,7 @@ class WeeklyReportContent extends StatefulWidget {
     required this.completedTasks,
     required this.shareController,
     required this.letterUnlocked,
+    required this.comparison,
   });
 
   @override
@@ -101,7 +105,20 @@ class _WeeklyReportContentState extends State<WeeklyReportContent> {
         icon: Icons.bubble_chart_outlined,
         title: l10n.weeklyReportKeywordsSectionTitle,
         subtitle: l10n.weeklyReportBrainMapSubtitle,
-        child: EmotionCategoryBreakdown(emotionCounts: widget.emotionCounts),
+        child: Column(
+          children: [
+            EmotionCategoryBreakdown(emotionCounts: widget.emotionCounts),
+            if (widget.comparison.hasPrevious &&
+                widget.comparison.positivePercentChange != null) ...[
+              const SizedBox(height: 10),
+              _ComparisonBadge(
+                label: l10n.weeklyReportPositiveShareVsLastWeek,
+                value: widget.comparison.positivePercentChange!,
+                suffix: 'pt',
+              ),
+            ],
+          ],
+        ),
       ),
       _SectionCard(
         icon: Icons.tag,
@@ -125,19 +142,44 @@ class _WeeklyReportContentState extends State<WeeklyReportContent> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: _StatTile(
-                    value: widget.completedTasks,
-                    label: l10n.weeklyReportTasksCompleted(widget.completedTasks),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _StatTile(
+                        value: widget.completedTasks,
+                        label: l10n.weeklyReportTasksCompleted(widget.completedTasks),
+                      ),
+                      if (widget.comparison.hasPrevious) ...[
+                        const SizedBox(height: 6),
+                        _ComparisonBadge(
+                          label: l10n.weeklyReportVsLastWeek,
+                          value: widget.comparison.completedTasksChange,
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _StatTile(
-                    value: widget.diaryCount,
-                    label: l10n.weeklyReportDiaryCount(widget.diaryCount),
-                    delay: const Duration(milliseconds: 140),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _StatTile(
+                        value: widget.diaryCount,
+                        label: l10n.weeklyReportDiaryCount(widget.diaryCount),
+                        delay: const Duration(milliseconds: 140),
+                      ),
+                      if (widget.comparison.hasPrevious) ...[
+                        const SizedBox(height: 6),
+                        _ComparisonBadge(
+                          label: l10n.weeklyReportVsLastWeek,
+                          value: widget.comparison.diaryCountChange,
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],
@@ -756,6 +798,51 @@ class _StatTileState extends State<_StatTile> {
           ),
         );
       },
+    );
+  }
+}
+
+/// 「先週比」の増減を小さなバッジで示す。増加はアプリのアクセントカラー、
+/// 減少・変化なしは控えめなグレーで表示し、感情の落ち込みを赤色などで
+/// 強調して咎めるような見せ方にならないよう配慮している(このアプリの
+/// 相談機能の応答方針——一般論の説教をしない——と同じトーン)。
+class _ComparisonBadge extends StatelessWidget {
+  final String label;
+  final num value;
+  final String suffix;
+
+  const _ComparisonBadge({required this.label, required this.value, this.suffix = ''});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final rounded = value.round();
+    final isUp = rounded > 0;
+    final isDown = rounded < 0;
+    final color = isUp ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant;
+    final icon = isUp
+        ? Icons.arrow_upward
+        : isDown
+            ? Icons.arrow_downward
+            : Icons.remove;
+    final valueText = isUp ? '+$rounded$suffix' : '$rounded$suffix';
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: color),
+        const SizedBox(width: 2),
+        Flexible(
+          child: Text(
+            '$label $valueText',
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

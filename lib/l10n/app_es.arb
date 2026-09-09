@@ -510,6 +510,8 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "weeklyReportEncouragement": "¡Lo has hecho genial esta semana!",
+  "weeklyReportVsLastWeek": "frente a la semana pasada",
+  "weeklyReportPositiveShareVsLastWeek": "Porcentaje positivo (frente a la semana pasada)",
   "weeklyReportAdviceSectionTitle": "Consejo para la próxima semana",
   "weeklyReportLetterSectionTitle": "Tu carta semanal",
   "weeklyReportLetterLocked": "La carta de esta semana llega el domingo a las 8:00 PM. La mantendremos en secreto hasta entonces.",

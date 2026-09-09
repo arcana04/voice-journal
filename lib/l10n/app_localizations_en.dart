@@ -1448,6 +1448,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weeklyReportEncouragement => 'You did great this week!';
 
   @override
+  String get weeklyReportVsLastWeek => 'vs last week';
+
+  @override
+  String get weeklyReportPositiveShareVsLastWeek =>
+      'Positive share (vs last week)';
+
+  @override
   String get weeklyReportAdviceSectionTitle => 'Advice for next week';
 
   @override

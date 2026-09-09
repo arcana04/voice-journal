@@ -510,6 +510,8 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "weeklyReportEncouragement": "Tu as fait du très bon travail cette semaine !",
+  "weeklyReportVsLastWeek": "par rapport à la semaine dernière",
+  "weeklyReportPositiveShareVsLastWeek": "Part positive (par rapport à la semaine dernière)",
   "weeklyReportAdviceSectionTitle": "Conseil pour la semaine prochaine",
   "weeklyReportLetterSectionTitle": "Ta lettre hebdomadaire",
   "weeklyReportLetterLocked": "La lettre de cette semaine arrive dimanche à 20h00. On la gardera secrète jusque-là.",

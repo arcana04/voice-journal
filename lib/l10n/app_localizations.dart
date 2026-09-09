@@ -2752,6 +2752,18 @@ abstract class AppLocalizations {
   /// **'You did great this week!'**
   String get weeklyReportEncouragement;
 
+  /// No description provided for @weeklyReportVsLastWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'vs last week'**
+  String get weeklyReportVsLastWeek;
+
+  /// No description provided for @weeklyReportPositiveShareVsLastWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Positive share (vs last week)'**
+  String get weeklyReportPositiveShareVsLastWeek;
+
   /// No description provided for @weeklyReportAdviceSectionTitle.
   ///
   /// In en, this message translates to:

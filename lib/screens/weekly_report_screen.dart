@@ -50,6 +50,10 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
   late final String _weekKey;
   bool get _isHistoryView => widget.savedReport != null;
 
+  /// 「先週比」比較用の、前週の保存済みスナップショット。無ければ比較UIは
+  /// 表示しない([WeeklyReportDelta.hasPrevious]がfalseになる)。
+  SavedWeeklyReport? _previousReport;
+
   Future<WeeklyReportInsights>? _insightsFuture;
 
   @override
@@ -70,6 +74,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       _totalTasks = saved.totalTasks;
       _completedTasks = saved.completedTasks;
       _insightsFuture = Future.value(saved.insights);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadPreviousReport());
       return;
     }
 
@@ -88,8 +93,19 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      _loadPreviousReport();
       if (context.read<SubscriptionStore>().isPro) _load();
     });
+  }
+
+  /// 「先週比」比較用に、前週(週の開始日を7日遡った週)の保存済み
+  /// スナップショットを読み込む。無ければ[_previousReport]はnullのまま
+  /// (=比較UI非表示)。
+  Future<void> _loadPreviousReport() async {
+    final previousWeekKey = _dateKey(_weekStart.subtract(const Duration(days: 7)));
+    final previous = await DbService.instance.getWeeklyReportByWeekKey(previousWeekKey);
+    if (!mounted) return;
+    setState(() => _previousReport = previous);
   }
 
   String _dateKey(DateTime d) =>
@@ -323,6 +339,12 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                       final emotionCounts = _isHistoryView
                           ? widget.savedReport!.emotionCounts
                           : _emotionCounts;
+                      final comparison = WeeklyReportDelta.compare(
+                        currentEmotionCounts: emotionCounts,
+                        currentCompletedTasks: _completedTasks,
+                        currentDiaryCount: _diaryCount,
+                        previous: _previousReport,
+                      );
                       return RevealIn(
                         child: WeeklyReportContent(
                           insights: snapshot.data!,
@@ -336,6 +358,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                           completedTasks: _completedTasks,
                           shareController: _shareController,
                           letterUnlocked: _letterUnlocked,
+                          comparison: comparison,
                         ),
                       );
                     },
