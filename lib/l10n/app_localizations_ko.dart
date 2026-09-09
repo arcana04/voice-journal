@@ -804,6 +804,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get diaryNextWeekTooltip => '다음 주';
 
   @override
+  String get throwbackRowLabel => '추억';
+
+  @override
+  String get throwbackOneMonthAgo => '한 달 전 오늘';
+
+  @override
+  String get throwbackThreeMonthsAgo => '세 달 전 오늘';
+
+  @override
+  String get throwbackSixMonthsAgo => '반년 전 오늘';
+
+  @override
+  String get throwbackOneYearAgo => '1년 전 오늘';
+
+  @override
+  String get throwbackTwoYearsAgo => '2년 전 오늘';
+
+  @override
+  String get throwbackOpenFull => '전체 보기';
+
+  @override
   String get fontStandard => '기본';
 
   @override

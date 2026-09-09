@@ -292,6 +292,14 @@
   "diaryPreviousWeekTooltip": "Semana anterior",
   "diaryNextWeekTooltip": "Semana siguiente",
 
+  "throwbackRowLabel": "Recuerdos",
+  "throwbackOneMonthAgo": "Hace un mes, hoy",
+  "throwbackThreeMonthsAgo": "Hace tres meses, hoy",
+  "throwbackSixMonthsAgo": "Hace seis meses, hoy",
+  "throwbackOneYearAgo": "Hace un año, hoy",
+  "throwbackTwoYearsAgo": "Hace dos años, hoy",
+  "throwbackOpenFull": "Ver entrada completa",
+
   "fontStandard": "Estándar",
   "fontMincho": "Serif",
   "fontHandwriting": "Manuscrita",

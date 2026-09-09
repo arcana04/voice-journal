@@ -848,6 +848,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diaryNextWeekTooltip => 'Semana siguiente';
 
   @override
+  String get throwbackRowLabel => 'Recuerdos';
+
+  @override
+  String get throwbackOneMonthAgo => 'Hace un mes, hoy';
+
+  @override
+  String get throwbackThreeMonthsAgo => 'Hace tres meses, hoy';
+
+  @override
+  String get throwbackSixMonthsAgo => 'Hace seis meses, hoy';
+
+  @override
+  String get throwbackOneYearAgo => 'Hace un año, hoy';
+
+  @override
+  String get throwbackTwoYearsAgo => 'Hace dos años, hoy';
+
+  @override
+  String get throwbackOpenFull => 'Ver entrada completa';
+
+  @override
   String get fontStandard => 'Estándar';
 
   @override

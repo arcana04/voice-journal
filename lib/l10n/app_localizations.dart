@@ -1594,6 +1594,48 @@ abstract class AppLocalizations {
   /// **'Next week'**
   String get diaryNextWeekTooltip;
 
+  /// No description provided for @throwbackRowLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Memories'**
+  String get throwbackRowLabel;
+
+  /// No description provided for @throwbackOneMonthAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'One month ago today'**
+  String get throwbackOneMonthAgo;
+
+  /// No description provided for @throwbackThreeMonthsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Three months ago today'**
+  String get throwbackThreeMonthsAgo;
+
+  /// No description provided for @throwbackSixMonthsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Six months ago today'**
+  String get throwbackSixMonthsAgo;
+
+  /// No description provided for @throwbackOneYearAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'One year ago today'**
+  String get throwbackOneYearAgo;
+
+  /// No description provided for @throwbackTwoYearsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Two years ago today'**
+  String get throwbackTwoYearsAgo;
+
+  /// No description provided for @throwbackOpenFull.
+  ///
+  /// In en, this message translates to:
+  /// **'View full entry'**
+  String get throwbackOpenFull;
+
   /// No description provided for @fontStandard.
   ///
   /// In en, this message translates to:

@@ -292,6 +292,14 @@
   "diaryPreviousWeekTooltip": "지난주",
   "diaryNextWeekTooltip": "다음 주",
 
+  "throwbackRowLabel": "추억",
+  "throwbackOneMonthAgo": "한 달 전 오늘",
+  "throwbackThreeMonthsAgo": "세 달 전 오늘",
+  "throwbackSixMonthsAgo": "반년 전 오늘",
+  "throwbackOneYearAgo": "1년 전 오늘",
+  "throwbackTwoYearsAgo": "2년 전 오늘",
+  "throwbackOpenFull": "전체 보기",
+
   "fontStandard": "기본",
   "fontMincho": "명조체",
   "fontHandwriting": "손글씨",

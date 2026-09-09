@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
@@ -8,6 +9,7 @@ import '../models/emotion_tag.dart';
 import '../models/entry_image.dart';
 import '../models/journal_entry.dart';
 import '../models/media_usage.dart';
+import '../models/throwback_item.dart';
 import '../services/apple_reminders_service.dart';
 import '../services/apple_reminders_settings_service.dart';
 import '../services/backend_service.dart';
@@ -128,6 +130,69 @@ class JournalStore extends ChangeNotifier {
       if (entry.id == id) return entry;
     }
     return null;
+  }
+
+  /// 日記タブの「思い出」機能（Instagram Storiesのようなふり返りビューア）向け。
+  /// 「1ヶ月前/3ヶ月前/半年前/1年前/2年前の今日」のうち、実際に日記
+  /// （[kNoteCategoryFeeling]）がある日だけを対象にする。ネガティブな感情の
+  /// 日も除外しない（ユーザー指示）。同じ日に複数の日記がある場合は、
+  /// ポジティブな感情のものを優先し、同程度なら文量（本文の文字数）が多い
+  /// ものを優先して1件だけ選ぶ。表示順は「ランダムに出す」というユーザー
+  /// 指示どおり、今日の日付をシードにした乱数でシャッフルする（同じ日に
+  /// 何度開いても結果が変わらないよう、日付が変わるまでは安定させる）。
+  List<ThrowbackItem> get throwbackItems {
+    final now = DateTime.now();
+    const monthsBackOptions = [1, 3, 6, 12, 24];
+    final items = <ThrowbackItem>[];
+    for (final monthsAgo in monthsBackOptions) {
+      final target = DateTime(now.year, now.month - monthsAgo, now.day);
+      // 対象月にその日が存在しない場合（例:過去の月末日）はDateTimeが
+      // 翌月へ繰り上がって正規化されるため、dayが一致しなければ対象日なし
+      // としてスキップする。
+      if (target.day != now.day) continue;
+      final dayEntries = entries
+          .where(
+            (e) =>
+                e.createdAt.year == target.year &&
+                e.createdAt.month == target.month &&
+                e.createdAt.day == target.day &&
+                e.notes.any((n) => n.category == kNoteCategoryFeeling),
+          )
+          .toList();
+      if (dayEntries.isEmpty) continue;
+      dayEntries.sort((a, b) {
+        final emotionDiff =
+            _throwbackEmotionScore(b) - _throwbackEmotionScore(a);
+        if (emotionDiff != 0) return emotionDiff;
+        return _throwbackFeelingLength(b) - _throwbackFeelingLength(a);
+      });
+      items.add(ThrowbackItem(entry: dayEntries.first, monthsAgo: monthsAgo));
+    }
+    if (items.isEmpty) return items;
+    final seed = now.year * 10000 + now.month * 100 + now.day;
+    items.shuffle(math.Random(seed));
+    return items;
+  }
+
+  int _throwbackEmotionScore(JournalEntry entry) {
+    switch (entry.emotion?.category) {
+      case EmotionCategory.positive:
+        return 2;
+      case EmotionCategory.fine:
+        return 1;
+      case EmotionCategory.negative:
+        return 0;
+      case null:
+        return 1;
+    }
+  }
+
+  int _throwbackFeelingLength(JournalEntry entry) {
+    var total = 0;
+    for (final note in entry.notes) {
+      if (note.category == kNoteCategoryFeeling) total += note.content.length;
+    }
+    return total;
   }
 
   /// 連携先カレンダーが選ばれていれば、タスクの状態に合わせて予定を作成・更新・

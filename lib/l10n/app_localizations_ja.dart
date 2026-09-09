@@ -799,6 +799,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get diaryNextWeekTooltip => '次の週';
 
   @override
+  String get throwbackRowLabel => '思い出';
+
+  @override
+  String get throwbackOneMonthAgo => '1ヶ月前の今日';
+
+  @override
+  String get throwbackThreeMonthsAgo => '3ヶ月前の今日';
+
+  @override
+  String get throwbackSixMonthsAgo => '半年前の今日';
+
+  @override
+  String get throwbackOneYearAgo => '1年前の今日';
+
+  @override
+  String get throwbackTwoYearsAgo => '2年前の今日';
+
+  @override
+  String get throwbackOpenFull => '全文を見る';
+
+  @override
   String get fontStandard => '標準';
 
   @override

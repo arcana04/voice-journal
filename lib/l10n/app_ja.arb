@@ -260,6 +260,14 @@
   "add": "追加",
   "customDictionaryEmpty": "登録された単語はまだありません",
 
+  "throwbackRowLabel": "思い出",
+  "throwbackOneMonthAgo": "1ヶ月前の今日",
+  "throwbackThreeMonthsAgo": "3ヶ月前の今日",
+  "throwbackSixMonthsAgo": "半年前の今日",
+  "throwbackOneYearAgo": "1年前の今日",
+  "throwbackTwoYearsAgo": "2年前の今日",
+  "throwbackOpenFull": "全文を見る",
+
   "diaryDayEmpty": "この日の日記・感想はありません",
   "diaryPickDateTooltip": "日付を選択",
   "diaryPreviousWeekTooltip": "前の週",

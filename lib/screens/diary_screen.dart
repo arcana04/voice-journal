@@ -16,6 +16,7 @@ import '../widgets/icon_button_style.dart';
 import '../widgets/note_text_style_picker.dart';
 import '../widgets/screen_label_badge.dart';
 import '../widgets/scrim_text.dart';
+import '../widgets/throwback_story_button.dart';
 import 'diary_view_screen.dart';
 import 'manual_diary_screen.dart';
 
@@ -257,6 +258,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
                     ScreenLabelBadge(
                       label: AppLocalizations.of(context)!.navDiary,
                     ),
+                    ThrowbackStoryButton(items: store.throwbackItems),
                     _WeekStrip(
                       weekStart: _weekStart,
                       selectedDate: _selectedDate,
