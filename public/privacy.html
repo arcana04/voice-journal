@@ -24,7 +24,7 @@
 
 <section id="en">
 <h1>Privacy Policy</h1>
-<p class="updated">Last updated: August 29, 2026</p>
+<p class="updated">Last updated: September 9, 2026</p>
 
 <p>Voice Brain (the "App") respects your privacy. This policy explains what information we collect and how we use it.</p>
 
@@ -32,10 +32,12 @@
 <table>
 <tr><th>Type</th><th>Details / When Collected</th></tr>
 <tr><td>Voice recordings</td><td>Sent to our server when you record, and processed temporarily for transcription. The audio itself is discarded after processing and not stored on our servers.</td></tr>
-<tr><td>Entry content (diary, ideas, tasks)</td><td>Stored on your device. If you sign in with an email account, it is also stored in the cloud (Firestore) for backup. For the cross-entry AI search feature, a numeric vector representation (embedding) generated from your entry text may also be stored in the cloud. The original text cannot be reconstructed directly from this vector, and it is deleted whenever the underlying entry is deleted.</td></tr>
-<tr><td>Photos & videos</td><td>Stored on your device only; never sent to our servers.</td></tr>
-<tr><td>Email address</td><td>Collected only if you choose to create an account, for authentication.</td></tr>
+<tr><td>Entry content (diary, ideas, tasks)</td><td>Stored on your device. If you sign in with a Google or Apple account, it is also stored in the cloud (Firestore) for backup. For the cross-entry AI search feature, a numeric vector representation (embedding) generated from your entry text may also be stored in the cloud. The original text cannot be reconstructed directly from this vector, and it is deleted whenever the underlying entry is deleted.</td></tr>
+<tr><td>Photos & videos</td><td>Stored on your device. If you're signed in with a Google or Apple account and subscribed to a Pro plan (monthly or annual), compressed copies may also be backed up to the cloud (Firebase Storage) so they can be restored on another device. This cloud backup is not included with the one-time lifetime plan or while using the App anonymously.</td></tr>
+<tr><td>Email address</td><td>Collected only if you choose to sign in with Google or Apple, for authentication.</td></tr>
 <tr><td>Purchase / subscription status</td><td>Managed for Pro plan entitlement. Payment is processed by the App Store / Google Play and subscription status is managed via RevenueCat.</td></tr>
+<tr><td>Calendar data</td><td>If you turn on calendar sync for a task, the App reads and writes events in your device's calendar app to keep due dates in sync. This stays on your device and in your calendar app; it is not sent to our servers.</td></tr>
+<tr><td>Crash & diagnostic data</td><td>If the App crashes, technical diagnostic information (via Firebase Crashlytics) may be sent automatically to help us find and fix the problem.</td></tr>
 <tr><td>Device language setting</td><td>Used so AI responses match your language.</td></tr>
 </table>
 
@@ -52,6 +54,7 @@
 <ul>
   <li><strong>OpenAI</strong> (audio and entry text are sent for transcription, AI classification/summarization/chat, and generating numeric vector embeddings of entry text for cross-entry AI search)</li>
   <li><strong>Google Firebase / Google Cloud Platform</strong> (authentication, database, and serverless function infrastructure)</li>
+  <li><strong>Firebase Crashlytics</strong> (crash and diagnostic reports, to help us find and fix bugs)</li>
   <li><strong>RevenueCat</strong> (subscription purchase status management)</li>
 </ul>
 <p>Other than these processors, we do not share your information with third parties without your consent, except where required by law. The App does not include any advertising or behavioral-tracking analytics SDKs.</p>
@@ -81,7 +84,7 @@
 
 <section id="ja" class="secondary">
 <h1>プライバシーポリシー</h1>
-<p class="updated">最終更新日: 2026年8月29日</p>
+<p class="updated">最終更新日: 2026年9月9日</p>
 
 <p>Voice Brain（以下「本アプリ」）は、ユーザーのプライバシーを尊重し、以下の方針に基づいて情報を取り扱います。</p>
 
@@ -89,10 +92,12 @@
 <table>
 <tr><th>情報の種類</th><th>内容・取得タイミング</th></tr>
 <tr><td>音声データ</td><td>録音時にサーバーへ送信し、文字起こしのために一時的に処理します。処理完了後、音声データ自体はサーバーに保存されず破棄されます。</td></tr>
-<tr><td>記録内容（日記・アイデア・タスクのテキスト）</td><td>端末内に保存されます。メールアカウントでログインした場合は、バックアップのためクラウド（Firestore）にも保存されます。あわせて、AIによる横断検索（相談機能）のため、記録テキストから生成した数値ベクトル（embedding）もクラウドに保存される場合があります。このベクトルから元の文章を直接読み取ることはできませんが、元の記録を削除すると同時に削除されます。</td></tr>
-<tr><td>写真・動画</td><td>端末内にのみ保存され、サーバーには送信されません。</td></tr>
-<tr><td>メールアドレス</td><td>任意でアカウントを作成した場合のみ、認証のために取得します。</td></tr>
+<tr><td>記録内容（日記・アイデア・タスクのテキスト）</td><td>端末内に保存されます。GoogleまたはAppleアカウントでサインインした場合は、バックアップのためクラウド（Firestore）にも保存されます。あわせて、AIによる横断検索（相談機能）のため、記録テキストから生成した数値ベクトル（embedding）もクラウドに保存される場合があります。このベクトルから元の文章を直接読み取ることはできませんが、元の記録を削除すると同時に削除されます。</td></tr>
+<tr><td>写真・動画</td><td>端末内に保存されます。GoogleまたはAppleアカウントでサインインし、Proプラン（月額・年額のサブスクリプション）に加入している場合は、圧縮したコピーがクラウド（Firebase Storage）にもバックアップされ、他の端末での復元に使われます。このクラウドバックアップは買い切りプランおよび匿名利用時には含まれません。</td></tr>
+<tr><td>メールアドレス</td><td>GoogleまたはAppleでサインインした場合のみ、認証のために取得します。</td></tr>
 <tr><td>購入・サブスクリプション情報</td><td>Proプラン purchases のステータス管理のため、決済処理はApp Store／Google Playおよび決済管理サービス（RevenueCat）を通じて行われます。</td></tr>
+<tr><td>カレンダーの情報</td><td>タスクのカレンダー連携をオンにした場合、期限を同期するために端末のカレンダーアプリの予定を読み書きします。この情報は端末内・カレンダーアプリ内にとどまり、サーバーには送信されません。</td></tr>
+<tr><td>クラッシュ・診断情報</td><td>アプリがクラッシュした場合、不具合の発見・修正のため、技術的な診断情報（Firebase Crashlytics経由）が自動送信されることがあります。</td></tr>
 <tr><td>端末の言語設定</td><td>AIの応答言語を合わせるために使用します。</td></tr>
 </table>
 
@@ -109,6 +114,7 @@
 <ul>
   <li><strong>OpenAI</strong>（音声の文字起こし・AIによる分類/要約/チャット回答の生成、および記録テキストの数値ベクトル化（embedding、AI横断検索のため）のため、音声データおよび記録テキストを送信します）</li>
   <li><strong>Google Firebase / Google Cloud Platform</strong>（認証、データベース、サーバーレス関数の実行基盤として使用します）</li>
+  <li><strong>Firebase Crashlytics</strong>（不具合の発見・修正のため、クラッシュ発生時の診断情報を収集します）</li>
   <li><strong>RevenueCat</strong>（サブスクリプションの購入状態管理のため使用します）</li>
 </ul>
 <p>これら第三者への提供以外に、法令に基づく場合を除き、取得した情報を本人の同意なく第三者に提供することはありません。本アプリは広告配信・行動追跡を目的としたアクセス解析ツール（トラッキング用SDK）を組み込んでいません。</p>
@@ -138,7 +144,7 @@
 
 <section id="es" class="secondary">
 <h1>Política de Privacidad</h1>
-<p class="updated">Última actualización: 29 de agosto de 2026</p>
+<p class="updated">Última actualización: 9 de septiembre de 2026</p>
 
 <p>Voice Brain (la "App") respeta tu privacidad. Esta política explica qué información recopilamos y cómo la usamos.</p>
 
@@ -146,10 +152,12 @@
 <table>
 <tr><th>Tipo</th><th>Detalles / Cuándo se recopila</th></tr>
 <tr><td>Grabaciones de voz</td><td>Se envían a nuestro servidor cuando grabas, y se procesan temporalmente para la transcripción. El audio en sí se descarta después del procesamiento y no se almacena en nuestros servidores.</td></tr>
-<tr><td>Contenido de las entradas (diario, ideas, tareas)</td><td>Se almacena en tu dispositivo. Si inicias sesión con una cuenta de correo electrónico, también se almacena en la nube (Firestore) como respaldo. Para la función de búsqueda de IA entre entradas, también puede almacenarse en la nube una representación vectorial numérica (embedding) generada a partir del texto de tu entrada. El texto original no se puede reconstruir directamente a partir de este vector, y se elimina cada vez que se elimina la entrada correspondiente.</td></tr>
-<tr><td>Fotos y vídeos</td><td>Se almacenan solo en tu dispositivo; nunca se envían a nuestros servidores.</td></tr>
-<tr><td>Dirección de correo electrónico</td><td>Se recopila solo si eliges crear una cuenta, para la autenticación.</td></tr>
+<tr><td>Contenido de las entradas (diario, ideas, tareas)</td><td>Se almacena en tu dispositivo. Si inicias sesión con una cuenta de Google o Apple, también se almacena en la nube (Firestore) como respaldo. Para la función de búsqueda de IA entre entradas, también puede almacenarse en la nube una representación vectorial numérica (embedding) generada a partir del texto de tu entrada. El texto original no se puede reconstruir directamente a partir de este vector, y se elimina cada vez que se elimina la entrada correspondiente.</td></tr>
+<tr><td>Fotos y vídeos</td><td>Se almacenan en tu dispositivo. Si iniciaste sesión con una cuenta de Google o Apple y tienes un plan Pro (mensual o anual), también se pueden respaldar copias comprimidas en la nube (Firebase Storage) para restaurarlas en otro dispositivo. Este respaldo en la nube no está incluido en el plan de por vida (pago único) ni durante el uso anónimo.</td></tr>
+<tr><td>Dirección de correo electrónico</td><td>Se recopila solo si inicias sesión con Google o Apple, para la autenticación.</td></tr>
 <tr><td>Estado de compra/suscripción</td><td>Se gestiona para el derecho al plan Pro. El pago se procesa a través de la App Store / Google Play y el estado de la suscripción se gestiona mediante RevenueCat.</td></tr>
+<tr><td>Datos del calendario</td><td>Si activas la sincronización de calendario para una tarea, la App lee y escribe eventos en la app de calendario de tu dispositivo para mantener sincronizadas las fechas de vencimiento. Esto permanece en tu dispositivo y en tu app de calendario; no se envía a nuestros servidores.</td></tr>
+<tr><td>Datos de fallos y diagnóstico</td><td>Si la App falla, se puede enviar automáticamente información técnica de diagnóstico (mediante Firebase Crashlytics) para ayudarnos a encontrar y corregir el problema.</td></tr>
 <tr><td>Configuración de idioma del dispositivo</td><td>Se usa para que las respuestas de la IA coincidan con tu idioma.</td></tr>
 </table>
 
@@ -166,6 +174,7 @@
 <ul>
   <li><strong>OpenAI</strong> (se envían audio y texto de las entradas para la transcripción, clasificación/resumen/chat mediante IA, y para generar embeddings vectoriales numéricos del texto de las entradas para la búsqueda de IA entre entradas)</li>
   <li><strong>Google Firebase / Google Cloud Platform</strong> (autenticación, base de datos e infraestructura de funciones sin servidor)</li>
+  <li><strong>Firebase Crashlytics</strong> (informes de fallos y diagnóstico, para ayudarnos a encontrar y corregir errores)</li>
   <li><strong>RevenueCat</strong> (gestión del estado de compra de suscripciones)</li>
 </ul>
 <p>Aparte de estos encargados del tratamiento, no compartimos tu información con terceros sin tu consentimiento, salvo cuando lo exija la ley. La App no incluye ningún SDK de publicidad o análisis de seguimiento de comportamiento.</p>
@@ -195,7 +204,7 @@
 
 <section id="de" class="secondary">
 <h1>Datenschutzerklärung</h1>
-<p class="updated">Zuletzt aktualisiert: 29. August 2026</p>
+<p class="updated">Zuletzt aktualisiert: 9. September 2026</p>
 
 <p>Voice Brain (die "App") respektiert deine Privatsphäre. Diese Richtlinie erklärt, welche Informationen wir erheben und wie wir sie verwenden.</p>
 
@@ -203,10 +212,12 @@
 <table>
 <tr><th>Art</th><th>Details / Zeitpunkt der Erhebung</th></tr>
 <tr><td>Sprachaufnahmen</td><td>Werden beim Aufnehmen an unseren Server gesendet und vorübergehend zur Transkription verarbeitet. Das Audio selbst wird nach der Verarbeitung verworfen und nicht auf unseren Servern gespeichert.</td></tr>
-<tr><td>Eintragsinhalt (Tagebuch, Ideen, Aufgaben)</td><td>Wird auf deinem Gerät gespeichert. Wenn du dich mit einem E-Mail-Konto anmeldest, wird er zur Sicherung auch in der Cloud (Firestore) gespeichert. Für die Funktion der KI-Suche über alle Einträge kann auch eine aus deinem Eintragstext generierte numerische Vektordarstellung (Embedding) in der Cloud gespeichert werden. Der Originaltext kann aus diesem Vektor nicht direkt rekonstruiert werden, und er wird gelöscht, sobald der zugrunde liegende Eintrag gelöscht wird.</td></tr>
-<tr><td>Fotos & Videos</td><td>Werden nur auf deinem Gerät gespeichert; werden niemals an unsere Server gesendet.</td></tr>
-<tr><td>E-Mail-Adresse</td><td>Wird nur erhoben, wenn du dich für die Erstellung eines Kontos entscheidest, zur Authentifizierung.</td></tr>
+<tr><td>Eintragsinhalt (Tagebuch, Ideen, Aufgaben)</td><td>Wird auf deinem Gerät gespeichert. Wenn du dich mit einem Google- oder Apple-Konto anmeldest, wird er zur Sicherung auch in der Cloud (Firestore) gespeichert. Für die Funktion der KI-Suche über alle Einträge kann auch eine aus deinem Eintragstext generierte numerische Vektordarstellung (Embedding) in der Cloud gespeichert werden. Der Originaltext kann aus diesem Vektor nicht direkt rekonstruiert werden, und er wird gelöscht, sobald der zugrunde liegende Eintrag gelöscht wird.</td></tr>
+<tr><td>Fotos & Videos</td><td>Werden auf deinem Gerät gespeichert. Wenn du mit einem Google- oder Apple-Konto angemeldet bist und ein Pro-Abonnement (monatlich oder jährlich) hast, können komprimierte Kopien zusätzlich in der Cloud (Firebase Storage) gesichert werden, um sie auf einem anderen Gerät wiederherzustellen. Diese Cloud-Sicherung ist beim einmaligen Lifetime-Plan sowie bei anonymer Nutzung nicht enthalten.</td></tr>
+<tr><td>E-Mail-Adresse</td><td>Wird nur erhoben, wenn du dich mit Google oder Apple anmeldest, zur Authentifizierung.</td></tr>
 <tr><td>Kauf-/Abonnementstatus</td><td>Wird für die Pro-Plan-Berechtigung verwaltet. Die Zahlung wird über den App Store / Google Play abgewickelt, und der Abonnementstatus wird über RevenueCat verwaltet.</td></tr>
+<tr><td>Kalenderdaten</td><td>Wenn du die Kalendersynchronisierung für eine Aufgabe aktivierst, liest und schreibt die App Termine in der Kalender-App deines Geräts, um Fälligkeitsdaten synchron zu halten. Diese Daten verbleiben auf deinem Gerät und in deiner Kalender-App; sie werden nicht an unsere Server gesendet.</td></tr>
+<tr><td>Absturz- und Diagnosedaten</td><td>Wenn die App abstürzt, können automatisch technische Diagnoseinformationen (über Firebase Crashlytics) gesendet werden, damit wir das Problem finden und beheben können.</td></tr>
 <tr><td>Spracheinstellung des Geräts</td><td>Wird verwendet, damit die KI-Antworten deiner Sprache entsprechen.</td></tr>
 </table>
 
@@ -223,6 +234,7 @@
 <ul>
   <li><strong>OpenAI</strong> (Audio und Eintragstext werden zur Transkription, KI-Klassifizierung/Zusammenfassung/Chat sowie zur Erzeugung numerischer Vektor-Embeddings des Eintragstexts für die KI-Suche über alle Einträge gesendet)</li>
   <li><strong>Google Firebase / Google Cloud Platform</strong> (Authentifizierung, Datenbank und serverlose Funktionsinfrastruktur)</li>
+  <li><strong>Firebase Crashlytics</strong> (Absturz- und Diagnoseberichte, damit wir Fehler finden und beheben können)</li>
   <li><strong>RevenueCat</strong> (Verwaltung des Kaufstatus von Abonnements)</li>
 </ul>
 <p>Abgesehen von diesen Auftragsverarbeitern geben wir deine Informationen nicht ohne deine Zustimmung an Dritte weiter, außer wenn gesetzlich vorgeschrieben. Die App enthält keine Werbe- oder Verhaltens-Tracking-Analyse-SDKs.</p>
@@ -252,7 +264,7 @@
 
 <section id="ko" class="secondary">
 <h1>개인정보처리방침</h1>
-<p class="updated">최종 업데이트: 2026년 8월 29일</p>
+<p class="updated">최종 업데이트: 2026년 9월 9일</p>
 
 <p>Voice Brain("본 앱")은 사용자의 개인정보를 존중하며, 다음 방침에 따라 정보를 처리합니다.</p>
 
@@ -260,10 +272,12 @@
 <table>
 <tr><th>정보 종류</th><th>내용 및 수집 시점</th></tr>
 <tr><td>음성 데이터</td><td>녹음 시 서버로 전송되어 텍스트 변환을 위해 일시적으로 처리됩니다. 처리 완료 후 음성 데이터 자체는 서버에 저장되지 않고 폐기됩니다.</td></tr>
-<tr><td>기록 내용(일기·아이디어·할 일 텍스트)</td><td>기기에 저장됩니다. 이메일 계정으로 로그인한 경우 백업을 위해 클라우드(Firestore)에도 저장됩니다. 또한 AI를 이용한 전체 기록 검색(질문 기능)을 위해, 기록 텍스트로부터 생성한 수치 벡터(임베딩)도 클라우드에 저장될 수 있습니다. 이 벡터로부터 원문을 직접 복원할 수는 없으며, 원본 기록이 삭제되면 함께 삭제됩니다.</td></tr>
-<tr><td>사진·동영상</td><td>기기에만 저장되며, 서버로 전송되지 않습니다.</td></tr>
-<tr><td>이메일 주소</td><td>계정을 만들기로 선택한 경우에만 인증을 위해 수집됩니다.</td></tr>
+<tr><td>기록 내용(일기·아이디어·할 일 텍스트)</td><td>기기에 저장됩니다. Google 또는 Apple 계정으로 로그인한 경우 백업을 위해 클라우드(Firestore)에도 저장됩니다. 또한 AI를 이용한 전체 기록 검색(질문 기능)을 위해, 기록 텍스트로부터 생성한 수치 벡터(임베딩)도 클라우드에 저장될 수 있습니다. 이 벡터로부터 원문을 직접 복원할 수는 없으며, 원본 기록이 삭제되면 함께 삭제됩니다.</td></tr>
+<tr><td>사진·동영상</td><td>기기에 저장됩니다. Google 또는 Apple 계정으로 로그인하고 Pro 플랜(월간·연간 구독)을 이용 중인 경우, 압축된 사본이 다른 기기에서 복원할 수 있도록 클라우드(Firebase Storage)에도 백업될 수 있습니다. 이 클라우드 백업은 평생 이용권(1회 결제) 또는 익명 이용 시에는 제공되지 않습니다.</td></tr>
+<tr><td>이메일 주소</td><td>Google 또는 Apple로 로그인한 경우에만 인증을 위해 수집됩니다.</td></tr>
 <tr><td>구매·구독 상태</td><td>Pro 플랜 이용 권한 관리를 위해 사용됩니다. 결제는 App Store / Google Play를 통해 처리되며, 구독 상태는 RevenueCat을 통해 관리됩니다.</td></tr>
+<tr><td>캘린더 정보</td><td>할 일에 캘린더 동기화를 켠 경우, 마감일을 동기화하기 위해 기기의 캘린더 앱에서 일정을 읽고 씁니다. 이 정보는 기기와 캘린더 앱 내에만 남으며 서버로 전송되지 않습니다.</td></tr>
+<tr><td>충돌·진단 정보</td><td>앱이 충돌한 경우, 문제 발견 및 수정을 위해 기술적인 진단 정보(Firebase Crashlytics 경유)가 자동으로 전송될 수 있습니다.</td></tr>
 <tr><td>기기 언어 설정</td><td>AI 응답 언어를 맞추기 위해 사용됩니다.</td></tr>
 </table>
 
@@ -280,6 +294,7 @@
 <ul>
   <li><strong>OpenAI</strong>(음성 텍스트 변환, AI를 통한 분류/요약/채팅 답변 생성, 그리고 전체 기록 검색을 위한 기록 텍스트의 수치 벡터화(임베딩)를 위해 음성 데이터 및 기록 텍스트를 전송합니다)</li>
   <li><strong>Google Firebase / Google Cloud Platform</strong>(인증, 데이터베이스, 서버리스 함수 실행 기반으로 사용합니다)</li>
+  <li><strong>Firebase Crashlytics</strong>(버그를 찾아 수정할 수 있도록 충돌 및 진단 리포트를 수집합니다)</li>
   <li><strong>RevenueCat</strong>(구독 구매 상태 관리를 위해 사용합니다)</li>
 </ul>
 <p>이러한 제3자 제공 외에는, 법령에 따른 경우를 제외하고 본인의 동의 없이 수집한 정보를 제3자에게 제공하지 않습니다. 본 앱은 광고 게재나 행동 추적을 목적으로 하는 분석 도구(추적용 SDK)를 포함하고 있지 않습니다.</p>
@@ -309,7 +324,7 @@
 
 <section id="fr" class="secondary">
 <h1>Politique de confidentialité</h1>
-<p class="updated">Dernière mise à jour : 29 août 2026</p>
+<p class="updated">Dernière mise à jour : 9 septembre 2026</p>
 
 <p>Voice Brain (l'"Application") respecte ta vie privée. Cette politique explique quelles informations nous collectons et comment nous les utilisons.</p>
 
@@ -317,10 +332,12 @@
 <table>
 <tr><th>Type</th><th>Détails / Moment de la collecte</th></tr>
 <tr><td>Enregistrements vocaux</td><td>Envoyés à notre serveur lorsque tu enregistres, et traités temporairement pour la transcription. L'audio lui-même est supprimé après traitement et n'est pas stocké sur nos serveurs.</td></tr>
-<tr><td>Contenu des entrées (journal, idées, tâches)</td><td>Stocké sur ton appareil. Si tu te connectes avec un compte e-mail, il est également stocké dans le cloud (Firestore) à des fins de sauvegarde. Pour la fonctionnalité de recherche IA entre toutes les entrées, une représentation vectorielle numérique (embedding) générée à partir du texte de ton entrée peut aussi être stockée dans le cloud. Le texte original ne peut pas être reconstruit directement à partir de ce vecteur, et il est supprimé chaque fois que l'entrée sous-jacente est supprimée.</td></tr>
-<tr><td>Photos et vidéos</td><td>Stockées uniquement sur ton appareil ; jamais envoyées à nos serveurs.</td></tr>
-<tr><td>Adresse e-mail</td><td>Collectée uniquement si tu choisis de créer un compte, à des fins d'authentification.</td></tr>
+<tr><td>Contenu des entrées (journal, idées, tâches)</td><td>Stocké sur ton appareil. Si tu te connectes avec un compte Google ou Apple, il est également stocké dans le cloud (Firestore) à des fins de sauvegarde. Pour la fonctionnalité de recherche IA entre toutes les entrées, une représentation vectorielle numérique (embedding) générée à partir du texte de ton entrée peut aussi être stockée dans le cloud. Le texte original ne peut pas être reconstruit directement à partir de ce vecteur, et il est supprimé chaque fois que l'entrée sous-jacente est supprimée.</td></tr>
+<tr><td>Photos et vidéos</td><td>Stockées sur ton appareil. Si tu es connecté avec un compte Google ou Apple et abonné au plan Pro (mensuel ou annuel), des copies compressées peuvent également être sauvegardées dans le cloud (Firebase Storage) pour être restaurées sur un autre appareil. Cette sauvegarde cloud n'est pas incluse avec le plan à vie (achat unique) ni en utilisation anonyme.</td></tr>
+<tr><td>Adresse e-mail</td><td>Collectée uniquement si tu te connectes avec Google ou Apple, à des fins d'authentification.</td></tr>
 <tr><td>Statut d'achat/abonnement</td><td>Géré pour le droit au plan Pro. Le paiement est traité par l'App Store / Google Play et le statut de l'abonnement est géré via RevenueCat.</td></tr>
+<tr><td>Données de calendrier</td><td>Si tu actives la synchronisation du calendrier pour une tâche, l'Application lit et écrit des événements dans l'application calendrier de ton appareil afin de garder les échéances synchronisées. Ces données restent sur ton appareil et dans ton application calendrier ; elles ne sont pas envoyées à nos serveurs.</td></tr>
+<tr><td>Données de plantage et de diagnostic</td><td>Si l'Application plante, des informations techniques de diagnostic (via Firebase Crashlytics) peuvent être envoyées automatiquement pour nous aider à trouver et corriger le problème.</td></tr>
 <tr><td>Paramètre de langue de l'appareil</td><td>Utilisé pour que les réponses de l'IA correspondent à ta langue.</td></tr>
 </table>
 
@@ -337,6 +354,7 @@
 <ul>
   <li><strong>OpenAI</strong> (l'audio et le texte des entrées sont envoyés pour la transcription, la classification/le résumé/le chat par IA, et pour générer des embeddings vectoriels numériques du texte des entrées pour la recherche IA entre toutes les entrées)</li>
   <li><strong>Google Firebase / Google Cloud Platform</strong> (authentification, base de données et infrastructure de fonctions sans serveur)</li>
+  <li><strong>Firebase Crashlytics</strong> (rapports de plantage et de diagnostic, pour nous aider à trouver et corriger les bugs)</li>
   <li><strong>RevenueCat</strong> (gestion du statut d'achat des abonnements)</li>
 </ul>
 <p>En dehors de ces sous-traitants, nous ne partageons pas tes informations avec des tiers sans ton consentement, sauf si la loi l'exige. L'Application n'inclut aucun SDK publicitaire ou d'analyse de suivi comportemental.</p>
