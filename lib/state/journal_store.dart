@@ -304,6 +304,75 @@ class JournalStore extends ChangeNotifier {
     _trackSync(_cloudSync.pushEntry(entries[index]));
   }
 
+  /// Notion連携(1タップ送信)でタスクを送信し、成功したら作成されたNotionページの
+  /// URLをローカルへ永続化する。ユーザー操作起点の1回きりの送信のため、カレンダー/
+  /// リマインダー同期と違い失敗を握りつぶさず[BackendServiceException]をそのまま
+  /// 投げる(呼び出し元の編集画面がSnackBarで結果を見せる)。
+  Future<String> sendTaskToNotion(
+    JournalEntry entry,
+    TaskItem task, {
+    required String locale,
+  }) async {
+    if (task.id == null) {
+      throw StateError('sendTaskToNotion called on an unsaved task');
+    }
+    final pageUrl = await _backend.notionSendItem(
+      title: task.title,
+      content: task.dueHint ?? '',
+      category: 'Task',
+      date: entry.createdAt,
+      dueDate: task.dueDate,
+      done: task.done,
+      locale: locale,
+    );
+    await _db.updateTaskNotionPageUrl(task.id!, pageUrl);
+    final index = entries.indexWhere((e) => e.id == entry.id);
+    if (index != -1) {
+      final updatedTasks = entries[index].tasks.map((t) {
+        if (t.id != task.id) return t;
+        return t.copyWith(notionPageUrl: pageUrl);
+      }).toList();
+      entries[index] = entries[index].copyWith(tasks: updatedTasks);
+      notifyListeners();
+    }
+    return pageUrl;
+  }
+
+  /// [sendTaskToNotion]の日記/アイデア版。
+  Future<String> sendNoteToNotion(
+    JournalEntry entry,
+    NoteItem note, {
+    required String locale,
+  }) async {
+    if (note.id == null) {
+      throw StateError('sendNoteToNotion called on an unsaved note');
+    }
+    final rawTitle = (note.title ?? '').trim();
+    final fallback = note.content.trim();
+    final title = rawTitle.isNotEmpty
+        ? rawTitle
+        : (fallback.length > 80 ? '${fallback.substring(0, 80)}…' : fallback);
+    final category = note.category == kNoteCategoryIdea ? 'Idea' : 'Diary';
+    final pageUrl = await _backend.notionSendItem(
+      title: title,
+      content: note.content,
+      category: category,
+      date: entry.createdAt,
+      locale: locale,
+    );
+    await _db.updateNoteNotionPageUrl(note.id!, pageUrl);
+    final index = entries.indexWhere((e) => e.id == entry.id);
+    if (index != -1) {
+      final updatedNotes = entries[index].notes.map((n) {
+        if (n.id != note.id) return n;
+        return n.copyWith(notionPageUrl: pageUrl);
+      }).toList();
+      entries[index] = entries[index].copyWith(notes: updatedNotes);
+      notifyListeners();
+    }
+    return pageUrl;
+  }
+
   Future<void> deleteEntry(JournalEntry entry, {bool canSyncMedia = false}) async {
     if (entry.id == null) return;
     for (final task in entry.tasks) {

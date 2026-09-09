@@ -356,6 +356,83 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se encontraron listas de recordatorios editables. Crea una lista en la app Recordatorios y luego actualiza.';
 
   @override
+  String get notionSettingsRowTitle => 'Notion';
+
+  @override
+  String get notionScreenTitle => 'Integración con Notion';
+
+  @override
+  String get notionIntroDescription =>
+      'Envía tareas, entradas de diario e ideas a una base de datos de Notion con un toque. Primero crea una integración en Notion y luego comparte con ella la página que quieras usar.';
+
+  @override
+  String get notionTokenFieldLabel => 'Token de integración';
+
+  @override
+  String get notionTokenFieldHint => 'Pega un token que empiece por secret_';
+
+  @override
+  String get notionTokenHelpText =>
+      'Crea una nueva integración en notion.so/my-integrations y pega aquí el token. Luego comparte con esa integración la página donde quieras crear la base de datos.';
+
+  @override
+  String get notionConnectButton => 'Conectar';
+
+  @override
+  String get notionSelectPageTitle =>
+      'Elige una página donde crear la base de datos';
+
+  @override
+  String get notionNoPagesFound =>
+      'No se encontraron páginas compartidas. Comparte una página con esta integración en Notion y vuelve a cargar.';
+
+  @override
+  String get notionCreateDatabaseButton => 'Crear en esta página';
+
+  @override
+  String get notionConnectedStatusLabel => 'Conectado';
+
+  @override
+  String get notionDisconnectButton => 'Desconectar';
+
+  @override
+  String get notionDisconnectConfirmTitle => '¿Desconectar Notion?';
+
+  @override
+  String get notionDisconnectConfirmMessage =>
+      'La base de datos creada en Notion se mantendrá tal cual.';
+
+  @override
+  String get notionSendTooltip => 'Enviar a Notion';
+
+  @override
+  String get notionSendSuccessMessage => 'Enviado a Notion';
+
+  @override
+  String get notionOpenAction => 'Abrir';
+
+  @override
+  String get notionSendErrorMessage => 'Error al enviar a Notion';
+
+  @override
+  String get notionCopiedFreeMessage =>
+      'Copiado al portapapeles. Enviar directamente a Notion es una función Pro';
+
+  @override
+  String get notionNotConnectedMessage =>
+      'Notion no está conectado. Conéctalo desde Ajustes';
+
+  @override
+  String get notionConnectAction => 'Conectar';
+
+  @override
+  String get notionAlreadySentTooltip => 'Abrir en Notion';
+
+  @override
+  String get notionProLockedDescription =>
+      'La integración con Notion es una función Pro.';
+
+  @override
   String get accountSectionTitle => 'Cuenta';
 
   @override
@@ -629,6 +706,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get paywallPlanRecommended => 'Recomendado';
 
   @override
+  String paywallLifetimeRemaining(Object count) {
+    return 'Quedan $count';
+  }
+
+  @override
   String get paywallPlanLifetimeCaption =>
       'No incluye sincronización de fotos/vídeos en la nube';
 
@@ -639,11 +721,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get paywallContinueButton => 'Continuar';
 
   @override
+  String get paywallTrialNote => 'Incluye 14 días de prueba gratis';
+
+  @override
+  String get paywallStartTrialButton => 'Comenzar prueba gratis';
+
+  @override
   String get paywallSignInRequiredTitle => 'Inicia sesión para continuar';
 
   @override
   String get paywallSignInRequiredDescription =>
       'Iniciar sesión protege tu compra, para que puedas restaurarla incluso si reinstalas la app.';
+
+  @override
+  String get paywallPlanSoldOut => 'Agotado';
+
+  @override
+  String get paywallLifetimeSoldOutMessage =>
+      'El plan de por vida ya no está disponible.';
 
   @override
   String homeUsageToday(int used, int limit) {
@@ -1173,6 +1268,22 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get weeklyReportNotificationChannelDescription =>
       'Te avisa cada domingo a las 8pm cuando tu Informe Cerebral Semanal está listo';
+
+  @override
+  String get trialEndingNotificationTitle =>
+      'Tu prueba gratuita está por terminar';
+
+  @override
+  String get trialEndingNotificationBody =>
+      'Si no has cancelado, el cobro comenzará en 3 días.';
+
+  @override
+  String get trialEndingNotificationChannelName =>
+      'Recordatorios de fin de prueba';
+
+  @override
+  String get trialEndingNotificationChannelDescription =>
+      'Te avisa 3 días antes de que termine tu prueba gratuita y comience el cobro';
 
   @override
   String get weeklyReportHistoryTooltip => 'Informes anteriores';

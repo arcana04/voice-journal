@@ -339,6 +339,78 @@ class AppLocalizationsJa extends AppLocalizations {
       '書き込み可能なリマインダーリストが見つかりませんでした。リマインダーアプリでリストを作成してから、再読み込みしてください。';
 
   @override
+  String get notionSettingsRowTitle => 'Notion';
+
+  @override
+  String get notionScreenTitle => 'Notion連携';
+
+  @override
+  String get notionIntroDescription =>
+      'タスク・日記・アイデアをワンタップでNotionのデータベースに送れます。まずNotionでIntegrationを作成し、送信先にしたいページをそのIntegrationに共有してください。';
+
+  @override
+  String get notionTokenFieldLabel => 'Integrationトークン';
+
+  @override
+  String get notionTokenFieldHint => 'secret_ から始まるトークンを貼り付け';
+
+  @override
+  String get notionTokenHelpText =>
+      'notion.so/my-integrations で新しいIntegrationを作成し、発行されたトークンをここに貼り付けてください。続けて、データベースを作成したいページをそのIntegrationに共有します。';
+
+  @override
+  String get notionConnectButton => '接続';
+
+  @override
+  String get notionSelectPageTitle => 'データベースを作成するページを選んでください';
+
+  @override
+  String get notionNoPagesFound =>
+      '共有されたページが見つかりません。Notion側でこのIntegrationにページを共有してから、再読み込みしてください。';
+
+  @override
+  String get notionCreateDatabaseButton => 'このページに作成';
+
+  @override
+  String get notionConnectedStatusLabel => '接続済み';
+
+  @override
+  String get notionDisconnectButton => '連携を解除';
+
+  @override
+  String get notionDisconnectConfirmTitle => '連携を解除しますか?';
+
+  @override
+  String get notionDisconnectConfirmMessage => 'Notion側に作成したデータベースはそのまま残ります。';
+
+  @override
+  String get notionSendTooltip => 'Notionへ送る';
+
+  @override
+  String get notionSendSuccessMessage => 'Notionに送信しました';
+
+  @override
+  String get notionOpenAction => '開く';
+
+  @override
+  String get notionSendErrorMessage => 'Notionへの送信に失敗しました';
+
+  @override
+  String get notionCopiedFreeMessage => 'テキストをコピーしました。Notionへの直接送信はProプラン限定です';
+
+  @override
+  String get notionNotConnectedMessage => 'Notionが未接続です。設定から接続してください';
+
+  @override
+  String get notionConnectAction => '接続する';
+
+  @override
+  String get notionAlreadySentTooltip => 'Notionで開く';
+
+  @override
+  String get notionProLockedDescription => 'Notion連携はProプラン限定です。';
+
+  @override
   String get accountSectionTitle => 'アカウント';
 
   @override
@@ -591,6 +663,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get paywallPlanRecommended => 'おすすめ';
 
   @override
+  String paywallLifetimeRemaining(Object count) {
+    return '残り$count人';
+  }
+
+  @override
   String get paywallPlanLifetimeCaption => '写真・動画のクラウド同期は対象外';
 
   @override
@@ -600,11 +677,23 @@ class AppLocalizationsJa extends AppLocalizations {
   String get paywallContinueButton => '続ける';
 
   @override
+  String get paywallTrialNote => '14日間無料トライアル付き';
+
+  @override
+  String get paywallStartTrialButton => '無料トライアルを始める';
+
+  @override
   String get paywallSignInRequiredTitle => '購入にはログインが必要です';
 
   @override
   String get paywallSignInRequiredDescription =>
       'ログインしておくと、アプリを再インストールしても購入内容を復元できます。';
+
+  @override
+  String get paywallPlanSoldOut => '完売';
+
+  @override
+  String get paywallLifetimeSoldOutMessage => '買い切りプランは受付を終了しました。';
 
   @override
   String homeUsageToday(int used, int limit) {
@@ -1120,6 +1209,19 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get weeklyReportNotificationChannelDescription =>
       '毎週日曜20時に週刊脳内レポートの完成をお知らせします';
+
+  @override
+  String get trialEndingNotificationTitle => '無料トライアルがまもなく終了します';
+
+  @override
+  String get trialEndingNotificationBody => '解約していない場合、3日後に本契約の課金が始まります';
+
+  @override
+  String get trialEndingNotificationChannelName => 'トライアル終了通知';
+
+  @override
+  String get trialEndingNotificationChannelDescription =>
+      '無料トライアル終了・課金開始の3日前にお知らせします';
 
   @override
   String get weeklyReportHistoryTooltip => '過去のレポート';

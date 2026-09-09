@@ -103,6 +103,7 @@ class _RootScreenState extends State<RootScreen> {
           ReminderService.instance.scheduleWeeklyReportNotification();
         } else {
           ReminderService.instance.cancelWeeklyReportNotification();
+          ReminderService.instance.cancelTrialEndingNotification();
         }
       });
     }

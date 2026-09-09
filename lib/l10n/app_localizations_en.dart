@@ -353,6 +353,82 @@ class AppLocalizationsEn extends AppLocalizations {
       'No writable reminder lists were found. Create a list in the Reminders app, then refresh.';
 
   @override
+  String get notionSettingsRowTitle => 'Notion';
+
+  @override
+  String get notionScreenTitle => 'Notion Integration';
+
+  @override
+  String get notionIntroDescription =>
+      'Send tasks, diary entries, and ideas to a Notion database with one tap. First create an integration on Notion, then share the page you want to use with that integration.';
+
+  @override
+  String get notionTokenFieldLabel => 'Integration token';
+
+  @override
+  String get notionTokenFieldHint => 'Paste a token starting with secret_';
+
+  @override
+  String get notionTokenHelpText =>
+      'Create a new integration at notion.so/my-integrations, then paste the token here. Next, share the page you want to create the database in with that integration.';
+
+  @override
+  String get notionConnectButton => 'Connect';
+
+  @override
+  String get notionSelectPageTitle => 'Choose a page to create the database in';
+
+  @override
+  String get notionNoPagesFound =>
+      'No shared pages were found. Share a page with this integration in Notion, then refresh.';
+
+  @override
+  String get notionCreateDatabaseButton => 'Create in this page';
+
+  @override
+  String get notionConnectedStatusLabel => 'Connected';
+
+  @override
+  String get notionDisconnectButton => 'Disconnect';
+
+  @override
+  String get notionDisconnectConfirmTitle => 'Disconnect Notion?';
+
+  @override
+  String get notionDisconnectConfirmMessage =>
+      'The database created in Notion will stay as it is.';
+
+  @override
+  String get notionSendTooltip => 'Send to Notion';
+
+  @override
+  String get notionSendSuccessMessage => 'Sent to Notion';
+
+  @override
+  String get notionOpenAction => 'Open';
+
+  @override
+  String get notionSendErrorMessage => 'Failed to send to Notion';
+
+  @override
+  String get notionCopiedFreeMessage =>
+      'Copied to clipboard. Sending directly to Notion is a Pro feature';
+
+  @override
+  String get notionNotConnectedMessage =>
+      'Notion isn\'t connected. Connect it from Settings';
+
+  @override
+  String get notionConnectAction => 'Connect';
+
+  @override
+  String get notionAlreadySentTooltip => 'Open in Notion';
+
+  @override
+  String get notionProLockedDescription =>
+      'Notion integration is a Pro feature.';
+
+  @override
   String get accountSectionTitle => 'Account';
 
   @override
@@ -621,6 +697,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallPlanRecommended => 'Recommended';
 
   @override
+  String paywallLifetimeRemaining(Object count) {
+    return '$count left';
+  }
+
+  @override
   String get paywallPlanLifetimeCaption =>
       'Cloud photo/video sync not included';
 
@@ -631,11 +712,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallContinueButton => 'Continue';
 
   @override
+  String get paywallTrialNote => '14-day free trial included';
+
+  @override
+  String get paywallStartTrialButton => 'Start Free Trial';
+
+  @override
   String get paywallSignInRequiredTitle => 'Sign in to continue';
 
   @override
   String get paywallSignInRequiredDescription =>
       'Signing in protects your purchase, so you can restore it even after reinstalling the app.';
+
+  @override
+  String get paywallPlanSoldOut => 'Sold out';
+
+  @override
+  String get paywallLifetimeSoldOutMessage =>
+      'The lifetime plan is no longer available.';
 
   @override
   String homeUsageToday(int used, int limit) {
@@ -1163,6 +1257,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get weeklyReportNotificationChannelDescription =>
       'Notifies you every Sunday at 8pm when your Weekly Recap is ready';
+
+  @override
+  String get trialEndingNotificationTitle => 'Your free trial is ending soon';
+
+  @override
+  String get trialEndingNotificationBody =>
+      'If you haven\'t cancelled, billing will start in 3 days.';
+
+  @override
+  String get trialEndingNotificationChannelName => 'Trial ending reminders';
+
+  @override
+  String get trialEndingNotificationChannelDescription =>
+      'Notifies you 3 days before your free trial ends and billing begins';
 
   @override
   String get weeklyReportHistoryTooltip => 'Past recaps';

@@ -9,6 +9,7 @@ import 'db_service.dart';
 
 const String _kWeeklyReportPayload = 'weekly_report';
 const int _kWeeklyReportNotificationId = 900000;
+const int _kTrialEndingNotificationId = 900001;
 
 /// 時刻付きのToDoに対するローカル通知（リマインダー）を管理する。
 ///
@@ -180,6 +181,44 @@ class ReminderService {
 
   Future<void> cancelWeeklyReportNotification() =>
       _plugin.cancel(_kWeeklyReportNotificationId);
+
+  /// 無料トライアル終了の3日前に一度だけ通知する。[trialEndsAt]は
+  /// RevenueCatのentitlement.expirationDateから得た実際のトライアル終了時刻
+  /// （絶対時刻）——14日を自前計算せず、ストアが確定した終了時刻を使う。
+  ///
+  /// ユーザーがトライアル中にストア側で解約しても、クライアント側の
+  /// isPro判定は実際に失効するまでtrueのままのため、この通知を確実に
+  /// キャンセルする手段はない。文言は「課金されます」ではなく「解約して
+  /// いない場合は課金が始まります」という防御的な表現にする。
+  Future<void> scheduleTrialEndingNotification(DateTime trialEndsAt) async {
+    final fireAt = trialEndsAt.subtract(const Duration(days: 3));
+    final scheduled = tz.TZDateTime.from(fireAt, tz.local);
+    if (scheduled.isBefore(tz.TZDateTime.now(tz.local))) return;
+
+    final l10n = currentLocalizations();
+    await _plugin.zonedSchedule(
+      _kTrialEndingNotificationId,
+      l10n.trialEndingNotificationTitle,
+      l10n.trialEndingNotificationBody,
+      scheduled,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          'trial_ending',
+          l10n.trialEndingNotificationChannelName,
+          channelDescription: l10n.trialEndingNotificationChannelDescription,
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: const DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+    );
+  }
+
+  Future<void> cancelTrialEndingNotification() =>
+      _plugin.cancel(_kTrialEndingNotificationId);
 
   /// 通知が現在許可されているかどうか。プラットフォームが判定できない場合はtrue扱い。
   Future<bool> hasNotificationPermission() async {

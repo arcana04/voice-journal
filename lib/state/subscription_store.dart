@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show ChangeNotifier, kDebugMode, debugPrint;
 import 'package:purchases_flutter/purchases_flutter.dart';
 
@@ -62,6 +63,13 @@ class SubscriptionStore extends ChangeNotifier {
       await FirebaseFunctions.instanceFor(
         region: 'us-central1',
       ).httpsCallable('syncProStatus').call();
+      // syncProStatusはFirebase Authのカスタムクレーム(hasMediaSync等)を
+      // サーバー側で更新するが、それだけでは端末が持つ既存のIDトークンには
+      // 反映されない（Firebase Authは通常1時間おきにしか自動更新しない）。
+      // Storage Security Rulesはこのクレームをトークンから直接読むため、
+      // ここで強制的にトークンを再取得しないと、同期が成功していても
+      // 古いトークンのままアップロードが権限エラーになり続ける。
+      await FirebaseAuth.instance.currentUser?.getIdToken(true);
     } catch (e) {
       debugPrint('syncProStatus failed: $e');
     }

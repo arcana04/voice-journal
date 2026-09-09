@@ -9,6 +9,7 @@ import 'state/apple_reminders_store.dart';
 import 'state/calendar_store.dart';
 import 'state/custom_words_store.dart';
 import 'state/journal_store.dart';
+import 'state/notion_store.dart';
 import 'state/record_trigger_store.dart';
 import 'state/settings_store.dart';
 import 'state/subscription_store.dart';
@@ -84,6 +85,7 @@ class VoiceJournalApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => SettingsStore()..load()),
         ChangeNotifierProvider(create: (_) => CalendarStore()..load()),
+        ChangeNotifierProvider(create: (_) => NotionStore()..load()),
         ChangeNotifierProvider(create: (_) => AppleRemindersStore()..load()),
         ChangeNotifierProvider(create: (_) => JournalStore()..load()),
         ChangeNotifierProvider(create: (_) => CustomWordsStore()..load()),

@@ -724,6 +724,144 @@ abstract class AppLocalizations {
   /// **'No writable reminder lists were found. Create a list in the Reminders app, then refresh.'**
   String get appleRemindersNoLists;
 
+  /// No description provided for @notionSettingsRowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notion'**
+  String get notionSettingsRowTitle;
+
+  /// No description provided for @notionScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notion Integration'**
+  String get notionScreenTitle;
+
+  /// No description provided for @notionIntroDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Send tasks, diary entries, and ideas to a Notion database with one tap. First create an integration on Notion, then share the page you want to use with that integration.'**
+  String get notionIntroDescription;
+
+  /// No description provided for @notionTokenFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Integration token'**
+  String get notionTokenFieldLabel;
+
+  /// No description provided for @notionTokenFieldHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a token starting with secret_'**
+  String get notionTokenFieldHint;
+
+  /// No description provided for @notionTokenHelpText.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new integration at notion.so/my-integrations, then paste the token here. Next, share the page you want to create the database in with that integration.'**
+  String get notionTokenHelpText;
+
+  /// No description provided for @notionConnectButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get notionConnectButton;
+
+  /// No description provided for @notionSelectPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a page to create the database in'**
+  String get notionSelectPageTitle;
+
+  /// No description provided for @notionNoPagesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No shared pages were found. Share a page with this integration in Notion, then refresh.'**
+  String get notionNoPagesFound;
+
+  /// No description provided for @notionCreateDatabaseButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Create in this page'**
+  String get notionCreateDatabaseButton;
+
+  /// No description provided for @notionConnectedStatusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get notionConnectedStatusLabel;
+
+  /// No description provided for @notionDisconnectButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get notionDisconnectButton;
+
+  /// No description provided for @notionDisconnectConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect Notion?'**
+  String get notionDisconnectConfirmTitle;
+
+  /// No description provided for @notionDisconnectConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The database created in Notion will stay as it is.'**
+  String get notionDisconnectConfirmMessage;
+
+  /// No description provided for @notionSendTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to Notion'**
+  String get notionSendTooltip;
+
+  /// No description provided for @notionSendSuccessMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to Notion'**
+  String get notionSendSuccessMessage;
+
+  /// No description provided for @notionOpenAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get notionOpenAction;
+
+  /// No description provided for @notionSendErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send to Notion'**
+  String get notionSendErrorMessage;
+
+  /// No description provided for @notionCopiedFreeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard. Sending directly to Notion is a Pro feature'**
+  String get notionCopiedFreeMessage;
+
+  /// No description provided for @notionNotConnectedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Notion isn\'t connected. Connect it from Settings'**
+  String get notionNotConnectedMessage;
+
+  /// No description provided for @notionConnectAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get notionConnectAction;
+
+  /// No description provided for @notionAlreadySentTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Notion'**
+  String get notionAlreadySentTooltip;
+
+  /// No description provided for @notionProLockedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Notion integration is a Pro feature.'**
+  String get notionProLockedDescription;
+
   /// No description provided for @accountSectionTitle.
   ///
   /// In en, this message translates to:
@@ -1210,6 +1348,12 @@ abstract class AppLocalizations {
   /// **'Recommended'**
   String get paywallPlanRecommended;
 
+  /// No description provided for @paywallLifetimeRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} left'**
+  String paywallLifetimeRemaining(Object count);
+
   /// No description provided for @paywallPlanLifetimeCaption.
   ///
   /// In en, this message translates to:
@@ -1228,6 +1372,18 @@ abstract class AppLocalizations {
   /// **'Continue'**
   String get paywallContinueButton;
 
+  /// No description provided for @paywallTrialNote.
+  ///
+  /// In en, this message translates to:
+  /// **'14-day free trial included'**
+  String get paywallTrialNote;
+
+  /// No description provided for @paywallStartTrialButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Free Trial'**
+  String get paywallStartTrialButton;
+
   /// No description provided for @paywallSignInRequiredTitle.
   ///
   /// In en, this message translates to:
@@ -1239,6 +1395,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Signing in protects your purchase, so you can restore it even after reinstalling the app.'**
   String get paywallSignInRequiredDescription;
+
+  /// No description provided for @paywallPlanSoldOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold out'**
+  String get paywallPlanSoldOut;
+
+  /// No description provided for @paywallLifetimeSoldOutMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The lifetime plan is no longer available.'**
+  String get paywallLifetimeSoldOutMessage;
 
   /// No description provided for @homeUsageToday.
   ///
@@ -2235,6 +2403,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notifies you every Sunday at 8pm when your Weekly Recap is ready'**
   String get weeklyReportNotificationChannelDescription;
+
+  /// No description provided for @trialEndingNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your free trial is ending soon'**
+  String get trialEndingNotificationTitle;
+
+  /// No description provided for @trialEndingNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If you haven\'t cancelled, billing will start in 3 days.'**
+  String get trialEndingNotificationBody;
+
+  /// No description provided for @trialEndingNotificationChannelName.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial ending reminders'**
+  String get trialEndingNotificationChannelName;
+
+  /// No description provided for @trialEndingNotificationChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifies you 3 days before your free trial ends and billing begins'**
+  String get trialEndingNotificationChannelDescription;
 
   /// No description provided for @weeklyReportHistoryTooltip.
   ///

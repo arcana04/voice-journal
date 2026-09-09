@@ -25,6 +25,9 @@ class TaskItem {
   /// 影響しない。
   final DateTime? notifyAt;
 
+  /// Notion連携で送信済みの場合の、作成されたNotionページURL。未送信はnull。
+  final String? notionPageUrl;
+
   TaskItem({
     this.id,
     this.entryId,
@@ -38,6 +41,7 @@ class TaskItem {
     this.appleReminderId,
     this.isAllDay = false,
     this.notifyAt,
+    this.notionPageUrl,
   });
 
   /// 終日タスクにユーザーが明示的な通知時刻を設定していない場合の既定値
@@ -70,6 +74,8 @@ class TaskItem {
     bool? isAllDay,
     DateTime? notifyAt,
     bool clearNotify = false,
+    String? notionPageUrl,
+    bool clearNotionPageUrl = false,
   }) {
     return TaskItem(
       id: id,
@@ -90,6 +96,9 @@ class TaskItem {
           : (appleReminderId ?? this.appleReminderId),
       isAllDay: clearReminder ? false : (isAllDay ?? this.isAllDay),
       notifyAt: clearNotify ? null : (notifyAt ?? this.notifyAt),
+      notionPageUrl: clearNotionPageUrl
+          ? null
+          : (notionPageUrl ?? this.notionPageUrl),
     );
   }
 
@@ -107,6 +116,7 @@ class TaskItem {
       'apple_reminder_id': appleReminderId,
       'is_all_day': isAllDay ? 1 : 0,
       'notify_at': notifyAt?.toIso8601String(),
+      'notion_page_url': notionPageUrl,
     };
   }
 
@@ -132,6 +142,7 @@ class TaskItem {
       appleReminderId: map['apple_reminder_id'] as String?,
       isAllDay: (map['is_all_day'] as int? ?? 0) == 1,
       notifyAt: notifyAtStr != null ? DateTime.tryParse(notifyAtStr) : null,
+      notionPageUrl: map['notion_page_url'] as String?,
     );
   }
 
@@ -193,6 +204,9 @@ class NoteItem {
   /// アイデアの自由入力タグ（種類分け用）。未設定はnull。
   final String? tag;
 
+  /// Notion連携で送信済みの場合の、作成されたNotionページURL。未送信はnull。
+  final String? notionPageUrl;
+
   NoteItem({
     this.id,
     this.entryId,
@@ -206,6 +220,7 @@ class NoteItem {
     this.ideaStatus,
     this.pinned = false,
     this.tag,
+    this.notionPageUrl,
   });
 
   NoteItem copyWith({
@@ -223,6 +238,8 @@ class NoteItem {
     bool? pinned,
     String? tag,
     bool clearTag = false,
+    String? notionPageUrl,
+    bool clearNotionPageUrl = false,
   }) {
     return NoteItem(
       id: id,
@@ -241,6 +258,9 @@ class NoteItem {
       ideaStatus: clearIdeaStatus ? null : (ideaStatus ?? this.ideaStatus),
       pinned: pinned ?? this.pinned,
       tag: clearTag ? null : (tag ?? this.tag),
+      notionPageUrl: clearNotionPageUrl
+          ? null
+          : (notionPageUrl ?? this.notionPageUrl),
     );
   }
 
@@ -258,6 +278,7 @@ class NoteItem {
       'idea_status': ideaStatus,
       'pinned': pinned ? 1 : 0,
       'tag': tag,
+      'notion_page_url': notionPageUrl,
     };
   }
 
@@ -275,6 +296,7 @@ class NoteItem {
       ideaStatus: map['idea_status'] as String?,
       pinned: (map['pinned'] as int? ?? 0) == 1,
       tag: map['tag'] as String?,
+      notionPageUrl: map['notion_page_url'] as String?,
     );
   }
 

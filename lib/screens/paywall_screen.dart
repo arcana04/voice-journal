@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -6,7 +8,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../config/legal_links.dart';
 import '../config/theme_colors.dart';
 import '../l10n/app_localizations.dart';
+import '../services/lifetime_plan_service.dart';
 import '../services/purchase_service.dart';
+import '../services/reminder_service.dart';
 import '../state/account_store.dart';
 import '../state/subscription_store.dart';
 import '../widgets/require_sign_in_sheet.dart';
@@ -23,9 +27,46 @@ class PaywallScreen extends StatefulWidget {
 
 class _PaywallScreenState extends State<PaywallScreen> {
   final PurchaseService _purchases = PurchaseService.instance;
-  late final Future<Offering?> _offeringFuture = _purchases.fetchCurrentOffering();
+  late final Future<
+    ({
+      Offering? offering,
+      int? lifetimeRemaining,
+      Map<String, bool> trialEligibility,
+    })
+  >
+  _dataFuture = _loadData();
   bool _busy = false;
   Package? _selected;
+
+  Future<
+    ({
+      Offering? offering,
+      int? lifetimeRemaining,
+      Map<String, bool> trialEligibility,
+    })
+  >
+  _loadData() async {
+    final offering = await _purchases.fetchCurrentOffering();
+    final lifetimeRemaining = await LifetimePlanService.instance
+        .remainingSlots();
+    final trialCandidateIds = (offering?.availablePackages ?? const <Package>[])
+        .where(
+          (p) =>
+              (p.packageType == PackageType.monthly ||
+                  p.packageType == PackageType.annual) &&
+              p.storeProduct.introductoryPrice != null,
+        )
+        .map((p) => p.storeProduct.identifier)
+        .toList();
+    final trialEligibility = await _purchases.checkTrialEligibility(
+      trialCandidateIds,
+    );
+    return (
+      offering: offering,
+      lifetimeRemaining: lifetimeRemaining,
+      trialEligibility: trialEligibility,
+    );
+  }
 
   Future<void> _purchase() async {
     final package = _selected;
@@ -37,20 +78,41 @@ class _PaywallScreenState extends State<PaywallScreen> {
       final signedIn = await showRequireSignInSheet(context);
       if (!mounted || !signedIn) return;
     }
+    // 画面を開いた時点では枠があっても、購入ボタンを押すまでの間に他の誰かが
+    // 埋めてしまう可能性があるため、実際に購入を投げる直前にもう一度確認する
+    // （100人限定を超えて売ってしまわないための最後の砦）。
+    if (package.packageType == PackageType.lifetime) {
+      final stillAvailable = await LifetimePlanService.instance.isAvailable();
+      if (!stillAvailable) {
+        if (!mounted) return;
+        setState(() => _selected = null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.paywallLifetimeSoldOutMessage)),
+        );
+        return;
+      }
+    }
     setState(() => _busy = true);
     try {
-      final granted = await _purchases.purchasePackage(package);
+      final result = await _purchases.purchasePackage(package);
       if (!mounted) return;
-      if (granted == true) {
+      if (result != null && result.granted) {
         await context.read<SubscriptionStore>().refresh();
+        if (result.isTrial && result.trialEndsAt != null) {
+          unawaited(
+            ReminderService.instance.scheduleTrialEndingNotification(
+              result.trialEndsAt!,
+            ),
+          );
+        }
         if (!mounted) return;
         Navigator.of(context).pop();
-      } else if (granted == false) {
+      } else if (result != null && !result.granted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.paywallPurchaseFailed)));
       }
-      // grantedがnull = ユーザーが購入をキャンセルした場合は何もしない。
+      // resultがnull = ユーザーが購入をキャンセルした場合は何もしない。
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -96,16 +158,35 @@ class _PaywallScreenState extends State<PaywallScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.paywallTitle)),
       body: SafeArea(
-        child: FutureBuilder<Offering?>(
-          future: _offeringFuture,
+        child: FutureBuilder<
+          ({
+            Offering? offering,
+            int? lifetimeRemaining,
+            Map<String, bool> trialEligibility,
+          })
+        >(
+          future: _dataFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            final packages = snapshot.data?.availablePackages ?? const <Package>[];
-            final plans = _buildPlanSlots(l10n, packages);
+            final packages =
+                snapshot.data?.offering?.availablePackages ??
+                const <Package>[];
+            final lifetimeRemaining = snapshot.data?.lifetimeRemaining;
+            final trialEligibility =
+                snapshot.data?.trialEligibility ?? const <String, bool>{};
+            final plans = _buildPlanSlots(
+              l10n,
+              packages,
+              lifetimeRemaining,
+              trialEligibility,
+            );
             final anyPurchasable = plans.any((p) => p.package != null);
+            final selectedTrial = plans.any(
+              (p) => p.package == _selected && p.trialNote != null,
+            );
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
@@ -231,7 +312,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     _PlanCard(
                       plan: plan,
                       selected: _selected == plan.package && plan.package != null,
-                      onTap: plan.package == null
+                      onTap: (plan.package == null || plan.soldOut)
                           ? null
                           : () => setState(() => _selected = plan.package),
                     ),
@@ -259,7 +340,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : Text(l10n.paywallContinueButton),
+                          : Text(
+                              selectedTrial
+                                  ? l10n.paywallStartTrialButton
+                                  : l10n.paywallContinueButton,
+                            ),
                     ),
                   ),
                 ],
@@ -297,8 +382,17 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   /// 表示したい3プラン（月額・年額・買い切り）の枠を作り、Offeringに実在する
   /// パッケージがあれば紐付ける。RevenueCat側にまだ買い切り商品が設定されて
-  /// いない場合は[_PlanSlot.package]がnullのまま「近日公開」表示になる。
-  List<_PlanSlot> _buildPlanSlots(AppLocalizations l10n, List<Package> packages) {
+  /// いない場合は[_PlanSlot.package]がnullのまま「近日公開」表示になり、
+  /// 設定済みだが[lifetimeRemaining]が0（先着100人限定に到達済み）の場合は
+  /// 「完売」表示になる。[lifetimeRemaining]が読み取れた場合は残り枠数を
+  /// バッジで表示する（読み取り失敗時のnullは表示しない——不正確な数字を
+  /// 見せないため）。
+  List<_PlanSlot> _buildPlanSlots(
+    AppLocalizations l10n,
+    List<Package> packages,
+    int? lifetimeRemaining,
+    Map<String, bool> trialEligibility,
+  ) {
     Package? find(PackageType type) {
       for (final p in packages) {
         if (p.packageType == type) return p;
@@ -306,28 +400,48 @@ class _PaywallScreenState extends State<PaywallScreen> {
       return null;
     }
 
+    String? trialNoteFor(Package? pkg) {
+      if (pkg == null) return null;
+      if (pkg.storeProduct.introductoryPrice == null) return null;
+      if (trialEligibility[pkg.storeProduct.identifier] != true) return null;
+      return l10n.paywallTrialNote;
+    }
+
     final monthly = find(PackageType.monthly);
     final annual = find(PackageType.annual);
     final lifetime = find(PackageType.lifetime);
+    final lifetimeSoldOut = lifetime != null && lifetimeRemaining == 0;
+    final lifetimeBadge =
+        (lifetime != null && lifetimeRemaining != null && lifetimeRemaining > 0)
+        ? l10n.paywallLifetimeRemaining(lifetimeRemaining)
+        : null;
 
     final slots = [
-      _PlanSlot(label: l10n.paywallPlanMonthly, package: monthly),
+      _PlanSlot(
+        label: l10n.paywallPlanMonthly,
+        package: monthly,
+        trialNote: trialNoteFor(monthly),
+      ),
       _PlanSlot(
         label: l10n.paywallPlanAnnual,
         package: annual,
         badge: l10n.paywallPlanRecommended,
+        trialNote: trialNoteFor(annual),
       ),
       _PlanSlot(
         label: l10n.paywallPlanLifetime,
         package: lifetime,
         caption: l10n.paywallPlanLifetimeCaption,
+        badge: lifetimeBadge,
+        soldOut: lifetimeSoldOut,
       ),
     ];
 
     // 起動時、実在するパッケージの中から一番目立たせたいもの（年額があれば
-    // それ、無ければ最初に見つかったもの）を初期選択にする。
+    // それ、無ければ最初に見つかったもの）を初期選択にする。買い切りが完売
+    // 済みの場合は初期選択の候補から外す。
     if (_selected == null) {
-      final initial = annual ?? monthly ?? lifetime;
+      final initial = annual ?? monthly ?? (lifetimeSoldOut ? null : lifetime);
       if (initial != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) setState(() => _selected = initial);
@@ -344,8 +458,17 @@ class _PlanSlot {
   final Package? package;
   final String? badge;
   final String? caption;
+  final String? trialNote;
+  final bool soldOut;
 
-  const _PlanSlot({required this.label, required this.package, this.badge, this.caption});
+  const _PlanSlot({
+    required this.label,
+    required this.package,
+    this.badge,
+    this.caption,
+    this.trialNote,
+    this.soldOut = false,
+  });
 }
 
 class _PlanCard extends StatelessWidget {
@@ -359,7 +482,7 @@ class _PlanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final available = plan.package != null;
+    final available = plan.package != null && !plan.soldOut;
     final borderColor = selected
         ? theme.colorScheme.primary
         : theme.colorScheme.outlineVariant;
@@ -410,6 +533,17 @@ class _PlanCard extends StatelessWidget {
                           ],
                         ],
                       ),
+                      if (plan.trialNote != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            plan.trialNote!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
                       if (plan.caption != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
@@ -433,7 +567,7 @@ class _PlanCard extends StatelessWidget {
                         ),
                       )
                     : Text(
-                        l10n.paywallPlanComingSoon,
+                        plan.soldOut ? l10n.paywallPlanSoldOut : l10n.paywallPlanComingSoon,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.outline,
                         ),

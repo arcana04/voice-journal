@@ -6,6 +6,21 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../config/revenuecat_config.dart';
 
+/// 購入結果。トライアルとして開始された場合は[isTrial]がtrue、
+/// [trialEndsAt]にRevenueCatが確定したトライアル終了時刻(entitlementの
+/// expirationDate)が入る——14日を自前計算しない。
+class PurchaseResult {
+  final bool granted;
+  final bool isTrial;
+  final DateTime? trialEndsAt;
+
+  const PurchaseResult({
+    required this.granted,
+    this.isTrial = false,
+    this.trialEndsAt,
+  });
+}
+
 /// RevenueCat SDKへの薄いラッパー。APIキーが未設定（開発初期や設定忘れ）の場合は
 /// 何もせず、常に「Pro未加入」として振る舞う（課金機能なしで安全に動く）。
 class PurchaseService {
@@ -130,13 +145,23 @@ class PurchaseService {
     }
   }
 
-  /// 購入成功でPro付与済みならtrue。ユーザーが自分でキャンセルした場合はnullを返す
-  /// （エラー扱いしない）。それ以外の失敗は例外をそのまま投げる。
-  Future<bool?> purchasePackage(Package package) async {
+  /// 購入成功でPro付与済みなら[PurchaseResult]を返す。ユーザーが自分で
+  /// キャンセルした場合はnullを返す（エラー扱いしない）。それ以外の失敗は
+  /// 例外をそのまま投げる。
+  Future<PurchaseResult?> purchasePackage(Package package) async {
     try {
       final result = await Purchases.purchasePackage(package);
-      return result.customerInfo.entitlements.active.containsKey(
-        RevenueCatConfig.proEntitlementId,
+      final entitlement = result.customerInfo.entitlements.active[
+          RevenueCatConfig.proEntitlementId];
+      if (entitlement == null) return const PurchaseResult(granted: false);
+      final isTrial = entitlement.periodType == PeriodType.trial;
+      final trialEndsAt = isTrial && entitlement.expirationDate != null
+          ? DateTime.parse(entitlement.expirationDate!)
+          : null;
+      return PurchaseResult(
+        granted: true,
+        isTrial: isTrial,
+        trialEndsAt: trialEndsAt,
       );
     } on PlatformException catch (e) {
       if (PurchasesErrorHelper.getErrorCode(e) ==
@@ -144,6 +169,35 @@ class PurchaseService {
         return null;
       }
       rethrow;
+    }
+  }
+
+  /// 指定した商品IDそれぞれについて、トライアル/導入価格の適格性を返す。
+  ///
+  /// [Purchases.checkTrialOrIntroductoryPriceEligibility]はiOS専用のAPIで、
+  /// Androidは常に`introEligibilityStatusUnknown`しか返さない（RevenueCat側の
+  /// 既知の制約）。そのためAndroidでは全商品を「適格」として扱う——Play Billing
+  /// 自体が同一アカウントへの二重トライアル付与を防ぐため、表示だけの問題で
+  /// 実害はない。iOS側は「適格」と明確に判定できた商品だけをtrueとし、
+  /// 不明・不適格・オファーなしはすべてfalse（トライアル文言を隠す安全側）。
+  Future<Map<String, bool>> checkTrialEligibility(
+    List<String> productIds,
+  ) async {
+    if (productIds.isEmpty) return {};
+    if (!Platform.isIOS) {
+      return {for (final id in productIds) id: true};
+    }
+    try {
+      final result =
+          await Purchases.checkTrialOrIntroductoryPriceEligibility(productIds);
+      return {
+        for (final id in productIds)
+          id: result[id]?.status ==
+              IntroEligibilityStatus.introEligibilityStatusEligible,
+      };
+    } catch (e) {
+      debugPrint('RevenueCat checkTrialOrIntroductoryPriceEligibility failed: $e');
+      return {for (final id in productIds) id: false};
     }
   }
 

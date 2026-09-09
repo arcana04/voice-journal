@@ -26,11 +26,22 @@ service cloud.firestore {
         && request.resource.data.notes.size() < 200;
     }
 
-    // Everything else (users/{uid} root doc with isPro/bonusSecondsBalance,
+    // Lifetime-plan first-100-buyers cap counter. Read by the paywall (even
+    // signed-out) to decide whether to still offer the lifetime plan.
+    // Only ever incremented server-side (revenueCatWebhook, via the Admin SDK,
+    // which bypasses these rules) — never client-writable.
+    match /counters/lifetimePurchases {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Everything else (users/{uid} root doc with isPro/bonusSecondsBalance/notion,
     // usage/{uid}_{date}, usageMonth/{uid}_{yyyyMM},
     // users/{uid}/watchDevices/{deviceId}, watchRateLimit/{uid}_{deviceId}_{window})
     // goes through Cloud Functions (Admin SDK), which bypasses these rules.
-    // No client reads or writes those paths directly.
+    // No client reads or writes those paths directly. The 'notion' field (Notion
+    // integration token + database id, notionSetupDatabase/notionSendItem) is
+    // deliberately kept out of client reach the same way isPro is.
     match /{document=**} {
       allow read, write: if false;
     }

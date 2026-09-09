@@ -136,6 +136,8 @@ const MESSAGES: Record<
     transcriptionFailed: (body: string) => string;
     analysisFailed: (body: string) => string;
     unexpectedError: (message: string) => string;
+    notionInvalidToken: string;
+    notionNotConnected: string;
   }
 > = {
   ja: {
@@ -154,6 +156,8 @@ const MESSAGES: Record<
     transcriptionFailed: (body) => `文字起こしに失敗しました: ${body}`,
     analysisFailed: (body) => `AI解析に失敗しました: ${body}`,
     unexpectedError: (message) => `処理中に予期しないエラーが発生しました: ${message}`,
+    notionInvalidToken: "Notionのトークンが無効です。もう一度確認してください。",
+    notionNotConnected: "Notionと連携されていません。設定から接続してください。",
   },
   en: {
     authRequired: "Authentication is required.",
@@ -173,6 +177,8 @@ const MESSAGES: Record<
     analysisFailed: (body) => `AI analysis failed: ${body}`,
     unexpectedError: (message) =>
       `An unexpected error occurred while processing: ${message}`,
+    notionInvalidToken: "Your Notion token is invalid. Please check it and try again.",
+    notionNotConnected: "Notion isn't connected yet. Please connect it from Settings.",
   },
   es: {
     authRequired: "Se requiere autenticación.",
@@ -192,6 +198,8 @@ const MESSAGES: Record<
     analysisFailed: (body) => `Error en el análisis de la IA: ${body}`,
     unexpectedError: (message) =>
       `Se produjo un error inesperado durante el procesamiento: ${message}`,
+    notionInvalidToken: "Tu token de Notion no es válido. Compruébalo e inténtalo de nuevo.",
+    notionNotConnected: "Notion aún no está conectado. Conéctalo desde Ajustes.",
   },
   de: {
     authRequired: "Authentifizierung ist erforderlich.",
@@ -211,6 +219,8 @@ const MESSAGES: Record<
     analysisFailed: (body) => `KI-Analyse fehlgeschlagen: ${body}`,
     unexpectedError: (message) =>
       `Bei der Verarbeitung ist ein unerwarteter Fehler aufgetreten: ${message}`,
+    notionInvalidToken: "Dein Notion-Token ist ungültig. Bitte überprüfe ihn und versuche es erneut.",
+    notionNotConnected: "Notion ist noch nicht verbunden. Bitte verbinde es in den Einstellungen.",
   },
   ko: {
     authRequired: "인증이 필요합니다.",
@@ -228,6 +238,8 @@ const MESSAGES: Record<
     transcriptionFailed: (body) => `문자 변환에 실패했습니다: ${body}`,
     analysisFailed: (body) => `AI 분석에 실패했습니다: ${body}`,
     unexpectedError: (message) => `처리 중 예기치 않은 오류가 발생했습니다: ${message}`,
+    notionInvalidToken: "Notion 토큰이 유효하지 않습니다. 다시 확인해 주세요.",
+    notionNotConnected: "Notion이 아직 연결되지 않았습니다. 설정에서 연결해 주세요.",
   },
   fr: {
     authRequired: "Une authentification est requise.",
@@ -247,6 +259,8 @@ const MESSAGES: Record<
     analysisFailed: (body) => `Échec de l'analyse par l'IA : ${body}`,
     unexpectedError: (message) =>
       `Une erreur inattendue s'est produite pendant le traitement : ${message}`,
+    notionInvalidToken: "Ton jeton Notion n'est pas valide. Vérifie-le et réessaie.",
+    notionNotConnected: "Notion n'est pas encore connecté. Connecte-le depuis les Réglages.",
   },
 };
 
@@ -1546,6 +1560,23 @@ export const revenueCatWebhook = onRequest(
         return;
       }
 
+      // 買い切りプランも非消耗型のためNON_RENEWING_PURCHASEとして届く（上の
+      // 追加60分パックと同じイベントタイプ、product_idで区別——追加パックは
+      // 既に上のブロックでreturn済みなのでここに来るのは買い切りプランのはず）。
+      // 先着100人限定をクライアント（PaywallScreen）が判定するためのカウンタを
+      // ここでインクリメントする。実際の上限判定・購入ブロックはクライアント側の
+      // 事前チェックのみで行い（Apple/Googleの決済自体をサーバー側で止める手段は
+      // 無いため）、このカウンタは「真実の数」を記録するだけの役割。
+      if (
+        eventType === "NON_RENEWING_PURCHASE" &&
+        (!event?.entitlement_ids || event.entitlement_ids.includes(PRO_ENTITLEMENT_ID))
+      ) {
+        await getFirestore()
+          .collection("counters")
+          .doc("lifetimePurchases")
+          .set({ count: FieldValue.increment(1) }, { merge: true });
+      }
+
       const activeEventTypes = new Set([
         "INITIAL_PURCHASE",
         "RENEWAL",
@@ -1568,6 +1599,7 @@ export const revenueCatWebhook = onRequest(
           event?.expiration_at_ms !== null &&
           event?.expiration_at_ms !== undefined;
         await applyProStatus(uid, isPro, hasMediaSync, `webhook:${eventType}`);
+        logger.info("revenueCatWebhook applied", { uid, eventType, isPro, hasMediaSync });
       }
 
       res.status(200).send("ok");
@@ -3107,6 +3139,263 @@ interface GenerateWeeklyReportRequest {
   emotionBreakdown?: Record<string, number>;
   locale?: string;
 }
+
+const NOTION_VERSION = "2022-06-28";
+/** Notionのrich_textプロパティに渡す本文の上限（Notion APIの2000文字制限に
+ * 余裕を持たせた値）。要約前提でこの機能を使うため、これを超える分は切り詰める。 */
+const NOTION_NOTES_MAX_LENGTH = 1900;
+
+function extractNotionPageTitle(page: Record<string, unknown>): string {
+  const props = page?.properties as Record<string, unknown> | undefined;
+  if (props && typeof props === "object") {
+    for (const key of Object.keys(props)) {
+      const prop = props[key] as { type?: string; title?: unknown[] } | undefined;
+      if (prop?.type === "title" && Array.isArray(prop.title)) {
+        const text = prop.title
+          .map((t) => (t as { plain_text?: string })?.plain_text ?? "")
+          .join("")
+          .trim();
+        if (text) return text;
+      }
+    }
+  }
+  const url = page?.url;
+  return typeof url === "string" ? url : "Untitled";
+}
+
+interface NotionListPagesRequest {
+  token: string;
+  locale?: string;
+}
+
+/** Notion連携: 渡されたIntegrationトークンで、そのインテグレーションに共有済みの
+ * ページ一覧を返す（データベース作成先を選ばせるための一覧取得のみ。まだ何も保存しない）。 */
+export const notionListPages = onCall(
+  { timeoutSeconds: 30, memory: "256MiB", enforceAppCheck: APP_CHECK_ENFORCED },
+  async (request) => {
+    const { token, locale } = (request.data ?? {}) as NotionListPagesRequest;
+    const loc = normalizeLocale(locale);
+
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", MESSAGES[loc].authRequired);
+    }
+    if (!(await isProUser(uid))) {
+      throw new HttpsError("permission-denied", MESSAGES[loc].proRequired);
+    }
+    if (!token || !token.trim()) {
+      throw new HttpsError("invalid-argument", MESSAGES[loc].notionInvalidToken);
+    }
+
+    try {
+      const res = await fetch("https://api.notion.com/v1/search", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token.trim()}`,
+          "Notion-Version": NOTION_VERSION,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          filter: { property: "object", value: "page" },
+          page_size: 50,
+        }),
+      });
+      if (!res.ok) {
+        throw new HttpsError("invalid-argument", MESSAGES[loc].notionInvalidToken);
+      }
+      const data = (await res.json()) as { results?: Record<string, unknown>[] };
+      const pages = (data.results ?? []).map((page) => ({
+        id: page.id as string,
+        title: extractNotionPageTitle(page),
+      }));
+      return { pages };
+    } catch (err) {
+      if (err instanceof HttpsError) throw err;
+      logger.error("notionListPages unexpected error", err);
+      const message = err instanceof Error ? err.message : String(err);
+      throw new HttpsError("unavailable", MESSAGES[loc].unexpectedError(message));
+    }
+  }
+);
+
+interface NotionSetupDatabaseRequest {
+  token: string;
+  pageId: string;
+  locale?: string;
+}
+
+/** Notion連携: 選ばれた親ページの配下に、固定スキーマのデータベースを新規作成し、
+ * トークン・データベースIDをusers/{uid}.notionへ保存する（以降のnotionSendItemが使う）。 */
+export const notionSetupDatabase = onCall(
+  { timeoutSeconds: 30, memory: "256MiB", enforceAppCheck: APP_CHECK_ENFORCED },
+  async (request) => {
+    const { token, pageId, locale } = (request.data ?? {}) as NotionSetupDatabaseRequest;
+    const loc = normalizeLocale(locale);
+
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", MESSAGES[loc].authRequired);
+    }
+    if (!(await isProUser(uid))) {
+      throw new HttpsError("permission-denied", MESSAGES[loc].proRequired);
+    }
+    if (!token || !token.trim() || !pageId || !pageId.trim()) {
+      throw new HttpsError("invalid-argument", MESSAGES[loc].notionInvalidToken);
+    }
+
+    try {
+      const res = await fetch("https://api.notion.com/v1/databases", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token.trim()}`,
+          "Notion-Version": NOTION_VERSION,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          parent: { type: "page_id", page_id: pageId },
+          title: [{ type: "text", text: { content: "Voice Brain" } }],
+          properties: {
+            Name: { title: {} },
+            Category: {
+              select: {
+                options: [
+                  { name: "Diary", color: "blue" },
+                  { name: "Idea", color: "yellow" },
+                  { name: "Task", color: "green" },
+                ],
+              },
+            },
+            Date: { date: {} },
+            Done: { checkbox: {} },
+            Notes: { rich_text: {} },
+          },
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.text();
+        logger.error("notionSetupDatabase failed", { status: res.status, body });
+        throw new HttpsError("invalid-argument", MESSAGES[loc].notionInvalidToken);
+      }
+      const data = (await res.json()) as { id: string };
+      await getFirestore()
+        .collection("users")
+        .doc(uid)
+        .set(
+          {
+            notion: {
+              token: token.trim(),
+              databaseId: data.id,
+              pageId,
+              connectedAt: FieldValue.serverTimestamp(),
+            },
+          },
+          { merge: true }
+        );
+      return { databaseId: data.id };
+    } catch (err) {
+      if (err instanceof HttpsError) throw err;
+      logger.error("notionSetupDatabase unexpected error", err);
+      const message = err instanceof Error ? err.message : String(err);
+      throw new HttpsError("unavailable", MESSAGES[loc].unexpectedError(message));
+    }
+  }
+);
+
+/** Notion連携の解除。usersドキュメントからnotionフィールドを削除するだけで、
+ * Notion側のデータベース自体は残す（ユーザーが自分のワークスペースに作った資産のため）。 */
+export const notionDisconnect = onCall(
+  { timeoutSeconds: 15, memory: "256MiB", enforceAppCheck: APP_CHECK_ENFORCED },
+  async (request) => {
+    const loc = normalizeLocale((request.data as { locale?: string } | undefined)?.locale);
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", MESSAGES[loc].authRequired);
+    }
+    await getFirestore()
+      .collection("users")
+      .doc(uid)
+      .set({ notion: FieldValue.delete() }, { merge: true });
+    return { ok: true };
+  }
+);
+
+interface NotionSendItemRequest {
+  title: string;
+  content: string;
+  category: string;
+  dateIso: string;
+  dueDateIso?: string;
+  done?: boolean;
+  locale?: string;
+}
+
+/** Notion連携: タスク/日記/アイデア1件を、接続済みのデータベースへ1ページとして送信する
+ * （1タップ送信のMVP。自動同期は次フェーズ）。Proプラン限定。 */
+export const notionSendItem = onCall(
+  { timeoutSeconds: 30, memory: "256MiB", enforceAppCheck: APP_CHECK_ENFORCED },
+  async (request) => {
+    const { title, content, category, dateIso, dueDateIso, done, locale } =
+      (request.data ?? {}) as NotionSendItemRequest;
+    const loc = normalizeLocale(locale);
+
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", MESSAGES[loc].authRequired);
+    }
+    if (!(await isProUser(uid))) {
+      throw new HttpsError("permission-denied", MESSAGES[loc].proRequired);
+    }
+    if (!title || !title.trim()) {
+      throw new HttpsError("invalid-argument", MESSAGES[loc].noText);
+    }
+
+    const userSnap = await getFirestore().collection("users").doc(uid).get();
+    const notion = userSnap.data()?.notion as
+      | { token?: string; databaseId?: string }
+      | undefined;
+    if (!notion?.token || !notion?.databaseId) {
+      throw new HttpsError("failed-precondition", MESSAGES[loc].notionNotConnected);
+    }
+
+    const truncatedNotes = (content ?? "").slice(0, NOTION_NOTES_MAX_LENGTH);
+    const properties: Record<string, unknown> = {
+      Name: { title: [{ text: { content: title.trim().slice(0, 2000) } }] },
+      Category: { select: { name: category } },
+      Date: { date: { start: dueDateIso ?? dateIso } },
+      Notes: { rich_text: [{ text: { content: truncatedNotes } }] },
+    };
+    if (typeof done === "boolean") {
+      properties.Done = { checkbox: done };
+    }
+
+    try {
+      const res = await fetch("https://api.notion.com/v1/pages", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${notion.token}`,
+          "Notion-Version": NOTION_VERSION,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          parent: { database_id: notion.databaseId },
+          properties,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.text();
+        logger.error("notionSendItem failed", { status: res.status, body });
+        throw new HttpsError("unavailable", MESSAGES[loc].notionNotConnected);
+      }
+      const data = (await res.json()) as { id: string; url: string };
+      return { pageId: data.id, pageUrl: data.url };
+    } catch (err) {
+      if (err instanceof HttpsError) throw err;
+      logger.error("notionSendItem unexpected error", err);
+      const message = err instanceof Error ? err.message : String(err);
+      throw new HttpsError("unavailable", MESSAGES[loc].unexpectedError(message));
+    }
+  }
+);
 
 // Proプラン限定機能。課金基盤（RevenueCat + revenueCatWebhook）が反映した
 // users/{uid}.isPro を見て、非Proは弾く。

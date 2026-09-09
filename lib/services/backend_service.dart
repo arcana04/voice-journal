@@ -9,6 +9,7 @@ import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
 import '../models/knowledge_base_source.dart';
 import '../models/media_usage.dart';
+import '../models/notion_page.dart';
 import '../models/review_category.dart';
 import '../models/summary_level.dart';
 import '../models/usage_status.dart';
@@ -232,6 +233,106 @@ class BackendService {
       );
     } on FirebaseFunctionsException catch (e) {
       throw BackendServiceException(e.message ?? currentLocalizations().usageFetchError);
+    }
+  }
+
+  /// Notion連携: 渡されたIntegrationトークンに共有済みのページ一覧を返す
+  /// (データベース作成先を選ばせるための一覧取得のみ。まだ何も保存しない)。
+  Future<List<NotionPage>> notionListPages(String token, {required String locale}) async {
+    await _auth.ensureSignedIn();
+
+    try {
+      final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+      final callable = functions.httpsCallable('notionListPages');
+      final result = await callable.call<Map<String, dynamic>>({
+        'token': token,
+        'locale': locale,
+      });
+      final pagesJson = result.data['pages'] as List<dynamic>? ?? const [];
+      return pagesJson
+          .map((p) => NotionPage.fromJson(Map<String, dynamic>.from(p as Map)))
+          .toList();
+    } on FirebaseFunctionsException catch (e) {
+      throw BackendServiceException(
+        e.message ?? currentLocalizations().genericProcessingError,
+        code: e.code,
+      );
+    }
+  }
+
+  /// Notion連携: 選ばれた親ページ配下に固定スキーマのデータベースを作成し、
+  /// トークンとあわせてサーバー側に保存する。
+  Future<void> notionSetupDatabase(
+    String token,
+    String pageId, {
+    required String locale,
+  }) async {
+    await _auth.ensureSignedIn();
+
+    try {
+      final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+      final callable = functions.httpsCallable('notionSetupDatabase');
+      await callable.call<Map<String, dynamic>>({
+        'token': token,
+        'pageId': pageId,
+        'locale': locale,
+      });
+    } on FirebaseFunctionsException catch (e) {
+      throw BackendServiceException(
+        e.message ?? currentLocalizations().genericProcessingError,
+        code: e.code,
+      );
+    }
+  }
+
+  /// Notion連携の解除(Notion側のデータベース自体は残す)。
+  Future<void> notionDisconnect({required String locale}) async {
+    await _auth.ensureSignedIn();
+
+    try {
+      final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+      final callable = functions.httpsCallable('notionDisconnect');
+      await callable.call<Map<String, dynamic>>({'locale': locale});
+    } on FirebaseFunctionsException catch (e) {
+      throw BackendServiceException(
+        e.message ?? currentLocalizations().genericProcessingError,
+        code: e.code,
+      );
+    }
+  }
+
+  /// Notion連携: タスク/日記/アイデア1件を接続済みのデータベースへ1ページとして送信する。
+  /// 成功したら作成されたNotionページのURLを返す。
+  Future<String> notionSendItem({
+    required String title,
+    required String content,
+    required String category,
+    required DateTime date,
+    DateTime? dueDate,
+    bool? done,
+    required String locale,
+  }) async {
+    await _auth.ensureSignedIn();
+
+    try {
+      final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+      final callable = functions.httpsCallable('notionSendItem');
+      final payload = <String, dynamic>{
+        'title': title,
+        'content': content,
+        'category': category,
+        'dateIso': date.toIso8601String(),
+        'locale': locale,
+      };
+      if (dueDate != null) payload['dueDateIso'] = dueDate.toIso8601String();
+      if (done != null) payload['done'] = done;
+      final result = await callable.call<Map<String, dynamic>>(payload);
+      return result.data['pageUrl'] as String? ?? '';
+    } on FirebaseFunctionsException catch (e) {
+      throw BackendServiceException(
+        e.message ?? currentLocalizations().genericProcessingError,
+        code: e.code,
+      );
     }
   }
 }

@@ -53,7 +53,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 23,
+      version: 24,
       // tasks/notes/entry_imagesはON DELETE CASCADEをスキーマに宣言しているが、
       // SQLiteは外部キー制約自体をデフォルトで無効にしており、接続のたびに
       // 明示的に有効化しないとその宣言は一切効かない（各deleteメソッドが手動で
@@ -90,6 +90,7 @@ class DbService {
             apple_reminder_id TEXT,
             is_all_day INTEGER NOT NULL DEFAULT 0,
             notify_at TEXT,
+            notion_page_url TEXT,
             FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
           )
         ''');
@@ -107,6 +108,7 @@ class DbService {
             idea_status TEXT,
             pinned INTEGER NOT NULL DEFAULT 0,
             tag TEXT,
+            notion_page_url TEXT,
             FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
           )
         ''');
@@ -358,6 +360,18 @@ class DbService {
           await _addColumnIfMissing(
             db,
             'ALTER TABLE entry_images ADD COLUMN scale REAL',
+          );
+        }
+        if (oldVersion < 24) {
+          // Notion連携(1タップ送信)で送信済みのタスク/ノートが指す、作成された
+          // NotionページのURL。未送信はNULL。
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE tasks ADD COLUMN notion_page_url TEXT',
+          );
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE notes ADD COLUMN notion_page_url TEXT',
           );
         }
       },
@@ -714,6 +728,28 @@ class DbService {
       {'apple_reminder_id': reminderId},
       where: 'id = ?',
       whereArgs: [taskId],
+    );
+  }
+
+  /// Notion連携(1タップ送信)で送信に成功した際、作成されたNotionページのURLを保存する。
+  Future<void> updateTaskNotionPageUrl(int taskId, String? pageUrl) async {
+    final db = await _database;
+    await db.update(
+      'tasks',
+      {'notion_page_url': pageUrl},
+      where: 'id = ?',
+      whereArgs: [taskId],
+    );
+  }
+
+  /// Notion連携(1タップ送信)で送信に成功した際、作成されたNotionページのURLを保存する。
+  Future<void> updateNoteNotionPageUrl(int noteId, String? pageUrl) async {
+    final db = await _database;
+    await db.update(
+      'notes',
+      {'notion_page_url': pageUrl},
+      where: 'id = ?',
+      whereArgs: [noteId],
     );
   }
 

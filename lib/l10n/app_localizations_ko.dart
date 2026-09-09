@@ -343,6 +343,79 @@ class AppLocalizationsKo extends AppLocalizations {
       '쓰기 가능한 미리 알림 목록을 찾을 수 없습니다. 미리 알림 앱에서 목록을 만든 후 새로고침하세요.';
 
   @override
+  String get notionSettingsRowTitle => 'Notion';
+
+  @override
+  String get notionScreenTitle => 'Notion 연동';
+
+  @override
+  String get notionIntroDescription =>
+      '탭 한 번으로 태스크, 일기, 아이디어를 Notion 데이터베이스로 보낼 수 있습니다. 먼저 Notion에서 통합(Integration)을 만들고, 사용할 페이지를 그 통합과 공유하세요.';
+
+  @override
+  String get notionTokenFieldLabel => '통합 토큰';
+
+  @override
+  String get notionTokenFieldHint => 'secret_로 시작하는 토큰을 붙여넣으세요';
+
+  @override
+  String get notionTokenHelpText =>
+      'notion.so/my-integrations 에서 새 통합을 만들고 발급된 토큰을 여기에 붙여넣으세요. 이어서 데이터베이스를 만들 페이지를 해당 통합과 공유하세요.';
+
+  @override
+  String get notionConnectButton => '연결';
+
+  @override
+  String get notionSelectPageTitle => '데이터베이스를 만들 페이지를 선택하세요';
+
+  @override
+  String get notionNoPagesFound =>
+      '공유된 페이지를 찾을 수 없습니다. Notion에서 이 통합에 페이지를 공유한 후 새로고침하세요.';
+
+  @override
+  String get notionCreateDatabaseButton => '이 페이지에 만들기';
+
+  @override
+  String get notionConnectedStatusLabel => '연결됨';
+
+  @override
+  String get notionDisconnectButton => '연동 해제';
+
+  @override
+  String get notionDisconnectConfirmTitle => '연동을 해제할까요?';
+
+  @override
+  String get notionDisconnectConfirmMessage => 'Notion에 만들어진 데이터베이스는 그대로 남습니다.';
+
+  @override
+  String get notionSendTooltip => 'Notion으로 보내기';
+
+  @override
+  String get notionSendSuccessMessage => 'Notion으로 전송했습니다';
+
+  @override
+  String get notionOpenAction => '열기';
+
+  @override
+  String get notionSendErrorMessage => 'Notion 전송에 실패했습니다';
+
+  @override
+  String get notionCopiedFreeMessage =>
+      '클립보드에 복사했습니다. Notion 직접 전송은 Pro 전용 기능입니다';
+
+  @override
+  String get notionNotConnectedMessage => 'Notion이 연결되어 있지 않습니다. 설정에서 연결하세요';
+
+  @override
+  String get notionConnectAction => '연결하기';
+
+  @override
+  String get notionAlreadySentTooltip => 'Notion에서 열기';
+
+  @override
+  String get notionProLockedDescription => 'Notion 연동은 Pro 전용 기능입니다.';
+
+  @override
   String get accountSectionTitle => '계정';
 
   @override
@@ -595,6 +668,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get paywallPlanRecommended => '추천';
 
   @override
+  String paywallLifetimeRemaining(Object count) {
+    return '$count명 남음';
+  }
+
+  @override
   String get paywallPlanLifetimeCaption => '사진/동영상 클라우드 동기화 미포함';
 
   @override
@@ -604,11 +682,23 @@ class AppLocalizationsKo extends AppLocalizations {
   String get paywallContinueButton => '계속';
 
   @override
+  String get paywallTrialNote => '14일 무료 체험 포함';
+
+  @override
+  String get paywallStartTrialButton => '무료 체험 시작하기';
+
+  @override
   String get paywallSignInRequiredTitle => '계속하려면 로그인하세요';
 
   @override
   String get paywallSignInRequiredDescription =>
       '로그인하면 구매 내역이 보호되어 앱을 재설치해도 복원할 수 있습니다.';
+
+  @override
+  String get paywallPlanSoldOut => '품절';
+
+  @override
+  String get paywallLifetimeSoldOutMessage => '평생 이용권은 더 이상 제공되지 않습니다.';
 
   @override
   String homeUsageToday(int used, int limit) {
@@ -1124,6 +1214,19 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get weeklyReportNotificationChannelDescription =>
       '매주 일요일 오후 8시, 주간 두뇌 리포트가 준비되면 알려드려요';
+
+  @override
+  String get trialEndingNotificationTitle => '무료 체험이 곧 종료됩니다';
+
+  @override
+  String get trialEndingNotificationBody => '해지하지 않으셨다면 3일 후 결제가 시작됩니다.';
+
+  @override
+  String get trialEndingNotificationChannelName => '체험 종료 알림';
+
+  @override
+  String get trialEndingNotificationChannelDescription =>
+      '무료 체험 종료 및 결제 시작 3일 전에 알려드립니다';
 
   @override
   String get weeklyReportHistoryTooltip => '지난 리포트';
