@@ -91,6 +91,52 @@ class PurchaseService {
     }
   }
 
+  /// 現在有効な自動更新サブスク(月額/年額)の商品IDを返す。買い切りプランは
+  /// 自動更新ではない(expirationDateが無い)ので対象外——[purchasePackage]が
+  /// Android向けのプラン変更(月額⇄年額)を正しく「置き換え」として扱うために
+  /// 使う。サブスクに入っていない/買い切りのみの場合はnull。
+  Future<String?> activeSubscriptionProductId() async {
+    if (!_configured) return null;
+    try {
+      final info = await Purchases.getCustomerInfo();
+      final entitlement =
+          info.entitlements.active[RevenueCatConfig.proEntitlementId];
+      if (entitlement == null || entitlement.expirationDate == null) return null;
+      return entitlement.productIdentifier;
+    } catch (e) {
+      debugPrint('RevenueCat getCustomerInfo failed: $e');
+      return null;
+    }
+  }
+
+  /// 現在有効なエンタイトルメントが月額・年額・買い切りのどれかを返す
+  /// （設定画面の「現在のプラン」表示用）。Pro未加入ならnull。買い切りは
+  /// 有効期限が無いことで判定できる。月額/年額の区別は、現在のOfferingとの
+  /// 商品ID突き合わせ（Android側でbase plan識別子等により文字列が一致しない
+  /// ケースがあり不安定だった）ではなく、その商品自体をStoreから取り直して
+  /// [StoreProduct.subscriptionPeriod]（ISO8601表記、例: "P1M"/"P1Y"）を
+  /// 直接見る方式にしている。
+  Future<PackageType?> activeSubscriptionPlanType() async {
+    if (!_configured) return null;
+    try {
+      final info = await Purchases.getCustomerInfo();
+      final entitlement =
+          info.entitlements.active[RevenueCatConfig.proEntitlementId];
+      if (entitlement == null) return null;
+      if (entitlement.expirationDate == null) return PackageType.lifetime;
+      final products = await Purchases.getProducts([entitlement.productIdentifier]);
+      final period = products.isEmpty ? null : products.first.subscriptionPeriod;
+      if (period == null) return null;
+      if (period.contains('Y')) return PackageType.annual;
+      if (period.contains('M')) return PackageType.monthly;
+      if (period.contains('W')) return PackageType.weekly;
+      return null;
+    } catch (e) {
+      debugPrint('RevenueCat getCustomerInfo failed: $e');
+      return null;
+    }
+  }
+
   void addCustomerInfoListener(void Function(CustomerInfo) listener) {
     if (!_configured) return;
     Purchases.addCustomerInfoUpdateListener(listener);
@@ -148,9 +194,28 @@ class PurchaseService {
   /// 購入成功でPro付与済みなら[PurchaseResult]を返す。ユーザーが自分で
   /// キャンセルした場合はnullを返す（エラー扱いしない）。それ以外の失敗は
   /// 例外をそのまま投げる。
+  ///
+  /// [Android] 月額⇄年額のように既に別のサブスクに加入中の場合、何もせず
+  /// 素のまま購入するとGoogle Playは無関係な2件目の定期購入として扱ってしまい
+  /// 二重課金になる（iOSのサブスクリプショングループのような自動排他が無いため）。
+  /// 既存の有効なサブスク商品IDを検出し、[GoogleProductChangeInfo]で「既存の
+  /// 契約を置き換える」形の購入にする。買い切りプランへの切り替えはPlay Billing
+  /// が定期購入→非定期購入の置き換えをサポートしていないため対象外
+  /// （[PurchaseService.activeSubscriptionProductId]も自動更新サブスクのみ返す）。
   Future<PurchaseResult?> purchasePackage(Package package) async {
     try {
-      final result = await Purchases.purchasePackage(package);
+      GoogleProductChangeInfo? googleProductChangeInfo;
+      if (Platform.isAndroid) {
+        final oldProductId = await activeSubscriptionProductId();
+        if (oldProductId != null &&
+            oldProductId != package.storeProduct.identifier) {
+          googleProductChangeInfo = GoogleProductChangeInfo(oldProductId);
+        }
+      }
+      final result = await Purchases.purchasePackage(
+        package,
+        googleProductChangeInfo: googleProductChangeInfo,
+      );
       final entitlement = result.customerInfo.entitlements.active[
           RevenueCatConfig.proEntitlementId];
       if (entitlement == null) return const PurchaseResult(granted: false);

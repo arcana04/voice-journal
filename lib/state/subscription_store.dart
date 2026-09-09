@@ -19,6 +19,10 @@ class SubscriptionStore extends ChangeNotifier {
   /// 使えるが、これだけはサブスク（月額/年額）限定（[[isPro]]がtrueでも
   /// falseになりうる）。
   bool isProWithMediaSync = false;
+  /// 月額・年額・買い切りのどれか（設定画面の「現在のプラン」表示用）。
+  /// Pro未加入、またはOfferingとの突き合わせに失敗した場合はnull——その
+  /// 場合は呼び出し側が汎用の「Proプラン」表示にフォールバックする。
+  PackageType? currentPlanType;
   bool loading = true;
 
   void Function(CustomerInfo)? _listener;
@@ -46,7 +50,16 @@ class SubscriptionStore extends ChangeNotifier {
       isProWithMediaSync = withMediaSync;
       notifyListeners();
     }
+    unawaited(_refreshPlanType());
     if (active) unawaited(_syncProStatusToServer());
+  }
+
+  Future<void> _refreshPlanType() async {
+    final type = await _purchases.activeSubscriptionPlanType();
+    if (type != currentPlanType) {
+      currentPlanType = type;
+      notifyListeners();
+    }
   }
 
   /// サーバー側（Cloud Functions経由のisProUser）はRevenueCatのWebhookが書き込む
@@ -97,6 +110,7 @@ class SubscriptionStore extends ChangeNotifier {
     isPro = await _purchases.hasProEntitlement();
     isProWithMediaSync = await _purchases.hasMediaSyncEntitlement();
     notifyListeners();
+    unawaited(_refreshPlanType());
     if (isPro) unawaited(_syncProStatusToServer());
   }
 

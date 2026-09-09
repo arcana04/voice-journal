@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/legal_links.dart';
@@ -292,7 +293,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: l10n.planCurrentTitle,
                       badge: _Pill(
                         text: subscription.isPro
-                            ? l10n.planProTitle
+                            ? _planTitleFor(l10n, subscription.currentPlanType)
                             : l10n.planFreeTitle,
                         color: _SettingsColors.rose,
                       ),
@@ -451,6 +452,17 @@ const Map<String, String> kLanguageNativeNames = {
 String languageDisplayName(String? code, AppLocalizations l10n) => code == null
     ? l10n.languageSystemDefault
     : (kLanguageNativeNames[code] ?? code);
+
+/// 「現在のプラン」バッジの文言。月額・年額・買い切りを区別して表示し、
+/// [type]がnull(Offeringとの突き合わせに失敗した等)なら汎用の「Proプラン」
+/// にフォールバックする。ペイウォール画面のプラン名(paywallPlan*)と表記を
+/// 揃えている。
+String _planTitleFor(AppLocalizations l10n, PackageType? type) => switch (type) {
+  PackageType.monthly => l10n.paywallPlanMonthly,
+  PackageType.annual => l10n.paywallPlanAnnual,
+  PackageType.lifetime => l10n.paywallPlanLifetime,
+  _ => l10n.planProTitle,
+};
 
 /// 「言語」タイルから開く、[SettingsStore.setLanguageCode]で即座に切り替わる
 /// シンプルな言語ピッカー。テーマカラーの[_ThemeColorSheet]と同じ構成。
