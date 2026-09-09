@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
 import '../models/journal_entry.dart';
 import '../models/review_category.dart';
+import '../services/nav_icon_anchors.dart';
 import '../utils/task_format.dart';
 
 enum DraftItemType { diary, task }
@@ -73,6 +74,7 @@ class _EntryReviewState extends State<EntryReview> {
   int _newItemSeq = 0;
   String? _autofocusId;
   int _cardStaggerIndex = 0;
+  final GlobalKey _saveButtonKey = GlobalKey();
 
   void _addItem(ReviewCategory bucket) {
     final id = 'new_${_newItemSeq++}';
@@ -121,7 +123,43 @@ class _EntryReviewState extends State<EntryReview> {
     setState(() => _items.removeWhere((i) => i.id == item.id));
   }
 
+  /// 保存ボタンから、実際に仕分けられた各項目のカテゴリに応じて日記/アイデア/
+  /// タスクのナビゲーションアイコンへ、光の粒が飛んでいく演出。ボタン自身の
+  /// 位置を発射点にし、[NavIconAnchors]から取得した各アイコンの矩形の中心を
+  /// 着地点にする。アイコンが未レイアウト(取得失敗)ならそのカテゴリ分だけ
+  /// 静かにスキップする。
+  void _flyToNavIcons() {
+    final buttonBox =
+        _saveButtonKey.currentContext?.findRenderObject() as RenderBox?;
+    if (buttonBox == null || !buttonBox.hasSize) return;
+    final origin = buttonBox.localToGlobal(buttonBox.size.center(Offset.zero));
+    final overlay = Overlay.of(context, rootOverlay: true);
+    final targetCache = <ReviewCategory, Rect?>{};
+    var seed = 0;
+    for (final item in _items) {
+      if (item.text.trim().isEmpty) continue;
+      final category = _bucketOf(item);
+      final target = targetCache.putIfAbsent(
+        category,
+        () => NavIconAnchors.instance.rectFor(category),
+      );
+      if (target == null) continue;
+      seed++;
+      late final OverlayEntry entry;
+      entry = OverlayEntry(
+        builder: (_) => _FlyingLight(
+          origin: origin,
+          target: target.center,
+          seed: seed,
+          onDone: () => entry.remove(),
+        ),
+      );
+      overlay.insert(entry);
+    }
+  }
+
   void _save() {
+    _flyToNavIcons();
     final tasks = _items
         .where((i) => i.type == DraftItemType.task && i.text.trim().isNotEmpty)
         .map(
@@ -240,6 +278,7 @@ class _EntryReviewState extends State<EntryReview> {
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
+                  key: _saveButtonKey,
                   onPressed: hasContent ? _save : null,
                   child: Text(l10n.save),
                 ),
@@ -344,6 +383,7 @@ class _EntryReviewState extends State<EntryReview> {
         ? cardShell
         : LongPressDraggable<DraftItem>(
             data: item,
+            delay: const Duration(milliseconds: 250),
             feedback: Material(
               color: Colors.transparent,
               child: SizedBox(
@@ -478,6 +518,98 @@ class _BurstOverlayState extends State<_BurstOverlay>
           ),
         );
       },
+    );
+  }
+}
+
+/// [origin]から[target]へ、光の粒が弧を描いて飛んでいく一度きりのアニメーション。
+/// 保存されたカードがナビゲーションバーの該当タブへ吸い込まれていくように
+/// 見せるための演出で、[Overlay]に直接挿入して使う(レビュー画面自体は保存直後
+/// にホーム画面の待機表示へ切り替わって消えるため、その上に独立して残る)。
+/// [seed]は同時に複数飛ばした際に軌道と速さを少しずつ変えて重ならないようにする。
+class _FlyingLight extends StatefulWidget {
+  final Offset origin;
+  final Offset target;
+  final int seed;
+  final VoidCallback onDone;
+
+  const _FlyingLight({
+    required this.origin,
+    required this.target,
+    required this.seed,
+    required this.onDone,
+  });
+
+  @override
+  State<_FlyingLight> createState() => _FlyingLightState();
+}
+
+class _FlyingLightState extends State<_FlyingLight>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 420 + (widget.seed % 4) * 35),
+    )..forward().whenComplete(widget.onDone);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = Theme.of(context).colorScheme.primary;
+    final delta = widget.target - widget.origin;
+    final normalLength = delta.distance == 0 ? 1.0 : delta.distance;
+    // 進行方向に垂直な向きへ弧を描くように持ち上げる(中間地点で最大、
+    // 両端でゼロになる山なりのオフセット)。seedの偶奇で左右どちらに
+    // 膨らむかを変え、複数同時発射でも軌道が重ならないようにする。
+    final unitNormal = Offset(-delta.dy, delta.dx) / normalLength;
+    final arcSign = widget.seed.isEven ? 1.0 : -1.0;
+    final arcHeight = 46.0 + (widget.seed % 3) * 14.0;
+
+    return IgnorePointer(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          final t = Curves.easeInCubic.transform(_controller.value);
+          final straight = Offset.lerp(widget.origin, widget.target, t)!;
+          final arc = unitNormal * (arcSign * arcHeight * 4 * t * (1 - t));
+          final position = straight + arc;
+          final size = 22.0 + (4.0 - 22.0) * t;
+          final opacity = t < 0.75 ? 1.0 : (1 - (t - 0.75) / 0.25);
+          return Positioned(
+            left: position.dx - size / 2,
+            top: position.dy - size / 2,
+            child: Opacity(
+              opacity: opacity.clamp(0.0, 1.0),
+              child: Container(
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [accent, accent.withValues(alpha: 0)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.55),
+                      blurRadius: size * 0.8,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

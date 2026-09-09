@@ -6,11 +6,15 @@ class FloatingNavDestination {
   final IconData icon;
   final IconData? selectedIcon;
   final String label;
+  /// [NavIconAnchors]用に、このアイコンの画面上の位置を測定できるようにする
+  /// キー。指定しないタブ(録音・相談など)は演出の対象にならない。
+  final GlobalKey? iconKey;
 
   const FloatingNavDestination({
     required this.icon,
     this.selectedIcon,
     required this.label,
+    this.iconKey,
   });
 }
 
@@ -100,6 +104,7 @@ class _NavItem extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedContainer(
+              key: destination.iconKey,
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeOut,
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),

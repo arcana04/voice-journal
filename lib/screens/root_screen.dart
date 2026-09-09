@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
+import '../models/review_category.dart';
 import '../services/deep_link_service.dart';
+import '../services/nav_icon_anchors.dart';
 import '../services/reminder_service.dart';
 import '../state/account_store.dart';
 import '../state/journal_store.dart';
@@ -162,16 +164,19 @@ class _RootScreenState extends State<RootScreen> {
             icon: Icons.menu_book_outlined,
             selectedIcon: Icons.menu_book,
             label: l10n.navDiary,
+            iconKey: NavIconAnchors.instance.keyFor(ReviewCategory.diary),
           ),
           FloatingNavDestination(
             icon: Icons.lightbulb_outline,
             selectedIcon: Icons.lightbulb,
             label: l10n.navIdea,
+            iconKey: NavIconAnchors.instance.keyFor(ReviewCategory.idea),
           ),
           FloatingNavDestination(
             icon: Icons.checklist_outlined,
             selectedIcon: Icons.checklist,
             label: l10n.navTask,
+            iconKey: NavIconAnchors.instance.keyFor(ReviewCategory.task),
           ),
           FloatingNavDestination(
             icon: Icons.psychology_outlined,

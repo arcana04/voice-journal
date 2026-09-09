@@ -832,8 +832,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       tooltip: l10n.settingsTooltip,
                       style: pressableIconButtonStyle(context),
                       onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const SettingsScreen(),
+                        PageRouteBuilder(
+                          pageBuilder: (_, animation, _) =>
+                              const SettingsScreen(),
+                          transitionsBuilder: (_, animation, _, child) =>
+                              SlideTransition(
+                                position:
+                                    Tween<Offset>(
+                                      begin: const Offset(-1, 0),
+                                      end: Offset.zero,
+                                    ).animate(
+                                      CurvedAnimation(
+                                        parent: animation,
+                                        curve: Curves.easeOutCubic,
+                                      ),
+                                    ),
+                                child: child,
+                              ),
                         ),
                       ),
                     ),
