@@ -58,22 +58,6 @@ class WeeklyReportKeyword {
   Map<String, dynamic> toJson() => {'keyword': keyword, 'count': count};
 }
 
-class ShiningIdea {
-  final String title;
-  final String reason;
-
-  ShiningIdea({required this.title, required this.reason});
-
-  factory ShiningIdea.fromJson(Map<String, dynamic> json) {
-    return ShiningIdea(
-      title: (json['title'] as String? ?? '').trim(),
-      reason: (json['reason'] as String? ?? '').trim(),
-    );
-  }
-
-  Map<String, dynamic> toJson() => {'title': title, 'reason': reason};
-}
-
 /// 「脳内マップ」の1バブルが持つ、実際に紐づいた記録1件分。
 class BrainMapMatch {
   final DateTime time;
@@ -159,7 +143,6 @@ class WeeklyReportInsights {
   final String moodHeadline;
   final String emotionNarrative;
   final List<WeeklyReportKeyword> topKeywords;
-  final List<ShiningIdea> shiningIdeas;
   final HighlightQuote highlightQuote;
   final String advice;
   final String weeklyLetter;
@@ -168,7 +151,6 @@ class WeeklyReportInsights {
     required this.moodHeadline,
     required this.emotionNarrative,
     required this.topKeywords,
-    required this.shiningIdeas,
     required this.highlightQuote,
     required this.advice,
     required this.weeklyLetter,
@@ -181,10 +163,6 @@ class WeeklyReportInsights {
       topKeywords: (json['top_keywords'] as List? ?? [])
           .map((e) => WeeklyReportKeyword.fromJson(Map<String, dynamic>.from(e as Map)))
           .where((k) => k.keyword.isNotEmpty)
-          .toList(),
-      shiningIdeas: (json['shining_ideas'] as List? ?? [])
-          .map((e) => ShiningIdea.fromJson(Map<String, dynamic>.from(e as Map)))
-          .where((i) => i.title.isNotEmpty)
           .toList(),
       highlightQuote: HighlightQuote.fromJson(
         Map<String, dynamic>.from(
@@ -200,7 +178,6 @@ class WeeklyReportInsights {
         'mood_headline': moodHeadline,
         'emotion_narrative': emotionNarrative,
         'top_keywords': topKeywords.map((k) => k.toJson()).toList(),
-        'shining_ideas': shiningIdeas.map((i) => i.toJson()).toList(),
         'highlight_quote': highlightQuote.toJson(),
         'advice': advice,
         'weekly_letter': weeklyLetter,
@@ -265,7 +242,9 @@ class SavedWeeklyReport {
       'mood_headline': insights.moodHeadline,
       'emotion_narrative': insights.emotionNarrative,
       'top_keywords_json': jsonEncode(insights.topKeywords.map((k) => k.toJson()).toList()),
-      'shining_ideas_json': jsonEncode(insights.shiningIdeas.map((i) => i.toJson()).toList()),
+      // shining_ideasは廃止済み(UIから表示箇所が無く、生成コストの無駄だった)。
+      // 既存のNOT NULL列を満たすためだけに空配列を書き込む。
+      'shining_ideas_json': jsonEncode(const <dynamic>[]),
       'highlight_quote_json': jsonEncode(insights.highlightQuote.toJson()),
       'advice': insights.advice,
       'weekly_letter': insights.weeklyLetter,
@@ -293,7 +272,6 @@ class SavedWeeklyReport {
 
   factory SavedWeeklyReport.fromMap(Map<String, Object?> map) {
     final topKeywordsRaw = jsonDecode(map['top_keywords_json'] as String) as List;
-    final shiningIdeasRaw = jsonDecode(map['shining_ideas_json'] as String) as List;
     final highlightQuoteRaw =
         jsonDecode(map['highlight_quote_json'] as String) as Map<String, dynamic>;
     final emotionCountsRaw =
@@ -343,9 +321,6 @@ class SavedWeeklyReport {
         emotionNarrative: map['emotion_narrative'] as String? ?? '',
         topKeywords: topKeywordsRaw
             .map((e) => WeeklyReportKeyword.fromJson(Map<String, dynamic>.from(e as Map)))
-            .toList(),
-        shiningIdeas: shiningIdeasRaw
-            .map((e) => ShiningIdea.fromJson(Map<String, dynamic>.from(e as Map)))
             .toList(),
         highlightQuote: HighlightQuote.fromJson(highlightQuoteRaw),
         advice: map['advice'] as String? ?? '',
