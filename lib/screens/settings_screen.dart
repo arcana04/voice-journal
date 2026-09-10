@@ -300,7 +300,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       subtitle: subscription.isPro
                           ? l10n.planProSubtitle
                           : l10n.planFreeSubtitle,
-                      trailing: subscription.isPro
+                      trailing:
+                          subscription.isPro &&
+                              subscription.currentPlanType !=
+                                  PackageType.lifetime
                           ? TextButton(
                               onPressed: _openManageSubscription,
                               child: Text(l10n.planManage),
