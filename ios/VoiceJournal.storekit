@@ -13,7 +13,7 @@
           "locale" : "ja_JP"
         }
       ],
-      "productID" : "REPLACE_WITH_REAL_ID.lifetime",
+      "productID" : "com.arcana04.voicejournal.lifetime",
       "referenceName" : "Lifetime",
       "type" : "NonConsumable"
     },
@@ -109,7 +109,7 @@
               "locale" : "ja_JP"
             }
           ],
-          "productID" : "REPLACE_WITH_REAL_ID.pro_monthly",
+          "productID" : "com.arcana04.voicejournal.pro.monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Pro Monthly",
           "subscriptionGroupID" : "2000000001",
@@ -130,7 +130,7 @@
               "locale" : "ja_JP"
             }
           ],
-          "productID" : "REPLACE_WITH_REAL_ID.pro_yearly",
+          "productID" : "com.arcana04.voicejournal.pro.yearly",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Pro Yearly",
           "subscriptionGroupID" : "2000000001",
