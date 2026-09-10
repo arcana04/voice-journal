@@ -521,10 +521,14 @@ class _PlanCard extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            plan.label,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
+                          Flexible(
+                            child: Text(
+                              plan.label,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                           if (plan.badge != null) ...[
