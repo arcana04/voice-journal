@@ -44,10 +44,10 @@ void main() async {
   // コンソールのApp Checkメトリクスで正規トラフィックの割合を確認してから
   // 段階的に強制する方針（[[project_voicejournal_status]]参照）。
   await FirebaseAppCheck.instance.activate(
-    androidProvider: kDebugMode
-        ? AndroidProvider.debug
-        : AndroidProvider.playIntegrity,
-    appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
+    providerAndroid: kDebugMode
+        ? AndroidDebugProvider()
+        : AndroidPlayIntegrityProvider(),
+    providerApple: kDebugMode ? AppleDebugProvider() : AppleAppAttestProvider(),
   );
   await ReminderService.instance.initialize();
   if (Platform.isAndroid) {
