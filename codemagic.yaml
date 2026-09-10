@@ -78,12 +78,17 @@ workflows:
         script: |
           #!/usr/bin/env bash
           set -euo pipefail
-          RUN_SCRIPT=$(find ios/Pods -maxdepth 2 -type f -path "*FirebaseCrashlytics/run" | head -n 1)
+          # FirebaseはSPM(Swift Package Manager)経由で解決されており、ios/Podsには
+          # 存在しない(FlutterプラグインのみCocoaPods)。SPMのチェックアウトは
+          # DerivedData配下のSourcePackages/checkoutsに展開されるため、そちらも探す。
+          RUN_SCRIPT=$(find ios/Pods "$HOME/Library/Developer/Xcode/DerivedData" \
+            -maxdepth 8 -type f -path "*FirebaseCrashlytics/run" 2>/dev/null | head -n 1)
           ARCHIVE_PATH=$(find build/ios -maxdepth 3 -name "*.xcarchive" | head -n 1)
           if [ -z "$RUN_SCRIPT" ] || [ -z "$ARCHIVE_PATH" ]; then
-            echo "FirebaseCrashlytics run script or .xcarchive not found, skipping dSYM upload"
-            exit 0
+            echo "::error::FirebaseCrashlytics run script or .xcarchive not found (RUN_SCRIPT='$RUN_SCRIPT' ARCHIVE_PATH='$ARCHIVE_PATH') - dSYM upload cannot proceed"
+            exit 1
           fi
+          echo "Using FirebaseCrashlytics run script: $RUN_SCRIPT"
           find "$ARCHIVE_PATH/dSYMs" -maxdepth 1 -name "*.dSYM" -print0 | \
             while IFS= read -r -d '' dsym; do
               echo "Uploading dSYM: $dsym"
