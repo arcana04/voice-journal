@@ -1014,6 +1014,36 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diaryBgClock => 'Reloj';
 
   @override
+  String get diaryBgBicycle => 'Bicicleta';
+
+  @override
+  String get diaryBgRainyWindow => 'Ventana lluviosa';
+
+  @override
+  String get diaryBgTornPaper => 'Papel rasgado';
+
+  @override
+  String get diaryBgCrescentMoon => 'Luna creciente';
+
+  @override
+  String get diaryBgStarrySky => 'Cielo estrellado';
+
+  @override
+  String get diaryBgRibbon => 'Lazo';
+
+  @override
+  String get diaryBgBlueFlowers => 'Flores azules';
+
+  @override
+  String get diaryBgSunnyRoom => 'Habitación soleada';
+
+  @override
+  String get diaryBgBathroom => 'Baño';
+
+  @override
+  String get diaryBgStreetLamp => 'Farola';
+
+  @override
   String get fontSheetTitle => 'Fuente';
 
   @override

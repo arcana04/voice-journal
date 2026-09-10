@@ -963,6 +963,36 @@ class AppLocalizationsJa extends AppLocalizations {
   String get diaryBgClock => '時計';
 
   @override
+  String get diaryBgBicycle => '自転車';
+
+  @override
+  String get diaryBgRainyWindow => '雨の日の窓';
+
+  @override
+  String get diaryBgTornPaper => 'ちぎった紙';
+
+  @override
+  String get diaryBgCrescentMoon => '三日月';
+
+  @override
+  String get diaryBgStarrySky => '星空';
+
+  @override
+  String get diaryBgRibbon => 'リボン';
+
+  @override
+  String get diaryBgBlueFlowers => '青い花';
+
+  @override
+  String get diaryBgSunnyRoom => '陽だまりの部屋';
+
+  @override
+  String get diaryBgBathroom => '洗面所';
+
+  @override
+  String get diaryBgStreetLamp => '夜の街灯';
+
+  @override
   String get fontSheetTitle => 'フォント';
 
   @override

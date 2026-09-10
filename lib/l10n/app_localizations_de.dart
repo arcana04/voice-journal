@@ -1015,6 +1015,36 @@ class AppLocalizationsDe extends AppLocalizations {
   String get diaryBgClock => 'Uhr';
 
   @override
+  String get diaryBgBicycle => 'Fahrrad';
+
+  @override
+  String get diaryBgRainyWindow => 'Regenfenster';
+
+  @override
+  String get diaryBgTornPaper => 'Zerrissenes Papier';
+
+  @override
+  String get diaryBgCrescentMoon => 'Sichelmond';
+
+  @override
+  String get diaryBgStarrySky => 'Sternenhimmel';
+
+  @override
+  String get diaryBgRibbon => 'Schleife';
+
+  @override
+  String get diaryBgBlueFlowers => 'Blaue Blumen';
+
+  @override
+  String get diaryBgSunnyRoom => 'Sonniges Zimmer';
+
+  @override
+  String get diaryBgBathroom => 'Badezimmer';
+
+  @override
+  String get diaryBgStreetLamp => 'Straßenlaterne';
+
+  @override
   String get fontSheetTitle => 'Schriftart';
 
   @override

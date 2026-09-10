@@ -968,6 +968,36 @@ class AppLocalizationsKo extends AppLocalizations {
   String get diaryBgClock => '시계';
 
   @override
+  String get diaryBgBicycle => '자전거';
+
+  @override
+  String get diaryBgRainyWindow => '비 오는 창문';
+
+  @override
+  String get diaryBgTornPaper => '찢어진 종이';
+
+  @override
+  String get diaryBgCrescentMoon => '초승달';
+
+  @override
+  String get diaryBgStarrySky => '별이 빛나는 밤하늘';
+
+  @override
+  String get diaryBgRibbon => '리본';
+
+  @override
+  String get diaryBgBlueFlowers => '파란 꽃';
+
+  @override
+  String get diaryBgSunnyRoom => '햇살 가득한 방';
+
+  @override
+  String get diaryBgBathroom => '욕실';
+
+  @override
+  String get diaryBgStreetLamp => '가로등';
+
+  @override
   String get fontSheetTitle => '글꼴';
 
   @override

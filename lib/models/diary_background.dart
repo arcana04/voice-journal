@@ -69,7 +69,44 @@ enum DiaryBackground {
     'luxury_frame',
     'assets/images/diary_backgrounds/diary_bg_luxury_frame.png',
   ),
-  clock('clock', 'assets/images/diary_backgrounds/diary_bg_clock.png');
+  clock('clock', 'assets/images/diary_backgrounds/diary_bg_clock.png'),
+  bicycle(
+    'bicycle',
+    'assets/images/diary_backgrounds/diary_bg_bicycle.png',
+  ),
+  rainyWindow(
+    'rainy_window',
+    'assets/images/diary_backgrounds/diary_bg_rainy_window.png',
+  ),
+  tornPaper(
+    'torn_paper',
+    'assets/images/diary_backgrounds/diary_bg_torn_paper.png',
+  ),
+  crescentMoon(
+    'crescent_moon',
+    'assets/images/diary_backgrounds/diary_bg_crescent_moon.png',
+  ),
+  starrySky(
+    'starry_sky',
+    'assets/images/diary_backgrounds/diary_bg_starry_sky.png',
+  ),
+  ribbon('ribbon', 'assets/images/diary_backgrounds/diary_bg_ribbon.png'),
+  blueFlowers(
+    'blue_flowers',
+    'assets/images/diary_backgrounds/diary_bg_blue_flowers.png',
+  ),
+  sunnyRoom(
+    'sunny_room',
+    'assets/images/diary_backgrounds/diary_bg_sunny_room.png',
+  ),
+  bathroom(
+    'bathroom',
+    'assets/images/diary_backgrounds/diary_bg_bathroom.png',
+  ),
+  streetLamp(
+    'street_lamp',
+    'assets/images/diary_backgrounds/diary_bg_street_lamp.png',
+  );
 
   final String id;
   final String asset;
@@ -101,6 +138,16 @@ enum DiaryBackground {
     DiaryBackground.soccerBall => l10n.diaryBgSoccerBall,
     DiaryBackground.luxuryFrame => l10n.diaryBgLuxuryFrame,
     DiaryBackground.clock => l10n.diaryBgClock,
+    DiaryBackground.bicycle => l10n.diaryBgBicycle,
+    DiaryBackground.rainyWindow => l10n.diaryBgRainyWindow,
+    DiaryBackground.tornPaper => l10n.diaryBgTornPaper,
+    DiaryBackground.crescentMoon => l10n.diaryBgCrescentMoon,
+    DiaryBackground.starrySky => l10n.diaryBgStarrySky,
+    DiaryBackground.ribbon => l10n.diaryBgRibbon,
+    DiaryBackground.blueFlowers => l10n.diaryBgBlueFlowers,
+    DiaryBackground.sunnyRoom => l10n.diaryBgSunnyRoom,
+    DiaryBackground.bathroom => l10n.diaryBgBathroom,
+    DiaryBackground.streetLamp => l10n.diaryBgStreetLamp,
   };
 
   /// 未設定（背景なし）を表すnullを含め、保存済みIDから復元する。

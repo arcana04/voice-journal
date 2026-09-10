@@ -1918,6 +1918,66 @@ abstract class AppLocalizations {
   /// **'Clock'**
   String get diaryBgClock;
 
+  /// No description provided for @diaryBgBicycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bicycle'**
+  String get diaryBgBicycle;
+
+  /// No description provided for @diaryBgRainyWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Rainy Window'**
+  String get diaryBgRainyWindow;
+
+  /// No description provided for @diaryBgTornPaper.
+  ///
+  /// In en, this message translates to:
+  /// **'Torn Paper'**
+  String get diaryBgTornPaper;
+
+  /// No description provided for @diaryBgCrescentMoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Crescent Moon'**
+  String get diaryBgCrescentMoon;
+
+  /// No description provided for @diaryBgStarrySky.
+  ///
+  /// In en, this message translates to:
+  /// **'Starry Sky'**
+  String get diaryBgStarrySky;
+
+  /// No description provided for @diaryBgRibbon.
+  ///
+  /// In en, this message translates to:
+  /// **'Ribbon'**
+  String get diaryBgRibbon;
+
+  /// No description provided for @diaryBgBlueFlowers.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue Flowers'**
+  String get diaryBgBlueFlowers;
+
+  /// No description provided for @diaryBgSunnyRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunlit Room'**
+  String get diaryBgSunnyRoom;
+
+  /// No description provided for @diaryBgBathroom.
+  ///
+  /// In en, this message translates to:
+  /// **'Bathroom'**
+  String get diaryBgBathroom;
+
+  /// No description provided for @diaryBgStreetLamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Street Lamp'**
+  String get diaryBgStreetLamp;
+
   /// No description provided for @fontSheetTitle.
   ///
   /// In en, this message translates to:
