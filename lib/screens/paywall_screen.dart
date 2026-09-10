@@ -521,10 +521,14 @@ class _PlanCard extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            plan.label,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
+                          Flexible(
+                            child: Text(
+                              plan.label,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                           if (plan.badge != null) ...[
@@ -558,20 +562,28 @@ class _PlanCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                available
-                    ? Text(
-                        plan.package!.storeProduct.priceString,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
-                        ),
-                      )
-                    : Text(
-                        plan.soldOut ? l10n.paywallPlanSoldOut : l10n.paywallPlanComingSoon,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.outline,
-                        ),
-                      ),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: available
+                        ? Text(
+                            plan.package!.storeProduct.priceString,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          )
+                        : Text(
+                            plan.soldOut
+                                ? l10n.paywallPlanSoldOut
+                                : l10n.paywallPlanComingSoon,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.outline,
+                            ),
+                          ),
+                  ),
+                ),
               ],
             ),
           ),
