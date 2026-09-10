@@ -1,0 +1,173 @@
+{
+  "_readme": "Hand-written English boundary-case eval set for structure()/buildSystemPromptEn in functions/src/index.ts. Each case is a spoken-style transcript with the classification a human would expect. Run manually through structure() (or the deployed callable) and compare notes[].category/tasks[] against `expected`. category values match the internal literal strings the prompt outputs: 'アイデア' (idea) or '感情ログ' (diary/emotion-log); tasks go to the top-level tasks[] array.",
+  "cases": [
+    {
+      "id": "task-clear-01",
+      "transcript": "I need to call the dentist tomorrow morning to reschedule my appointment.",
+      "expected": { "tasks": 1, "notes": [] },
+      "why": "Unambiguous confirmed action with explicit timing — sanity check, not a boundary case."
+    },
+    {
+      "id": "idea-clear-01",
+      "transcript": "What if I turned the spare bedroom into a little reading nook with a hammock chair?",
+      "expected": { "tasks": 0, "notes": [{ "category": "アイデア" }] },
+      "why": "Unconfirmed speculative idea, no action taken — sanity check."
+    },
+    {
+      "id": "diary-clear-01",
+      "transcript": "Today was rough. My manager criticized my work in front of everyone and I just felt so small.",
+      "expected": { "tasks": 0, "notes": [{ "category": "感情ログ" }] },
+      "why": "Pure feeling/reflection, no idea or action — sanity check."
+    },
+    {
+      "id": "complaint-hides-task-01",
+      "transcript": "Ugh, the kitchen faucet is still leaking, I really need to fix that this weekend.",
+      "expected": { "tasks": 1, "notes": [{ "category": "感情ログ", "note": "optional — mild frustration framing" }] },
+      "why": "Complaint ('ugh', 'still leaking') wraps a confirmed action with timing. Risk: model treats the whole thing as emotion-log and drops the task, or vice versa drops the frustration."
+    },
+    {
+      "id": "complaint-hides-task-02",
+      "transcript": "I'm so tired of doing the dishes every night, I should really just buy a dishwasher already.",
+      "expected": { "tasks": 1, "notes": [{ "category": "感情ログ" }] },
+      "why": "Venting ('so tired of') followed by a soft-but-real intention ('should really just buy'). Ambiguous whether 'should' counts as confirmed action per the prompt's rule."
+    },
+    {
+      "id": "complaint-no-task-01",
+      "transcript": "I'm so tired of doing the dishes every night, it never ends.",
+      "expected": { "tasks": 0, "notes": [{ "category": "感情ログ" }] },
+      "why": "Near-identical wording to the previous case but with the action clause removed — checks the model isn't pattern-matching 'tired of X' into an automatic task."
+    },
+    {
+      "id": "idea-vs-diary-wish-01",
+      "transcript": "I wish I lived closer to the ocean, it would make weekends so much better.",
+      "expected": { "tasks": 0, "notes": [{ "category": "感情ログ" }] },
+      "why": "'I wish' sounds idea-shaped but is really a feeling about current circumstances with no actionable/considerable plan — should land in emotion-log, not idea."
+    },
+    {
+      "id": "idea-vs-diary-wish-02",
+      "transcript": "I've been thinking maybe I should move somewhere closer to the ocean, like actually looking into it.",
+      "expected": { "tasks": 0, "notes": [{ "category": "アイデア" }] },
+      "why": "Near-identical topic to the previous case, but 'actually looking into it' signals genuine consideration, not just longing — should land in idea, not emotion-log. Pair with idea-vs-diary-wish-01 to test the model isn't relying on surface keywords like 'wish'."
+    },
+    {
+      "id": "idea-vs-task-maybe-01",
+      "transcript": "Maybe I'll start learning Spanish this year, not sure when though.",
+      "expected": { "tasks": 0, "notes": [{ "category": "アイデア" }] },
+      "why": "'Maybe' + no committed timing = unconfirmed idea, not a task, despite sounding intention-like."
+    },
+    {
+      "id": "idea-vs-task-maybe-02",
+      "transcript": "I'm starting Spanish lessons next Monday, I already signed up.",
+      "expected": { "tasks": 1, "notes": [] },
+      "why": "Same topic area as previous case but committed + already acted on + has timing — should be a task, tests the model distinguishes 'maybe' from 'already signed up'."
+    },
+    {
+      "id": "multi-topic-split-01",
+      "transcript": "Okay so I need to pick up dry cleaning by Friday, and also, kind of randomly, I was thinking it might be cool to start a small herb garden on the balcony. Also today was actually a pretty good day, I felt proud of finishing that project.",
+      "expected": { "tasks": 1, "notes": [{ "category": "アイデア" }, { "category": "感情ログ" }] },
+      "why": "Three distinct topics in one breath (task/idea/diary) — checks correct splitting into 3 entries rather than merging or dropping one."
+    },
+    {
+      "id": "multi-topic-split-02",
+      "transcript": "I have a doctor's appointment Thursday at 3pm, and I also need to call my sister back, she's called twice.",
+      "expected": { "tasks": 2, "notes": [] },
+      "why": "Two separate tasks in one utterance with different timing granularity (specific time vs no time) — checks both get split out instead of merged into one task."
+    },
+    {
+      "id": "sarcasm-indirect-01",
+      "transcript": "Oh great, ANOTHER email from my landlord about the rent increase, love that for me.",
+      "expected": { "tasks": 0, "notes": [{ "category": "感情ログ" }] },
+      "why": "Sarcasm ('love that for me') could confuse sentiment/emotion tagging; no actual task stated even though a landlord/rent topic often correlates with tasks."
+    },
+    {
+      "id": "implicit-task-no-verb-01",
+      "transcript": "Rent's due on the first, and I still haven't transferred the money.",
+      "expected": { "tasks": 1, "notes": [] },
+      "why": "No explicit 'I need to' — action must be inferred from 'still haven't' + a deadline. Tests inference rule #2 in the prompt (infer missing subject/timing/action)."
+    },
+    {
+      "id": "past-reflection-with-future-action-01",
+      "transcript": "That was such a stressful meeting, I'm never doing another product launch without a written agenda again.",
+      "expected": { "tasks": 0, "notes": [{ "category": "感情ログ" }] },
+      "why": "'I'm never doing X without Y' reads like a resolution/idea but is really a reflective takeaway about a past event with no concrete near-term action or plan — should stay diary, not idea or task."
+    },
+    {
+      "id": "past-reflection-with-future-action-02",
+      "transcript": "That meeting was a mess. Next time I'm going to draft the agenda myself and send it out two days early.",
+      "expected": { "tasks": 1, "notes": [{ "category": "感情ログ" }] },
+      "why": "Same emotional framing as previous case, but pairs it with a concrete recurring intention ('next time I'm going to X') — arguably a task/habit, tests whether the model over-generalizes 'reflection = diary only'."
+    },
+    {
+      "id": "question-to-self-01",
+      "transcript": "Should I even keep this gym membership? I haven't gone in like two months.",
+      "expected": { "tasks": 0, "notes": [{ "category": "アイデア" }] },
+      "why": "A genuine open question/consideration with no decision made — idea category ('something to consider'), not a task (no decision to cancel yet) and not pure emotion (it's deliberative, not just venting)."
+    },
+    {
+      "id": "question-rhetorical-01",
+      "transcript": "Why does it always rain the one day I decide to walk to work?",
+      "expected": { "tasks": 0, "notes": [{ "category": "感情ログ" }] },
+      "why": "Grammatically a question like the previous case, but rhetorical/venting rather than a genuine open consideration — tests the model isn't classifying by sentence type (question mark) instead of intent."
+    },
+    {
+      "id": "filler-heavy-01",
+      "transcript": "Um, so, like, I think, um, I need to, uh, finish the, um, the tax stuff, like, by the end of the month I guess.",
+      "expected": { "tasks": 1, "notes": [] },
+      "why": "Heavy filler words should be stripped per prompt rule #1 while still extracting the one real task with its deadline."
+    },
+    {
+      "id": "repeated-phrase-01",
+      "transcript": "I need to book the flights, I need to book the flights before prices go up, seriously I need to book the flights.",
+      "expected": { "tasks": 1, "notes": [] },
+      "why": "Exact repeated phrase (likely a recording/re-take artifact) should collapse into a single task, not three duplicate tasks."
+    },
+    {
+      "id": "gratitude-vs-idea-01",
+      "transcript": "I'm really grateful my friend helped me move this weekend, it made me think I should do something nice for her.",
+      "expected": { "tasks": 0, "notes": [{ "category": "感情ログ" }, { "category": "アイデア" }] },
+      "why": "Gratitude (diary) plus a vague not-yet-planned idea ('should do something nice') in the same breath — tests correct splitting rather than forcing one category over the other, and that the vague idea isn't upgraded to a task without any concrete plan."
+    },
+    {
+      "id": "worry-vs-task-01",
+      "transcript": "I'm really worried about the presentation next week, I don't feel ready at all.",
+      "expected": { "tasks": 0, "notes": [{ "category": "感情ログ" }] },
+      "why": "Anxiety about an upcoming known event with no stated action ('don't feel ready') — should not be inflated into a task like 'prepare for presentation' since no action was actually stated, tests over-inference."
+    },
+    {
+      "id": "worry-with-task-01",
+      "transcript": "I'm really worried about the presentation next week, so I'm going to run through my slides with Sarah on Tuesday.",
+      "expected": { "tasks": 1, "notes": [{ "category": "感情ログ" }] },
+      "why": "Same worry framing as previous case but now paired with a concrete planned action + day — should split into task + diary, contrasts with worry-vs-task-01 to check the model isn't auto-generating a task purely from anxiety language."
+    },
+    {
+      "id": "short-fragment-01",
+      "transcript": "Dentist. Friday. Don't forget.",
+      "expected": { "tasks": 1, "notes": [] },
+      "why": "Extremely terse, fragment-style speech (as if talking to oneself in a hurry) — tests robustness to non-sentence input still yielding a correct task with timing."
+    },
+    {
+      "id": "mixed-language-code-switch-01",
+      "transcript": "I need to email the landlord about the, uh, how do you say, deposit reembolso, before Friday.",
+      "expected": { "tasks": 1, "notes": [] },
+      "why": "Brief code-switch into Spanish mid-sentence (common for bilingual speakers) — output must still be English per the prompt's output-language rule, and the task should still be extracted correctly."
+    },
+    {
+      "id": "long-ramble-single-topic-01",
+      "transcript": "So I was just thinking about this the whole walk home, like, work has been fine I guess, nothing bad happened today really, but I don't know, I've just been feeling kind of empty lately, like going through the motions, and I can't really point to why.",
+      "expected": { "tasks": 0, "notes": [{ "category": "感情ログ" }] },
+      "why": "Long rambling monologue but genuinely a single topic (a diffuse mood, not tied to one event) — tests the model doesn't over-split a single feeling into multiple fragmented diary entries just because it's long."
+    },
+    {
+      "id": "negation-no-task-01",
+      "transcript": "I decided I'm NOT going to redo the whole bathroom this year, it's just not worth the stress right now.",
+      "expected": { "tasks": 0, "notes": [{ "category": "感情ログ" }] },
+      "why": "Explicit decision to NOT do something — must not be misread as a task ('redo the bathroom') by keying off the noun phrase while ignoring the negation."
+    },
+    {
+      "id": "conditional-idea-01",
+      "transcript": "If I ever get a raise, I think I'd want to finally get a good office chair, my back has been killing me.",
+      "expected": { "tasks": 0, "notes": [{ "category": "アイデア" }, { "category": "感情ログ" }] },
+      "why": "Conditional/hypothetical purchase idea gated on an uncertain future event, plus a real current physical complaint — tests that the conditional idea isn't promoted to a task, and that the two parts (idea + diary) get split."
+    }
+  ]
+}

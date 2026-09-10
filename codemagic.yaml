@@ -74,6 +74,21 @@ workflows:
             --build-number=$NEXT_BUILD_NUMBER \
             --export-options-plist=/Users/builder/export_options.plist \
             --dart-define=REVENUECAT_IOS_API_KEY=$REVENUECAT_IOS_API_KEY
+      - name: Upload dSYMs to Crashlytics
+        script: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          RUN_SCRIPT=$(find ios/Pods -maxdepth 2 -type f -path "*FirebaseCrashlytics/run" | head -n 1)
+          ARCHIVE_PATH=$(find build/ios -maxdepth 3 -name "*.xcarchive" | head -n 1)
+          if [ -z "$RUN_SCRIPT" ] || [ -z "$ARCHIVE_PATH" ]; then
+            echo "FirebaseCrashlytics run script or .xcarchive not found, skipping dSYM upload"
+            exit 0
+          fi
+          find "$ARCHIVE_PATH/dSYMs" -maxdepth 1 -name "*.dSYM" -print0 | \
+            while IFS= read -r -d '' dsym; do
+              echo "Uploading dSYM: $dsym"
+              "$RUN_SCRIPT" -gsp ios/Runner/GoogleService-Info.plist -p ios "$dsym"
+            done
     artifacts:
       - build/ios/ipa/*.ipa
       - build/ios/xcarchive

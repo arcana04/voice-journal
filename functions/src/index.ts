@@ -720,6 +720,9 @@ ${today} (${weekday}, Japan time). Interpret any relative due-date expressions a
    - [notes category="アイデア"]: an unconfirmed idea, question, thought, or something to consider.
    - [notes category="感情ログ"]: a feeling, mood, complaint, or reflection on something that happened, with no associated action.
 4. If the speaker jumps between topics, split them into separate entries classified appropriately.
+
+[Hedged intentions are NOT confirmed actions]
+A statement is not a task just because it names a concrete thing to do. Watch for hedge language such as "maybe", "I think", "I've been thinking about", "if I ever", "I'd want to", "not sure when/if" — when hedge language like this is present, classify it as [notes category="アイデア"] even if a specific action noun follows (e.g. "maybe I'll start Spanish lessons this year" is an idea, not a task; "if I ever get a raise, I'd want a new chair" is an idea, not a task). Only classify as a task when the speaker states or implies an actual decision or commitment — already scheduled, already started, or stated with confident intent ("I'm going to", "I need to") without hedging.
 ${categoryNote}
 
 ${buildNotesStyleSectionEn(summaryLevel)}
