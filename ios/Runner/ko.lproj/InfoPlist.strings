@@ -1,0 +1,7 @@
+CFBundleDisplayName = "Voice Brain";
+NSMicrophoneUsageDescription = "Voice Brain은 마이크를 사용해 말씀하신 내용을 녹음합니다. 녹음된 음성은 전사 및 일기·아이디어·할 일로 자동 분류하기 위해 OpenAI로 전송됩니다.";
+NSPhotoLibraryUsageDescription = "일기에 사진을 추가하기 위해 사용됩니다.";
+NSCalendarsUsageDescription = "동기화를 켠 캘린더에 일정이 있는 작업을 추가하기 위해 사용됩니다.";
+NSCalendarsFullAccessUsageDescription = "동기화를 켠 캘린더에 일정이 있는 작업을 추가하기 위해 사용됩니다.";
+NSRemindersUsageDescription = "동기화를 켠 미리 알림 목록에 작업을 추가하기 위해 사용됩니다.";
+NSRemindersFullAccessUsageDescription = "동기화를 켠 미리 알림 목록에 작업을 추가하기 위해 사용됩니다.";

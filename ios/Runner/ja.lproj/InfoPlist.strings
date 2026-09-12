@@ -1,1 +1,7 @@
 CFBundleDisplayName = "Voice Brain";
+NSMicrophoneUsageDescription = "音声を入力し、AIが自動でタスクや日記、アイデアに分類・整理するためにマイクを使用します。録音した音声はOpenAIへ送信され、文字起こし・自動仕分けに使用されます。";
+NSPhotoLibraryUsageDescription = "日記に写真を追加するために写真ライブラリを使用します。";
+NSCalendarsUsageDescription = "連携をONにしたカレンダーに、日時付きのタスクを予定として登録するために使用します。";
+NSCalendarsFullAccessUsageDescription = "連携をONにしたカレンダーに、日時付きのタスクを予定として登録するために使用します。";
+NSRemindersUsageDescription = "連携をONにしたリマインダーリストに、タスクを登録するために使用します。";
+NSRemindersFullAccessUsageDescription = "連携をONにしたリマインダーリストに、タスクを登録するために使用します。";

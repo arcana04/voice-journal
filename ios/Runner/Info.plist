@@ -48,21 +48,21 @@
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
 		<key>NSMicrophoneUsageDescription</key>
-		<string>音声を入力し、AIが自動でタスクや日記、アイデアに分類・整理するためにマイクを使用します。</string>
+		<string>Voice Brain uses your microphone to record what you say. Recordings are sent to OpenAI to be transcribed and automatically sorted into diary, idea, or task entries.</string>
 		<key>UIBackgroundModes</key>
 		<array>
 			<string>audio</string>
 		</array>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>日記に写真を追加するために写真ライブラリを使用します。</string>
+		<string>Used to add photos to your diary entries.</string>
 		<key>NSCalendarsUsageDescription</key>
-		<string>連携をONにしたカレンダーに、日時付きのタスクを予定として登録するために使用します。</string>
+		<string>Used to add scheduled tasks to calendars you've enabled syncing for.</string>
 		<key>NSCalendarsFullAccessUsageDescription</key>
-		<string>連携をONにしたカレンダーに、日時付きのタスクを予定として登録するために使用します。</string>
+		<string>Used to add scheduled tasks to calendars you've enabled syncing for.</string>
 		<key>NSRemindersUsageDescription</key>
-		<string>連携をONにしたリマインダーリストに、タスクを登録するために使用します。</string>
+		<string>Used to add tasks to the reminder list you've enabled syncing for.</string>
 		<key>NSRemindersFullAccessUsageDescription</key>
-		<string>連携をONにしたリマインダーリストに、タスクを登録するために使用します。</string>
+		<string>Used to add tasks to the reminder list you've enabled syncing for.</string>
 		<key>UIApplicationSceneManifest</key>
 		<dict>
 			<key>UIApplicationSupportsMultipleScenes</key>

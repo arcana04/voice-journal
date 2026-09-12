@@ -181,7 +181,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingPage2Body.
   ///
   /// In en, this message translates to:
-  /// **'What you say is transcribed by AI and automatically sorted into a diary entry, idea, or task. Your voice is handled securely, as data that belongs only to you.'**
+  /// **'What you say is transcribed by AI and automatically sorted into a diary entry, idea, or task.'**
   String get onboardingPage2Body;
 
   /// No description provided for @onboardingFreeTierTitle.
@@ -199,14 +199,20 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingMicTitle.
   ///
   /// In en, this message translates to:
-  /// **'We\'ll need microphone access'**
+  /// **'Microphone use & sending data to AI'**
   String get onboardingMicTitle;
 
   /// No description provided for @onboardingMicBody.
   ///
   /// In en, this message translates to:
-  /// **'Voice Brain uses your microphone to record. When the permission prompt appears next, please tap \"Allow.\"'**
+  /// **'Your recordings and the text you write are sent to OpenAI (a third-party AI service) to be transcribed, classified, summarized, and used in AI chat. When the permission prompt appears next, please tap \"Allow.\"'**
   String get onboardingMicBody;
+
+  /// No description provided for @onboardingAiConsentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand and agree'**
+  String get onboardingAiConsentLabel;
 
   /// No description provided for @onboardingPage3Title.
   ///

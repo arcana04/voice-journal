@@ -1,0 +1,7 @@
+CFBundleDisplayName = "Voice Brain";
+NSMicrophoneUsageDescription = "Voice Brain nutzt dein Mikrofon, um deine Sprachaufnahmen zu erfassen. Die Aufnahmen werden zur Transkription und automatischen Einordnung in Tagebuch, Idee oder Aufgabe an OpenAI gesendet.";
+NSPhotoLibraryUsageDescription = "Wird verwendet, um Fotos zu deinen Tagebucheinträgen hinzuzufügen.";
+NSCalendarsUsageDescription = "Wird verwendet, um geplante Aufgaben zu den Kalendern hinzuzufügen, für die du die Synchronisierung aktiviert hast.";
+NSCalendarsFullAccessUsageDescription = "Wird verwendet, um geplante Aufgaben zu den Kalendern hinzuzufügen, für die du die Synchronisierung aktiviert hast.";
+NSRemindersUsageDescription = "Wird verwendet, um Aufgaben zu der Erinnerungsliste hinzuzufügen, für die du die Synchronisierung aktiviert hast.";
+NSRemindersFullAccessUsageDescription = "Wird verwendet, um Aufgaben zu der Erinnerungsliste hinzuzufügen, für die du die Synchronisierung aktiviert hast.";

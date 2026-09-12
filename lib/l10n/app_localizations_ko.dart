@@ -48,7 +48,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get onboardingPage2Body =>
-      '말한 내용은 AI가 텍스트로 변환해 일기, 아이디어, 할 일로 자동 분류합니다. 당신의 목소리는 오직 당신만의 데이터로 안전하게 다뤄집니다.';
+      '말한 내용은 AI가 텍스트로 변환해 일기, 아이디어, 할 일로 자동 분류합니다.';
 
   @override
   String get onboardingFreeTierTitle => '지금 바로 무료로 시작';
@@ -58,11 +58,14 @@ class AppLocalizationsKo extends AppLocalizations {
       '무료 플랜에서는 하루 3회, 회당 최대 60초까지 녹음할 수 있어요. 더 필요하다면 더 길고 자주 녹음할 수 있는 Pro 플랜을 확인해 보세요.';
 
   @override
-  String get onboardingMicTitle => '마이크 접근 권한이 필요해요';
+  String get onboardingMicTitle => '마이크 사용 및 AI로의 데이터 전송 안내';
 
   @override
   String get onboardingMicBody =>
-      'Voice Brain은 녹음을 위해 마이크를 사용합니다. 다음에 권한 요청이 뜨면 \"허용\"을 눌러 주세요.';
+      '녹음된 음성과 작성한 텍스트는 전사, 분류, 요약, AI 채팅을 위해 OpenAI(제3자 AI 서비스)로 전송됩니다. 다음에 권한 요청이 뜨면 \"허용\"을 눌러 주세요.';
+
+  @override
+  String get onboardingAiConsentLabel => '내용을 이해했으며 동의합니다';
 
   @override
   String get onboardingPage3Title => '시작해 볼까요';

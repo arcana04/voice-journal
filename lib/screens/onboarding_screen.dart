@@ -15,8 +15,13 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _controller = PageController();
   int _page = 0;
+  bool _aiConsentChecked = false;
 
   static const _pageCount = 5;
+  // マイク許可+OpenAIへのデータ送信の開示・同意ページ(App Store審査
+  // ガイドライン5.1.1(i)/5.1.2(i)対応)。このページ以降はスキップ不可、
+  // 同意チェックが入るまで先へ進めない。
+  static const _aiConsentPageIndex = 3;
 
   @override
   void dispose() {
@@ -25,6 +30,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _next() {
+    if (_page == _aiConsentPageIndex && !_aiConsentChecked) {
+      return;
+    }
     if (_page == _pageCount - 1) {
       widget.onFinished();
       return;
@@ -49,7 +57,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Visibility(
-                  visible: !isLastPage,
+                  visible: !isLastPage && _page < _aiConsentPageIndex,
                   maintainState: true,
                   maintainAnimation: true,
                   maintainSize: true,
@@ -85,6 +93,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     icon: Icons.mic_none_rounded,
                     title: l10n.onboardingMicTitle,
                     body: l10n.onboardingMicBody,
+                    trailing: Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: CheckboxListTile(
+                        value: _aiConsentChecked,
+                        onChanged: (value) =>
+                            setState(() => _aiConsentChecked = value ?? false),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          l10n.onboardingAiConsentLabel,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    ),
                   ),
                   _OnboardingPage(
                     icon: Icons.waving_hand,
@@ -119,7 +141,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: _next,
+                      onPressed:
+                          (_page == _aiConsentPageIndex && !_aiConsentChecked)
+                              ? null
+                              : _next,
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),

@@ -144,6 +144,11 @@
 		BBD2A9E60114F3E99B0F130A /* RecordWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordWidget.swift; sourceTree = "<group>"; };
 		C957A061A97FF87657F540FB /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		CBCFE9364FEA37605D498F16 /* ja */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		1A2B3C4D5E6F7A8B9C0D1E2F /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		2B3C4D5E6F7A8B9C0D1E2F3A /* es */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		3C4D5E6F7A8B9C0D1E2F3A4B /* de */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		4D5E6F7A8B9C0D1E2F3A4B5C /* ko */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		5E6F7A8B9C0D1E2F3A4B5C6D /* fr */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		D2BC09C6B1040E74C02529F3 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		E4F7B17356C45B79BB0B19C8 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		EC6981E656E123A51BD719F7 /* VoiceJournalWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VoiceJournalWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -437,6 +442,10 @@
 				en,
 				Base,
 				ja,
+				es,
+				de,
+				ko,
+				fr,
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
 			packageReferences = (
@@ -659,6 +668,11 @@
 			isa = PBXVariantGroup;
 			children = (
 				CBCFE9364FEA37605D498F16 /* ja */,
+				1A2B3C4D5E6F7A8B9C0D1E2F /* en */,
+				2B3C4D5E6F7A8B9C0D1E2F3A /* es */,
+				3C4D5E6F7A8B9C0D1E2F3A4B /* de */,
+				4D5E6F7A8B9C0D1E2F3A4B5C /* ko */,
+				5E6F7A8B9C0D1E2F3A4B5C6D /* fr */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";

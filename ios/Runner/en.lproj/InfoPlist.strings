@@ -1,0 +1,7 @@
+CFBundleDisplayName = "Voice Brain";
+NSMicrophoneUsageDescription = "Voice Brain uses your microphone to record what you say. Recordings are sent to OpenAI to be transcribed and automatically sorted into diary, idea, or task entries.";
+NSPhotoLibraryUsageDescription = "Used to add photos to your diary entries.";
+NSCalendarsUsageDescription = "Used to add scheduled tasks to calendars you've enabled syncing for.";
+NSCalendarsFullAccessUsageDescription = "Used to add scheduled tasks to calendars you've enabled syncing for.";
+NSRemindersUsageDescription = "Used to add tasks to the reminder list you've enabled syncing for.";
+NSRemindersFullAccessUsageDescription = "Used to add tasks to the reminder list you've enabled syncing for.";

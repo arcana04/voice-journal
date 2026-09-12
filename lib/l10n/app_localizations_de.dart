@@ -50,7 +50,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingPage2Body =>
-      'Was du sagst, wird von der KI transkribiert und automatisch in einen Tagebucheintrag, eine Idee oder eine Aufgabe einsortiert. Deine Stimme wird sicher behandelt, als Daten, die nur dir gehören.';
+      'Was du sagst, wird von der KI transkribiert und automatisch in einen Tagebucheintrag, eine Idee oder eine Aufgabe einsortiert.';
 
   @override
   String get onboardingFreeTierTitle => 'Kostenlos sofort nutzbar';
@@ -60,11 +60,15 @@ class AppLocalizationsDe extends AppLocalizations {
       'Der kostenlose Plan umfasst 3 Aufnahmen pro Tag, je bis zu 60 Sekunden. Möchtest du mehr? Schau dir den Pro-Plan für längere, häufigere Aufnahmen an.';
 
   @override
-  String get onboardingMicTitle => 'Wir brauchen Mikrofonzugriff';
+  String get onboardingMicTitle =>
+      'Mikrofonnutzung und Datenübermittlung an KI';
 
   @override
   String get onboardingMicBody =>
-      'Voice Brain nutzt dein Mikrofon zum Aufnehmen. Wenn als Nächstes die Berechtigungsabfrage erscheint, tippe bitte auf \"Erlauben\".';
+      'Deine Aufnahmen und die von dir geschriebenen Texte werden zur Transkription, Klassifizierung, Zusammenfassung und für den KI-Chat an OpenAI (einen KI-Dienst eines Drittanbieters) gesendet. Wenn als Nächstes die Berechtigungsabfrage erscheint, tippe bitte auf \"Erlauben\".';
+
+  @override
+  String get onboardingAiConsentLabel => 'Ich habe verstanden und stimme zu';
 
   @override
   String get onboardingPage3Title => 'Los geht\'s';

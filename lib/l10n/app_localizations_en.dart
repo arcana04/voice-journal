@@ -50,7 +50,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingPage2Body =>
-      'What you say is transcribed by AI and automatically sorted into a diary entry, idea, or task. Your voice is handled securely, as data that belongs only to you.';
+      'What you say is transcribed by AI and automatically sorted into a diary entry, idea, or task.';
 
   @override
   String get onboardingFreeTierTitle => 'Free to start using right away';
@@ -60,11 +60,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'The free plan includes 3 recordings a day, up to 60 seconds each. Want more? Check out the Pro plan for longer, more frequent recording.';
 
   @override
-  String get onboardingMicTitle => 'We\'ll need microphone access';
+  String get onboardingMicTitle => 'Microphone use & sending data to AI';
 
   @override
   String get onboardingMicBody =>
-      'Voice Brain uses your microphone to record. When the permission prompt appears next, please tap \"Allow.\"';
+      'Your recordings and the text you write are sent to OpenAI (a third-party AI service) to be transcribed, classified, summarized, and used in AI chat. When the permission prompt appears next, please tap \"Allow.\"';
+
+  @override
+  String get onboardingAiConsentLabel => 'I understand and agree';
 
   @override
   String get onboardingPage3Title => 'Let\'s get started';

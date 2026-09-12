@@ -50,7 +50,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onboardingPage2Body =>
-      'Ce que tu dis est transcrit par l\'IA et automatiquement classé en entrée de journal, idée ou tâche. Ta voix est traitée en toute sécurité, comme des données qui n\'appartiennent qu\'à toi.';
+      'Ce que tu dis est transcrit par l\'IA et automatiquement classé en entrée de journal, idée ou tâche.';
 
   @override
   String get onboardingFreeTierTitle => 'Gratuit pour commencer tout de suite';
@@ -60,11 +60,15 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le plan gratuit inclut 3 enregistrements par jour, jusqu\'à 60 secondes chacun. Tu veux plus ? Découvre le plan Pro pour des enregistrements plus longs et plus fréquents.';
 
   @override
-  String get onboardingMicTitle => 'Nous aurons besoin d\'accéder au micro';
+  String get onboardingMicTitle =>
+      'Utilisation du micro et envoi de données à l\'IA';
 
   @override
   String get onboardingMicBody =>
-      'Voice Brain utilise ton micro pour enregistrer. Quand la demande d\'autorisation apparaîtra, appuie sur \"Autoriser\".';
+      'Tes enregistrements et les textes que tu écris sont envoyés à OpenAI (un service d\'IA tiers) pour être transcrits, classés, résumés et utilisés dans le chat IA. Quand la demande d\'autorisation apparaîtra, appuie sur \"Autoriser\".';
+
+  @override
+  String get onboardingAiConsentLabel => 'J\'ai compris et j\'accepte';
 
   @override
   String get onboardingPage3Title => 'C\'est parti';
