@@ -63,6 +63,14 @@ class JournalStore extends ChangeNotifier {
   /// [RootScreen]が案内バナーを出す（静かに失敗して気づかれない状態を避ける狙い）。
   bool syncError = false;
 
+  /// カレンダー/リマインダー連携（[_syncTaskCalendarEvent]/[_syncTaskAppleReminder]）
+  /// の直近の同期が失敗したかどうか。従来はdebugPrintするだけでUIに一切
+  /// 反映されず、権限が取り消された/連携先カレンダーが削除された等の理由で
+  /// 静かに・恒久的にズレたままになっていた（[[project_voicejournal_knowledge_base_chat]]
+  /// 参照）。[syncError]（クラウド同期用）とは原因も直し方も異なるため、
+  /// 別のバナーで案内するために独立したフラグにしている。
+  bool calendarSyncError = false;
+
   /// [_cloudSync]/[_mediaSync]の各操作はfire-and-forgetで呼ぶが、成否だけは
   /// [syncError]に反映してUIに見えるようにする。
   void _trackSync(Future<bool> future) {
@@ -202,22 +210,33 @@ class JournalStore extends ChangeNotifier {
     if (calendarId == null) return task.calendarEventId;
 
     try {
+      final String? result;
       if (task.reminderAt == null || task.done) {
         if (task.calendarEventId != null) {
           await _calendar.deleteEvent(calendarId, task.calendarEventId!);
         }
-        return null;
+        result = null;
+      } else {
+        result = await _calendar.upsertEvent(
+          calendarId: calendarId,
+          eventId: task.calendarEventId,
+          title: task.title,
+          start: task.reminderAt!,
+          end: task.reminderEndAt,
+          allDay: task.isAllDay,
+        );
       }
-      return await _calendar.upsertEvent(
-        calendarId: calendarId,
-        eventId: task.calendarEventId,
-        title: task.title,
-        start: task.reminderAt!,
-        end: task.reminderEndAt,
-        allDay: task.isAllDay,
-      );
+      if (calendarSyncError) {
+        calendarSyncError = false;
+        notifyListeners();
+      }
+      return result;
     } catch (e) {
       debugPrint('calendar sync failed: $e');
+      if (!calendarSyncError) {
+        calendarSyncError = true;
+        notifyListeners();
+      }
       return task.calendarEventId;
     }
   }
@@ -243,22 +262,33 @@ class JournalStore extends ChangeNotifier {
 
     try {
       final dueDate = task.reminderAt ?? task.dueDate;
+      final String? result;
       if (dueDate == null) {
         if (task.appleReminderId != null) {
           await _appleReminders.deleteReminder(task.appleReminderId!);
         }
-        return null;
+        result = null;
+      } else {
+        result = await _appleReminders.upsertReminder(
+          listId: listId,
+          reminderId: task.appleReminderId,
+          title: task.title,
+          dueDate: dueDate,
+          includesTime: task.reminderAt != null && !task.isAllDay,
+          completed: task.done,
+        );
       }
-      return await _appleReminders.upsertReminder(
-        listId: listId,
-        reminderId: task.appleReminderId,
-        title: task.title,
-        dueDate: dueDate,
-        includesTime: task.reminderAt != null && !task.isAllDay,
-        completed: task.done,
-      );
+      if (calendarSyncError) {
+        calendarSyncError = false;
+        notifyListeners();
+      }
+      return result;
     } catch (e) {
       debugPrint('apple reminders sync failed: $e');
+      if (!calendarSyncError) {
+        calendarSyncError = true;
+        notifyListeners();
+      }
       return task.appleReminderId;
     }
   }

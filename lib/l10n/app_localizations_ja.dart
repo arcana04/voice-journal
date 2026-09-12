@@ -451,10 +451,37 @@ class AppLocalizationsJa extends AppLocalizations {
       'Apple Watchとのペアリングが完了しました。Watch単体で録音できます。';
 
   @override
+  String get integrationsWatchRowTitle => 'Apple Watch';
+
+  @override
+  String get watchScreenTitle => 'Apple Watch';
+
+  @override
+  String get watchScreenDescription =>
+      'ペアリングするとApple Watch単体で録音・AI仕分けができるようになります（iPhoneを持ち歩かなくてもOK）。iPhoneとWatchが近くにあり、Bluetoothで通信できる状態で行ってください。';
+
+  @override
+  String get watchSignInRequiredTitle => 'Apple Watch連携にはログインが必要です';
+
+  @override
+  String get watchSignInRequiredDescription =>
+      '匿名のままペアリングすると、再インストール等でアカウントがリセットされた際にWatchとの連携がやり直しになります。先にログインしてください。';
+
+  @override
+  String get watchSignInRequiredNotice =>
+      'Apple Watchと連携するには、先にGoogle/Appleアカウントでログインしてください';
+
+  @override
   String get syncErrorBannerMessage => '一部のデータの同期に失敗しました';
 
   @override
   String get syncErrorBannerAction => '確認する';
+
+  @override
+  String get calendarSyncErrorBannerMessage => 'カレンダー/リマインダーとの連携に失敗しました';
+
+  @override
+  String get calendarSyncErrorBannerAction => '連携設定を確認';
 
   @override
   String get loadErrorBannerMessage => 'データの読み込みに失敗しました';
@@ -757,6 +784,9 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get notificationPermissionDialogMessage =>
       'リマインダーを届けるには通知を許可してください。設定アプリから変更できます。';
+
+  @override
+  String get notifyAtPastError => '過去の日時には通知を設定できません';
 
   @override
   String get openSettings => '設定を開く';
@@ -1208,6 +1238,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get discard => '破棄';
+
+  @override
+  String get recoveredRecordingTitle => '未保存の録音が見つかりました';
+
+  @override
+  String get recoveredRecordingMessage =>
+      '前回、保存される前にアプリが終了してしまった録音が端末に残っています。今すぐ処理しますか?';
+
+  @override
+  String get recoveredRecordingProcess => '処理する';
 
   @override
   String get dragCardHere => 'ここにカードをドラッグ';

@@ -16,6 +16,7 @@ import 'diary_screen.dart';
 import 'home_screen.dart';
 import 'idea_screen.dart';
 import 'knowledge_base_screen.dart';
+import 'settings_screen.dart';
 import 'task_screen.dart';
 import 'weekly_report_screen.dart';
 
@@ -131,6 +132,16 @@ class _RootScreenState extends State<RootScreen> {
                   actionLabel: l10n.syncErrorBannerAction,
                   onAction: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const AccountScreen()),
+                  ),
+                );
+              }
+              if (store.calendarSyncError) {
+                return _StatusBanner(
+                  icon: Icons.event_busy_outlined,
+                  message: l10n.calendarSyncErrorBannerMessage,
+                  actionLabel: l10n.calendarSyncErrorBannerAction,
+                  onAction: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
                   ),
                 );
               }

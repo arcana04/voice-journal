@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show ChangeNotifier, kDebugMode, debugPrint;
+import 'package:flutter/widgets.dart' show AppLifecycleState, WidgetsBinding, WidgetsBindingObserver;
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../config/revenuecat_config.dart';
@@ -10,7 +11,7 @@ import '../services/purchase_service.dart';
 
 /// アプリ全体でのPro加入状態。RevenueCatからのリアルタイム更新（購入・復元・
 /// 有効期限切れなど）を受けて自動的に反映される。
-class SubscriptionStore extends ChangeNotifier {
+class SubscriptionStore extends ChangeNotifier with WidgetsBindingObserver {
   final PurchaseService _purchases = PurchaseService.instance;
 
   bool isPro = false;
@@ -94,10 +95,25 @@ class SubscriptionStore extends ChangeNotifier {
       unawaited(_refreshFromCustomerInfo(info));
     };
     _purchases.addCustomerInfoListener(_listener!);
+    WidgetsBinding.instance.addObserver(this);
 
     await refresh();
     loading = false;
     notifyListeners();
+  }
+
+  /// アプリがバックグラウンドから復帰するたびにRevenueCatの現在の状態を
+  /// 取り直す。revenueCatWebhookはアプリが閉じている/バックグラウンドの間
+  /// にも独立して届き得るため、クライアント自身のリスナー（[_refreshFromCustomerInfo]）
+  /// がその変化にたまたま気づかないまま時間が経つと、[_syncProStatusToServer]
+  /// が呼ばれずFirebase IDトークンの強制リフレッシュも走らない——「購入直後に
+  /// 写真同期が使えない」バグをWebhook経由の更新で再発させないための対策
+  /// （[[project_voicejournal_knowledge_base_chat]]参照）。
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(refresh());
+    }
   }
 
   Future<void> refresh() async {
@@ -133,6 +149,7 @@ class SubscriptionStore extends ChangeNotifier {
     if (listener != null) {
       _purchases.removeCustomerInfoListener(listener);
     }
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 }

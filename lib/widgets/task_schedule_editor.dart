@@ -162,6 +162,22 @@ class TaskScheduleEditor extends StatelessWidget {
     onChanged();
   }
 
+  /// [ReminderService.scheduleTaskReminder]は過去の日時を渡されると通知を
+  /// スケジュールせず黙って何もしない。ここで弾かずに保存してしまうと、
+  /// 画面上は通知が「設定済み」に見えるのに実際には二度と鳴らない、という
+  /// 気づきにくい状態になっていた（[[project_voicejournal_knowledge_base_chat]]
+  /// 参照）。ピッカーの結果を反映する直前に必ずここを通す。
+  bool _applyNotifyAt(BuildContext context, DateTime value) {
+    if (value.isBefore(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.notifyAtPastError)),
+      );
+      return false;
+    }
+    draft.notifyAt = value;
+    return true;
+  }
+
   Future<void> _addNotify(BuildContext context) async {
     final now = DateTime.now();
     final date = await showDatePicker(
@@ -177,13 +193,13 @@ class TaskScheduleEditor extends StatelessWidget {
       initialTime: TimeOfDay.now(),
     );
     if (time == null) return;
-    draft.notifyAt = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    );
+    if (!context.mounted) return;
+    if (!_applyNotifyAt(
+      context,
+      DateTime(date.year, date.month, date.day, time.hour, time.minute),
+    )) {
+      return;
+    }
     onChanged();
   }
 
@@ -196,13 +212,13 @@ class TaskScheduleEditor extends StatelessWidget {
       lastDate: DateTime(2100),
     );
     if (picked == null) return;
-    draft.notifyAt = DateTime(
-      picked.year,
-      picked.month,
-      picked.day,
-      base.hour,
-      base.minute,
-    );
+    if (!context.mounted) return;
+    if (!_applyNotifyAt(
+      context,
+      DateTime(picked.year, picked.month, picked.day, base.hour, base.minute),
+    )) {
+      return;
+    }
     onChanged();
   }
 
@@ -213,13 +229,13 @@ class TaskScheduleEditor extends StatelessWidget {
       initialTime: TimeOfDay.fromDateTime(base),
     );
     if (picked == null) return;
-    draft.notifyAt = DateTime(
-      base.year,
-      base.month,
-      base.day,
-      picked.hour,
-      picked.minute,
-    );
+    if (!context.mounted) return;
+    if (!_applyNotifyAt(
+      context,
+      DateTime(base.year, base.month, base.day, picked.hour, picked.minute),
+    )) {
+      return;
+    }
     onChanged();
   }
 

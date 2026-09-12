@@ -20,6 +20,7 @@ import 'apple_reminders_select_screen.dart';
 import 'buy_minutes_screen.dart';
 import 'integration_select_screen.dart';
 import 'paywall_screen.dart';
+import 'watch_pairing_screen.dart';
 import 'weekly_report_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -245,6 +246,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       );
                     },
+                  ),
+                if (Platform.isIOS)
+                  _SettingsTile(
+                    icon: Icons.watch_rounded,
+                    color: _SettingsColors.indigo,
+                    title: l10n.integrationsWatchRowTitle,
+                    trailing: const _ChevronIcon(),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const WatchPairingScreen()),
+                    ),
                   ),
               ],
             ),

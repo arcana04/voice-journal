@@ -18,7 +18,14 @@ class CustomWordsStore extends ChangeNotifier {
 
   Future<void> addWord(String word, {String? description}) async {
     final trimmed = word.trim();
-    if (trimmed.isEmpty || words.any((w) => w.word == trimmed)) return;
+    // 大文字小文字だけが違う重複("Alice"/"alice")も同一語として弾く——
+    // 区別すると両方がWhisperのプロンプトヒント・AIの用語集コンテキストへ
+    // 重複して送られ、無駄なノイズになっていた
+    // （[[project_voicejournal_knowledge_base_chat]]参照）。
+    if (trimmed.isEmpty ||
+        words.any((w) => w.word.toLowerCase() == trimmed.toLowerCase())) {
+      return;
+    }
     words = [...words, CustomWord(word: trimmed, description: description?.trim())];
     await _service.setWords(words);
     notifyListeners();

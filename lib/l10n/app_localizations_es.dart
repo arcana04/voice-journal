@@ -473,11 +473,40 @@ class AppLocalizationsEs extends AppLocalizations {
       'Tu Apple Watch está emparejado. Ahora puedes grabar desde el Watch por sí solo.';
 
   @override
+  String get integrationsWatchRowTitle => 'Apple Watch';
+
+  @override
+  String get watchScreenTitle => 'Apple Watch';
+
+  @override
+  String get watchScreenDescription =>
+      'Al emparejar podrás grabar y clasificar con IA desde tu Apple Watch sin llevar el iPhone contigo. Mantén el iPhone y el Watch cerca con Bluetooth activado durante el emparejamiento.';
+
+  @override
+  String get watchSignInRequiredTitle =>
+      'Inicia sesión para conectar tu Apple Watch';
+
+  @override
+  String get watchSignInRequiredDescription =>
+      'Si emparejas de forma anónima, tendrás que volver a conectar el Watch si tu cuenta se reinicia (por ejemplo, tras reinstalar). Inicia sesión primero.';
+
+  @override
+  String get watchSignInRequiredNotice =>
+      'Inicia sesión con Google o Apple antes de conectar tu Apple Watch';
+
+  @override
   String get syncErrorBannerMessage =>
       'Algunos datos no se pudieron sincronizar';
 
   @override
   String get syncErrorBannerAction => 'Revisar';
+
+  @override
+  String get calendarSyncErrorBannerMessage =>
+      'No se pudo sincronizar con tu calendario/recordatorios';
+
+  @override
+  String get calendarSyncErrorBannerAction => 'Revisar ajustes de integración';
 
   @override
   String get loadErrorBannerMessage => 'Error al cargar tus datos';
@@ -806,6 +835,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get notificationPermissionDialogMessage =>
       'Permite las notificaciones para recibir recordatorios. Puedes cambiar esto en la app de Ajustes.';
+
+  @override
+  String get notifyAtPastError =>
+      'No se puede programar un recordatorio en el pasado';
 
   @override
   String get openSettings => 'Abrir ajustes';
@@ -1263,6 +1296,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get discard => 'Descartar';
+
+  @override
+  String get recoveredRecordingTitle => 'Se encontró una grabación sin guardar';
+
+  @override
+  String get recoveredRecordingMessage =>
+      'Hay una grabación en este dispositivo de antes de que la app se cerrara inesperadamente. ¿Quieres procesarla ahora?';
+
+  @override
+  String get recoveredRecordingProcess => 'Procesar';
 
   @override
   String get dragCardHere => 'Arrastra una tarjeta aquí';

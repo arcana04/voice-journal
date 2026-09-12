@@ -60,6 +60,9 @@ enum VoiceMemoUploader {
                 // iPhone側(lib/services/backend_service.dart)と同じワイヤー形式
                 // (EntryCategory.rawValueがdiary/idea/taskでReviewCategory.wireValueと一致)。
                 "allowedCategories": allowedCategories.map { $0.rawValue },
+                // 「今日」「今日の曜日」の判定用（[[project_voicejournal_knowledge_base_chat]]参照）。
+                // Watch単体で完結する機能のため、iPhoneのタイムゾーンには依存せずWatch自身のものを送る。
+                "timeZone": TimeZone.current.identifier,
             ],
         ])
 

@@ -473,11 +473,41 @@ class AppLocalizationsDe extends AppLocalizations {
       'Deine Apple Watch ist gekoppelt. Du kannst jetzt allein auf der Watch aufnehmen.';
 
   @override
+  String get integrationsWatchRowTitle => 'Apple Watch';
+
+  @override
+  String get watchScreenTitle => 'Apple Watch';
+
+  @override
+  String get watchScreenDescription =>
+      'Nach dem Koppeln kannst du allein mit der Apple Watch aufnehmen und die KI-Sortierung nutzen, ganz ohne iPhone. Halte iPhone und Watch beim Koppeln in der Nähe und aktiviere Bluetooth.';
+
+  @override
+  String get watchSignInRequiredTitle =>
+      'Melde dich an, um deine Apple Watch zu verbinden';
+
+  @override
+  String get watchSignInRequiredDescription =>
+      'Wenn du anonym koppelst, musst du die Watch-Verbindung neu einrichten, falls dein Konto zurückgesetzt wird (z. B. nach einer Neuinstallation). Melde dich zuerst an.';
+
+  @override
+  String get watchSignInRequiredNotice =>
+      'Melde dich zuerst mit Google oder Apple an, um deine Apple Watch zu verbinden';
+
+  @override
   String get syncErrorBannerMessage =>
       'Einige Daten konnten nicht synchronisiert werden';
 
   @override
   String get syncErrorBannerAction => 'Prüfen';
+
+  @override
+  String get calendarSyncErrorBannerMessage =>
+      'Synchronisierung mit Kalender/Erinnerungen fehlgeschlagen';
+
+  @override
+  String get calendarSyncErrorBannerAction =>
+      'Verknüpfungseinstellungen prüfen';
 
   @override
   String get loadErrorBannerMessage =>
@@ -807,6 +837,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get notificationPermissionDialogMessage =>
       'Erlaube Benachrichtigungen, um Erinnerungen zu erhalten. Du kannst dies in der Einstellungen-App ändern.';
+
+  @override
+  String get notifyAtPastError =>
+      'Für einen vergangenen Zeitpunkt kann keine Erinnerung gesetzt werden';
 
   @override
   String get openSettings => 'Einstellungen öffnen';
@@ -1265,6 +1299,16 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get discard => 'Verwerfen';
+
+  @override
+  String get recoveredRecordingTitle => 'Nicht gespeicherte Aufnahme gefunden';
+
+  @override
+  String get recoveredRecordingMessage =>
+      'Auf diesem Gerät ist eine Aufnahme von vor dem unerwarteten Schließen der App vorhanden. Möchtest du sie jetzt verarbeiten?';
+
+  @override
+  String get recoveredRecordingProcess => 'Verarbeiten';
 
   @override
   String get dragCardHere => 'Ziehe eine Karte hierher';

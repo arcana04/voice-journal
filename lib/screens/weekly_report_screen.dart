@@ -101,11 +101,21 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
   /// 「先週比」比較用に、前週(週の開始日を7日遡った週)の保存済み
   /// スナップショットを読み込む。無ければ[_previousReport]はnullのまま
   /// (=比較UI非表示)。
+  ///
+  /// 前週のスナップショットが、日曜20:00（レター解禁＝週の確定）より前に
+  /// 開かれて保存された途中経過(weekEndがその時点のnow)である場合は、
+  /// 比較対象として使わない——中途半端な週と比較すると誤解を招く前週比に
+  /// なってしまうため（[[project_voicejournal_knowledge_base_chat]]参照）。
+  /// この判定は新しいDBカラムを増やさず、既存のweekStart/weekEndから
+  /// 「確定済みの週かどうか」を計算するだけで行う。
   Future<void> _loadPreviousReport() async {
-    final previousWeekKey = _dateKey(_weekStart.subtract(const Duration(days: 7)));
+    final previousWeekStart = _weekStart.subtract(const Duration(days: 7));
+    final previousWeekKey = _dateKey(previousWeekStart);
     final previous = await DbService.instance.getWeeklyReportByWeekKey(previousWeekKey);
     if (!mounted) return;
-    setState(() => _previousReport = previous);
+    final previousCutoff = previousWeekStart.add(const Duration(days: 6, hours: 20));
+    final isComplete = previous != null && !previous.weekEnd.isBefore(previousCutoff);
+    setState(() => _previousReport = isComplete ? previous : null);
   }
 
   String _dateKey(DateTime d) =>

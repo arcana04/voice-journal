@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 
 import '../l10n/l10n_utils.dart';
 import '../models/custom_word.dart';
@@ -45,6 +46,18 @@ Map<String, dynamic>? _detailsAsMap(dynamic details) {
 class BackendService {
   final AuthService _auth = AuthService();
 
+  /// 「今日」「今日の曜日」の判定をサーバー（Cloud Functions、UTC固定）ではなく
+  /// 端末の実際のタイムゾーンで行わせるために送る。取得に失敗しても致命的では
+  /// ない（サーバー側で日本時間へフォールバックする）ためベストエフォート
+  /// （[[project_voicejournal_knowledge_base_chat]]参照）。
+  Future<String?> _deviceTimeZone() async {
+    try {
+      return (await FlutterTimezone.getLocalTimezone()).identifier;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<JournalEntry> processVoiceMemo(
     File audioFile, {
     List<CustomWord> customWords = const [],
@@ -56,6 +69,7 @@ class BackendService {
 
     final bytes = await audioFile.readAsBytes();
     final audioBase64 = base64Encode(bytes);
+    final timeZone = await _deviceTimeZone();
 
     try {
       final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
@@ -67,6 +81,7 @@ class BackendService {
         'summaryLevel': summaryLevel.wireValue,
         'locale': locale,
         'allowedCategories': allowedCategories.map((c) => c.wireValue).toList(),
+        'timeZone': timeZone,
       });
       return _entryFromResponse(result.data);
     } on FirebaseFunctionsException catch (e) {
@@ -85,6 +100,7 @@ class BackendService {
     required String locale,
   }) async {
     await _auth.ensureSignedIn();
+    final timeZone = await _deviceTimeZone();
 
     try {
       final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
@@ -94,6 +110,7 @@ class BackendService {
         'summaryLevel': summaryLevel.wireValue,
         'locale': locale,
         'allowedCategories': allowedCategories.map((c) => c.wireValue).toList(),
+        'timeZone': timeZone,
       });
       return _entryFromResponse(result.data);
     } on FirebaseFunctionsException catch (e) {
@@ -131,8 +148,10 @@ class BackendService {
     String question, {
     required String context,
     required String locale,
+    List<Map<String, String>> history = const [],
   }) async {
     await _auth.ensureSignedIn();
+    final timeZone = await _deviceTimeZone();
 
     try {
       final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
@@ -141,6 +160,8 @@ class BackendService {
         'question': question,
         'context': context,
         'locale': locale,
+        'history': history,
+        'timeZone': timeZone,
       });
       final answer = (result.data['answer'] as String? ?? '').trim();
       final sourcesJson = result.data['sources'] as List<dynamic>? ?? const [];

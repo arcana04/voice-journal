@@ -478,11 +478,41 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ton Apple Watch est couplée. Tu peux maintenant enregistrer directement depuis la Watch.';
 
   @override
+  String get integrationsWatchRowTitle => 'Apple Watch';
+
+  @override
+  String get watchScreenTitle => 'Apple Watch';
+
+  @override
+  String get watchScreenDescription =>
+      'Une fois couplée, tu peux enregistrer et profiter du tri par IA directement sur ton Apple Watch, sans avoir ton iPhone sur toi. Garde l\'iPhone et la Watch à proximité avec le Bluetooth activé pendant le couplage.';
+
+  @override
+  String get watchSignInRequiredTitle =>
+      'Connecte-toi pour associer ton Apple Watch';
+
+  @override
+  String get watchSignInRequiredDescription =>
+      'Si tu couples en restant anonyme, tu devras refaire la connexion à la Watch si ton compte est réinitialisé (par exemple après une réinstallation). Connecte-toi d\'abord.';
+
+  @override
+  String get watchSignInRequiredNotice =>
+      'Connecte-toi d\'abord avec Google ou Apple pour associer ton Apple Watch';
+
+  @override
   String get syncErrorBannerMessage =>
       'Certaines données n\'ont pas pu être synchronisées';
 
   @override
   String get syncErrorBannerAction => 'Vérifier';
+
+  @override
+  String get calendarSyncErrorBannerMessage =>
+      'Échec de la synchronisation avec ton calendrier/tes rappels';
+
+  @override
+  String get calendarSyncErrorBannerAction =>
+      'Vérifier les paramètres de connexion';
 
   @override
   String get loadErrorBannerMessage => 'Échec du chargement de tes données';
@@ -812,6 +842,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get notificationPermissionDialogMessage =>
       'Autorise les notifications pour recevoir des rappels. Tu peux modifier cela dans l\'application Réglages.';
+
+  @override
+  String get notifyAtPastError =>
+      'Impossible de programmer un rappel dans le passé';
 
   @override
   String get openSettings => 'Ouvrir les réglages';
@@ -1270,6 +1304,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get discard => 'Annuler';
+
+  @override
+  String get recoveredRecordingTitle => 'Enregistrement non sauvegardé trouvé';
+
+  @override
+  String get recoveredRecordingMessage =>
+      'Il y a un enregistrement sur cet appareil datant d\'avant la fermeture inattendue de l\'application. Veux-tu le traiter maintenant ?';
+
+  @override
+  String get recoveredRecordingProcess => 'Traiter';
 
   @override
   String get dragCardHere => 'Fais glisser une carte ici';

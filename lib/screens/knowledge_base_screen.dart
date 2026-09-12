@@ -144,8 +144,27 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
   /// 見て分かる程度の枚数に絞り、横スクロールが煩雑にならないようにする。
   static const _maxDisplayedSources = 5;
 
+  /// 直近のやり取りをそのまま会話の履歴としてサーバーへ渡す。「それって
+  /// どういうこと？」のような追撃質問に対応するため
+  /// （[[project_voicejournal_knowledge_base_chat]]参照）。回答が返ってきた
+  /// メッセージだけを対象にする（読み込み中・エラーのものは除く）。
+  static const _maxHistoryTurns = 6;
+
+  List<Map<String, String>> _buildHistory() {
+    return _messages
+        .where((m) => m.answer != null && m.answer!.isNotEmpty)
+        .map((m) => {'question': m.question, 'answer': m.answer!})
+        .toList()
+        .reversed
+        .take(_maxHistoryTurns)
+        .toList()
+        .reversed
+        .toList();
+  }
+
   /// テキスト入力・音声質問どちらもここに合流する。
   Future<void> _ask(String question) async {
+    final history = _buildHistory();
     final message = _ChatMessage(question: question);
     setState(() => _messages.add(message));
     _scrollToBottom();
@@ -159,6 +178,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
         question,
         context: contextText,
         locale: locale,
+        history: history,
       );
       if (!mounted) return;
       final isAnonymous = FirebaseAuth.instance.currentUser?.isAnonymous ?? false;

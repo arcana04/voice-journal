@@ -8,6 +8,28 @@ class SettingsService {
   static const _hasSeenOnboardingPref = 'has_seen_onboarding';
   static const _accentColorIndexPref = 'accent_color_index';
   static const _languageCodePref = 'language_code';
+  static const _localDataOwnerUidPref = 'local_data_owner_uid';
+
+  /// 端末ローカルのSQLiteデータが最後にどのアカウント(Firebase uid)のもので
+  /// あったかを記録する。サインアウトはローカルデータを消さない設計のため、
+  /// 同じ端末で別の既存アカウントに切り替えると、前のアカウントのデータが
+  /// 残ったまま新アカウントの「クラウドから復元」で誤って新アカウント側に
+  /// 送信されてしまう恐れがある
+  /// （[[project_voicejournal_knowledge_base_chat]]参照）。AccountStoreが
+  /// サインイン成功時にこの値と食い違っていないか確認するために使う。
+  Future<String?> getLocalDataOwnerUid() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_localDataOwnerUidPref);
+  }
+
+  Future<void> setLocalDataOwnerUid(String? uid) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (uid == null) {
+      await prefs.remove(_localDataOwnerUidPref);
+    } else {
+      await prefs.setString(_localDataOwnerUidPref, uid);
+    }
+  }
 
   Future<SummaryLevel> getSummaryLevel() async {
     final prefs = await SharedPreferences.getInstance();

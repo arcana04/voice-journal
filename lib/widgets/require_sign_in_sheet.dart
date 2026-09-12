@@ -13,17 +13,24 @@ import '../state/account_store.dart';
 /// PaywallScreen・BuyMinutesScreenの購入直前チェックから呼ばれる — 匿名のまま
 /// 課金すると、TestFlight等で端末が再インストールされ匿名uidがリセットされた際に
 /// 購入を復元する手段が無くなるため、購入前にアカウントへ紐付けさせる。
-Future<bool> showRequireSignInSheet(BuildContext context) async {
+Future<bool> showRequireSignInSheet(
+  BuildContext context, {
+  String? title,
+  String? description,
+}) async {
   final result = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => const _RequireSignInSheet(),
+    builder: (_) => _RequireSignInSheet(title: title, description: description),
   );
   return result ?? false;
 }
 
 class _RequireSignInSheet extends StatefulWidget {
-  const _RequireSignInSheet();
+  final String? title;
+  final String? description;
+
+  const _RequireSignInSheet({this.title, this.description});
 
   @override
   State<_RequireSignInSheet> createState() => _RequireSignInSheetState();
@@ -90,7 +97,7 @@ class _RequireSignInSheetState extends State<_RequireSignInSheet> {
             ),
             const SizedBox(height: 12),
             Text(
-              l10n.paywallSignInRequiredTitle,
+              widget.title ?? l10n.paywallSignInRequiredTitle,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
@@ -98,7 +105,7 @@ class _RequireSignInSheetState extends State<_RequireSignInSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              l10n.paywallSignInRequiredDescription,
+              widget.description ?? l10n.paywallSignInRequiredDescription,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.outline,
               ),

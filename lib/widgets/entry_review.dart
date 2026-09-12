@@ -375,7 +375,11 @@ class _EntryReviewState extends State<EntryReview> {
           : null,
       item: item,
       autofocus: item.id == _autofocusId,
-      onChanged: (value) => item.text = value,
+      // setStateを伴わずitem.textだけ更新すると、保存ボタンのhasContent判定
+      // （build()内で毎回計算）が次の再描画まで更新されない。全カードを消して
+      // 空の新規カードを追加した直後にここへ文字を入力すると、他に再描画の
+      // トリガーが無いため保存ボタンが無効のまま固まっていた。
+      onChanged: (value) => setState(() => item.text = value),
       onRemove: () => _removeItem(item),
     );
 

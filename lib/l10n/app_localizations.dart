@@ -934,6 +934,42 @@ abstract class AppLocalizations {
   /// **'Your Apple Watch is paired. You can now record on the Watch by itself.'**
   String get watchPairingSuccessMessage;
 
+  /// No description provided for @integrationsWatchRowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Watch'**
+  String get integrationsWatchRowTitle;
+
+  /// No description provided for @watchScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Watch'**
+  String get watchScreenTitle;
+
+  /// No description provided for @watchScreenDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Pairing lets you record and get AI sorting on your Apple Watch alone, without carrying your iPhone. Keep your iPhone and Watch nearby with Bluetooth on while pairing.'**
+  String get watchScreenDescription;
+
+  /// No description provided for @watchSignInRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to connect your Apple Watch'**
+  String get watchSignInRequiredTitle;
+
+  /// No description provided for @watchSignInRequiredDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Pairing while anonymous means you\'ll need to redo the Watch connection if your account resets (e.g. after a reinstall). Sign in first.'**
+  String get watchSignInRequiredDescription;
+
+  /// No description provided for @watchSignInRequiredNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google or Apple first to connect your Apple Watch'**
+  String get watchSignInRequiredNotice;
+
   /// No description provided for @syncErrorBannerMessage.
   ///
   /// In en, this message translates to:
@@ -945,6 +981,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check'**
   String get syncErrorBannerAction;
+
+  /// No description provided for @calendarSyncErrorBannerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t sync with your calendar/reminders'**
+  String get calendarSyncErrorBannerMessage;
+
+  /// No description provided for @calendarSyncErrorBannerAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Check integration settings'**
+  String get calendarSyncErrorBannerAction;
 
   /// No description provided for @loadErrorBannerMessage.
   ///
@@ -1515,6 +1563,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Allow notifications to receive reminders. You can change this in the Settings app.'**
   String get notificationPermissionDialogMessage;
+
+  /// No description provided for @notifyAtPastError.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t set a reminder for a time in the past'**
+  String get notifyAtPastError;
 
   /// No description provided for @openSettings.
   ///
@@ -2409,6 +2463,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Discard'**
   String get discard;
+
+  /// No description provided for @recoveredRecordingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved recording found'**
+  String get recoveredRecordingTitle;
+
+  /// No description provided for @recoveredRecordingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s a recording on this device from before the app closed unexpectedly. Would you like to process it now?'**
+  String get recoveredRecordingMessage;
+
+  /// No description provided for @recoveredRecordingProcess.
+  ///
+  /// In en, this message translates to:
+  /// **'Process'**
+  String get recoveredRecordingProcess;
 
   /// No description provided for @dragCardHere.
   ///

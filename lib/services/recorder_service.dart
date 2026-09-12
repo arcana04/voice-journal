@@ -56,6 +56,36 @@ class RecorderService {
         .map((amplitude) => RecordingAmplitude(amplitude.current));
   }
 
+  /// 前回アプリが録音の途中で強制終了された場合に残る、未処理のまま端末に
+  /// 残っている録音ファイル一覧を返す（新しい順）。Android版は電池最適化が
+  /// 厳しい端末でバックグラウンド録音中にOSがプロセスごと強制終了することが
+  /// あり、`record`パッケージは音声を逐次ディスクへ書き込むため、その場合
+  /// ファイル自体は生き残るが今まで検知・復旧する手段が無く、ユーザーが
+  /// 気づかないまま録音が失われていた（[[project_voicejournal_knowledge_base_chat]]
+  /// 参照）。呼び出し側は現在進行中の録音がある場合、そのパスを[excludePath]
+  /// で除外すること。
+  static Future<List<String>> findOrphanedRecordings({String? excludePath}) async {
+    try {
+      final dir = Directory.systemTemp;
+      if (!await dir.exists()) return const [];
+      final entries = await dir
+          .list()
+          .where(
+            (e) =>
+                e is File &&
+                e.path != excludePath &&
+                e.path.split(Platform.pathSeparator).last.startsWith('voicejournal_') &&
+                e.path.endsWith('.m4a'),
+          )
+          .cast<File>()
+          .toList();
+      entries.sort((a, b) => b.path.compareTo(a.path));
+      return entries.map((f) => f.path).toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
   Future<void> start() async {
     if (Platform.isIOS) {
       await _channel.invokeMethod('start');

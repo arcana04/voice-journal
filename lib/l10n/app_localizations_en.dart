@@ -469,10 +469,38 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your Apple Watch is paired. You can now record on the Watch by itself.';
 
   @override
+  String get integrationsWatchRowTitle => 'Apple Watch';
+
+  @override
+  String get watchScreenTitle => 'Apple Watch';
+
+  @override
+  String get watchScreenDescription =>
+      'Pairing lets you record and get AI sorting on your Apple Watch alone, without carrying your iPhone. Keep your iPhone and Watch nearby with Bluetooth on while pairing.';
+
+  @override
+  String get watchSignInRequiredTitle => 'Sign in to connect your Apple Watch';
+
+  @override
+  String get watchSignInRequiredDescription =>
+      'Pairing while anonymous means you\'ll need to redo the Watch connection if your account resets (e.g. after a reinstall). Sign in first.';
+
+  @override
+  String get watchSignInRequiredNotice =>
+      'Sign in with Google or Apple first to connect your Apple Watch';
+
+  @override
   String get syncErrorBannerMessage => 'Some data failed to sync';
 
   @override
   String get syncErrorBannerAction => 'Check';
+
+  @override
+  String get calendarSyncErrorBannerMessage =>
+      'Couldn\'t sync with your calendar/reminders';
+
+  @override
+  String get calendarSyncErrorBannerAction => 'Check integration settings';
 
   @override
   String get loadErrorBannerMessage => 'Failed to load your data';
@@ -798,6 +826,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationPermissionDialogMessage =>
       'Allow notifications to receive reminders. You can change this in the Settings app.';
+
+  @override
+  String get notifyAtPastError =>
+      'Can\'t set a reminder for a time in the past';
 
   @override
   String get openSettings => 'Open settings';
@@ -1254,6 +1286,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discard => 'Discard';
+
+  @override
+  String get recoveredRecordingTitle => 'Unsaved recording found';
+
+  @override
+  String get recoveredRecordingMessage =>
+      'There\'s a recording on this device from before the app closed unexpectedly. Would you like to process it now?';
+
+  @override
+  String get recoveredRecordingProcess => 'Process';
 
   @override
   String get dragCardHere => 'Drag a card here';

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import '../services/auth_service.dart';
 import '../services/db_service.dart';
+import '../services/settings_service.dart';
 
 /// アカウント連携エラーの理由。UI側でメッセージ出し分けに使う。
 class AccountException implements Exception {
@@ -27,6 +28,7 @@ enum AccountErrorReason { networkError, unknown }
 /// 別ユーザーへの切り替え（2台目以降の端末など）を行う。
 class AccountStore extends ChangeNotifier {
   final AuthService _authService = AuthService();
+  final SettingsService _settings = SettingsService();
   StreamSubscription<User?>? _authSub;
 
   AccountStore() {
@@ -82,11 +84,16 @@ class AccountStore extends ChangeNotifier {
         final result = await FirebaseAuth.instance.signInWithCredential(
           credential,
         );
+        await _guardAccountSwitch(result.user!.uid);
         notifyListeners();
         return result.user!.uid;
       }
       try {
         final result = await user.linkWithCredential(credential);
+        // linkWithCredentialはuidを変えない（匿名→本アカウントへの昇格）ため
+        // 切替ガードは不要だが、このuidを「ローカルデータの持ち主」として
+        // 記録しておく（初めての紐付けの場合、以後の切替検知の基準になる）。
+        await _settings.setLocalDataOwnerUid(result.user!.uid);
         notifyListeners();
         return result.user!.uid;
       } on FirebaseAuthException catch (e) {
@@ -98,12 +105,31 @@ class AccountStore extends ChangeNotifier {
         final result = await FirebaseAuth.instance.signInWithCredential(
           freshCredential,
         );
+        await _guardAccountSwitch(result.user!.uid);
         notifyListeners();
         return result.user!.uid;
       }
     } on FirebaseAuthException catch (e) {
       throw AccountException(_reasonFor(e), e);
     }
+  }
+
+  /// サインアウトは端末ローカルのSQLiteデータを消さない設計のため、同じ端末で
+  /// 別の既存アカウントへ切り替えると、前のアカウントのデータが残ったまま
+  /// 新アカウントの「クラウドから復元」で新アカウント側のFirestoreへ誤って
+  /// 送信されてしまう恐れがある。ローカルデータの持ち主として記録済みの
+  /// uidと、今回サインインしたuidが食い違う場合（＝別の既存アカウントへの
+  /// 切り替え）だけ、ローカルデータを消してから新しい持ち主を記録する
+  /// （[[project_voicejournal_knowledge_base_chat]]参照）。記録が無い場合
+  /// （この端末で初めての実アカウント紐付け）は消さずにそのまま採用する——
+  /// 匿名のまま使っていたデータを初回サインインで引き継ぐ既存の挙動を壊さない
+  /// ため。
+  Future<void> _guardAccountSwitch(String newUid) async {
+    final previousOwner = await _settings.getLocalDataOwnerUid();
+    if (previousOwner != null && previousOwner != newUid) {
+      await DbService.instance.wipeAllLocalData();
+    }
+    await _settings.setLocalDataOwnerUid(newUid);
   }
 
   Future<AuthCredential> googleCredential() => _authService.signInWithGoogle();
@@ -142,6 +168,7 @@ class AccountStore extends ChangeNotifier {
       );
     }
     await DbService.instance.wipeAllLocalData();
+    await _settings.setLocalDataOwnerUid(null);
     await FirebaseAuth.instance.signOut();
     final uid = await _authService.ensureSignedIn();
     notifyListeners();

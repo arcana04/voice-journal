@@ -92,9 +92,41 @@ class MediaSyncService {
     }
   }
 
+  /// putData成功後、サーバー側の5GB上限強制（functions/src/index.tsの
+  /// onMediaObjectFinalized）がアップロード直後にファイルを削除していないかを
+  /// 確認する。Storageトリガーの発火には数秒のラグがあるため、短い間隔で
+  /// 数回リトライしてから判定する（[[project_voicejournal_knowledge_base_chat]]
+  /// 参照——以前はputData成功の時点で無条件にmarkImageUploadedしていたため、
+  /// 上限超過分がサーバー側で静かに削除されても端末側は「アップロード済み」
+  /// のまま気づけず、実質的な永久データ損失になっていた）。
+  Future<bool> _confirmUploadSurvived(Reference ref) async {
+    const delays = [
+      Duration(seconds: 1),
+      Duration(seconds: 2),
+      Duration(seconds: 3),
+    ];
+    for (final delay in delays) {
+      await Future<void>.delayed(delay);
+      try {
+        await ref.getMetadata();
+        return true;
+      } on FirebaseException catch (e) {
+        if (e.code != 'object-not-found') return true;
+        // まだ削除されていないだけの可能性があるので次のリトライへ。
+      } catch (_) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// [entryId]のまだアップロードしていない添付ファイルをStorageへ送る。
   /// 戻り値はUIへの同期状態表示（[JournalStore.syncError]）に使う成否フラグ
-  /// （1件でもアップロードに失敗すればfalse）。
+  /// （1件でもアップロードに失敗すればfalse）。5GB上限超過でサーバー側に
+  /// 削除された場合はmarkImageUploadedを呼ばない（＝ローカルには未アップロード
+  /// のまま残り、次回の同期でも「未アップロード」として正しく扱われる。
+  /// 上限に達している限り再送も同じ理由で削除されるが、少なくとも
+  /// 「同期済みのはずが実際は消えている」という無自覚なデータ損失は防げる）。
   Future<bool> uploadPendingMedia({
     required int entryId,
     required String? remoteId,
@@ -107,8 +139,14 @@ class MediaSyncService {
       try {
         final bytes = await _prepareBytesForUpload(path);
         if (bytes == null) continue;
-        await folder.child(p.basename(path)).putData(bytes);
-        await DbService.instance.markImageUploaded(path);
+        final ref = folder.child(p.basename(path));
+        await ref.putData(bytes);
+        if (await _confirmUploadSurvived(ref)) {
+          await DbService.instance.markImageUploaded(path);
+        } else {
+          debugPrint('media upload rejected by storage cap: $path');
+          success = false;
+        }
       } catch (e) {
         debugPrint('media upload failed: $e');
         success = false;

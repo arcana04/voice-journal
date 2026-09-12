@@ -456,10 +456,37 @@ class AppLocalizationsKo extends AppLocalizations {
       'Apple Watch가 페어링되었습니다. 이제 Watch만으로도 녹음할 수 있어요.';
 
   @override
+  String get integrationsWatchRowTitle => 'Apple Watch';
+
+  @override
+  String get watchScreenTitle => 'Apple Watch';
+
+  @override
+  String get watchScreenDescription =>
+      '페어링하면 iPhone 없이 Apple Watch만으로 녹음하고 AI 분류를 사용할 수 있습니다. 페어링하는 동안 iPhone과 Watch를 가까이 두고 블루투스를 켜 두세요.';
+
+  @override
+  String get watchSignInRequiredTitle => 'Apple Watch를 연결하려면 로그인하세요';
+
+  @override
+  String get watchSignInRequiredDescription =>
+      '익명 상태로 페어링하면 계정이 초기화될 때(예: 재설치 후) Watch 연결을 다시 해야 합니다. 먼저 로그인하세요.';
+
+  @override
+  String get watchSignInRequiredNotice =>
+      'Apple Watch를 연결하려면 먼저 Google 또는 Apple로 로그인하세요';
+
+  @override
   String get syncErrorBannerMessage => '일부 데이터 동기화에 실패했습니다';
 
   @override
   String get syncErrorBannerAction => '확인';
+
+  @override
+  String get calendarSyncErrorBannerMessage => '캘린더/미리 알림 연동에 실패했습니다';
+
+  @override
+  String get calendarSyncErrorBannerAction => '연동 설정 확인';
 
   @override
   String get loadErrorBannerMessage => '데이터를 불러오지 못했습니다';
@@ -762,6 +789,9 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get notificationPermissionDialogMessage =>
       '리마인더를 받으려면 알림을 허용해 주세요. 설정 앱에서 변경할 수 있어요.';
+
+  @override
+  String get notifyAtPastError => '이미 지난 시간에는 알림을 설정할 수 없어요';
 
   @override
   String get openSettings => '설정 열기';
@@ -1213,6 +1243,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get discard => '취소';
+
+  @override
+  String get recoveredRecordingTitle => '저장되지 않은 녹음을 발견했어요';
+
+  @override
+  String get recoveredRecordingMessage =>
+      '앱이 예기치 않게 종료되기 전의 녹음이 기기에 남아 있어요. 지금 처리할까요?';
+
+  @override
+  String get recoveredRecordingProcess => '처리하기';
 
   @override
   String get dragCardHere => '카드를 여기로 드래그하세요';

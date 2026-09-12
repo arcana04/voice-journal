@@ -131,6 +131,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkForOrphanedRecording());
+  }
+
+  @override
   void dispose() {
     _recordTrigger?.removeListener(_onRecordTriggered);
     _timer?.cancel();
@@ -138,6 +144,86 @@ class _HomeScreenState extends State<HomeScreen> {
     _processingPhraseTimer?.cancel();
     _recorder.dispose();
     super.dispose();
+  }
+
+  /// 前回、バックグラウンド録音中にAndroidがOSの電池最適化等でプロセスごと
+  /// 強制終了した場合、`record`パッケージが逐次書き込んでいた録音ファイルが
+  /// 端末に残ったまま気づかれず失われていた。起動のたびに残留ファイルを
+  /// 確認し、見つかれば処理するか破棄するかをユーザーに確認する
+  /// （[[project_voicejournal_knowledge_base_chat]]参照）。
+  Future<void> _checkForOrphanedRecording() async {
+    final orphaned = await RecorderService.findOrphanedRecordings();
+    if (orphaned.isEmpty || !mounted) return;
+
+    // 万一2件以上残っていても複雑にしないよう、最新の1件だけ復旧を提案し、
+    // それ以外は静かに削除する。
+    for (final extra in orphaned.skip(1)) {
+      try {
+        await File(extra).delete();
+      } catch (_) {}
+    }
+    if (!mounted) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    final shouldRecover = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.recoveredRecordingTitle),
+        content: Text(l10n.recoveredRecordingMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.discard),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.recoveredRecordingProcess),
+          ),
+        ],
+      ),
+    );
+
+    final path = orphaned.first;
+    if (shouldRecover != true) {
+      try {
+        await File(path).delete();
+      } catch (_) {}
+      return;
+    }
+    await _processRecoveredRecording(path);
+  }
+
+  /// [_stopAndProcess]から「録音を止める」部分だけを除いたもの——復旧対象の
+  /// ファイルは既に完結しているため、そのままAI仕分けパイプラインへ渡す。
+  Future<void> _processRecoveredRecording(String path) async {
+    if (!mounted) return;
+    final allowedCategories = {...ReviewCategory.values};
+    setState(() {
+      _state = RecordButtonState.processing;
+      _selectedCategories = allowedCategories;
+    });
+    _startProcessingPhraseCycle();
+
+    try {
+      final customWords = context.read<CustomWordsStore>().words;
+      final settings = context.read<SettingsStore>();
+      final entry = await _backend.processVoiceMemo(
+        File(path),
+        customWords: customWords,
+        summaryLevel: settings.summaryLevel,
+        allowedCategories: allowedCategories,
+        locale: Localizations.localeOf(context).languageCode,
+      );
+      if (!mounted) return;
+      _applyDraft(entry, allowedCategories);
+    } catch (e) {
+      if (!mounted) return;
+      _handleProcessingError(e);
+    } finally {
+      try {
+        await File(path).delete();
+      } catch (_) {}
+    }
   }
 
   /// 歩きながら・画面を見ずに操作する場面が多いコンセプトのため、目視確認しなくても
