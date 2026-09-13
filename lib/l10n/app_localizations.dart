@@ -982,6 +982,18 @@ abstract class AppLocalizations {
   /// **'Some data failed to sync'**
   String get syncErrorBannerMessage;
 
+  /// No description provided for @syncErrorBannerMessageAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sign-in may have expired. Please sign in again'**
+  String get syncErrorBannerMessageAuth;
+
+  /// No description provided for @syncErrorBannerMessageNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed. Please check your network connection'**
+  String get syncErrorBannerMessageNetwork;
+
   /// No description provided for @syncErrorBannerAction.
   ///
   /// In en, this message translates to:
@@ -1029,6 +1041,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clean up'**
   String get mediaStorageBannerAction;
+
+  /// No description provided for @mediaStorageUsageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{usedGb} GB / {capGb} GB used'**
+  String mediaStorageUsageLabel(Object capGb, Object usedGb);
 
   /// No description provided for @accountSyncingMessage.
   ///
@@ -1333,7 +1351,7 @@ abstract class AppLocalizations {
   /// No description provided for @paywallBenefitMediaSyncDesc.
   ///
   /// In en, this message translates to:
-  /// **'Keep your memories safely backed up'**
+  /// **'Keep your memories safely backed up (up to 5GB total)'**
   String get paywallBenefitMediaSyncDesc;
 
   /// No description provided for @paywallBenefitMediaSyncBadge.

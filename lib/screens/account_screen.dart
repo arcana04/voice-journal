@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
+import '../models/media_usage.dart';
 import '../services/auth_service.dart';
 import '../state/account_store.dart';
 import '../state/journal_store.dart';
@@ -329,29 +330,65 @@ class _MediaSyncNotice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // 写真・動画同期の使用量はサインイン済みユーザーのJournalStoreでのみ
+    // 取得される（refreshMediaUsage参照）。未同期対象（買い切り/無料）では
+    // 常にnullなので、バーは自然に表示されない。
+    final MediaUsage? mediaUsage =
+        canSyncMedia ? context.watch<JournalStore>().mediaUsage : null;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            canSyncMedia ? Icons.cloud_done_outlined : Icons.cloud_off_outlined,
-            size: 18,
-            color: theme.colorScheme.onSurfaceVariant,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                canSyncMedia ? Icons.cloud_done_outlined : Icons.cloud_off_outlined,
+                size: 18,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  canSyncMedia ? l10n.accountMediaSyncProNote : l10n.accountMediaSyncFreeNote,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              canSyncMedia ? l10n.accountMediaSyncProNote : l10n.accountMediaSyncFreeNote,
+          if (mediaUsage != null) ...[
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: mediaUsage.ratio.clamp(0, 1),
+                minHeight: 6,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                color: mediaUsage.isOverCap
+                    ? theme.colorScheme.error
+                    : mediaUsage.isWarning
+                        ? theme.colorScheme.tertiary
+                        : theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.mediaStorageUsageLabel(
+                (mediaUsage.usedBytes / (1024 * 1024 * 1024)).toStringAsFixed(2),
+                (mediaUsage.capBytes / (1024 * 1024 * 1024)).toStringAsFixed(0),
+              ),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

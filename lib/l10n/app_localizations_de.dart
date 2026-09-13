@@ -503,6 +503,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Einige Daten konnten nicht synchronisiert werden';
 
   @override
+  String get syncErrorBannerMessageAuth =>
+      'Deine Anmeldung ist möglicherweise abgelaufen. Bitte melde dich erneut an';
+
+  @override
+  String get syncErrorBannerMessageNetwork =>
+      'Synchronisierung fehlgeschlagen. Bitte überprüfe deine Internetverbindung';
+
+  @override
   String get syncErrorBannerAction => 'Prüfen';
 
   @override
@@ -530,6 +538,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get mediaStorageBannerAction => 'Aufräumen';
+
+  @override
+  String mediaStorageUsageLabel(Object capGb, Object usedGb) {
+    return '$usedGb GB / $capGb GB verwendet';
+  }
 
   @override
   String get accountSyncingMessage => 'Synchronisiere…';
@@ -701,7 +714,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get paywallBenefitMediaSyncDesc =>
-      'Halte deine Erinnerungen sicher gesichert';
+      'Halte deine Erinnerungen sicher gesichert (bis zu 5GB insgesamt)';
 
   @override
   String get paywallBenefitMediaSyncBadge => 'Nur monatliche/jährliche Pläne';

@@ -478,6 +478,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get syncErrorBannerMessage => '一部のデータの同期に失敗しました';
 
   @override
+  String get syncErrorBannerMessageAuth =>
+      'サインイン情報の有効期限が切れている可能性があります。再度サインインしてください';
+
+  @override
+  String get syncErrorBannerMessageNetwork => 'ネットワーク接続をご確認ください。同期に失敗しています';
+
+  @override
   String get syncErrorBannerAction => '確認する';
 
   @override
@@ -501,6 +508,11 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get mediaStorageBannerAction => '整理する';
+
+  @override
+  String mediaStorageUsageLabel(Object capGb, Object usedGb) {
+    return '$usedGb GB / $capGb GB 使用中';
+  }
 
   @override
   String get accountSyncingMessage => '同期中です…';
@@ -657,7 +669,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get paywallBenefitMediaSyncTitle => '写真・動画のクラウド同期';
 
   @override
-  String get paywallBenefitMediaSyncDesc => '大切な思い出を、安全にバックアップ';
+  String get paywallBenefitMediaSyncDesc => '大切な思い出を、安全にバックアップ（合計5GBまで）';
 
   @override
   String get paywallBenefitMediaSyncBadge => '月額・年額プラン限定';

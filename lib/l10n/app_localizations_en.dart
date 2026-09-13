@@ -496,6 +496,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncErrorBannerMessage => 'Some data failed to sync';
 
   @override
+  String get syncErrorBannerMessageAuth =>
+      'Your sign-in may have expired. Please sign in again';
+
+  @override
+  String get syncErrorBannerMessageNetwork =>
+      'Sync failed. Please check your network connection';
+
+  @override
   String get syncErrorBannerAction => 'Check';
 
   @override
@@ -521,6 +529,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mediaStorageBannerAction => 'Clean up';
+
+  @override
+  String mediaStorageUsageLabel(Object capGb, Object usedGb) {
+    return '$usedGb GB / $capGb GB used';
+  }
 
   @override
   String get accountSyncingMessage => 'Syncing…';
@@ -690,7 +703,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paywallBenefitMediaSyncDesc =>
-      'Keep your memories safely backed up';
+      'Keep your memories safely backed up (up to 5GB total)';
 
   @override
   String get paywallBenefitMediaSyncBadge => 'Monthly / annual plans only';

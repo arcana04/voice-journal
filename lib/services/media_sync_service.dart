@@ -8,6 +8,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../models/sync_failure_reason.dart';
 import '../utils/media_type.dart';
 import 'db_service.dart';
 import 'image_storage_service.dart';
@@ -27,6 +28,12 @@ class MediaSyncService {
   static const int _videoMaxDimension = 1280;
 
   final ImageStorageService _images = ImageStorageService();
+
+  /// 直近の失敗の分類（[JournalStore.syncErrorReason]に使う）。5GB上限超過
+  /// による失敗（[_confirmUploadSurvived]がfalseを返すケース）は既に専用の
+  /// バナー（[JournalStore.mediaUsage]）で案内済みなので、ここでは対象外——
+  /// 実際の例外（権限・ネットワーク等）が起きたケースだけを分類する。
+  SyncFailureReason? lastFailureReason;
 
   Reference? _mediaFolder(String? remoteId) {
     final user = FirebaseAuth.instance.currentUser;
@@ -148,6 +155,7 @@ class MediaSyncService {
           success = false;
         }
       } catch (e) {
+        lastFailureReason = SyncFailureReason.classify(e);
         debugPrint('media upload failed: $e');
         success = false;
       }
@@ -162,6 +170,7 @@ class MediaSyncService {
       await folder.child(p.basename(path)).delete();
       return true;
     } catch (e) {
+      lastFailureReason = SyncFailureReason.classify(e);
       debugPrint('media delete failed: $e');
       return false;
     }
@@ -177,6 +186,7 @@ class MediaSyncService {
       }
       return true;
     } catch (e) {
+      lastFailureReason = SyncFailureReason.classify(e);
       debugPrint('media delete-all failed: $e');
       return false;
     }
@@ -196,6 +206,7 @@ class MediaSyncService {
     try {
       remoteItems = (await folder.listAll()).items;
     } catch (e) {
+      lastFailureReason = SyncFailureReason.classify(e);
       debugPrint('media list failed: $e');
       return false;
     }
@@ -209,6 +220,7 @@ class MediaSyncService {
         final localPath = await _images.saveBytes(bytes, ref.name);
         newPaths.add(localPath);
       } catch (e) {
+        lastFailureReason = SyncFailureReason.classify(e);
         debugPrint('media download failed: $e');
         success = false;
       }

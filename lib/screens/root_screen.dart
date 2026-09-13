@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/review_category.dart';
+import '../models/sync_failure_reason.dart';
 import '../services/deep_link_service.dart';
 import '../services/nav_icon_anchors.dart';
 import '../services/reminder_service.dart';
@@ -126,9 +127,16 @@ class _RootScreenState extends State<RootScreen> {
                 );
               }
               if (store.syncError) {
+                final message = switch (store.syncErrorReason) {
+                  SyncFailureReason.permissionDenied ||
+                  SyncFailureReason.unauthenticated =>
+                    l10n.syncErrorBannerMessageAuth,
+                  SyncFailureReason.network => l10n.syncErrorBannerMessageNetwork,
+                  SyncFailureReason.unknown || null => l10n.syncErrorBannerMessage,
+                };
                 return _StatusBanner(
                   icon: Icons.cloud_off,
-                  message: l10n.syncErrorBannerMessage,
+                  message: message,
                   actionLabel: l10n.syncErrorBannerAction,
                   onAction: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const AccountScreen()),

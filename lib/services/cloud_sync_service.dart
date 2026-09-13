@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
+import '../models/sync_failure_reason.dart';
 
 /// エントリ（日記・タスク・アイデア）をFirestore `users/{uid}/entries/{remoteId}`
 /// へバックアップ/復元する。写真・動画は対象外（テキストデータのみ）。
@@ -12,6 +13,11 @@ import '../models/journal_entry.dart';
 /// 通信しない — 課金と同様、未加入者にコストをかけない設計。
 /// リアルタイム同期ではなく、呼び出されたタイミングでの単純なpush/pull。
 class CloudSyncService {
+  /// 直近の失敗の分類（[JournalStore.syncErrorReason]に使う）。各メソッドは
+  /// 呼ばれるたびに自分の結果でこれを上書きするので、staleな値が別の
+  /// 失敗に紛れ込むことはない。
+  SyncFailureReason? lastFailureReason;
+
   CollectionReference<Map<String, dynamic>>? get _collection {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.isAnonymous) return null;
@@ -129,6 +135,7 @@ class CloudSyncService {
           .set(_entryToFirestoreMap(entry), SetOptions(merge: true));
       return true;
     } catch (e) {
+      lastFailureReason = SyncFailureReason.classify(e);
       debugPrint('cloud sync push failed: $e');
       return false;
     }
@@ -141,6 +148,7 @@ class CloudSyncService {
       await collection.doc(remoteId).delete();
       return true;
     } catch (e) {
+      lastFailureReason = SyncFailureReason.classify(e);
       debugPrint('cloud sync delete failed: $e');
       return false;
     }
@@ -156,6 +164,7 @@ class CloudSyncService {
           .map((doc) => _entryFromFirestore(doc.id, doc.data()))
           .toList();
     } catch (e) {
+      lastFailureReason = SyncFailureReason.classify(e);
       debugPrint('cloud sync fetch failed: $e');
       return null;
     }

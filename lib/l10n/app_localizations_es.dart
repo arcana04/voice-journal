@@ -502,6 +502,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Algunos datos no se pudieron sincronizar';
 
   @override
+  String get syncErrorBannerMessageAuth =>
+      'Puede que tu sesión haya caducado. Vuelve a iniciar sesión';
+
+  @override
+  String get syncErrorBannerMessageNetwork =>
+      'Error de sincronización. Comprueba tu conexión a internet';
+
+  @override
   String get syncErrorBannerAction => 'Revisar';
 
   @override
@@ -527,6 +535,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get mediaStorageBannerAction => 'Limpiar';
+
+  @override
+  String mediaStorageUsageLabel(Object capGb, Object usedGb) {
+    return '$usedGb GB / $capGb GB usados';
+  }
 
   @override
   String get accountSyncingMessage => 'Sincronizando…';
@@ -699,7 +712,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get paywallBenefitMediaSyncDesc =>
-      'Mantén tus recuerdos respaldados de forma segura';
+      'Mantén tus recuerdos respaldados de forma segura (hasta 5GB en total)';
 
   @override
   String get paywallBenefitMediaSyncBadge => 'Solo planes mensual / anual';

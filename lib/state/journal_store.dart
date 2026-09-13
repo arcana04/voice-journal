@@ -9,6 +9,7 @@ import '../models/emotion_tag.dart';
 import '../models/entry_image.dart';
 import '../models/journal_entry.dart';
 import '../models/media_usage.dart';
+import '../models/sync_failure_reason.dart';
 import '../models/throwback_item.dart';
 import '../services/apple_reminders_service.dart';
 import '../services/apple_reminders_settings_service.dart';
@@ -63,6 +64,10 @@ class JournalStore extends ChangeNotifier {
   /// [RootScreen]が案内バナーを出す（静かに失敗して気づかれない状態を避ける狙い）。
   bool syncError = false;
 
+  /// [syncError]がtrueの場合の大まかな原因分類。UIが「サインインし直せば
+  /// 直る」等、原因に応じた案内を出せるようにする（nullは分類不能/未取得）。
+  SyncFailureReason? syncErrorReason;
+
   /// カレンダー/リマインダー連携（[_syncTaskCalendarEvent]/[_syncTaskAppleReminder]）
   /// の直近の同期が失敗したかどうか。従来はdebugPrintするだけでUIに一切
   /// 反映されず、権限が取り消された/連携先カレンダーが削除された等の理由で
@@ -76,8 +81,12 @@ class JournalStore extends ChangeNotifier {
   void _trackSync(Future<bool> future) {
     unawaited(
       future.then((success) {
-        if (syncError == !success) return;
+        final reason = success
+            ? null
+            : (_cloudSync.lastFailureReason ?? _mediaSync.lastFailureReason);
+        if (syncError == !success && syncErrorReason == reason) return;
         syncError = !success;
+        syncErrorReason = reason;
         notifyListeners();
       }),
     );
@@ -960,6 +969,9 @@ class JournalStore extends ChangeNotifier {
     } finally {
       _syncing = false;
       syncError = !success;
+      syncErrorReason = success
+          ? null
+          : (_cloudSync.lastFailureReason ?? _mediaSync.lastFailureReason);
       await load();
     }
   }

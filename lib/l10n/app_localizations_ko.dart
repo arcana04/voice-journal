@@ -483,6 +483,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get syncErrorBannerMessage => '일부 데이터 동기화에 실패했습니다';
 
   @override
+  String get syncErrorBannerMessageAuth => '로그인이 만료되었을 수 있습니다. 다시 로그인해 주세요';
+
+  @override
+  String get syncErrorBannerMessageNetwork => '동기화에 실패했습니다. 네트워크 연결을 확인해 주세요';
+
+  @override
   String get syncErrorBannerAction => '확인';
 
   @override
@@ -506,6 +512,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get mediaStorageBannerAction => '정리하기';
+
+  @override
+  String mediaStorageUsageLabel(Object capGb, Object usedGb) {
+    return '${usedGb}GB / ${capGb}GB 사용 중';
+  }
 
   @override
   String get accountSyncingMessage => '동기화 중…';
@@ -662,7 +673,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get paywallBenefitMediaSyncTitle => '사진·동영상 클라우드 동기화';
 
   @override
-  String get paywallBenefitMediaSyncDesc => '소중한 순간들을 안전하게 백업해두세요';
+  String get paywallBenefitMediaSyncDesc => '소중한 순간들을 안전하게 백업해두세요 (최대 5GB)';
 
   @override
   String get paywallBenefitMediaSyncBadge => '월간/연간 플랜 전용';
