@@ -34,6 +34,11 @@ Mark: ✅ match / ⚠️ partial (right category, wrong split/detail) / ❌ wron
 | long-ramble-single-topic-01 | 1 diary (not split into several) | |✅ | |
 | negation-no-task-01 | 1 diary, 0 task (no bathroom task) | |✅ | |
 | conditional-idea-01 | 1 idea + 1 diary (not task) | |✖ |sorted task➜get a good ofice chair |
+| multi-topic-split-03-two-tasks-drop-diary | 2 tasks + 1 idea + 1 diary | 2 tasks + 1 idea + 1 diary | ✅ | 2026-09-14, initially failed every retry (diary dropped) with the pre-fix prompt. Root cause isolated (-07): leading short exclamatory feeling sentence treated as scene-setting. Rules #4/#5 added to buildSystemPromptEn, deployed to prod (processTextMemo/processVoiceMemo), reverified with the exact original wording — now passes |
+| multi-topic-split-04-three-tasks-drop-idea | 3 tasks + 1 idea | 3 tasks + 1 idea | ✅ | 2026-09-14, tested against pre-fix prompt |
+| multi-topic-split-05-note-buried-in-middle | 2 tasks + 1 diary (diary in the middle) | 2 tasks + 1 diary | ✅ | 2026-09-14, tested against pre-fix prompt |
+| multi-topic-split-06-idea-and-diary-swapped-order | 2 tasks + 1 idea + 1 diary (idea first) | 2 tasks + 1 idea + 1 diary | ✅ | 2026-09-14, tested against pre-fix prompt — same content as -03, just reordered |
+| multi-topic-split-07-diary-moved-to-second-isolated | 2 tasks + 1 idea + 1 diary (diary in 2nd position, "Oh," kept) | 2 tasks + 1 idea + 1 diary | ✅ | 2026-09-14, tested against pre-fix prompt — single-variable isolation vs -03, confirms root cause is "feeling sentence as opening line" |
 
 ## Summary (fill in after the full pass)
 

@@ -168,6 +168,36 @@
       "transcript": "If I ever get a raise, I think I'd want to finally get a good office chair, my back has been killing me.",
       "expected": { "tasks": 0, "notes": [{ "category": "アイデア" }, { "category": "感情ログ" }] },
       "why": "Conditional/hypothetical purchase idea gated on an uncertain future event, plus a real current physical complaint — tests that the conditional idea isn't promoted to a task, and that the two parts (idea + diary) get split."
+    },
+    {
+      "id": "multi-topic-split-03-two-tasks-drop-diary",
+      "transcript": "I slept so well and feel super energized today! We should really host a rooftop barbecue party next month. Oh, I need to meet Sarah for lunch at 12:30 PM, and pick up my dry cleaning today at 2:00 PM.",
+      "expected": { "tasks": 2, "notes": [{ "category": "感情ログ" }, { "category": "アイデア" }] },
+      "why": "Real user-reported failure: like multi-topic-split-01 but with 2 tasks instead of 1 (4 total entries). Reproduced live via the app's text composer (bypassing STT) — the diary note ('slept so well, feel energized') was dropped entirely, not even reassigned to another category. Root cause isolated via manual A/B testing (see multi-topic-split-06/07): consistently reproducible (fails every time), and specifically triggered by the feeling sentence being the transcript's opening line — moving it to 2nd position fixes it every time. The model appears to treat a leading short exclamatory feeling statement as scene-setting/a throwaway opener rather than loggable content. Regression case for the reinforced rule #4/#5 instructions."
+    },
+    {
+      "id": "multi-topic-split-04-three-tasks-drop-idea",
+      "transcript": "I need to pick up the kids from school at 3pm, and I have to call the plumber about the leak, and don't let me forget to pay the electricity bill by Friday. Also, it might be fun to repaint the fence this summer.",
+      "expected": { "tasks": 3, "notes": [{ "category": "アイデア" }] },
+      "why": "Same crowding risk as multi-topic-split-03 but with 3 tasks (no diary this time) and the trailing entry is an idea, not a feeling. Checks whether the failure is specific to 感情ログ or applies to アイデア too, and whether it gets worse as task count increases from 2 to 3."
+    },
+    {
+      "id": "multi-topic-split-05-note-buried-in-middle",
+      "transcript": "I need to renew my passport before the trip. Honestly I've just been feeling really burnt out this week. I also need to submit the expense report by tomorrow.",
+      "expected": { "tasks": 2, "notes": [{ "category": "感情ログ" }] },
+      "why": "The diary sentence is sandwiched between two tasks instead of leading the transcript (multi-topic-split-01/03 both open with the feeling/idea first). Tests whether position within the transcript — not just task count — affects the crowding-out failure."
+    },
+    {
+      "id": "multi-topic-split-06-idea-and-diary-swapped-order",
+      "transcript": "We should really host a rooftop barbecue party next month. I slept so well and feel super energized today! I need to meet Sarah for lunch at 12:30 PM, and pick up my dry cleaning today at 2:00 PM.",
+      "expected": { "tasks": 2, "notes": [{ "category": "アイデア" }, { "category": "感情ログ" }] },
+      "why": "Identical content to multi-topic-split-03 but with the idea and diary sentences swapped in order. If this passes while -03 fails (or vice versa), the failure is positional rather than category-specific."
+    },
+    {
+      "id": "multi-topic-split-07-diary-moved-to-second-isolated",
+      "transcript": "We should really host a rooftop barbecue party next month. I slept so well and feel super energized today! Oh, I need to meet Sarah for lunch at 12:30 PM, and pick up my dry cleaning today at 2:00 PM.",
+      "expected": { "tasks": 2, "notes": [{ "category": "アイデア" }, { "category": "感情ログ" }] },
+      "why": "Isolation test: identical wording to multi-topic-split-03 (including 'Oh,') with ONLY the diary sentence's position changed from 1st to 2nd. Confirmed via manual testing to pass reliably, while -03 (diary in 1st position) fails every time — pins the root cause down to 'feeling sentence as the transcript's opening line', not word choice, not category, not general task-count crowding."
     }
   ]
 }
