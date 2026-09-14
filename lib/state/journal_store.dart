@@ -501,9 +501,12 @@ class JournalStore extends ChangeNotifier {
     entries.removeWhere((e) => e.id == entry.id);
     notifyListeners();
     _trackSync(_cloudSync.deleteEntry(entry.remoteId));
-    if (canSyncMedia) {
-      _trackSync(_mediaSync.deleteAllMedia(entry.remoteId));
-    }
+    // 現在のサブスク状態([canSyncMedia])に関わらず常に削除を試みる——アップロード
+    // (課金対象の機能)とは違い、後片付けはいつでも許可しないと、Pro/メディア同期が
+    // 失効した後に削除したエントリの写真・動画がStorageに残り続け、5GB上限を
+    // 永久に圧迫してしまう。アップロードされたことが無ければStorage側で
+    // 空振り（no-op）になるだけで害は無い。
+    _trackSync(_mediaSync.deleteAllMedia(entry.remoteId));
   }
 
   /// entry丸ごとではなく、指定したnote（同じカテゴリの内容）だけを削除する。
@@ -590,9 +593,8 @@ class JournalStore extends ChangeNotifier {
       entries.removeAt(index);
       notifyListeners();
       _trackSync(_cloudSync.deleteEntry(updated.remoteId));
-      if (canSyncMedia) {
-        _trackSync(_mediaSync.deleteAllMedia(updated.remoteId));
-      }
+      // deleteEntryと同じ理由で、現在のサブスク状態に関わらず常に削除を試みる。
+      _trackSync(_mediaSync.deleteAllMedia(updated.remoteId));
       return;
     }
     entries[index] = updated;
@@ -651,9 +653,8 @@ class JournalStore extends ChangeNotifier {
       images: entries[index].images.where((i) => i.path != path).toList(),
     );
     notifyListeners();
-    if (canSyncMedia) {
-      _trackSync(_mediaSync.deleteMedia(entry.remoteId, path));
-    }
+    // deleteEntryと同じ理由で、現在のサブスク状態に関わらず常に削除を試みる。
+    _trackSync(_mediaSync.deleteMedia(entry.remoteId, path));
   }
 
   /// 添付画像の自由配置（Pro限定）。[x]/[y]は正規化座標(0..1)、[scale]は

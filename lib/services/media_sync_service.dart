@@ -169,6 +169,16 @@ class MediaSyncService {
     try {
       await folder.child(p.basename(path)).delete();
       return true;
+    } on FirebaseException catch (e) {
+      // アップロードされたことが一度も無いファイル（Pro/メディア同期が
+      // 無効な間にローカルへ追加・削除された等）を消そうとしても、
+      // Storage側にそもそも無いので"object-not-found"になる。これは
+      // 「削除すべきものが既に無い」という意味で成功と同じなので、
+      // 同期エラーバナーを誤って出さないよう成功扱いにする。
+      if (e.code == 'object-not-found') return true;
+      lastFailureReason = SyncFailureReason.classify(e);
+      debugPrint('media delete failed: $e');
+      return false;
     } catch (e) {
       lastFailureReason = SyncFailureReason.classify(e);
       debugPrint('media delete failed: $e');
