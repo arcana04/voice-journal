@@ -1127,6 +1127,22 @@ function jstMonthString(date: Date = new Date()): string {
     .replace("-", "");
 }
 
+/** jstMonthStringの任意タイムゾーン版。不正なタイムゾーン識別子の場合は
+ * 例外を投げず日本時間にフォールバックする。 */
+function localMonthString(timeZone: string, date: Date = new Date()): string {
+  try {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+    })
+      .format(date)
+      .replace("-", "");
+  } catch {
+    return jstMonthString(date);
+  }
+}
+
 function jstWeekdayString(locale: Locale, date: Date = new Date()): string {
   return new Intl.DateTimeFormat(INTL_LOCALE[locale], {
     timeZone: "Asia/Tokyo",
@@ -1147,9 +1163,9 @@ async function dailyLimitFor(uid: string): Promise<number> {
   return (await isProUser(uid)) ? PRO_DAILY_LIMIT : FREE_DAILY_LIMIT;
 }
 
-async function consumeDailyQuota(uid: string, locale: Locale): Promise<void> {
+async function consumeDailyQuota(uid: string, locale: Locale, timeZone: string): Promise<void> {
   const db = getFirestore();
-  const usageRef = db.collection("usage").doc(`${uid}_${jstDateString()}`);
+  const usageRef = db.collection("usage").doc(`${uid}_${localDateString(timeZone)}`);
   const limit = await dailyLimitFor(uid);
 
   await db.runTransaction(async (tx) => {
@@ -1178,9 +1194,9 @@ async function consumeDailyQuota(uid: string, locale: Locale): Promise<void> {
  * 1つ戻す（0未満にはしない。日付が変わって既に新しいドキュメントに
  * なっていた場合は何もしない——古い日付の枠を戻しても意味が無いため）。
  */
-async function refundDailyQuota(uid: string): Promise<void> {
+async function refundDailyQuota(uid: string, timeZone: string): Promise<void> {
   const db = getFirestore();
-  const usageRef = db.collection("usage").doc(`${uid}_${jstDateString()}`);
+  const usageRef = db.collection("usage").doc(`${uid}_${localDateString(timeZone)}`);
   await db.runTransaction(async (tx) => {
     const snap = await tx.get(usageRef);
     const count = (snap.data()?.count as number | undefined) ?? 0;
@@ -1190,8 +1206,8 @@ async function refundDailyQuota(uid: string): Promise<void> {
   });
 }
 
-function usageMonthRef(uid: string) {
-  return getFirestore().collection("usageMonth").doc(`${uid}_${jstMonthString()}`);
+function usageMonthRef(uid: string, timeZone: string) {
+  return getFirestore().collection("usageMonth").doc(`${uid}_${localMonthString(timeZone)}`);
 }
 
 /**
@@ -1202,12 +1218,16 @@ function usageMonthRef(uid: string) {
  * （1回の録音の途中で上限を跨ぐケース自体は許容し、事後にrecordMonthlyMinutesUsageで
  * 加算する——完全な事前ブロックにはできないが、無駄なWhisper課金を防ぐには十分）。
  */
-async function checkMonthlyMinutesBudget(uid: string, locale: Locale): Promise<void> {
+async function checkMonthlyMinutesBudget(
+  uid: string,
+  locale: Locale,
+  timeZone: string
+): Promise<void> {
   if (!(await isProUser(uid))) return;
 
   const db = getFirestore();
   const [usageSnap, userSnap] = await Promise.all([
-    usageMonthRef(uid).get(),
+    usageMonthRef(uid, timeZone).get(),
     db.collection("users").doc(uid).get(),
   ]);
   const audioSecondsUsed = (usageSnap.data()?.audioSecondsUsed as number | undefined) ?? 0;
@@ -1241,13 +1261,14 @@ interface MonthlyMinutesUsage {
  */
 async function recordMonthlyMinutesUsage(
   uid: string,
-  durationSeconds: number
+  durationSeconds: number,
+  timeZone: string
 ): Promise<MonthlyMinutesUsage | null> {
   if (durationSeconds <= 0) return null;
   if (!(await isProUser(uid))) return null;
 
   const db = getFirestore();
-  const usageRef = usageMonthRef(uid);
+  const usageRef = usageMonthRef(uid, timeZone);
   const userRef = db.collection("users").doc(uid);
 
   return db.runTransaction(async (tx) => {
@@ -1287,12 +1308,13 @@ async function recordMonthlyMinutesUsage(
  */
 async function refundMonthlyMinutesUsage(
   uid: string,
-  usage: MonthlyMinutesUsage
+  usage: MonthlyMinutesUsage,
+  timeZone: string
 ): Promise<void> {
   if (usage.fromBase <= 0 && usage.fromBonus <= 0) return;
 
   const db = getFirestore();
-  const usageRef = usageMonthRef(uid);
+  const usageRef = usageMonthRef(uid, timeZone);
   const userRef = db.collection("users").doc(uid);
 
   await db.runTransaction(async (tx) => {
@@ -1414,9 +1436,11 @@ export const getUsageStatus = onCall(
     if (!uid) {
       throw new HttpsError("unauthenticated", "認証が必要です。");
     }
+    const { timeZone } = (request.data ?? {}) as { timeZone?: string };
+    const effectiveTimeZone = isValidTimeZone(timeZone) ? timeZone : "Asia/Tokyo";
 
     const db = getFirestore();
-    const usageRef = db.collection("usage").doc(`${uid}_${jstDateString()}`);
+    const usageRef = db.collection("usage").doc(`${uid}_${localDateString(effectiveTimeZone)}`);
     const [snap, limit, isPro] = await Promise.all([
       usageRef.get(),
       dailyLimitFor(uid),
@@ -1429,7 +1453,7 @@ export const getUsageStatus = onCall(
     }
 
     const [monthSnap, userSnap] = await Promise.all([
-      usageMonthRef(uid).get(),
+      usageMonthRef(uid, effectiveTimeZone).get(),
       db.collection("users").doc(uid).get(),
     ]);
     const monthlyUsedSeconds = (monthSnap.data()?.audioSecondsUsed as number | undefined) ?? 0;
@@ -2482,15 +2506,19 @@ export const processVoiceMemo = onCall(
         await consumeWatchRateLimit(uid, watchAuth.deviceId, loc);
       }
 
-      await consumeDailyQuota(uid, loc);
-      await checkMonthlyMinutesBudget(uid, loc);
+      await consumeDailyQuota(uid, loc, effectiveTimeZone);
+      await checkMonthlyMinutesBudget(uid, loc, effectiveTimeZone);
 
       const apiKey = openAiApiKey.value();
       const rawAudioBuffer = Buffer.from(audioBase64, "base64");
       const enhanced = await enhanceAudio(rawAudioBuffer, mimeType ?? "audio/m4a");
       let monthlyUsage: MonthlyMinutesUsage | null = null;
       if (enhanced.durationSeconds !== null) {
-        monthlyUsage = await recordMonthlyMinutesUsage(uid, enhanced.durationSeconds);
+        monthlyUsage = await recordMonthlyMinutesUsage(
+          uid,
+          enhanced.durationSeconds,
+          effectiveTimeZone
+        );
       }
       const words = normalizeCustomWords(customWords);
       const prompt = buildTranscriptionPrompt(words, loc);
@@ -2512,8 +2540,8 @@ export const processVoiceMemo = onCall(
           throw new HttpsError("invalid-argument", MESSAGES[loc].transcriptionEmpty);
         }
       } catch (transcribeErr) {
-        await refundDailyQuota(uid);
-        if (monthlyUsage) await refundMonthlyMinutesUsage(uid, monthlyUsage);
+        await refundDailyQuota(uid, effectiveTimeZone);
+        if (monthlyUsage) await refundMonthlyMinutesUsage(uid, monthlyUsage, effectiveTimeZone);
         throw transcribeErr;
       }
 
@@ -2533,8 +2561,8 @@ export const processVoiceMemo = onCall(
         );
         return toClientResponse(structured);
       } catch (structureErr) {
-        await refundDailyQuota(uid);
-        if (monthlyUsage) await refundMonthlyMinutesUsage(uid, monthlyUsage);
+        await refundDailyQuota(uid, effectiveTimeZone);
+        if (monthlyUsage) await refundMonthlyMinutesUsage(uid, monthlyUsage, effectiveTimeZone);
         throw structureErr;
       }
     } catch (err) {
@@ -4974,7 +5002,7 @@ export const processTextMemo = onCall(
     }
 
     try {
-      await consumeDailyQuota(uid, loc);
+      await consumeDailyQuota(uid, loc, effectiveTimeZone);
 
       const apiKey = openAiApiKey.value();
       let structured;
@@ -4990,7 +5018,7 @@ export const processTextMemo = onCall(
       } catch (structureErr) {
         // GPT呼び出しが失敗した場合、ユーザーは何も得られていないのに
         // 日次回数だけ消費されたままにしない（processVoiceMemoと同じ対処）。
-        await refundDailyQuota(uid);
+        await refundDailyQuota(uid, effectiveTimeZone);
         throw structureErr;
       }
       return toClientResponse(structured);

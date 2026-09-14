@@ -222,11 +222,14 @@ class BackendService {
 
   Future<UsageStatus> fetchUsageStatus() async {
     await _auth.ensureSignedIn();
+    final timeZone = await _deviceTimeZone();
 
     try {
       final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
       final callable = functions.httpsCallable('getUsageStatus');
-      final result = await callable.call<Map<String, dynamic>>();
+      final result = await callable.call<Map<String, dynamic>>({
+        'timeZone': timeZone,
+      });
       final data = result.data;
       return UsageStatus(
         used: (data['used'] as num?)?.toInt() ?? 0,
