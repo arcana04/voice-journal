@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -47,8 +48,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
   >
   _loadData() async {
     final offering = await _purchases.fetchCurrentOffering();
-    final lifetimeRemaining = await LifetimePlanService.instance
-        .remainingSlots();
+    final lifetimeRemaining = Platform.isIOS
+        ? await LifetimePlanService.instance.remainingSlots()
+        : null;
     final trialCandidateIds = (offering?.availablePackages ?? const <Package>[])
         .where(
           (p) =>
@@ -428,13 +430,16 @@ class _PaywallScreenState extends State<PaywallScreen> {
         badge: l10n.paywallPlanRecommended,
         trialNote: trialNoteFor(annual),
       ),
-      _PlanSlot(
-        label: l10n.paywallPlanLifetime,
-        package: lifetime,
-        caption: l10n.paywallPlanLifetimeCaption,
-        badge: lifetimeBadge,
-        soldOut: lifetimeSoldOut,
-      ),
+      // 買い切りプランはiOS限定で提供する方針のため、Androidでは
+      // 商品が用意されないまま「近日公開」を出し続けないよう枠自体を作らない。
+      if (Platform.isIOS)
+        _PlanSlot(
+          label: l10n.paywallPlanLifetime,
+          package: lifetime,
+          caption: l10n.paywallPlanLifetimeCaption,
+          badge: lifetimeBadge,
+          soldOut: lifetimeSoldOut,
+        ),
     ];
 
     // 起動時、実在するパッケージの中から一番目立たせたいもの（年額があれば
