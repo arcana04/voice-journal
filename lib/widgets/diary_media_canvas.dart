@@ -93,6 +93,7 @@ class _DiaryMediaCanvasState extends State<DiaryMediaCanvas> {
         final maxScale = math.max(_kMinScale, canvasW / _kBaseTileSize);
 
         EntryImage? selected;
+        Offset? selectedCenterPx;
         var unarrangedIndex = 0;
         final tiles = <Widget>[];
         // 拡大したタイルが既定の高さ(canvasH)からはみ出す場合、切り取らずに
@@ -119,6 +120,7 @@ class _DiaryMediaCanvasState extends State<DiaryMediaCanvas> {
             centerPx = _autoPosition(unarrangedIndex, canvasW);
             unarrangedIndex++;
           }
+          if (isSelected) selectedCenterPx = centerPx;
 
           final left = (centerPx.dx - size / 2)
               .clamp(0.0, math.max(0.0, canvasW - size))
@@ -252,12 +254,11 @@ class _DiaryMediaCanvasState extends State<DiaryMediaCanvas> {
                 onChanged: (v) => setState(() => _liveScale = v),
                 onChangeEnd: (v) {
                   final image = selected!;
-                  final centerPx = image.x != null && image.y != null
-                      ? Offset(image.x! * canvasW, image.y! * canvasH)
-                      : _autoPosition(
-                          unarrangedIndex > 0 ? unarrangedIndex - 1 : 0,
-                          canvasW,
-                        );
+                  // 選択中の画像が実際に描画された位置(ループ内で記録済み)を
+                  // そのまま使う。以前はunarrangedIndex（未配置枚数のカウンタ）
+                  // から位置を逆算していたため、選択中の画像が「最後の未配置
+                  // 画像」でない場合に別の画像の位置を上書きしてしまっていた。
+                  final centerPx = selectedCenterPx!;
                   _commitPosition(image, centerPx, v, canvasW, canvasH);
                   setState(() => _liveScale = null);
                 },
