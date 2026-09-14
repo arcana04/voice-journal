@@ -45,17 +45,18 @@ class TaskItem {
   });
 
   /// 終日タスクにユーザーが明示的な通知時刻を設定していない場合の既定値
-  /// （期限日の前日16:00）。期限が今日以前（「牛乳を買わなきゃ」のような当日
-  /// タスクなど）だと前日16:00はすでに過去になり通知が飛ばなくなるため、
-  /// その場合は既定値を設定しない（null＝通知なし、従来どおりの挙動）。
-  static DateTime? defaultAllDayNotifyAt(DateTime dueDate) {
+  /// （期限日の前日[hour]時、設定画面で変更可能・デフォルト16時）。期限が
+  /// 今日以前（「牛乳を買わなきゃ」のような当日タスクなど）だと前日[hour]時は
+  /// すでに過去になり通知が飛ばなくなるため、その場合は既定値を設定しない
+  /// （null＝通知なし、従来どおりの挙動）。
+  static DateTime? defaultAllDayNotifyAt(DateTime dueDate, {int hour = 16}) {
     final today = DateTime.now();
     final dueDay = DateTime(dueDate.year, dueDate.month, dueDate.day);
     if (!dueDay.isAfter(DateTime(today.year, today.month, today.day))) {
       return null;
     }
     final dayBefore = dueDay.subtract(const Duration(days: 1));
-    return DateTime(dayBefore.year, dayBefore.month, dayBefore.day, 16);
+    return DateTime(dayBefore.year, dayBefore.month, dayBefore.day, hour);
   }
 
   TaskItem copyWith({
@@ -146,7 +147,18 @@ class TaskItem {
     );
   }
 
-  factory TaskItem.fromJson(Map<String, dynamic> json) {
+  /// [autoNotificationsEnabled]がfalseの場合、AIが時刻を抽出できていても
+  /// 通知は一切設定しない（カレンダー/リマインダーアプリへの反映だけしたい
+  /// ユーザー向けの設定）。[reminderOffsetMinutes]は「開始何分前に通知するか」
+  /// （0なら開始時刻ちょうど）、[allDayReminderHour]は終日タスクの既定通知時刻。
+  /// いずれも設定画面のデフォルト値で、後からTaskEditScreenで個別に変更できる
+  /// 点は変わらない。
+  factory TaskItem.fromJson(
+    Map<String, dynamic> json, {
+    bool autoNotificationsEnabled = true,
+    int reminderOffsetMinutes = 0,
+    int allDayReminderHour = 16,
+  }) {
     final dueDateStr = json['due_date'] as String?;
     final reminderAtStr = json['reminder_at'] as String?;
     final reminderEndAtStr = json['reminder_end_at'] as String?;
@@ -175,9 +187,16 @@ class TaskItem {
           ? DateTime.tryParse(reminderEndAtStr)
           : null,
       isAllDay: isAllDay,
-      // AIが時刻を抽出した直後は、通知時刻も開始時刻と同じにしておく（後から
-      // TaskEditScreenで両者を独立に変更できる）。終日タスクは前日16:00を既定にする。
-      notifyAt: isAllDay ? TaskItem.defaultAllDayNotifyAt(dueDate) : reminderAt,
+      // AIが時刻を抽出した直後の通知時刻の既定値。終日タスクは
+      // 「前日[allDayReminderHour]時」、時刻ありタスクは「開始時刻から
+      // [reminderOffsetMinutes]分前」（どちらも設定画面のデフォルト値、
+      // 後からTaskEditScreenで個別に変更できる点は変わらない）。
+      // autoNotificationsEnabledがfalseなら通知そのものを設定しない。
+      notifyAt: !autoNotificationsEnabled
+          ? null
+          : isAllDay
+          ? TaskItem.defaultAllDayNotifyAt(dueDate, hour: allDayReminderHour)
+          : reminderAt?.subtract(Duration(minutes: reminderOffsetMinutes)),
     );
   }
 }

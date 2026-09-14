@@ -214,6 +214,9 @@ class _HomeScreenState extends State<HomeScreen> {
         summaryLevel: settings.summaryLevel,
         allowedCategories: allowedCategories,
         locale: Localizations.localeOf(context).languageCode,
+        autoNotificationsEnabled: settings.autoNotificationsEnabled,
+        reminderOffsetMinutes: settings.reminderOffsetMinutes,
+        allDayReminderHour: settings.allDayReminderHour,
       );
       if (!mounted) return;
       _applyDraft(entry, allowedCategories);
@@ -427,6 +430,9 @@ class _HomeScreenState extends State<HomeScreen> {
         summaryLevel: settings.summaryLevel,
         allowedCategories: allowedCategories,
         locale: Localizations.localeOf(context).languageCode,
+        autoNotificationsEnabled: settings.autoNotificationsEnabled,
+        reminderOffsetMinutes: settings.reminderOffsetMinutes,
+        allDayReminderHour: settings.allDayReminderHour,
       );
       if (!mounted) return;
       _applyDraft(entry, allowedCategories);
@@ -472,6 +478,9 @@ class _HomeScreenState extends State<HomeScreen> {
         summaryLevel: settings.summaryLevel,
         allowedCategories: allowedCategories,
         locale: locale,
+        autoNotificationsEnabled: settings.autoNotificationsEnabled,
+        reminderOffsetMinutes: settings.reminderOffsetMinutes,
+        allDayReminderHour: settings.allDayReminderHour,
       );
       if (!mounted) return;
       _applyDraft(entry, allowedCategories);

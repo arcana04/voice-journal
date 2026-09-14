@@ -12,6 +12,9 @@ class SettingsStore extends ChangeNotifier {
   bool hasSeenOnboarding = false;
   int accentColorIndex = 0;
   String? languageCode;
+  int reminderOffsetMinutes = 0;
+  bool autoNotificationsEnabled = true;
+  int allDayReminderHour = 16;
   bool _loaded = false;
   bool get loaded => _loaded;
 
@@ -34,7 +37,28 @@ class SettingsStore extends ChangeNotifier {
     hasSeenOnboarding = await _service.getHasSeenOnboarding();
     accentColorIndex = await _service.getAccentColorIndex();
     languageCode = await _service.getLanguageCode();
+    reminderOffsetMinutes = await _service.getReminderOffsetMinutes();
+    autoNotificationsEnabled = await _service.getAutoNotificationsEnabled();
+    allDayReminderHour = await _service.getAllDayReminderHour();
     _loaded = true;
+    notifyListeners();
+  }
+
+  Future<void> setReminderOffsetMinutes(int value) async {
+    reminderOffsetMinutes = value;
+    await _service.setReminderOffsetMinutes(value);
+    notifyListeners();
+  }
+
+  Future<void> setAutoNotificationsEnabled(bool value) async {
+    autoNotificationsEnabled = value;
+    await _service.setAutoNotificationsEnabled(value);
+    notifyListeners();
+  }
+
+  Future<void> setAllDayReminderHour(int value) async {
+    allDayReminderHour = value;
+    await _service.setAllDayReminderHour(value);
     notifyListeners();
   }
 

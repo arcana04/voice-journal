@@ -10,6 +10,9 @@ class SettingsService {
   static const _accentColorIndexPref = 'accent_color_index';
   static const _languageCodePref = 'language_code';
   static const _localDataOwnerUidPref = 'local_data_owner_uid';
+  static const _reminderOffsetMinutesPref = 'reminder_offset_minutes';
+  static const _autoNotificationsEnabledPref = 'auto_notifications_enabled';
+  static const _allDayReminderHourPref = 'all_day_reminder_hour';
 
   /// 端末ローカルのSQLiteデータが最後にどのアカウント(Firebase uid)のもので
   /// あったかを記録する。サインアウトはローカルデータを消さない設計のため、
@@ -94,6 +97,43 @@ class SettingsService {
     } else {
       await prefs.setString(_languageCodePref, value);
     }
+  }
+
+  /// タスクの通知を、開始時刻の何分前に飛ばすかの既定値（0なら開始時刻
+  /// ちょうど）。AIが音声からタスクを作った直後の通知時刻の既定値として使う
+  /// （個々のタスクは後からTaskEditScreenで独立に変更できる）。
+  Future<int> getReminderOffsetMinutes() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_reminderOffsetMinutesPref) ?? 0;
+  }
+
+  Future<void> setReminderOffsetMinutes(int value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_reminderOffsetMinutesPref, value);
+  }
+
+  /// falseなら、AIがタスクを作った時点では通知を一切設定しない（カレンダー/
+  /// リマインダーアプリへの反映だけしたいユーザー向け）。個々のタスクは
+  /// 後からTaskEditScreenで手動で通知を付けられる。
+  Future<bool> getAutoNotificationsEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_autoNotificationsEnabledPref) ?? true;
+  }
+
+  Future<void> setAutoNotificationsEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoNotificationsEnabledPref, value);
+  }
+
+  /// 終日タスクの既定通知時刻（期限日の前日、この時（0〜23）に通知する）。
+  Future<int> getAllDayReminderHour() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_allDayReminderHourPref) ?? 16;
+  }
+
+  Future<void> setAllDayReminderHour(int value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_allDayReminderHourPref, value);
   }
 
   Future<bool> getHasSeenOnboarding() async {

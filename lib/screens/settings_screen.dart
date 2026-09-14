@@ -111,6 +111,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void _openReminderOffsetSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (_) => const _ReminderOffsetSheet(),
+    );
+  }
+
+  String _reminderOffsetLabel(AppLocalizations l10n, int minutes) {
+    if (minutes == 0) return l10n.reminderOffsetAtStartTime;
+    if (minutes == 60) return l10n.reminderOffsetOneHourBefore;
+    return l10n.reminderOffsetMinutesBefore(minutes);
+  }
+
+  String _formatHour(BuildContext context, int hour) {
+    return TimeOfDay(hour: hour, minute: 0).format(context);
+  }
+
+  Future<void> _pickAllDayReminderHour(
+    BuildContext context,
+    SettingsStore settings,
+  ) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: settings.allDayReminderHour, minute: 0),
+    );
+    if (picked == null) return;
+    await settings.setAllDayReminderHour(picked.hour);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -425,6 +455,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     );
                   },
                 ),
+                Consumer<SettingsStore>(
+                  builder: (context, settings, _) {
+                    return _SettingsTile(
+                      icon: Icons.flash_on_rounded,
+                      color: _SettingsColors.amber,
+                      title: l10n.autoNotificationsTitle,
+                      subtitle: l10n.autoNotificationsDescription,
+                      trailing: Switch(
+                        value: settings.autoNotificationsEnabled,
+                        onChanged: settings.setAutoNotificationsEnabled,
+                      ),
+                    );
+                  },
+                ),
+                Consumer<SettingsStore>(
+                  builder: (context, settings, _) {
+                    return _SettingsTile(
+                      icon: Icons.timer_outlined,
+                      color: _SettingsColors.amber,
+                      title: l10n.reminderOffsetTitle,
+                      subtitle: _reminderOffsetLabel(
+                        l10n,
+                        settings.reminderOffsetMinutes,
+                      ),
+                      trailing: const _ChevronIcon(),
+                      onTap: settings.autoNotificationsEnabled
+                          ? () => _openReminderOffsetSheet(context)
+                          : null,
+                    );
+                  },
+                ),
+                Consumer<SettingsStore>(
+                  builder: (context, settings, _) {
+                    return _SettingsTile(
+                      icon: Icons.event_busy_rounded,
+                      color: _SettingsColors.amber,
+                      title: l10n.allDayReminderHourTitle,
+                      subtitle: l10n.allDayReminderHourDescription,
+                      trailing: Text(
+                        _formatHour(context, settings.allDayReminderHour),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                      ),
+                      onTap: settings.autoNotificationsEnabled
+                          ? () => _pickAllDayReminderHour(context, settings)
+                          : null,
+                    );
+                  },
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -550,6 +630,47 @@ class _LanguageSheet extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// 「デフォルトの通知タイミング」タイルから開く、開始時刻/N分前から選ぶ
+/// シンプルなピッカー。選んだ値は以後AIがタスクを作った時の通知時刻の
+/// 既定値として使われる（個々のタスクは後からTaskEditScreenで独立に変更できる）。
+class _ReminderOffsetSheet extends StatelessWidget {
+  const _ReminderOffsetSheet();
+
+  static const _options = [0, 5, 15, 30, 60];
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final settings = context.watch<SettingsStore>();
+    return Padding(
+      padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.reminderOffsetSheetTitle,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          for (final minutes in _options)
+            _LanguageTile(
+              label: minutes == 0
+                  ? l10n.reminderOffsetAtStartTime
+                  : minutes == 60
+                  ? l10n.reminderOffsetOneHourBefore
+                  : l10n.reminderOffsetMinutesBefore(minutes),
+              selected: settings.reminderOffsetMinutes == minutes,
+              onTap: () => context
+                  .read<SettingsStore>()
+                  .setReminderOffsetMinutes(minutes),
+            ),
+        ],
       ),
     );
   }

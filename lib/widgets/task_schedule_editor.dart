@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/task_schedule_draft.dart';
+import '../state/settings_store.dart';
 
 String _dateLabel(DateTime date, String locale) =>
     '${DateFormat.MMMd(locale).format(date)}(${DateFormat.E(locale).format(date)})';
@@ -91,8 +93,11 @@ class TaskScheduleEditor extends StatelessWidget {
     onChanged();
   }
 
-  void _setAllDay(bool value) {
-    draft.setAllDay(value);
+  void _setAllDay(BuildContext context, bool value) {
+    draft.setAllDay(
+      value,
+      allDayReminderHour: context.read<SettingsStore>().allDayReminderHour,
+    );
     onChanged();
   }
 
@@ -415,7 +420,7 @@ class TaskScheduleEditor extends StatelessWidget {
           FilterChip(
             label: Text(l10n.allDayLabel),
             selected: draft.isAllDay,
-            onSelected: _setAllDay,
+            onSelected: (value) => _setAllDay(context, value),
             visualDensity: VisualDensity.compact,
           ),
           const SizedBox(height: 16),

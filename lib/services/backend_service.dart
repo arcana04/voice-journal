@@ -64,6 +64,9 @@ class BackendService {
     SummaryLevel summaryLevel = SummaryLevel.preserve,
     Set<ReviewCategory> allowedCategories = const {...ReviewCategory.values},
     required String locale,
+    bool autoNotificationsEnabled = true,
+    int reminderOffsetMinutes = 0,
+    int allDayReminderHour = 16,
   }) async {
     await _auth.ensureSignedIn();
 
@@ -83,7 +86,12 @@ class BackendService {
         'allowedCategories': allowedCategories.map((c) => c.wireValue).toList(),
         'timeZone': timeZone,
       });
-      return _entryFromResponse(result.data);
+      return _entryFromResponse(
+        result.data,
+        autoNotificationsEnabled: autoNotificationsEnabled,
+        reminderOffsetMinutes: reminderOffsetMinutes,
+        allDayReminderHour: allDayReminderHour,
+      );
     } on FirebaseFunctionsException catch (e) {
       throw BackendServiceException(
         e.message ?? currentLocalizations().genericProcessingError,
@@ -98,6 +106,9 @@ class BackendService {
     SummaryLevel summaryLevel = SummaryLevel.preserve,
     Set<ReviewCategory> allowedCategories = const {...ReviewCategory.values},
     required String locale,
+    bool autoNotificationsEnabled = true,
+    int reminderOffsetMinutes = 0,
+    int allDayReminderHour = 16,
   }) async {
     await _auth.ensureSignedIn();
     final timeZone = await _deviceTimeZone();
@@ -112,7 +123,12 @@ class BackendService {
         'allowedCategories': allowedCategories.map((c) => c.wireValue).toList(),
         'timeZone': timeZone,
       });
-      return _entryFromResponse(result.data);
+      return _entryFromResponse(
+        result.data,
+        autoNotificationsEnabled: autoNotificationsEnabled,
+        reminderOffsetMinutes: reminderOffsetMinutes,
+        allDayReminderHour: allDayReminderHour,
+      );
     } on FirebaseFunctionsException catch (e) {
       throw BackendServiceException(
         e.message ?? currentLocalizations().genericProcessingError,
@@ -121,9 +137,21 @@ class BackendService {
     }
   }
 
-  JournalEntry _entryFromResponse(Map<String, dynamic> data) {
+  JournalEntry _entryFromResponse(
+    Map<String, dynamic> data, {
+    bool autoNotificationsEnabled = true,
+    int reminderOffsetMinutes = 0,
+    int allDayReminderHour = 16,
+  }) {
     final tasks = (data['tasks'] as List? ?? [])
-        .map((e) => TaskItem.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map(
+          (e) => TaskItem.fromJson(
+            Map<String, dynamic>.from(e as Map),
+            autoNotificationsEnabled: autoNotificationsEnabled,
+            reminderOffsetMinutes: reminderOffsetMinutes,
+            allDayReminderHour: allDayReminderHour,
+          ),
+        )
         .where((t) => t.title.isNotEmpty)
         .toList();
     final notes = (data['notes'] as List? ?? [])

@@ -28,14 +28,17 @@ class TaskScheduleDraft {
     }
   }
 
-  void setAllDay(bool value) {
+  void setAllDay(bool value, {int allDayReminderHour = 16}) {
     isAllDay = value;
     final at = startAt;
     if (value) {
       endAt = null;
       if (at != null) {
         startAt = DateTime(at.year, at.month, at.day);
-        notifyAt ??= TaskItem.defaultAllDayNotifyAt(startAt!);
+        notifyAt ??= TaskItem.defaultAllDayNotifyAt(
+          startAt!,
+          hour: allDayReminderHour,
+        );
       }
     }
   }
