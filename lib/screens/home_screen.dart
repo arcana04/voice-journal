@@ -423,6 +423,14 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       if (!mounted) return;
       _handleProcessingError(e);
+    } finally {
+      // 処理の成否に関わらずここで削除しないと、Androidでは端末に録音
+      // ファイルが残り続け、次回起動時のオーファン録音検知([_checkForOrphanedRecording])
+      // が「未処理の録音」と誤検知して、既に保存済みの内容を重複保存
+      // ・クォータ二重消費させてしまっていた。
+      try {
+        await File(path).delete();
+      } catch (_) {}
     }
   }
 
