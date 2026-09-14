@@ -1720,9 +1720,21 @@ export const revenueCatWebhook = onRequest(
       return;
     }
 
+    // catch節から見えるよう、tryの外で宣言しておく（処理失敗時に予約を
+    // 取り消して再送で処理できるようにするため）。
+    let eventMarkerRef: FirebaseFirestore.DocumentReference | null = null;
+    // trueなのは「このリクエスト自身が予約に成功した」場合のみ。重複配信
+    // （他のリクエストが既に予約済み）でcreateが失敗したケースは含めない
+    // ——その場合catchに来てもここの予約を取り消してはいけないため。
+    let markerCreatedByThisRequest = false;
+
     try {
       const event = req.body?.event as
         | {
+            /** イベントの一意なID。RevenueCatはWebhookの再送(リトライ)時も
+             * 同じidを使う（公式ドキュメント「Event Types and Fields」で
+             * "Retries reuse the same id" と明記）ため、冪等性の判定に使う。 */
+            id?: string;
             type?: string;
             app_user_id?: string;
             entitlement_ids?: string[];
@@ -1752,6 +1764,37 @@ export const revenueCatWebhook = onRequest(
       if (!uid || !eventType) {
         res.status(400).send("bad request");
         return;
+      }
+
+      // 冪等性ガード: RevenueCatは非2xx応答・タイムアウト時にWebhookを
+      // 同じevent.idで再送する。これを検知せずに処理すると、買い切り枠の
+      // カウンタや追加分数の付与が再送のたびに二重加算されてしまう
+      // （公式ドキュメント推奨のevent idベースの重複排除）。先にこのIDを
+      // 予約し、既に予約済みなら即200を返して以降の処理をスキップする。
+      // 万一この後の処理自体が失敗した場合は、catch節で予約を取り消して
+      // 次回の再送で改めて処理できるようにする。
+      const eventId = event?.id;
+      eventMarkerRef = eventId
+        ? getFirestore().collection("processedWebhookEvents").doc(eventId)
+        : null;
+      if (eventMarkerRef) {
+        try {
+          await eventMarkerRef.create({
+            receivedAt: FieldValue.serverTimestamp(),
+            eventType,
+            uid,
+          });
+          markerCreatedByThisRequest = true;
+        } catch (createErr) {
+          // ALREADY_EXISTS（Firestore Admin SDKのエラーコード6）＝重複配信。
+          const code = (createErr as { code?: number })?.code;
+          if (code === 6) {
+            logger.info("revenueCatWebhook duplicate event skipped", { uid, eventType, eventId });
+            res.status(200).send("ok");
+            return;
+          }
+          throw createErr;
+        }
       }
 
       // 追加分数パック（消費型IAP、エンタイトルメント無し）の購入はPro付与とは
@@ -1839,6 +1882,16 @@ export const revenueCatWebhook = onRequest(
       res.status(200).send("ok");
     } catch (err) {
       logger.error("revenueCatWebhook unexpected error", err);
+      // このリクエスト自身が予約した直後に後続処理で失敗した場合は、
+      // 予約を取り消して次回の再送(同じevent.id)がスキップされず
+      // 再処理されるようにする。
+      if (markerCreatedByThisRequest && eventMarkerRef) {
+        try {
+          await eventMarkerRef.delete();
+        } catch (deleteErr) {
+          logger.error("revenueCatWebhook failed to release event marker", deleteErr);
+        }
+      }
       res.status(500).send("internal error");
     }
   }

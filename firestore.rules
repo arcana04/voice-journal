@@ -37,7 +37,8 @@ service cloud.firestore {
 
     // Everything else (users/{uid} root doc with isPro/bonusSecondsBalance/notion,
     // usage/{uid}_{date}, usageMonth/{uid}_{yyyyMM},
-    // users/{uid}/watchDevices/{deviceId}, watchRateLimit/{uid}_{deviceId}_{window})
+    // users/{uid}/watchDevices/{deviceId}, watchRateLimit/{uid}_{deviceId}_{window},
+    // processedWebhookEvents/{eventId} — revenueCatWebhook's idempotency markers)
     // goes through Cloud Functions (Admin SDK), which bypasses these rules.
     // No client reads or writes those paths directly. The 'notion' field (Notion
     // integration token + database id, notionSetupDatabase/notionSendItem) is
