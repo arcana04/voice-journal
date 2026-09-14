@@ -2167,6 +2167,50 @@ function transcriptionFilename(mimeType: string): string {
   return mimeType === "audio/wav" ? "audio.wav" : "audio.m4a";
 }
 
+/** 無音・BGMのみ等、実際には発話が無い区間をWhisperに渡すと、学習データ
+ * （YouTube字幕）由来のそれっぽい文（「ご視聴ありがとうございました」
+ * 「エンディングについて考えていた」等）をでっち上げてしまう既知の
+ * ハルシネーションがある。全体を一律で捨てるのではなく、
+ * response_format="verbose_json"で返るセグメント単位で判定し、
+ * ハルシネーションらしいセグメントだけを取り除いてから残りを結合する
+ * （例: 5秒喋った後にBGMだけの3秒が続くような録音で、実際の発話部分まで
+ * 巻き添えで消さないため）。判定はOpenAI/Whisperコミュニティで知られた
+ * 3指標を使う:
+ * - no_speech_prob（非音声らしさ）が高い ＋ avg_logprob（生成の自信度）が
+ *   低い、の組み合わせ（無音/BGM区間にそれっぽい文をでっち上げているパターン）
+ * - compression_ratio（テキストの繰り返し度）が高すぎる（反復的な
+ *   意味不明テキストという別パターン）
+ * no_speech_probだけで判定しないのは、小声の本物の発話まで誤って
+ * 弾いてしまう既知の誤検知を避けるため。 */
+const HALLUCINATION_NO_SPEECH_PROB_THRESHOLD = 0.5;
+const HALLUCINATION_AVG_LOGPROB_THRESHOLD = -0.5;
+const HALLUCINATION_COMPRESSION_RATIO_THRESHOLD = 2.4;
+
+interface WhisperSegment {
+  text: string;
+  no_speech_prob?: number;
+  avg_logprob?: number;
+  compression_ratio?: number;
+}
+
+interface WhisperVerboseResponse {
+  text: string;
+  segments?: WhisperSegment[];
+}
+
+function isLikelyHallucinatedSegment(segment: WhisperSegment): boolean {
+  const noSpeechProb = segment.no_speech_prob ?? 0;
+  const avgLogprob = segment.avg_logprob ?? 0;
+  const compressionRatio = segment.compression_ratio ?? 1;
+  if (
+    noSpeechProb >= HALLUCINATION_NO_SPEECH_PROB_THRESHOLD &&
+    avgLogprob <= HALLUCINATION_AVG_LOGPROB_THRESHOLD
+  ) {
+    return true;
+  }
+  return compressionRatio >= HALLUCINATION_COMPRESSION_RATIO_THRESHOLD;
+}
+
 async function transcribe(
   apiKey: string,
   audioBuffer: Buffer,
@@ -2182,6 +2226,7 @@ async function transcribe(
   );
   form.append("model", "whisper-1");
   form.append("language", locale);
+  form.append("response_format", "verbose_json");
   if (prompt) {
     form.append("prompt", prompt);
   }
@@ -2197,8 +2242,16 @@ async function transcribe(
     throw new HttpsError("unavailable", MESSAGES[locale].transcriptionFailed(body));
   }
 
-  const data = (await response.json()) as { text: string };
-  return data.text;
+  const data = (await response.json()) as WhisperVerboseResponse;
+  const segments = data.segments ?? [];
+  if (segments.length === 0) {
+    return data.text;
+  }
+  return segments
+    .filter((s) => !isLikelyHallucinatedSegment(s))
+    .map((s) => s.text.trim())
+    .filter((t) => t.length > 0)
+    .join(" ");
 }
 
 interface StructuredResult {
