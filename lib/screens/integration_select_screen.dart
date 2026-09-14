@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:device_calendar/device_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -32,6 +34,16 @@ class _IntegrationSelectScreenState extends State<IntegrationSelectScreen> {
 
   void _select(Calendar? calendar) {
     context.read<CalendarStore>().setCalendar(calendar);
+  }
+
+  /// GoogleカレンダーはiOSの「設定」でGoogleアカウントを追加しない限り
+  /// EventKitに出てこない(Google Calendarアプリを入れているだけでは不可)。
+  /// 気づきにくいので、それらしいカレンダーが1つも無い場合だけ案内を出す。
+  bool _hasGoogleLikeCalendar(List<Calendar> calendars) {
+    return calendars.any((c) {
+      final account = c.accountName?.toLowerCase() ?? '';
+      return account.contains('gmail.com') || account.contains('google');
+    });
   }
 
   @override
@@ -140,6 +152,16 @@ class _IntegrationSelectScreenState extends State<IntegrationSelectScreen> {
                               ? null
                               : Text(calendar.accountName!),
                           value: calendar.id,
+                        ),
+                      if (Platform.isIOS && !_hasGoogleLikeCalendar(calendars))
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Text(
+                            l10n.integrationsGoogleCalendarHint,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.outline,
+                            ),
+                          ),
                         ),
                     ],
                   );
