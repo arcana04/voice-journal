@@ -2989,6 +2989,32 @@ function isDeadlineFocusedQuestion(question: string, locale: Locale): boolean {
   return keywords.some((k) => q.includes(k.toLowerCase()));
 }
 
+/** 「今一番優先すべきタスクは？」のような、タスクの「優先度」を尋ねる質問の
+ * 簡易判定。タスクに優先度フィールドは無いため、期限が一番近い（＝一番
+ * 差し迫っている）未完了タスクを優先度の代役として使う（ユーザー指示）。
+ * isDeadlineFocusedQuestionと違い、質問文に日付範囲が含まれていなくても
+ * （「今週の」のような期間指定が無くても）発火する — 期間ではなく
+ * 「一番近い期限はどれか」を横断的に探す質問のため。 */
+const PRIORITY_KEYWORDS_JA = ["優先", "一番大事", "急ぎ", "急ぐ", "後回し"];
+const PRIORITY_KEYWORDS_EN = ["priorit", "urgent", "most important", "pressing"];
+const PRIORITY_KEYWORDS_ES = ["priorit", "urgente", "más importante"];
+const PRIORITY_KEYWORDS_DE = ["priorit", "dringend", "am wichtigsten"];
+const PRIORITY_KEYWORDS_KO = ["우선", "급한", "가장 중요"];
+const PRIORITY_KEYWORDS_FR = ["priorit", "urgent", "le plus important"];
+
+function isPriorityQuestion(question: string, locale: Locale): boolean {
+  const q = question.toLowerCase();
+  const keywords = {
+    ja: PRIORITY_KEYWORDS_JA,
+    en: PRIORITY_KEYWORDS_EN,
+    es: PRIORITY_KEYWORDS_ES,
+    de: PRIORITY_KEYWORDS_DE,
+    ko: PRIORITY_KEYWORDS_KO,
+    fr: PRIORITY_KEYWORDS_FR,
+  }[locale];
+  return keywords.some((k) => q.includes(k.toLowerCase()));
+}
+
 /** 「1年目の自分から今の自分にアドバイスするとしたら」のような、使い始めの
  * 頃の自分と今の自分を比較させたい質問の検知。「1年前」「去年」は暦日で
  * 計算することもできるが、使用期間がまだ1年に満たないアカウントでは
@@ -4107,6 +4133,51 @@ async function buildKnowledgeBaseContext(
           (a, b) => new Date(a.dueDateIso).getTime() - new Date(b.dueDateIso).getTime()
         );
         const limited = dueTasks.slice(0, KNOWLEDGE_BASE_BROAD_MAX_ENTRIES);
+        const sources: KnowledgeBaseSource[] = limited.map((t) => ({
+          id: t.entryId,
+          date: t.entryCreatedAt,
+          excerpt: truncateExcerpt(t.title),
+        }));
+        return {
+          context: formatDueTasksAsContext(limited, locale),
+          sources,
+          isBroad: true,
+        };
+      }
+    }
+
+    // 「今一番優先すべきタスクは？」「後回しにしがちなタスクの傾向は？」
+    // のような優先度質問。日付範囲の指定が無いことが多く、上のdue_task
+    // ブロック（broad.rangeStart必須）を通らないため独立して判定する。
+    // 優先度フィールドが無い以上、期限が一番近い（＝一番差し迫っている）
+    // 未完了タスクを優先度の代役として使う。
+    if (isPriorityQuestion(question, locale)) {
+      const upcomingTasks: DueTask[] = [];
+      for (const data of allDocs) {
+        const tasks = (data.tasks ?? []) as {
+          title?: string;
+          due_date?: string;
+          done?: number | boolean;
+        }[];
+        for (const task of tasks) {
+          if (!task.title || !task.due_date) continue;
+          if (task.done === 1 || task.done === true) continue;
+          const dueDate = new Date(task.due_date);
+          if (Number.isNaN(dueDate.getTime())) continue;
+          upcomingTasks.push({
+            entryId: data.id,
+            entryCreatedAt: typeof data.created_at === "string" ? data.created_at : "",
+            title: task.title,
+            dueDateIso: task.due_date,
+          });
+        }
+      }
+
+      if (upcomingTasks.length > 0) {
+        upcomingTasks.sort(
+          (a, b) => new Date(a.dueDateIso).getTime() - new Date(b.dueDateIso).getTime()
+        );
+        const limited = upcomingTasks.slice(0, KNOWLEDGE_BASE_BROAD_MAX_ENTRIES);
         const sources: KnowledgeBaseSource[] = limited.map((t) => ({
           id: t.entryId,
           date: t.entryCreatedAt,
