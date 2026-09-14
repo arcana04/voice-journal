@@ -86,7 +86,13 @@ class ReminderService {
     }
   }
 
-  Future<void> scheduleTaskReminder({
+  /// タスクの通知を予約する。戻り値は実際に予約できたかどうか——対象時刻が
+  /// 既に過去の場合はfalseを返す。この場合、同じtaskIdで過去に予約済みの
+  /// 通知が残っていれば（時刻編集で過去に変わった等）キャンセルする。
+  /// 呼び出し側はfalseが返ってきた場合、DB上の`notify_at`もクリアするなど
+  /// して「通知が設定されているように見えるが実際は何も届かない」状態を
+  /// 残さないこと。
+  Future<bool> scheduleTaskReminder({
     required int taskId,
     required String title,
     required DateTime scheduledAt,
@@ -99,7 +105,10 @@ class ReminderService {
       scheduledAt.hour,
       scheduledAt.minute,
     );
-    if (scheduled.isBefore(tz.TZDateTime.now(tz.local))) return;
+    if (scheduled.isBefore(tz.TZDateTime.now(tz.local))) {
+      await cancelTaskReminder(taskId);
+      return false;
+    }
 
     final l10n = currentLocalizations();
     await _plugin.zonedSchedule(
@@ -121,6 +130,7 @@ class ReminderService {
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
     );
+    return true;
   }
 
   Future<void> cancelTaskReminder(int taskId) => _plugin.cancel(taskId);
@@ -136,19 +146,35 @@ class ReminderService {
     for (final entry in entries) {
       for (final task in entry.tasks) {
         if (!task.done && task.id != null && task.notifyAt != null) {
-          await scheduleTaskReminder(
+          final scheduled = await scheduleTaskReminder(
             taskId: task.id!,
             title: task.title,
             scheduledAt: task.notifyAt!,
           );
+          // 端末が数日オフラインだった等で、再スケジュール時には既に
+          // 過去になっていた場合はDB側も一致させておく。
+          if (!scheduled) {
+            await DbService.instance.updateTaskNotifyAt(task.id!, null);
+          }
         }
       }
     }
   }
 
-  /// 毎週日曜20:00（JST）に週刊脳内レポートの完成を知らせる通知を（再）スケジュール
-  /// する。既存のスケジュールがあれば同じ通知IDで上書きされる。
-  Future<void> scheduleWeeklyReportNotification() async {
+  /// 今週分の週刊脳内レポート通知を、今週まだ1件も記録が無ければキャンセルし、
+  /// 1件でもあれば直近の日曜20:00（JST）向けに（再）スケジュールする。
+  /// [DateTimeComponents.dayOfWeekAndTime]による自動繰り返しにはせず、毎週
+  /// 呼び出し側（[hasEntriesThisWeek]の元になった記録の増減）で都度スケジュール
+  /// し直す一回限りの通知として扱う——記録が無い週にまで機械的に届いてしまう
+  /// のを防ぐため。
+  Future<void> scheduleWeeklyReportNotification({
+    required bool hasEntriesThisWeek,
+  }) async {
+    if (!hasEntriesThisWeek) {
+      await cancelWeeklyReportNotification();
+      return;
+    }
+
     final now = tz.TZDateTime.now(tz.local);
     var scheduled = tz.TZDateTime(tz.local, now.year, now.month, now.day, 20);
     while (scheduled.weekday != DateTime.sunday || !scheduled.isAfter(now)) {
@@ -174,7 +200,6 @@ class ReminderService {
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
       payload: _kWeeklyReportPayload,
     );
   }

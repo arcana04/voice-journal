@@ -321,13 +321,21 @@ class JournalStore extends ChangeNotifier {
   }) async {
     final saved = await _db.insertEntry(entry);
     final syncedTasks = <TaskItem>[];
-    for (final task in saved.tasks) {
+    for (var task in saved.tasks) {
       if (task.id != null && task.notifyAt != null) {
-        await _reminders.scheduleTaskReminder(
+        final scheduled = await _reminders.scheduleTaskReminder(
           taskId: task.id!,
           title: task.title,
           scheduledAt: task.notifyAt!,
         );
+        // AIが音声から解析したnotify_atが、保存時点で既に過去になっている
+        // ことがある（例:「15時にリマインドして」を15時より後に保存した場合）。
+        // 通知は予約されないのに画面上は「リマインダー設定済み」に見える
+        // 状態を残さないよう、DB・以後の表示側の両方でnotify_atをクリアする。
+        if (!scheduled) {
+          await _db.updateTaskNotifyAt(task.id!, null);
+          task = task.copyWith(clearNotify: true);
+        }
       }
       if (task.id != null) {
         final eventId = await _syncTaskCalendarEvent(task);

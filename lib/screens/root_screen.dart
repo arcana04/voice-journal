@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
+import '../models/journal_entry.dart';
 import '../models/review_category.dart';
 import '../models/sync_failure_reason.dart';
 import '../services/deep_link_service.dart';
@@ -32,6 +33,16 @@ class _RootScreenState extends State<RootScreen> {
   int _index = 0;
   final DeepLinkService _deepLinks = DeepLinkService();
   bool? _lastIsPro;
+  bool? _lastHasEntriesThisWeek;
+
+  /// 月曜始まりの今週(進行中の週)に1件でも記録があるか。[WeeklyReportScreen]の
+  /// 週境界の定義と揃えている。
+  bool _hasEntriesThisWeek(List<JournalEntry> entries) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final weekStart = today.subtract(Duration(days: now.weekday - 1));
+    return entries.any((e) => !e.createdAt.isBefore(weekStart));
+  }
 
   static const _screens = [
     HomeScreen(),
@@ -100,11 +111,17 @@ class _RootScreenState extends State<RootScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     final isPro = context.watch<SubscriptionStore>().isPro;
-    if (_lastIsPro != isPro) {
+    final hasEntriesThisWeek = _hasEntriesThisWeek(
+      context.watch<JournalStore>().entries,
+    );
+    if (_lastIsPro != isPro || _lastHasEntriesThisWeek != hasEntriesThisWeek) {
       _lastIsPro = isPro;
+      _lastHasEntriesThisWeek = hasEntriesThisWeek;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (isPro) {
-          ReminderService.instance.scheduleWeeklyReportNotification();
+          ReminderService.instance.scheduleWeeklyReportNotification(
+            hasEntriesThisWeek: hasEntriesThisWeek,
+          );
         } else {
           ReminderService.instance.cancelWeeklyReportNotification();
           ReminderService.instance.cancelTrialEndingNotification();
