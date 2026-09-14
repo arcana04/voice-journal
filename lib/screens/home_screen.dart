@@ -53,6 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Timer? _timer;
   StreamSubscription<RecordingAmplitude>? _amplitudeSub;
   DateTime? _lastSoundAt;
+  double _micLevel = 0.0;
   String? _statusMessage;
   Timer? _processingPhraseTimer;
   int _processingPhraseIndex = 0;
@@ -350,6 +351,14 @@ class _HomeScreenState extends State<HomeScreen> {
           if (amplitude.current > kSilenceThresholdDb) {
             _lastSoundAt = DateTime.now();
           }
+          if (!mounted) return;
+          // dBFSは静寂ほど-160に近づく対数スケールなので、体感的な音量に
+          // 近づけるため実用的な話し声のレンジ(-50〜-5dB)だけを0〜1に正規化する。
+          // 300msごとの離散値そのままだが、[Waveform]側で毎フレーム滑らかに
+          // 追従させるため、ここでは平滑化しない。
+          setState(() {
+            _micLevel = ((amplitude.current + 50) / 45).clamp(0.0, 1.0);
+          });
         });
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       final next = _elapsed + const Duration(seconds: 1);
@@ -391,6 +400,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _state = RecordButtonState.processing;
       _selectedCategories = {...ReviewCategory.values};
+      _micLevel = 0.0;
     });
     _hapticRecordingStopped(auto: auto);
     _startProcessingPhraseCycle();
@@ -751,6 +761,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     WaveformMode.processing,
                                   RecordButtonState.idle => WaveformMode.idle,
                                 },
+                                micLevel: _micLevel,
                               ),
                               const SizedBox(height: 24),
                               Visibility(

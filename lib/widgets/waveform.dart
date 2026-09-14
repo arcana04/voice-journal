@@ -7,12 +7,18 @@ import '../state/settings_store.dart';
 
 enum WaveformMode { idle, recording, processing }
 
+/// 録音中だけ、テーマのアクセントカラー設定に関わらずこの赤で固定する
+/// （ユーザー指示）。アイドル時・処理中はテーマのアクセントカラーのまま。
+const _kRecordingColor = Color(0xFFE53935);
+
 /// 録音画面の飾りとなる波のリボン。録音していない間も常にゆったり漂い、
-/// 録音中は振幅が大きくなって反応、AI処理中は「考えている」ように
+/// 録音中はマイクの入力音量（[micLevel]、0〜1に正規化済み）に応じて振幅と
+/// 波の密度がリアルタイムに揺らめき、AI処理中は「考えている」ように
 /// 呼吸するような明滅で脈打つ。
 class Waveform extends StatefulWidget {
   final WaveformMode mode;
-  const Waveform({super.key, required this.mode});
+  final double micLevel;
+  const Waveform({super.key, required this.mode, this.micLevel = 0.0});
 
   @override
   State<Waveform> createState() => _WaveformState();
@@ -21,6 +27,10 @@ class Waveform extends StatefulWidget {
 class _WaveformState extends State<Waveform>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  // widget.micLevelは300msごとの離散サンプルなので、そのまま使うと値が
+  // 飛んでカクついて見える。毎フレーム(_controllerのtickごと)少しずつ
+  // 追従させることで、サンプリング間隔に関係なく滑らかな動きにする。
+  double _smoothedLevel = 0.0;
 
   @override
   void initState() {
@@ -40,17 +50,22 @@ class _WaveformState extends State<Waveform>
   @override
   Widget build(BuildContext context) {
     final accent = context.watch<SettingsStore>().accentColor;
+    final color = widget.mode == WaveformMode.recording
+        ? _kRecordingColor
+        : accent;
     return SizedBox(
       height: 110,
       width: double.infinity,
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) {
+          _smoothedLevel += (widget.micLevel - _smoothedLevel) * 0.08;
           return CustomPaint(
             painter: _WavePainter(
               phase: _controller.value * 2 * pi,
               mode: widget.mode,
-              color: accent,
+              color: color,
+              micLevel: _smoothedLevel,
             ),
             size: Size.infinite,
           );
@@ -82,6 +97,7 @@ class _WavePainter extends CustomPainter {
   final double phase;
   final WaveformMode mode;
   final Color color;
+  final double micLevel;
 
   // speedは必ず整数にする。AnimationControllerのrepeat()はvalue(=phaseの元)を
   // 1.0から0.0へ瞬間的に巻き戻すため、phase*speedが整数周期でなければループの
@@ -112,7 +128,12 @@ class _WavePainter extends CustomPainter {
     ),
   ];
 
-  _WavePainter({required this.phase, required this.mode, required this.color});
+  _WavePainter({
+    required this.phase,
+    required this.mode,
+    required this.color,
+    required this.micLevel,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -121,12 +142,18 @@ class _WavePainter extends CustomPainter {
     // アイドル時も飾りのリボンとして見せつつ、録音中は振幅を大きくして反応、
     // 処理中はゆっくり呼吸するように振幅そのものを上下させて「考えている」感を出す。
     final isProcessing = mode == WaveformMode.processing;
+    final isRecording = mode == WaveformMode.recording;
     final breathe = isProcessing ? 0.5 + 0.5 * sin(phase * 0.6) : 0.0;
+    // 録音中はマイクの実音量([micLevel]、無音=0〜大声=1)に応じて振幅そのものを
+    // 揺らめかせる。無音時でも完全に平らにならないよう最低限のベース振幅は残す。
     final baseAmplitude = switch (mode) {
-      WaveformMode.recording => size.height * 0.34,
+      WaveformMode.recording => size.height * (0.10 + 0.34 * micLevel),
       WaveformMode.processing => size.height * (0.20 + 0.10 * breathe),
       WaveformMode.idle => size.height * 0.17,
     };
+    // 真の周波数解析(FFT)は行わないため、音量が大きいほど波が細かく詰まって
+    // 見えるように各レイヤーの周波数を上げることで「揺らめき」の代用にする。
+    final frequencyBoost = isRecording ? 1.0 + micLevel * 1.2 : 1.0;
 
     for (final layer in _layers) {
       final path = Path();
@@ -134,7 +161,7 @@ class _WavePainter extends CustomPainter {
         final t = x / size.width;
         final y = midY +
             layer.verticalOffset +
-            sin(t * 2 * pi * layer.frequency + phase * layer.speed) *
+            sin(t * 2 * pi * layer.frequency * frequencyBoost + phase * layer.speed) *
                 baseAmplitude *
                 layer.amplitudeScale;
         if (x == 0) {
@@ -163,6 +190,7 @@ class _WavePainter extends CustomPainter {
   bool shouldRepaint(covariant _WavePainter oldDelegate) {
     return oldDelegate.phase != phase ||
         oldDelegate.mode != mode ||
-        oldDelegate.color != color;
+        oldDelegate.color != color ||
+        oldDelegate.micLevel != micLevel;
   }
 }
