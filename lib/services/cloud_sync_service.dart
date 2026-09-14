@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
 import '../models/sync_failure_reason.dart';
+import 'settings_service.dart';
 
 /// エントリ（日記・タスク・アイデア）をFirestore `users/{uid}/entries/{remoteId}`
 /// へバックアップ/復元する。写真・動画は対象外（テキストデータのみ）。
@@ -127,6 +128,10 @@ class CloudSyncService {
     final collection = _collection;
     final remoteId = entry.remoteId;
     if (collection == null || remoteId == null) return true;
+    // アカウント切り替え中の極短い窓（currentUserは切り替わっているが、
+    // ローカルデータの持ち主記録はまだ前のアカウントのまま）に、前アカウントの
+    // データが新アカウントのFirestoreへ紛れ込むのを防ぐ最終防衛ライン。
+    if (!await SettingsService().currentUserOwnsLocalData()) return true;
     try {
       // merge:true でないと、この端末が知らないフィールド（サーバー側で計算される
       // 相談機能の埋め込みベクトルなど）を毎回の同期で消してしまう。

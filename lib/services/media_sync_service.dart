@@ -12,6 +12,7 @@ import '../models/sync_failure_reason.dart';
 import '../utils/media_type.dart';
 import 'db_service.dart';
 import 'image_storage_service.dart';
+import 'settings_service.dart';
 
 /// 日記に添付した写真・動画をFirebase Storageへバックアップ/復元する。
 /// テキストデータの同期（[CloudSyncService]）とは独立して動き、Pro限定機能
@@ -140,6 +141,10 @@ class MediaSyncService {
   }) async {
     final folder = _mediaFolder(remoteId);
     if (folder == null) return true;
+    // CloudSyncService.pushEntryと同じ理由の最終防衛ライン。アカウント
+    // 切り替え中の極短い窓で、前アカウントの写真・動画が新アカウントの
+    // Storageへ紛れ込むのを防ぐ。
+    if (!await SettingsService().currentUserOwnsLocalData()) return true;
     final pending = await DbService.instance.getUnuploadedImagePaths(entryId);
     var success = true;
     for (final path in pending) {

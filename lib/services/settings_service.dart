@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/summary_level.dart';
@@ -29,6 +30,25 @@ class SettingsService {
     } else {
       await prefs.setString(_localDataOwnerUidPref, uid);
     }
+  }
+
+  /// クラウドへの書き込み（[CloudSyncService.pushEntry]/[MediaSyncService]の
+  /// アップロード系）が呼ばれる直前の最終防衛ライン。`signInWithCredential`は
+  /// `FirebaseAuth.instance.currentUser`を即座に新アカウントへ切り替えるが、
+  /// [AccountStore._guardAccountSwitch]によるローカルデータの消去（＝
+  /// [setLocalDataOwnerUid]の更新）はその後に非同期で完了するため、ごく短い
+  /// 間だけ「currentUserは新アカウントなのに、ローカルデータはまだ前の
+  /// アカウントのもの」という状態が存在しうる。この間に何かがクラウド書き込みを
+  /// 起こすと、前アカウントのデータが新アカウントのFirestore/Storageへ紛れ込む
+  /// （現状そのような呼び出し経路は無いが、将来の機能追加で再発しうる潜在リスク）。
+  /// 記録が無い（この端末で初めての紐付け）場合は、通常の初回同期を妨げない
+  /// よう素通り（true）する。
+  Future<bool> currentUserOwnsLocalData() async {
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    if (currentUid == null) return false;
+    final ownerUid = await getLocalDataOwnerUid();
+    if (ownerUid == null) return true;
+    return ownerUid == currentUid;
   }
 
   Future<SummaryLevel> getSummaryLevel() async {
