@@ -5022,7 +5022,16 @@ export const notionSendItem = onCall(
     if (!notion?.token || !notion?.databaseId) {
       throw new HttpsError("failed-precondition", MESSAGES[loc].notionNotConnected);
     }
-    const notionToken = decryptNotionToken(notion.token, notionTokenEncryptionKey.value());
+    let notionToken: string;
+    try {
+      notionToken = decryptNotionToken(notion.token, notionTokenEncryptionKey.value());
+    } catch (decryptErr) {
+      // 暗号化キーのローテーションや保存データの破損で復号に失敗した場合、
+      // 素通しの例外（意味不明な内部エラー）にせず、再接続を促す既存の
+      // メッセージにそろえる。
+      logger.error("notionSendItem token decrypt failed", { uid, err: decryptErr });
+      throw new HttpsError("failed-precondition", MESSAGES[loc].notionNotConnected);
+    }
 
     const truncatedNotes = (content ?? "").slice(0, NOTION_NOTES_MAX_LENGTH);
     const properties: Record<string, unknown> = {
