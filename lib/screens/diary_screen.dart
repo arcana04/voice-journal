@@ -18,6 +18,7 @@ import '../widgets/screen_label_badge.dart';
 import '../widgets/scrim_text.dart';
 import '../widgets/throwback_story_button.dart';
 import 'diary_view_screen.dart';
+import 'diary_week_story_screen.dart';
 import 'manual_diary_screen.dart';
 
 class DiaryScreen extends StatefulWidget {
@@ -59,7 +60,8 @@ class _DiaryScreenState extends State<DiaryScreen> {
     });
   }
 
-  void _shiftDay(int days) => _selectDate(_selectedDate.add(Duration(days: days)));
+  void _shiftDay(int days) =>
+      _selectDate(_selectedDate.add(Duration(days: days)));
 
   Future<void> _pickDate(BuildContext context) async {
     final picked = await showDatePicker(
@@ -141,11 +143,12 @@ class _DiaryScreenState extends State<DiaryScreen> {
                           textColor: color,
                           fontScale: defaults.fontScale,
                         ),
-                        onFontFamilyIndexChanged: (index) => defaults.setDefault(
-                          fontFamilyIndex: index,
-                          textColor: defaults.textColor,
-                          fontScale: defaults.fontScale,
-                        ),
+                        onFontFamilyIndexChanged: (index) =>
+                            defaults.setDefault(
+                              fontFamilyIndex: index,
+                              textColor: defaults.textColor,
+                              fontScale: defaults.fontScale,
+                            ),
                       ),
                       const SizedBox(height: 28),
                       Text(
@@ -220,18 +223,16 @@ class _DiaryScreenState extends State<DiaryScreen> {
         ),
         child: FloatingActionButton(
           heroTag: 'manual_diary_fab',
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ManualDiaryScreen()),
-          ),
+          onPressed: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const ManualDiaryScreen())),
           tooltip: AppLocalizations.of(context)!.manualDiaryFabTooltip,
           child: const Icon(Icons.add),
         ),
       ),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: const AppBackgroundImage(),
-          ),
+          Positioned.fill(child: const AppBackgroundImage()),
           SafeArea(
             child: Consumer<JournalStore>(
               builder: (context, store, _) {
@@ -249,6 +250,17 @@ class _DiaryScreenState extends State<DiaryScreen> {
                     allDiaryEntries
                         .where((e) => _isSameDate(e.createdAt, _selectedDate))
                         .toList()
+                      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+                final weekEnd = _weekStart.add(const Duration(days: 7));
+                final weekEntries =
+                    allDiaryEntries
+                        .where(
+                          (e) =>
+                              !e.createdAt.isBefore(_weekStart) &&
+                              e.createdAt.isBefore(weekEnd),
+                        )
+                        .toList()
+                      // 過去も含めて「古い順」にスクロールで振り返れるようにする指示。
                       ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
                 bool hasEntry(DateTime day) =>
                     allDiaryEntries.any((e) => _isSameDate(e.createdAt, day));
@@ -286,9 +298,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
                                   style: Theme.of(context).textTheme.labelMedium
                                       ?.copyWith(
                                         fontWeight: FontWeight.w700,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
                                       ),
                                 ),
                                 Text(
@@ -296,27 +308,43 @@ class _DiaryScreenState extends State<DiaryScreen> {
                                   style: Theme.of(context).textTheme.titleMedium
                                       ?.copyWith(
                                         fontWeight: FontWeight.w800,
-                                        color: Theme.of(context).colorScheme.primary,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
                                       ),
                                 ),
                               ],
                             ),
                           ),
                           const Spacer(),
+                          if (weekEntries.isNotEmpty)
+                            IconButton(
+                              icon: const Icon(Icons.auto_stories_rounded),
+                              tooltip: AppLocalizations.of(context)!
+                                  .diaryWeekStoryTooltip,
+                              style: pressableIconButtonStyle(context),
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  fullscreenDialog: true,
+                                  builder: (_) => DiaryWeekStoryScreen(
+                                    entries: weekEntries,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          const SizedBox(width: 4),
                           IconButton(
                             icon: const Icon(Icons.calendar_month_outlined),
-                            tooltip: AppLocalizations.of(
-                              context,
-                            )!.diaryPickDateTooltip,
+                            tooltip: AppLocalizations.of(context)!
+                                .diaryPickDateTooltip,
                             style: pressableIconButtonStyle(context),
                             onPressed: () => _pickDate(context),
                           ),
                           const SizedBox(width: 4),
                           IconButton(
                             icon: const Icon(Icons.star_border),
-                            tooltip: AppLocalizations.of(
-                              context,
-                            )!.favoriteSettingsTooltip,
+                            tooltip: AppLocalizations.of(context)!
+                                .favoriteSettingsTooltip,
                             style: pressableIconButtonStyle(context),
                             onPressed: () =>
                                 _openFavoriteSettingsSheet(context),
@@ -341,16 +369,21 @@ class _DiaryScreenState extends State<DiaryScreen> {
                                   child: Text(
                                     AppLocalizations.of(context)!.diaryDayEmpty,
                                     textAlign: TextAlign.center,
-                                    style:
-                                        Theme.of(context).textTheme.bodyMedium,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium,
                                   ),
                                 ),
                               )
                             : RefreshIndicator(
                                 onRefresh: store.load,
                                 child: ListView(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(0, 8, 0, 96),
+                                  padding: const EdgeInsets.fromLTRB(
+                                    0,
+                                    8,
+                                    0,
+                                    96,
+                                  ),
                                   children: [
                                     for (final entry in dayEntries)
                                       DiaryEntryCard(
@@ -511,9 +544,7 @@ class _DayCell extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: selected
-                  ? theme.colorScheme.primary
-                  : Colors.transparent,
+              color: selected ? theme.colorScheme.primary : Colors.transparent,
               border: !selected && isToday
                   ? Border.all(color: theme.colorScheme.primary, width: 1.5)
                   : null,
