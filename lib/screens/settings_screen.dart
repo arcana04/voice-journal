@@ -333,6 +333,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         ),
                       ),
+                    if (subscription.isPro &&
+                        subscription.currentPlanType != PackageType.lifetime)
+                      _SettingsTile(
+                        icon: Icons.swap_horiz_rounded,
+                        color: _SettingsColors.rose,
+                        title: l10n.planChangeCta,
+                        subtitle: l10n.planChangeDescription,
+                        trailing: const _ChevronIcon(),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const PaywallScreen(),
+                          ),
+                        ),
+                      ),
                     if (subscription.isPro)
                       _SettingsTile(
                         icon: Icons.add_circle_outline_rounded,
