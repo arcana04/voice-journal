@@ -335,6 +335,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'No writable calendars were found on this device. Add a calendar (like a Google account) in the system Settings app, then refresh.';
 
   @override
+  String get integrationsGoogleCalendarHint =>
+      'Want to use Google Calendar? Add your Google account under iOS Settings → Calendar → Accounts, and it will show up here.';
+
+  @override
   String get integrationsRefresh => 'Refresh';
 
   @override
@@ -626,6 +630,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planUpgrade => 'Upgrade';
 
   @override
+  String get planChangeCta => 'Change plan';
+
+  @override
+  String get planChangeDescription => 'Switch between monthly and annual plans';
+
+  @override
   String get paywallTitle => 'Pro plan';
 
   @override
@@ -880,6 +890,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diaryPickDateTooltip => 'Pick a date';
+
+  @override
+  String get diaryWeekStoryTooltip => 'View this week\'s diary as a story';
 
   @override
   String get diaryPreviousWeekTooltip => 'Previous week';

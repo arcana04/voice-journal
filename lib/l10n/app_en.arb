@@ -121,6 +121,7 @@
   "integrationsOff": "Off",
   "integrationsPermissionDenied": "Calendar access wasn't granted. You can allow it from the system Settings app.",
   "integrationsNoCalendars": "No writable calendars were found on this device. Add a calendar (like a Google account) in the system Settings app, then refresh.",
+  "integrationsGoogleCalendarHint": "Want to use Google Calendar? Add your Google account under iOS Settings → Calendar → Accounts, and it will show up here.",
   "integrationsRefresh": "Refresh",
   "appleRemindersSettingsTitle": "Reminders",
   "appleRemindersScreenTitle": "Reminders Integration",
@@ -212,6 +213,8 @@
   "planFreeSubtitle": "Up to 60 seconds per recording, 3 recordings a day for free",
   "planManage": "Manage",
   "planUpgrade": "Upgrade",
+  "planChangeCta": "Change plan",
+  "planChangeDescription": "Switch between monthly and annual plans",
   "paywallTitle": "Pro plan",
   "paywallSectionTitle": "What Pro unlocks",
   "paywallSectionSubtitle": "Unlimited access to every Pro feature",
@@ -302,6 +305,7 @@
 
   "diaryDayEmpty": "No diary entries this day",
   "diaryPickDateTooltip": "Pick a date",
+  "diaryWeekStoryTooltip": "View this week's diary as a story",
   "diaryPreviousWeekTooltip": "Previous week",
   "diaryNextWeekTooltip": "Next week",
 

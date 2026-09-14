@@ -321,6 +321,10 @@ class AppLocalizationsJa extends AppLocalizations {
       '書き込み可能なカレンダーが端末に見つかりませんでした。設定アプリでGoogleアカウントなどのカレンダーを追加してから、再読み込みしてください。';
 
   @override
+  String get integrationsGoogleCalendarHint =>
+      'Googleカレンダーを使いたい場合は、iOSの「設定」→「カレンダー」→「アカウント」からGoogleアカウントを追加すると、ここに表示されるようになります。';
+
+  @override
   String get integrationsRefresh => '再読み込み';
 
   @override
@@ -599,6 +603,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get planUpgrade => 'アップグレード';
 
   @override
+  String get planChangeCta => 'プランを変更';
+
+  @override
+  String get planChangeDescription => '月額・年額プランを切り替えます';
+
+  @override
   String get paywallTitle => 'Proプラン';
 
   @override
@@ -836,6 +846,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get diaryPickDateTooltip => '日付を選択';
+
+  @override
+  String get diaryWeekStoryTooltip => '今週の日記をストーリーで見る';
 
   @override
   String get diaryPreviousWeekTooltip => '前の週';

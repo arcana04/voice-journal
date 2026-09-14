@@ -338,6 +338,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se encontraron calendarios editables en este dispositivo. Añade un calendario (como una cuenta de Google) en la app de Ajustes del sistema y luego actualiza.';
 
   @override
+  String get integrationsGoogleCalendarHint =>
+      '¿Quieres usar Google Calendar? Añade tu cuenta de Google en Ajustes de iOS → Calendario → Cuentas y aparecerá aquí.';
+
+  @override
   String get integrationsRefresh => 'Actualizar';
 
   @override
@@ -632,6 +636,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get planUpgrade => 'Mejorar';
 
   @override
+  String get planChangeCta => 'Cambiar de plan';
+
+  @override
+  String get planChangeDescription => 'Cambia entre el plan mensual y el anual';
+
+  @override
   String get paywallTitle => 'Plan Pro';
 
   @override
@@ -889,6 +899,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get diaryPickDateTooltip => 'Elegir una fecha';
+
+  @override
+  String get diaryWeekStoryTooltip =>
+      'Ver el diario de esta semana como historia';
 
   @override
   String get diaryPreviousWeekTooltip => 'Semana anterior';

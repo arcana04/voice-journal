@@ -109,6 +109,7 @@
   "integrationsOff": "連携しない",
   "integrationsPermissionDenied": "カレンダーへのアクセスが許可されていません。設定アプリから許可できます。",
   "integrationsNoCalendars": "書き込み可能なカレンダーが端末に見つかりませんでした。設定アプリでGoogleアカウントなどのカレンダーを追加してから、再読み込みしてください。",
+  "integrationsGoogleCalendarHint": "Googleカレンダーを使いたい場合は、iOSの「設定」→「カレンダー」→「アカウント」からGoogleアカウントを追加すると、ここに表示されるようになります。",
   "integrationsRefresh": "再読み込み",
   "appleRemindersSettingsTitle": "リマインダー",
   "appleRemindersScreenTitle": "リマインダー連携",
@@ -197,6 +198,8 @@
   "planFreeSubtitle": "録音60秒・1日3回まで無料で利用できます",
   "planManage": "管理する",
   "planUpgrade": "アップグレード",
+  "planChangeCta": "プランを変更",
+  "planChangeDescription": "月額・年額プランを切り替えます",
   "paywallTitle": "Proプラン",
   "paywallSectionTitle": "Proプランでできること",
   "paywallSectionSubtitle": "すべてのPro機能が使い放題",
@@ -283,6 +286,7 @@
 
   "diaryDayEmpty": "この日の日記・感想はありません",
   "diaryPickDateTooltip": "日付を選択",
+  "diaryWeekStoryTooltip": "今週の日記をストーリーで見る",
   "diaryPreviousWeekTooltip": "前の週",
   "diaryNextWeekTooltip": "次の週",
 

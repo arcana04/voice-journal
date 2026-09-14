@@ -325,6 +325,10 @@ class AppLocalizationsKo extends AppLocalizations {
       '이 기기에서 쓰기 가능한 캘린더를 찾을 수 없습니다. 시스템 설정 앱에서 캘린더(예: Google 계정)를 추가한 후 새로고침하세요.';
 
   @override
+  String get integrationsGoogleCalendarHint =>
+      'Google 캘린더를 사용하고 싶다면, iOS 설정 → 캘린더 → 계정에서 Google 계정을 추가하면 여기에 표시됩니다.';
+
+  @override
   String get integrationsRefresh => '새로고침';
 
   @override
@@ -603,6 +607,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get planUpgrade => '업그레이드';
 
   @override
+  String get planChangeCta => '플랜 변경';
+
+  @override
+  String get planChangeDescription => '월간 플랜과 연간 플랜을 전환합니다';
+
+  @override
   String get paywallTitle => 'Pro 플랜';
 
   @override
@@ -840,6 +850,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get diaryPickDateTooltip => '날짜 선택';
+
+  @override
+  String get diaryWeekStoryTooltip => '이번 주 일기를 스토리로 보기';
 
   @override
   String get diaryPreviousWeekTooltip => '지난주';

@@ -694,6 +694,12 @@ abstract class AppLocalizations {
   /// **'No writable calendars were found on this device. Add a calendar (like a Google account) in the system Settings app, then refresh.'**
   String get integrationsNoCalendars;
 
+  /// No description provided for @integrationsGoogleCalendarHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Want to use Google Calendar? Add your Google account under iOS Settings → Calendar → Accounts, and it will show up here.'**
+  String get integrationsGoogleCalendarHint;
+
   /// No description provided for @integrationsRefresh.
   ///
   /// In en, this message translates to:
@@ -1210,6 +1216,18 @@ abstract class AppLocalizations {
   /// **'Upgrade'**
   String get planUpgrade;
 
+  /// No description provided for @planChangeCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Change plan'**
+  String get planChangeCta;
+
+  /// No description provided for @planChangeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch between monthly and annual plans'**
+  String get planChangeDescription;
+
   /// No description provided for @paywallTitle.
   ///
   /// In en, this message translates to:
@@ -1659,6 +1677,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick a date'**
   String get diaryPickDateTooltip;
+
+  /// No description provided for @diaryWeekStoryTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'View this week\'s diary as a story'**
+  String get diaryWeekStoryTooltip;
 
   /// No description provided for @diaryPreviousWeekTooltip.
   ///

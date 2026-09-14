@@ -121,6 +121,7 @@
   "integrationsOff": "Aus",
   "integrationsPermissionDenied": "Kalenderzugriff wurde nicht gewährt. Du kannst ihn in der Systemeinstellungen-App erlauben.",
   "integrationsNoCalendars": "Auf diesem Gerät wurden keine beschreibbaren Kalender gefunden. Füge in der Systemeinstellungen-App einen Kalender (wie ein Google-Konto) hinzu und aktualisiere dann.",
+  "integrationsGoogleCalendarHint": "Google Kalender nutzen? Füge dein Google-Konto unter iOS-Einstellungen → Kalender → Accounts hinzu, dann erscheint es hier.",
   "integrationsRefresh": "Aktualisieren",
   "appleRemindersSettingsTitle": "Erinnerungen",
   "appleRemindersScreenTitle": "Erinnerungen-Integration",
@@ -212,6 +213,8 @@
   "planFreeSubtitle": "Bis zu 60 Sekunden pro Aufnahme, 3 kostenlose Aufnahmen pro Tag",
   "planManage": "Verwalten",
   "planUpgrade": "Upgrade",
+  "planChangeCta": "Plan ändern",
+  "planChangeDescription": "Zwischen Monats- und Jahresplan wechseln",
   "paywallTitle": "Pro-Plan",
   "paywallSectionTitle": "Was Pro freischaltet",
   "paywallSectionSubtitle": "Unbegrenzter Zugriff auf alle Pro-Funktionen",
@@ -302,6 +305,7 @@
 
   "diaryDayEmpty": "Keine Tagebucheinträge an diesem Tag",
   "diaryPickDateTooltip": "Datum auswählen",
+  "diaryWeekStoryTooltip": "Tagebuch dieser Woche als Story ansehen",
   "diaryPreviousWeekTooltip": "Vorherige Woche",
   "diaryNextWeekTooltip": "Nächste Woche",
 

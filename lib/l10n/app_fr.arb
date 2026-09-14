@@ -121,6 +121,7 @@
   "integrationsOff": "Désactivé",
   "integrationsPermissionDenied": "L'accès au calendrier n'a pas été accordé. Tu peux l'autoriser depuis l'application Réglages du système.",
   "integrationsNoCalendars": "Aucun calendrier modifiable n'a été trouvé sur cet appareil. Ajoute un calendrier (comme un compte Google) dans l'application Réglages du système, puis actualise.",
+  "integrationsGoogleCalendarHint": "Envie d'utiliser Google Agenda ? Ajoute ton compte Google dans Réglages iOS → Calendrier → Comptes, il apparaîtra ici.",
   "integrationsRefresh": "Actualiser",
   "appleRemindersSettingsTitle": "Rappels",
   "appleRemindersScreenTitle": "Intégration des Rappels",
@@ -212,6 +213,8 @@
   "planFreeSubtitle": "Jusqu'à 60 secondes par enregistrement, 3 enregistrements gratuits par jour",
   "planManage": "Gérer",
   "planUpgrade": "Passer à Pro",
+  "planChangeCta": "Changer de forfait",
+  "planChangeDescription": "Passez du forfait mensuel au forfait annuel, ou inversement",
   "paywallTitle": "Plan Pro",
   "paywallSectionTitle": "Ce que Pro débloque",
   "paywallSectionSubtitle": "Accès illimité à toutes les fonctionnalités Pro",
@@ -302,6 +305,7 @@
 
   "diaryDayEmpty": "Aucune entrée de journal ce jour-là",
   "diaryPickDateTooltip": "Choisir une date",
+  "diaryWeekStoryTooltip": "Voir le journal de la semaine façon story",
   "diaryPreviousWeekTooltip": "Semaine précédente",
   "diaryNextWeekTooltip": "Semaine suivante",
 

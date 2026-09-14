@@ -121,6 +121,7 @@
   "integrationsOff": "끄기",
   "integrationsPermissionDenied": "캘린더 접근 권한이 허용되지 않았습니다. 시스템 설정 앱에서 허용할 수 있어요.",
   "integrationsNoCalendars": "이 기기에서 쓰기 가능한 캘린더를 찾을 수 없습니다. 시스템 설정 앱에서 캘린더(예: Google 계정)를 추가한 후 새로고침하세요.",
+  "integrationsGoogleCalendarHint": "Google 캘린더를 사용하고 싶다면, iOS 설정 → 캘린더 → 계정에서 Google 계정을 추가하면 여기에 표시됩니다.",
   "integrationsRefresh": "새로고침",
   "appleRemindersSettingsTitle": "미리 알림",
   "appleRemindersScreenTitle": "미리 알림 연동",
@@ -212,6 +213,8 @@
   "planFreeSubtitle": "1회 최대 60초, 하루 3회 무료 녹음",
   "planManage": "관리",
   "planUpgrade": "업그레이드",
+  "planChangeCta": "플랜 변경",
+  "planChangeDescription": "월간 플랜과 연간 플랜을 전환합니다",
   "paywallTitle": "Pro 플랜",
   "paywallSectionTitle": "Pro로 열리는 기능",
   "paywallSectionSubtitle": "모든 Pro 기능을 무제한으로 이용",
@@ -302,6 +305,7 @@
 
   "diaryDayEmpty": "이 날의 일기가 없습니다",
   "diaryPickDateTooltip": "날짜 선택",
+  "diaryWeekStoryTooltip": "이번 주 일기를 스토리로 보기",
   "diaryPreviousWeekTooltip": "지난주",
   "diaryNextWeekTooltip": "다음 주",
 
