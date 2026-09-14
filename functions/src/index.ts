@@ -1477,11 +1477,23 @@ const MEDIA_OBJECT_PATH_RE = /^users\/([^/]+)\/entries\/[^/]+\/media\/[^/]+$/;
  * にしているのは、onMediaObjectFinalizedが更新直後の値を見て5GB上限
  * （MEDIA_STORAGE_CAP_BYTES）超過を判定する必要があるため
  * （FieldValue.incrementだけでは呼び出し側が結果値を取得できない）。 */
-async function adjustMediaBytesUsed(uid: string, deltaBytes: number): Promise<number> {
+/** [createIfMissing]がfalseかつusers/{uid}ドキュメントが既に存在しない場合は
+ * 何も書き込まない（0を返す）。deleteAccountはFirestoreの再帰削除の後に
+ * Storageのファイルを削除しており、そのonMediaObjectDeletedトリガーが非同期に
+ * 遅れて発火すると、set+mergeが既に消したはずのusersドキュメントを
+ * mediaBytesUsedフィールドだけの状態で復活させてしまっていた。アップロード側
+ * （onMediaObjectFinalized）は逆に、初回アップロード時などドキュメントがまだ
+ * 無くても正しく作成できる必要があるため、デフォルトはtrueのまま。 */
+async function adjustMediaBytesUsed(
+  uid: string,
+  deltaBytes: number,
+  createIfMissing = true
+): Promise<number> {
   const db = getFirestore();
   const userRef = db.collection("users").doc(uid);
   return db.runTransaction(async (tx) => {
     const snap = await tx.get(userRef);
+    if (!snap.exists && !createIfMissing) return 0;
     const current = (snap.data()?.mediaBytesUsed as number | undefined) ?? 0;
     const next = Math.max(0, current + deltaBytes);
     tx.set(userRef, { mediaBytesUsed: next }, { merge: true });
@@ -1522,7 +1534,7 @@ export const onMediaObjectFinalized = onObjectFinalized(async (event) => {
 export const onMediaObjectDeleted = onObjectDeleted(async (event) => {
   const match = MEDIA_OBJECT_PATH_RE.exec(event.data.name);
   if (!match) return;
-  await adjustMediaBytesUsed(match[1], -Number(event.data.size ?? 0));
+  await adjustMediaBytesUsed(match[1], -Number(event.data.size ?? 0), false);
 });
 
 /** クライアントはusers/{uid}を直接読めない（firestore.rules参照）ため、写真・
