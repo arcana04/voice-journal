@@ -852,6 +852,39 @@ class AppLocalizationsEs extends AppLocalizations {
       'No permitido (los recordatorios no se entregarán)';
 
   @override
+  String get autoNotificationsTitle =>
+      'Configurar notificaciones automáticamente';
+
+  @override
+  String get autoNotificationsDescription =>
+      'Desactívalo para solo sincronizar con tu calendario/recordatorios, sin crear una notificación en el dispositivo';
+
+  @override
+  String get reminderOffsetTitle => 'Aviso predeterminado';
+
+  @override
+  String get reminderOffsetSheetTitle => 'Aviso';
+
+  @override
+  String get reminderOffsetAtStartTime => 'A la hora de inicio';
+
+  @override
+  String reminderOffsetMinutesBefore(Object minutes) {
+    return '$minutes min antes';
+  }
+
+  @override
+  String get reminderOffsetOneHourBefore => '1 hora antes';
+
+  @override
+  String get allDayReminderHourTitle =>
+      'Hora de aviso para tareas de todo el día';
+
+  @override
+  String get allDayReminderHourDescription =>
+      'Avisa a esta hora, el día antes de la fecha límite';
+
+  @override
   String get allow => 'Permitir';
 
   @override

@@ -843,6 +843,37 @@ class AppLocalizationsEn extends AppLocalizations {
       'Not allowed (reminders won\'t be delivered)';
 
   @override
+  String get autoNotificationsTitle => 'Auto-set notifications for new tasks';
+
+  @override
+  String get autoNotificationsDescription =>
+      'Turn off to only sync to your calendar/reminders app, without creating a device notification';
+
+  @override
+  String get reminderOffsetTitle => 'Default reminder timing';
+
+  @override
+  String get reminderOffsetSheetTitle => 'Reminder timing';
+
+  @override
+  String get reminderOffsetAtStartTime => 'At start time';
+
+  @override
+  String reminderOffsetMinutesBefore(Object minutes) {
+    return '$minutes min before';
+  }
+
+  @override
+  String get reminderOffsetOneHourBefore => '1 hour before';
+
+  @override
+  String get allDayReminderHourTitle => 'All-day task reminder time';
+
+  @override
+  String get allDayReminderHourDescription =>
+      'Notifies at this time, the day before the due date';
+
+  @override
   String get allow => 'Allow';
 
   @override

@@ -1588,6 +1588,60 @@ abstract class AppLocalizations {
   /// **'Not allowed (reminders won\'t be delivered)'**
   String get notificationDenied;
 
+  /// No description provided for @autoNotificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-set notifications for new tasks'**
+  String get autoNotificationsTitle;
+
+  /// No description provided for @autoNotificationsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off to only sync to your calendar/reminders app, without creating a device notification'**
+  String get autoNotificationsDescription;
+
+  /// No description provided for @reminderOffsetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Default reminder timing'**
+  String get reminderOffsetTitle;
+
+  /// No description provided for @reminderOffsetSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder timing'**
+  String get reminderOffsetSheetTitle;
+
+  /// No description provided for @reminderOffsetAtStartTime.
+  ///
+  /// In en, this message translates to:
+  /// **'At start time'**
+  String get reminderOffsetAtStartTime;
+
+  /// No description provided for @reminderOffsetMinutesBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min before'**
+  String reminderOffsetMinutesBefore(Object minutes);
+
+  /// No description provided for @reminderOffsetOneHourBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'1 hour before'**
+  String get reminderOffsetOneHourBefore;
+
+  /// No description provided for @allDayReminderHourTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All-day task reminder time'**
+  String get allDayReminderHourTitle;
+
+  /// No description provided for @allDayReminderHourDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifies at this time, the day before the due date'**
+  String get allDayReminderHourDescription;
+
   /// No description provided for @allow.
   ///
   /// In en, this message translates to:

@@ -856,6 +856,38 @@ class AppLocalizationsDe extends AppLocalizations {
       'Nicht erlaubt (Erinnerungen werden nicht zugestellt)';
 
   @override
+  String get autoNotificationsTitle => 'Erinnerungen automatisch einstellen';
+
+  @override
+  String get autoNotificationsDescription =>
+      'Deaktivieren, um nur mit Kalender/Erinnerungen zu synchronisieren, ohne eine Gerätebenachrichtigung zu erstellen';
+
+  @override
+  String get reminderOffsetTitle => 'Standard-Erinnerungszeitpunkt';
+
+  @override
+  String get reminderOffsetSheetTitle => 'Erinnerungszeitpunkt';
+
+  @override
+  String get reminderOffsetAtStartTime => 'Zur Startzeit';
+
+  @override
+  String reminderOffsetMinutesBefore(Object minutes) {
+    return '$minutes Min. vorher';
+  }
+
+  @override
+  String get reminderOffsetOneHourBefore => '1 Stunde vorher';
+
+  @override
+  String get allDayReminderHourTitle =>
+      'Erinnerungszeit für ganztägige Aufgaben';
+
+  @override
+  String get allDayReminderHourDescription =>
+      'Erinnert zu dieser Uhrzeit, am Tag vor dem Fälligkeitsdatum';
+
+  @override
   String get allow => 'Erlauben';
 
   @override

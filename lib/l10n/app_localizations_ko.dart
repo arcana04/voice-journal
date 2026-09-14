@@ -805,6 +805,35 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notificationDenied => '허용되지 않음(리마인더가 전달되지 않습니다)';
 
   @override
+  String get autoNotificationsTitle => '새 작업에 자동으로 알림 설정';
+
+  @override
+  String get autoNotificationsDescription => '끄면 기기 알림 없이 캘린더/미리 알림 앱에만 반영됩니다';
+
+  @override
+  String get reminderOffsetTitle => '기본 알림 시점';
+
+  @override
+  String get reminderOffsetSheetTitle => '알림 시점';
+
+  @override
+  String get reminderOffsetAtStartTime => '시작 시각 정각';
+
+  @override
+  String reminderOffsetMinutesBefore(Object minutes) {
+    return '$minutes분 전';
+  }
+
+  @override
+  String get reminderOffsetOneHourBefore => '1시간 전';
+
+  @override
+  String get allDayReminderHourTitle => '종일 작업 알림 시각';
+
+  @override
+  String get allDayReminderHourDescription => '마감일 전날 이 시각에 알림을 보냅니다';
+
+  @override
   String get allow => '허용';
 
   @override

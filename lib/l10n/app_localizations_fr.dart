@@ -861,6 +861,39 @@ class AppLocalizationsFr extends AppLocalizations {
       'Non autorisées (les rappels ne seront pas envoyés)';
 
   @override
+  String get autoNotificationsTitle =>
+      'Configurer les notifications automatiquement';
+
+  @override
+  String get autoNotificationsDescription =>
+      'Désactive pour ne synchroniser qu\'avec ton calendrier/tes rappels, sans créer de notification sur l\'appareil';
+
+  @override
+  String get reminderOffsetTitle => 'Délai de rappel par défaut';
+
+  @override
+  String get reminderOffsetSheetTitle => 'Délai de rappel';
+
+  @override
+  String get reminderOffsetAtStartTime => 'À l\'heure de début';
+
+  @override
+  String reminderOffsetMinutesBefore(Object minutes) {
+    return '$minutes min avant';
+  }
+
+  @override
+  String get reminderOffsetOneHourBefore => '1 heure avant';
+
+  @override
+  String get allDayReminderHourTitle =>
+      'Heure de rappel pour les tâches journée entière';
+
+  @override
+  String get allDayReminderHourDescription =>
+      'Notifie à cette heure, la veille de l\'échéance';
+
+  @override
   String get allow => 'Autoriser';
 
   @override

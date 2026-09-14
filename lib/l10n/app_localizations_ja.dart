@@ -801,6 +801,36 @@ class AppLocalizationsJa extends AppLocalizations {
   String get notificationDenied => '許可されていません（リマインダーが届きません）';
 
   @override
+  String get autoNotificationsTitle => 'タスク作成時に自動で通知を設定';
+
+  @override
+  String get autoNotificationsDescription =>
+      'オフにすると、カレンダー/リマインダーアプリへの反映だけ行い、端末への通知は作成しません';
+
+  @override
+  String get reminderOffsetTitle => 'デフォルトの通知タイミング';
+
+  @override
+  String get reminderOffsetSheetTitle => '通知タイミング';
+
+  @override
+  String get reminderOffsetAtStartTime => '開始時刻ちょうど';
+
+  @override
+  String reminderOffsetMinutesBefore(Object minutes) {
+    return '$minutes分前';
+  }
+
+  @override
+  String get reminderOffsetOneHourBefore => '1時間前';
+
+  @override
+  String get allDayReminderHourTitle => '終日タスクの通知時刻';
+
+  @override
+  String get allDayReminderHourDescription => '期限日の前日、この時刻に通知します';
+
+  @override
   String get allow => '許可する';
 
   @override
