@@ -579,40 +579,51 @@ class _FlyingLightState extends State<_FlyingLight>
     final arcSign = widget.seed.isEven ? 1.0 : -1.0;
     final arcHeight = 46.0 + (widget.seed % 3) * 14.0;
 
+    // OverlayEntryが提供する暗黙のStack的な親（Theatre）に直接Positionedを
+    // 差し込むと、端末・Flutterのバージョンによっては親のRenderObjectが
+    // StackParentDataを持たないタイミングと重なり、
+    // 「type 'ParentData' is not a subtype of type 'StackParentData'」で
+    // 画面全体の描画が壊れることがあった（保存ボタンを押すと白画面になる
+    // 不具合の原因）。Positionedの直近の祖先を明示的なStackにすることで、
+    // OverlayのTheatre側の状態に依存しないようにする。
     return IgnorePointer(
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, _) {
-          final t = Curves.easeInCubic.transform(_controller.value);
-          final straight = Offset.lerp(widget.origin, widget.target, t)!;
-          final arc = unitNormal * (arcSign * arcHeight * 4 * t * (1 - t));
-          final position = straight + arc;
-          final size = 22.0 + (4.0 - 22.0) * t;
-          final opacity = t < 0.75 ? 1.0 : (1 - (t - 0.75) / 0.25);
-          return Positioned(
-            left: position.dx - size / 2,
-            top: position.dy - size / 2,
-            child: Opacity(
-              opacity: opacity.clamp(0.0, 1.0),
-              child: Container(
-                width: size,
-                height: size,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [accent, accent.withValues(alpha: 0)],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: accent.withValues(alpha: 0.55),
-                      blurRadius: size * 0.8,
+      child: Stack(
+        children: [
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, _) {
+              final t = Curves.easeInCubic.transform(_controller.value);
+              final straight = Offset.lerp(widget.origin, widget.target, t)!;
+              final arc = unitNormal * (arcSign * arcHeight * 4 * t * (1 - t));
+              final position = straight + arc;
+              final size = 22.0 + (4.0 - 22.0) * t;
+              final opacity = t < 0.75 ? 1.0 : (1 - (t - 0.75) / 0.25);
+              return Positioned(
+                left: position.dx - size / 2,
+                top: position.dy - size / 2,
+                child: Opacity(
+                  opacity: opacity.clamp(0.0, 1.0),
+                  child: Container(
+                    width: size,
+                    height: size,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [accent, accent.withValues(alpha: 0)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: accent.withValues(alpha: 0.55),
+                          blurRadius: size * 0.8,
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ],
       ),
     );
   }
