@@ -1,4 +1,10 @@
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+  timingSafeEqual,
+} from "node:crypto";
 import { execFile } from "node:child_process";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -28,6 +34,10 @@ const revenueCatWebhookSecret = defineSecret("REVENUECAT_WEBHOOK_SECRET");
 // key（"sk_"始まり、公開SDKキー"appl_"/"goog_"とは別物）。syncProStatusが
 // Subscriber APIを叩くのに使う。
 const revenueCatSecretApiKey = defineSecret("REVENUECAT_SECRET_API_KEY");
+// Notion連携トークン（ユーザーの実ワークスペースへの読み書き権限を持つ）を
+// Firestoreに保存する前に暗号化するための鍵。64桁の16進数文字列（32バイト）。
+// `openssl rand -hex 32`等で生成し、`firebase functions:secrets:set`で設定する。
+const notionTokenEncryptionKey = defineSecret("NOTION_TOKEN_ENCRYPTION_KEY");
 
 /** App Check未検証のリクエストを拒否するかどうか。クライアント側
  * （lib/main.dartのFirebaseAppCheck.instance.activate）は本番プロバイダ
@@ -4590,6 +4600,42 @@ const NOTION_VERSION = "2022-06-28";
  * 余裕を持たせた値）。要約前提でこの機能を使うため、これを超える分は切り詰める。 */
 const NOTION_NOTES_MAX_LENGTH = 1900;
 
+/** 暗号化済みトークンの先頭に付けるマーカー。既存ユーザーの平文トークン
+ * （このマーカーが無いもの）と区別するために使う——復号時にこのプレフィックスが
+ * 無ければ復号せずそのまま返す（後方互換。次にnotionSetupDatabaseで
+ * 再接続された時点で暗号化済みに置き換わる）。 */
+const NOTION_TOKEN_ENC_PREFIX = "enc:v1:";
+
+/** Notion Integrationトークンを、実際にユーザーのNotionワークスペースへの
+ * 読み書き権限を持つ機密情報として、Firestoreへ平文保存しないようAES-256-GCMで
+ * 暗号化する。IV/認証タグは呼び出しごとにランダムに生成し、復号に必要な値も
+ * まとめて1つの文字列にして保存する（鍵自体は共有シークレットのみ）。 */
+function encryptNotionToken(token: string, keyHex: string): string {
+  const key = Buffer.from(keyHex, "hex");
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const ciphertext = Buffer.concat([cipher.update(token, "utf8"), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  return `${NOTION_TOKEN_ENC_PREFIX}${iv.toString("hex")}:${authTag.toString("hex")}:${ciphertext.toString("hex")}`;
+}
+
+/** encryptNotionTokenの対。マーカーが無い（暗号化前の既存データ）場合は
+ * そのまま平文として返す。 */
+function decryptNotionToken(stored: string, keyHex: string): string {
+  if (!stored.startsWith(NOTION_TOKEN_ENC_PREFIX)) return stored;
+  const [ivHex, authTagHex, ciphertextHex] = stored
+    .slice(NOTION_TOKEN_ENC_PREFIX.length)
+    .split(":");
+  const key = Buffer.from(keyHex, "hex");
+  const decipher = createDecipheriv("aes-256-gcm", key, Buffer.from(ivHex, "hex"));
+  decipher.setAuthTag(Buffer.from(authTagHex, "hex"));
+  const plaintext = Buffer.concat([
+    decipher.update(Buffer.from(ciphertextHex, "hex")),
+    decipher.final(),
+  ]);
+  return plaintext.toString("utf8");
+}
+
 function extractNotionPageTitle(page: Record<string, unknown>): string {
   const props = page?.properties as Record<string, unknown> | undefined;
   if (props && typeof props === "object") {
@@ -4672,7 +4718,12 @@ interface NotionSetupDatabaseRequest {
 /** Notion連携: 選ばれた親ページの配下に、固定スキーマのデータベースを新規作成し、
  * トークン・データベースIDをusers/{uid}.notionへ保存する（以降のnotionSendItemが使う）。 */
 export const notionSetupDatabase = onCall(
-  { timeoutSeconds: 30, memory: "256MiB", enforceAppCheck: APP_CHECK_ENFORCED },
+  {
+    secrets: [notionTokenEncryptionKey],
+    timeoutSeconds: 30,
+    memory: "256MiB",
+    enforceAppCheck: APP_CHECK_ENFORCED,
+  },
   async (request) => {
     const { token, pageId, locale } = (request.data ?? {}) as NotionSetupDatabaseRequest;
     const loc = normalizeLocale(locale);
@@ -4728,7 +4779,7 @@ export const notionSetupDatabase = onCall(
         .set(
           {
             notion: {
-              token: token.trim(),
+              token: encryptNotionToken(token.trim(), notionTokenEncryptionKey.value()),
               databaseId: data.id,
               pageId,
               connectedAt: FieldValue.serverTimestamp(),
@@ -4777,7 +4828,12 @@ interface NotionSendItemRequest {
 /** Notion連携: タスク/日記/アイデア1件を、接続済みのデータベースへ1ページとして送信する
  * （1タップ送信のMVP。自動同期は次フェーズ）。Proプラン限定。 */
 export const notionSendItem = onCall(
-  { timeoutSeconds: 30, memory: "256MiB", enforceAppCheck: APP_CHECK_ENFORCED },
+  {
+    secrets: [notionTokenEncryptionKey],
+    timeoutSeconds: 30,
+    memory: "256MiB",
+    enforceAppCheck: APP_CHECK_ENFORCED,
+  },
   async (request) => {
     const { title, content, category, dateIso, dueDateIso, done, locale } =
       (request.data ?? {}) as NotionSendItemRequest;
@@ -4801,6 +4857,7 @@ export const notionSendItem = onCall(
     if (!notion?.token || !notion?.databaseId) {
       throw new HttpsError("failed-precondition", MESSAGES[loc].notionNotConnected);
     }
+    const notionToken = decryptNotionToken(notion.token, notionTokenEncryptionKey.value());
 
     const truncatedNotes = (content ?? "").slice(0, NOTION_NOTES_MAX_LENGTH);
     const properties: Record<string, unknown> = {
@@ -4817,7 +4874,7 @@ export const notionSendItem = onCall(
       const res = await fetch("https://api.notion.com/v1/pages", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${notion.token}`,
+          Authorization: `Bearer ${notionToken}`,
           "Notion-Version": NOTION_VERSION,
           "Content-Type": "application/json",
         },
