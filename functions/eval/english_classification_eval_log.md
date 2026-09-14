@@ -39,6 +39,7 @@ Mark: ✅ match / ⚠️ partial (right category, wrong split/detail) / ❌ wron
 | multi-topic-split-05-note-buried-in-middle | 2 tasks + 1 diary (diary in the middle) | 2 tasks + 1 diary | ✅ | 2026-09-14, tested against pre-fix prompt |
 | multi-topic-split-06-idea-and-diary-swapped-order | 2 tasks + 1 idea + 1 diary (idea first) | 2 tasks + 1 idea + 1 diary | ✅ | 2026-09-14, tested against pre-fix prompt — same content as -03, just reordered |
 | multi-topic-split-07-diary-moved-to-second-isolated | 2 tasks + 1 idea + 1 diary (diary in 2nd position, "Oh," kept) | 2 tasks + 1 idea + 1 diary | ✅ | 2026-09-14, tested against pre-fix prompt — single-variable isolation vs -03, confirms root cause is "feeling sentence as opening line" |
+| multi-topic-split-08-five-tasks-plus-idea-and-diary-severe-drop | 5 tasks + 1 idea + 1 diary | 5 tasks + 1 idea + 1 diary | ✅ | 2026-09-14, initially failed (2 of 5 tasks, 1 fabricated from framing language) with the pre-fix prompt. Rules #6/#7 added to buildSystemPromptEn (no tasks from framing/wrap-up language; every item in a long list gets its own task), deployed to prod (processTextMemo/processVoiceMemo), reverified with the exact original wording — now passes |
 
 ## Summary (fill in after the full pass)
 
