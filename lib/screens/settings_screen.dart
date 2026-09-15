@@ -974,7 +974,6 @@ class _SettingsTile extends StatelessWidget {
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w700,
                             ),
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (badge != null) ...[
