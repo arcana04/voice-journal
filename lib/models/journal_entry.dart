@@ -53,15 +53,21 @@ class TaskItem {
   });
 
   /// 終日タスクにユーザーが明示的な通知時刻を設定していない場合の既定値
-  /// （期限日の前日[hour]時、設定画面で変更可能・デフォルト16時）。期限が
-  /// 今日以前（「牛乳を買わなきゃ」のような当日タスクなど）だと前日[hour]時は
-  /// すでに過去になり通知が飛ばなくなるため、その場合は既定値を設定しない
-  /// （null＝通知なし、従来どおりの挙動）。
+  /// （期限日の前日[hour]時、設定画面で変更可能・デフォルト16時）。
+  /// 期限が今日（「今日、この後、牛乳を買う」のような当日・時刻指定なし
+  /// タスク）だと前日[hour]時はすでに過去になるため、代わりに「今から2時間後」
+  /// を既定値にする——固定時刻だと録音した時間帯によってはそれ自体が既に
+  /// 過去ということが起こり得るが、相対時間なら常に未来になる。「この後」
+  /// という言い回し自体が近い未来を指すニュアンスとも合う。
+  /// 期限が過去（すでに期日超過）の場合は、通知時刻を推測する意味が無いため
+  /// 既定値を設定しない（null＝通知なし、従来どおりの挙動）。
   static DateTime? defaultAllDayNotifyAt(DateTime dueDate, {int hour = 16}) {
-    final today = DateTime.now();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     final dueDay = DateTime(dueDate.year, dueDate.month, dueDate.day);
-    if (!dueDay.isAfter(DateTime(today.year, today.month, today.day))) {
-      return null;
+    if (dueDay.isBefore(today)) return null;
+    if (dueDay.isAtSameMomentAs(today)) {
+      return now.add(const Duration(hours: 2));
     }
     final dayBefore = dueDay.subtract(const Duration(days: 1));
     return DateTime(dayBefore.year, dayBefore.month, dayBefore.day, hour);
