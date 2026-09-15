@@ -220,13 +220,15 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       if (!mounted) return;
       _applyDraft(entry, allowedCategories);
-    } catch (e) {
-      if (!mounted) return;
-      _handleProcessingError(e);
-    } finally {
+      // 保存できた場合のみ削除する（失敗時に消すと復旧不能になるため、
+      // 詳細は_stopAndProcess側のコメントを参照）。
       try {
         await File(path).delete();
       } catch (_) {}
+    } catch (e) {
+      if (!mounted) return;
+      _handleProcessingError(e);
+      unawaited(_checkForOrphanedRecording());
     }
   }
 
@@ -436,17 +438,22 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       if (!mounted) return;
       _applyDraft(entry, allowedCategories);
-    } catch (e) {
-      if (!mounted) return;
-      _handleProcessingError(e);
-    } finally {
-      // 処理の成否に関わらずここで削除しないと、Androidでは端末に録音
-      // ファイルが残り続け、次回起動時のオーファン録音検知([_checkForOrphanedRecording])
-      // が「未処理の録音」と誤検知して、既に保存済みの内容を重複保存
-      // ・クォータ二重消費させてしまっていた。
+      // 保存が完了した録音だけをここで削除する。Androidでは削除しないと
+      // 端末に録音ファイルが残り続け、次回起動時のオーファン録音検知
+      // ([_checkForOrphanedRecording])が「未処理の録音」と誤検知して、
+      // 既に保存済みの内容を重複保存・クォータ二重消費させてしまっていた。
+      // 逆に処理が失敗した場合はここで消してしまうと録音そのものが復旧
+      // 不能になるため、あえて残しておき、次回起動時のオーファン検知経由で
+      // ユーザーが再度処理を試せるようにする。
       try {
         await File(path).delete();
       } catch (_) {}
+    } catch (e) {
+      if (!mounted) return;
+      _handleProcessingError(e);
+      // 録音ファイルは削除せず残してあるので、アプリ再起動を待たず
+      // その場でオーファン録音として再処理を案内する。
+      unawaited(_checkForOrphanedRecording());
     }
   }
 

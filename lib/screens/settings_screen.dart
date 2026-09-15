@@ -373,7 +373,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         trailing: const _ChevronIcon(),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => const PaywallScreen(),
+                            builder: (_) =>
+                                const PaywallScreen(subscriptionSwitchOnly: true),
                           ),
                         ),
                       ),

@@ -20,7 +20,13 @@ import '../widgets/require_sign_in_sheet.dart';
 /// パッケージ（月額・年額・買い切り）を1枚ずつ選べるカードとして一覧表示し、
 /// 選んだプランの購入・復元を行う。
 class PaywallScreen extends StatefulWidget {
-  const PaywallScreen({super.key});
+  /// 既存のPro契約者が月額⇄年額を切り替えるためだけに開いた場合はtrue。
+  /// 買い切りは自動更新サブスクをキャンセルしない別種の購入のため、この
+  /// モードでは買い切り枠自体を出さない（既存サブスクを解約しないまま
+  /// 買い切りも購入され二重に課金され続けてしまうのを防ぐ）。
+  final bool subscriptionSwitchOnly;
+
+  const PaywallScreen({super.key, this.subscriptionSwitchOnly = false});
 
   @override
   State<PaywallScreen> createState() => _PaywallScreenState();
@@ -432,7 +438,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
       ),
       // 買い切りプランはiOS限定で提供する方針のため、Androidでは
       // 商品が用意されないまま「近日公開」を出し続けないよう枠自体を作らない。
-      if (Platform.isIOS)
+      // 既存サブスクの月額⇄年額切替専用モードでも、買い切りは別種の購入で
+      // 既存サブスクを自動解約しないため意図的に出さない（二重課金防止）。
+      if (Platform.isIOS && !widget.subscriptionSwitchOnly)
         _PlanSlot(
           label: l10n.paywallPlanLifetime,
           package: lifetime,
@@ -444,9 +452,18 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
     // 起動時、実在するパッケージの中から一番目立たせたいもの（年額があれば
     // それ、無ければ最初に見つかったもの）を初期選択にする。買い切りが完売
-    // 済みの場合は初期選択の候補から外す。
+    // 済みの場合は初期選択の候補から外す。切替専用モードでは「今と違う方の
+    // プラン」を初期選択にし、誤って今と同じプランのまま送信してしまうのを防ぐ。
     if (_selected == null) {
-      final initial = annual ?? monthly ?? (lifetimeSoldOut ? null : lifetime);
+      Package? initial;
+      if (widget.subscriptionSwitchOnly) {
+        final currentPlanType = context.read<SubscriptionStore>().currentPlanType;
+        initial = currentPlanType == PackageType.monthly
+            ? (annual ?? monthly)
+            : (monthly ?? annual);
+      } else {
+        initial = annual ?? monthly ?? (lifetimeSoldOut ? null : lifetime);
+      }
       if (initial != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) setState(() => _selected = initial);
