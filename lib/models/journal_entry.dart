@@ -16,6 +16,13 @@ class TaskItem {
   final bool done;
   final String? calendarEventId;
 
+  /// [calendarEventId]が実際に存在するカレンダーのID。「連携先カレンダー」の
+  /// 現在の設定値とは独立して保持する——ユーザーが後で連携先カレンダーを
+  /// 切り替えても、既存の予定に対する更新・削除は必ずこのIDを対象にする
+  /// ため（切り替え後に「現在選択中のカレンダー」を見てしまうと、切り替え前の
+  /// カレンダーに残った予定が二度と操作できなくなる）。
+  final String? calendarId;
+
   /// iPhone標準のリマインダーアプリ（EventKitのEKReminder）に連携登録した際のID。
   final String? appleReminderId;
   final bool isAllDay;
@@ -38,6 +45,7 @@ class TaskItem {
     this.reminderEndAt,
     this.done = false,
     this.calendarEventId,
+    this.calendarId,
     this.appleReminderId,
     this.isAllDay = false,
     this.notifyAt,
@@ -70,6 +78,7 @@ class TaskItem {
     bool clearReminderEndAt = false,
     String? calendarEventId,
     bool clearCalendarEventId = false,
+    String? calendarId,
     String? appleReminderId,
     bool clearAppleReminderId = false,
     bool? isAllDay,
@@ -92,6 +101,9 @@ class TaskItem {
       calendarEventId: clearCalendarEventId
           ? null
           : (calendarEventId ?? this.calendarEventId),
+      calendarId: clearCalendarEventId
+          ? null
+          : (calendarId ?? this.calendarId),
       appleReminderId: clearAppleReminderId
           ? null
           : (appleReminderId ?? this.appleReminderId),
@@ -114,6 +126,7 @@ class TaskItem {
       'reminder_end_at': reminderEndAt?.toIso8601String(),
       'done': done ? 1 : 0,
       'calendar_event_id': calendarEventId,
+      'calendar_id': calendarId,
       'apple_reminder_id': appleReminderId,
       'is_all_day': isAllDay ? 1 : 0,
       'notify_at': notifyAt?.toIso8601String(),
@@ -140,6 +153,7 @@ class TaskItem {
           : null,
       done: (map['done'] as int? ?? 0) == 1,
       calendarEventId: map['calendar_event_id'] as String?,
+      calendarId: map['calendar_id'] as String?,
       appleReminderId: map['apple_reminder_id'] as String?,
       isAllDay: (map['is_all_day'] as int? ?? 0) == 1,
       notifyAt: notifyAtStr != null ? DateTime.tryParse(notifyAtStr) : null,

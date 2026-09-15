@@ -213,46 +213,75 @@ class JournalStore extends ChangeNotifier {
   }
 
   /// 連携先カレンダーが選ばれていれば、タスクの状態に合わせて予定を作成・更新・
-  /// 削除し、新しいカレンダーイベントIDを返す（連携オフや失敗時は元の値のまま）。
-  Future<String?> _syncTaskCalendarEvent(TaskItem task) async {
-    final calendarId = await _calendarSettings.getCalendarId();
-    if (calendarId == null) return task.calendarEventId;
+  /// 削除し、新しいカレンダーイベントIDとそのカレンダーIDを返す（連携オフや
+  /// 失敗時は元の値のまま）。既にカレンダー予定を持っているタスクは、ユーザーが
+  /// その後「現在選択中のカレンダー」を切り替えても、必ず予定が実際に存在する
+  /// [task.calendarId]を対象に更新・削除する——現在選択中の値を使ってしまうと、
+  /// 切り替え前のカレンダーに残った予定が二度と操作できず孤立してしまうため。
+  /// [task.calendarEventId]はあるが[task.calendarId]が無い（切替対応前に
+  /// 作られた）タスクだけ、従来どおり現在選択中の値へフォールバックする。
+  Future<({String? eventId, String? calendarId})> _syncTaskCalendarEvent(
+    TaskItem task,
+  ) async {
+    final selectedCalendarId = await _calendarSettings.getCalendarId();
+    final existingCalendarId = task.calendarEventId == null
+        ? null
+        : (task.calendarId ?? selectedCalendarId);
+
+    if (task.reminderAt == null || task.done) {
+      if (task.calendarEventId != null && existingCalendarId != null) {
+        try {
+          await _calendar.deleteEvent(existingCalendarId, task.calendarEventId!);
+        } catch (e) {
+          debugPrint('calendar sync (delete) failed: $e');
+          if (!calendarSyncError) {
+            calendarSyncError = true;
+            notifyListeners();
+          }
+          return (eventId: task.calendarEventId, calendarId: task.calendarId);
+        }
+      }
+      return (eventId: null, calendarId: null);
+    }
+
+    // 既存予定があればそのカレンダーを、無ければ現在選択中のカレンダーを
+    // 新規作成先にする。どちらも無ければ連携オフ扱いで何もしない。
+    final targetCalendarId = existingCalendarId ?? selectedCalendarId;
+    if (targetCalendarId == null) {
+      return (eventId: task.calendarEventId, calendarId: task.calendarId);
+    }
 
     try {
-      final String? result;
-      if (task.reminderAt == null || task.done) {
-        if (task.calendarEventId != null) {
-          await _calendar.deleteEvent(calendarId, task.calendarEventId!);
-        }
-        result = null;
-      } else {
-        result = await _calendar.upsertEvent(
-          calendarId: calendarId,
-          eventId: task.calendarEventId,
-          title: task.title,
-          start: task.reminderAt!,
-          end: task.reminderEndAt,
-          allDay: task.isAllDay,
-        );
-      }
+      final result = await _calendar.upsertEvent(
+        calendarId: targetCalendarId,
+        eventId: task.calendarEventId,
+        title: task.title,
+        start: task.reminderAt!,
+        end: task.reminderEndAt,
+        allDay: task.isAllDay,
+      );
       if (calendarSyncError) {
         calendarSyncError = false;
         notifyListeners();
       }
-      return result;
+      return (eventId: result, calendarId: result == null ? null : targetCalendarId);
     } catch (e) {
       debugPrint('calendar sync failed: $e');
       if (!calendarSyncError) {
         calendarSyncError = true;
         notifyListeners();
       }
-      return task.calendarEventId;
+      return (eventId: task.calendarEventId, calendarId: task.calendarId);
     }
   }
 
   Future<void> _deleteTaskCalendarEvent(TaskItem task) async {
     if (task.calendarEventId == null) return;
-    final calendarId = await _calendarSettings.getCalendarId();
+    // 予定が実際に存在するカレンダーを対象にする（[_syncTaskCalendarEvent]と
+    // 同じ理由）。切替対応前のデータで[calendarId]が無い場合のみ、現在選択中の
+    // カレンダーへフォールバックする。
+    final calendarId =
+        task.calendarId ?? await _calendarSettings.getCalendarId();
     if (calendarId == null) return;
     try {
       await _calendar.deleteEvent(calendarId, task.calendarEventId!);
@@ -304,8 +333,12 @@ class JournalStore extends ChangeNotifier {
 
   Future<void> _deleteTaskAppleReminder(TaskItem task) async {
     if (task.appleReminderId == null) return;
-    final listId = await _appleRemindersSettings.getListId();
-    if (listId == null) return;
+    // ネイティブ側のdeleteReminder(AppleRemindersChannel.swift)はreminderIdだけで
+    // EKReminderをグローバルに検索して削除でき、リストIDを必要としない。以前は
+    // ここで「現在選択中のリマインダーリスト」の取得を必須にしていたため、連携を
+    // OFFにした（listIdがnullになる）後にタスクを削除すると、実際のリマインダーは
+    // Apple Reminders側に永久に残り続けていた（カレンダー連携で既に修正した
+    // 孤立バグと同じ構造）。listIdの有無に関わらず常に削除を試みる。
     try {
       await _appleReminders.deleteReminder(task.appleReminderId!);
     } catch (e) {
@@ -338,9 +371,15 @@ class JournalStore extends ChangeNotifier {
         }
       }
       if (task.id != null) {
-        final eventId = await _syncTaskCalendarEvent(task);
-        if (eventId != task.calendarEventId) {
-          await _db.updateTaskCalendarEventId(task.id!, eventId);
+        final calendarSync = await _syncTaskCalendarEvent(task);
+        final eventId = calendarSync.eventId;
+        if (eventId != task.calendarEventId ||
+            calendarSync.calendarId != task.calendarId) {
+          await _db.updateTaskCalendarEventId(
+            task.id!,
+            eventId,
+            calendarId: calendarSync.calendarId,
+          );
         }
         final reminderId = await _syncTaskAppleReminder(task);
         if (reminderId != task.appleReminderId) {
@@ -350,6 +389,7 @@ class JournalStore extends ChangeNotifier {
           task.copyWith(
             calendarEventId: eventId,
             clearCalendarEventId: eventId == null,
+            calendarId: calendarSync.calendarId,
             appleReminderId: reminderId,
             clearAppleReminderId: reminderId == null,
           ),
@@ -374,10 +414,17 @@ class JournalStore extends ChangeNotifier {
     final updatedTask = task.copyWith(done: newDone);
 
     String? eventId = task.calendarEventId;
+    String? calendarId = task.calendarId;
     if (task.reminderAt != null) {
-      eventId = await _syncTaskCalendarEvent(updatedTask);
-      if (eventId != task.calendarEventId) {
-        await _db.updateTaskCalendarEventId(task.id!, eventId);
+      final calendarSync = await _syncTaskCalendarEvent(updatedTask);
+      eventId = calendarSync.eventId;
+      calendarId = calendarSync.calendarId;
+      if (eventId != task.calendarEventId || calendarId != task.calendarId) {
+        await _db.updateTaskCalendarEventId(
+          task.id!,
+          eventId,
+          calendarId: calendarId,
+        );
       }
     }
     String? reminderId = task.appleReminderId;
@@ -407,6 +454,7 @@ class JournalStore extends ChangeNotifier {
         done: newDone,
         calendarEventId: eventId,
         clearCalendarEventId: eventId == null,
+        calendarId: calendarId,
         appleReminderId: reminderId,
         clearAppleReminderId: reminderId == null,
       );
@@ -803,9 +851,17 @@ class JournalStore extends ChangeNotifier {
         scheduledAt: task.notifyAt!,
       );
     }
-    final eventId = await _syncTaskCalendarEvent(task.copyWith(title: trimmed));
-    if (eventId != task.calendarEventId) {
-      await _db.updateTaskCalendarEventId(task.id!, eventId);
+    final calendarSync = await _syncTaskCalendarEvent(
+      task.copyWith(title: trimmed),
+    );
+    final eventId = calendarSync.eventId;
+    if (eventId != task.calendarEventId ||
+        calendarSync.calendarId != task.calendarId) {
+      await _db.updateTaskCalendarEventId(
+        task.id!,
+        eventId,
+        calendarId: calendarSync.calendarId,
+      );
     }
     final reminderId = await _syncTaskAppleReminder(
       task.copyWith(title: trimmed),
@@ -822,6 +878,7 @@ class JournalStore extends ChangeNotifier {
         title: trimmed,
         calendarEventId: eventId,
         clearCalendarEventId: eventId == null,
+        calendarId: calendarSync.calendarId,
         appleReminderId: reminderId,
         clearAppleReminderId: reminderId == null,
       );
@@ -866,9 +923,15 @@ class JournalStore extends ChangeNotifier {
       clearReminderEndAt: effectiveEndAt == null,
       isAllDay: effectiveAllDay,
     );
-    final eventId = await _syncTaskCalendarEvent(scheduledTask);
-    if (eventId != task.calendarEventId) {
-      await _db.updateTaskCalendarEventId(task.id!, eventId);
+    final calendarSync = await _syncTaskCalendarEvent(scheduledTask);
+    final eventId = calendarSync.eventId;
+    if (eventId != task.calendarEventId ||
+        calendarSync.calendarId != task.calendarId) {
+      await _db.updateTaskCalendarEventId(
+        task.id!,
+        eventId,
+        calendarId: calendarSync.calendarId,
+      );
     }
     final reminderId = await _syncTaskAppleReminder(scheduledTask);
     if (reminderId != task.appleReminderId) {
@@ -888,6 +951,7 @@ class JournalStore extends ChangeNotifier {
           clearReminderEndAt: effectiveEndAt == null,
           calendarEventId: eventId,
           clearCalendarEventId: eventId == null,
+          calendarId: calendarSync.calendarId,
           appleReminderId: reminderId,
           clearAppleReminderId: reminderId == null,
           isAllDay: effectiveAllDay,

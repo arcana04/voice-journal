@@ -111,12 +111,29 @@ class _AppleRemindersSelectScreenState
                       ),
                     );
                   }
+                  // カレンダー連携画面([IntegrationSelectScreen])と同じ理由:
+                  // 以前選択していたリストがOS側で削除された等で見つからない
+                  // 場合、下のどのラジオボタンにも選択中の印が付かず不整合に
+                  // 見えるため、状況を説明する一言を出す。
+                  final staleSelectionNote =
+                      selectedId != null && !lists.any((l) => l.id == selectedId)
+                      ? Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Text(
+                            l10n.appleRemindersSelectedListMissing,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.error,
+                            ),
+                          ),
+                        )
+                      : null;
                   if (lists.isEmpty) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          ?staleSelectionNote,
                           Text(
                             l10n.appleRemindersNoLists,
                             style: theme.textTheme.bodyMedium?.copyWith(
@@ -135,6 +152,7 @@ class _AppleRemindersSelectScreenState
                   }
                   return Column(
                     children: [
+                      ?staleSelectionNote,
                       for (final list in lists)
                         RadioListTile<String?>(
                           contentPadding: EdgeInsets.zero,

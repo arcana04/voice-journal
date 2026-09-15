@@ -53,7 +53,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 24,
+      version: 25,
       // tasks/notes/entry_imagesはON DELETE CASCADEをスキーマに宣言しているが、
       // SQLiteは外部キー制約自体をデフォルトで無効にしており、接続のたびに
       // 明示的に有効化しないとその宣言は一切効かない（各deleteメソッドが手動で
@@ -87,6 +87,7 @@ class DbService {
             reminder_end_at TEXT,
             done INTEGER NOT NULL DEFAULT 0,
             calendar_event_id TEXT,
+            calendar_id TEXT,
             apple_reminder_id TEXT,
             is_all_day INTEGER NOT NULL DEFAULT 0,
             notify_at TEXT,
@@ -372,6 +373,19 @@ class DbService {
           await _addColumnIfMissing(
             db,
             'ALTER TABLE notes ADD COLUMN notion_page_url TEXT',
+          );
+        }
+        if (oldVersion < 25) {
+          // calendar_event_idが「どのカレンダーの予定か」を記録していなかった
+          // ため、ユーザーが連携先カレンダーを切り替えると、以前作成した予定を
+          // 二度と削除・更新できず孤立していた。予定を作った時点のカレンダーIDを
+          // 別途保持し、以後はそのタスクの予定に対する操作は常にこのIDを使う
+          // （現在選択中のカレンダーが何であってもブレない）。既存行はNULLの
+          // ままになるため、移行前に作られた予定については従来どおり現在選択中の
+          // カレンダーへフォールバックする（journal_store.dart参照）。
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE tasks ADD COLUMN calendar_id TEXT',
           );
         }
       },
@@ -711,11 +725,15 @@ class DbService {
     );
   }
 
-  Future<void> updateTaskCalendarEventId(int taskId, String? eventId) async {
+  Future<void> updateTaskCalendarEventId(
+    int taskId,
+    String? eventId, {
+    String? calendarId,
+  }) async {
     final db = await _database;
     await db.update(
       'tasks',
-      {'calendar_event_id': eventId},
+      {'calendar_event_id': eventId, 'calendar_id': calendarId},
       where: 'id = ?',
       whereArgs: [taskId],
     );

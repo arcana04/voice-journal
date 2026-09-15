@@ -120,12 +120,32 @@ class _IntegrationSelectScreenState extends State<IntegrationSelectScreen> {
                       ),
                     );
                   }
+                  // 以前選択していたカレンダーがOS側で削除された等で今回の
+                  // 一覧に見つからない場合、下のどのラジオボタン（「オフ」も
+                  // 含む）にも選択中の印が付かず、ユーザーには「何が選ばれて
+                  // いるのか分からない」という不整合に見えていた。実際の同期
+                  // 処理側は既にこのケースをエラーバナーで安全に扱っているが、
+                  // この画面自体にも状況を説明する一言を出す（一覧の表示自体は
+                  // 妨げず、その上に注記として重ねる）。
+                  final staleSelectionNote =
+                      selectedId != null && !calendars.any((c) => c.id == selectedId)
+                      ? Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Text(
+                            l10n.integrationsSelectedCalendarMissing,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.error,
+                            ),
+                          ),
+                        )
+                      : null;
                   if (calendars.isEmpty) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          ?staleSelectionNote,
                           Text(
                             l10n.integrationsNoCalendars,
                             style: theme.textTheme.bodyMedium?.copyWith(
@@ -144,6 +164,7 @@ class _IntegrationSelectScreenState extends State<IntegrationSelectScreen> {
                   }
                   return Column(
                     children: [
+                      ?staleSelectionNote,
                       for (final calendar in calendars)
                         RadioListTile<String?>(
                           contentPadding: EdgeInsets.zero,
