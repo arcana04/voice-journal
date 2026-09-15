@@ -2572,6 +2572,12 @@ abstract class AppLocalizations {
   /// **'Edit the text if it\'s off. Drag a card to move it between diary, idea, and task.'**
   String get reviewDescription;
 
+  /// No description provided for @notificationAutoSetHintMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks with a time automatically get a phone notification set for them'**
+  String get notificationAutoSetHintMessage;
+
   /// No description provided for @reviewDescriptionNoDrag.
   ///
   /// In en, this message translates to:

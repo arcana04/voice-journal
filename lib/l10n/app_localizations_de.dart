@@ -1374,6 +1374,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Bearbeite den Text, falls er nicht stimmt. Ziehe eine Karte, um sie zwischen Tagebuch, Idee und Aufgabe zu verschieben.';
 
   @override
+  String get notificationAutoSetHintMessage =>
+      'Für Aufgaben mit einer Uhrzeit wird automatisch eine Push-Benachrichtigung eingerichtet';
+
+  @override
   String get reviewDescriptionNoDrag =>
       'Bearbeite den Text, falls er nicht stimmt';
 

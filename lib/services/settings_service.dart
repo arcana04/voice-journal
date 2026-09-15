@@ -9,6 +9,7 @@ class SettingsService {
   static const _hasSeenOnboardingPref = 'has_seen_onboarding';
   static const _aiConsentGivenPref = 'ai_consent_given';
   static const _trialEndsAtPref = 'trial_ends_at';
+  static const _hasSeenNotificationHintPref = 'has_seen_notification_hint';
   static const _accentColorIndexPref = 'accent_color_index';
   static const _languageCodePref = 'language_code';
   static const _localDataOwnerUidPref = 'local_data_owner_uid';
@@ -161,6 +162,21 @@ class SettingsService {
   Future<void> setAiConsentGiven(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_aiConsentGivenPref, value);
+  }
+
+  /// レビュー画面で「時刻付きタスクには自動で通知が設定される」ことを示す
+  /// 一度きりのヒントバナーを、既に見せたかどうか。時刻を録音しただけで
+  /// 通知が裏側で自動設定される挙動は画面上に説明が一切無く、ユーザーが
+  /// 気づかないまま届く通知に戸惑う可能性があったため追加した
+  /// （一度閉じたら二度と表示しない）。
+  Future<bool> getHasSeenNotificationHint() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_hasSeenNotificationHintPref) ?? false;
+  }
+
+  Future<void> setHasSeenNotificationHint(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_hasSeenNotificationHintPref, value);
   }
 
   /// トライアル終了3日前通知([ReminderService.scheduleTrialEndingNotification])

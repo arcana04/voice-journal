@@ -1381,6 +1381,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Modifie le texte s\'il n\'est pas correct. Fais glisser une carte pour la déplacer entre journal, idée et tâche.';
 
   @override
+  String get notificationAutoSetHintMessage =>
+      'Les tâches avec une heure reçoivent automatiquement une notification sur le téléphone';
+
+  @override
   String get reviewDescriptionNoDrag =>
       'Modifie le texte s\'il n\'est pas correct';
 

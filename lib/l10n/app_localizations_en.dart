@@ -1359,6 +1359,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Edit the text if it\'s off. Drag a card to move it between diary, idea, and task.';
 
   @override
+  String get notificationAutoSetHintMessage =>
+      'Tasks with a time automatically get a phone notification set for them';
+
+  @override
   String get reviewDescriptionNoDrag => 'Edit the text if it\'s off';
 
   @override

@@ -468,6 +468,7 @@
 
   "reviewTitle": "Review content",
   "reviewDescription": "Edit the text if it's off. Drag a card to move it between diary, idea, and task.",
+  "notificationAutoSetHintMessage": "Tasks with a time automatically get a phone notification set for them",
   "reviewDescriptionNoDrag": "Edit the text if it's off",
   "sectionDiary": "Diary",
   "sectionIdea": "Idea",

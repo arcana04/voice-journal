@@ -11,6 +11,7 @@ class SettingsStore extends ChangeNotifier {
   bool darkMode = true;
   bool hasSeenOnboarding = false;
   bool aiConsentGiven = false;
+  bool hasSeenNotificationHint = false;
   int accentColorIndex = 0;
   String? languageCode;
   int reminderOffsetMinutes = 0;
@@ -47,6 +48,7 @@ class SettingsStore extends ChangeNotifier {
       aiConsentGiven = true;
       await _service.setAiConsentGiven(true);
     }
+    hasSeenNotificationHint = await _service.getHasSeenNotificationHint();
     accentColorIndex = await _service.getAccentColorIndex();
     languageCode = await _service.getLanguageCode();
     reminderOffsetMinutes = await _service.getReminderOffsetMinutes();
@@ -96,6 +98,13 @@ class SettingsStore extends ChangeNotifier {
   Future<void> setAiConsentGiven(bool value) async {
     aiConsentGiven = value;
     await _service.setAiConsentGiven(value);
+    notifyListeners();
+  }
+
+  Future<void> dismissNotificationHint() async {
+    if (hasSeenNotificationHint) return;
+    hasSeenNotificationHint = true;
+    await _service.setHasSeenNotificationHint(true);
     notifyListeners();
   }
 

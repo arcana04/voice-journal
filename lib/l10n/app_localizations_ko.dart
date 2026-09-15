@@ -1312,6 +1312,9 @@ class AppLocalizationsKo extends AppLocalizations {
       '내용이 틀렸다면 텍스트를 수정하세요. 카드를 드래그하면 일기·아이디어·할 일 사이로 옮길 수 있어요.';
 
   @override
+  String get notificationAutoSetHintMessage => '시각이 있는 할 일에는 자동으로 휴대폰 알림이 설정돼요';
+
+  @override
   String get reviewDescriptionNoDrag => '내용이 틀렸다면 텍스트를 수정하세요';
 
   @override

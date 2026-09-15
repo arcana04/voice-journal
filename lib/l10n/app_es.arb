@@ -468,6 +468,7 @@
 
   "reviewTitle": "Revisar contenido",
   "reviewDescription": "Edita el texto si no es correcto. Arrastra una tarjeta para moverla entre diario, idea y tarea.",
+  "notificationAutoSetHintMessage": "Las tareas con una hora reciben automáticamente una notificación en el teléfono",
   "reviewDescriptionNoDrag": "Edita el texto si no es correcto",
   "sectionDiary": "Diario",
   "sectionIdea": "Idea",

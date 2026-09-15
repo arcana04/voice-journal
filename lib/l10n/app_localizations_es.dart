@@ -1372,6 +1372,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Edita el texto si no es correcto. Arrastra una tarjeta para moverla entre diario, idea y tarea.';
 
   @override
+  String get notificationAutoSetHintMessage =>
+      'Las tareas con una hora reciben automáticamente una notificación en el teléfono';
+
+  @override
   String get reviewDescriptionNoDrag => 'Edita el texto si no es correcto';
 
   @override

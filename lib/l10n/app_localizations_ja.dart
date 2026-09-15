@@ -1309,6 +1309,9 @@ class AppLocalizationsJa extends AppLocalizations {
       '違っていればテキストを直せます。カードをドラッグすると日記・アイデア・タスクを入れ替えられます';
 
   @override
+  String get notificationAutoSetHintMessage => '時刻が入ったタスクには、自動でスマホの通知を設定します';
+
+  @override
   String get reviewDescriptionNoDrag => '違っていればテキストを直せます';
 
   @override

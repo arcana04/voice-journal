@@ -468,6 +468,7 @@
 
   "reviewTitle": "Inhalt überprüfen",
   "reviewDescription": "Bearbeite den Text, falls er nicht stimmt. Ziehe eine Karte, um sie zwischen Tagebuch, Idee und Aufgabe zu verschieben.",
+  "notificationAutoSetHintMessage": "Für Aufgaben mit einer Uhrzeit wird automatisch eine Push-Benachrichtigung eingerichtet",
   "reviewDescriptionNoDrag": "Bearbeite den Text, falls er nicht stimmt",
   "sectionDiary": "Tagebuch",
   "sectionIdea": "Idee",
