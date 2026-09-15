@@ -149,6 +149,10 @@ class CloudSyncService {
   Future<bool> deleteEntry(String? remoteId) async {
     final collection = _collection;
     if (collection == null || remoteId == null) return true;
+    // pushEntryと同じ、アカウント切り替え中の極短い窓に対するガード。この
+    // remoteIdは前アカウントのローカルエントリのものなので、削除も新アカウント
+    // 側の同名ドキュメントを誤って消してしまわないよう同様にブロックする。
+    if (!await SettingsService().currentUserOwnsLocalData()) return true;
     try {
       await collection.doc(remoteId).delete();
       return true;

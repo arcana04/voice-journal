@@ -171,6 +171,8 @@ class MediaSyncService {
   Future<bool> deleteMedia(String? remoteId, String path) async {
     final folder = _mediaFolder(remoteId);
     if (folder == null) return true;
+    // uploadPendingMediaと同じ、アカウント切り替え中の極短い窓に対するガード。
+    if (!await SettingsService().currentUserOwnsLocalData()) return true;
     try {
       await folder.child(p.basename(path)).delete();
       return true;
@@ -194,6 +196,8 @@ class MediaSyncService {
   Future<bool> deleteAllMedia(String? remoteId) async {
     final folder = _mediaFolder(remoteId);
     if (folder == null) return true;
+    // uploadPendingMediaと同じ、アカウント切り替え中の極短い窓に対するガード。
+    if (!await SettingsService().currentUserOwnsLocalData()) return true;
     try {
       final list = await folder.listAll();
       for (final item in list.items) {
