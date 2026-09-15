@@ -247,8 +247,9 @@ class _HomeScreenState extends State<HomeScreen> {
       } catch (_) {}
     } catch (e) {
       if (!mounted) return;
-      _handleProcessingError(e);
-      unawaited(_checkForOrphanedRecording(offerRecovery: true));
+      if (_handleProcessingError(e)) {
+        unawaited(_checkForOrphanedRecording(offerRecovery: true));
+      }
     }
   }
 
@@ -470,10 +471,12 @@ class _HomeScreenState extends State<HomeScreen> {
       } catch (_) {}
     } catch (e) {
       if (!mounted) return;
-      _handleProcessingError(e);
-      // 録音ファイルは削除せず残してあるので、アプリ再起動を待たず
-      // その場でオーファン録音として再処理を案内する。
-      unawaited(_checkForOrphanedRecording(offerRecovery: true));
+      // 録音ファイルは削除せず残してあるので、リトライの価値がある失敗
+      // （クォータ超過等の即再発するエラーではない）に限り、アプリ再起動を
+      // 待たずその場でオーファン録音として再処理を案内する。
+      if (_handleProcessingError(e)) {
+        unawaited(_checkForOrphanedRecording(offerRecovery: true));
+      }
     }
   }
 
@@ -533,7 +536,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _refreshUsage();
   }
 
-  void _handleProcessingError(Object e) {
+  /// 戻り値は、この失敗が「録音ファイルを残してその場でリトライを促す
+  /// 価値がある」種類かどうか。クォータ超過系のエラーは、同じ録音を
+  /// もう一度処理させても上限が変わらない限り同じエラーが即座に再発するだけ
+  /// なので、直後に「未保存の録音が見つかりました」の復旧ダイアログを
+  /// 重ねて出すと、たった今録音した内容を別物のように再度尋ねる不自然な
+  /// 二重ダイアログになってしまう（実際に発生した不具合）。
+  bool _handleProcessingError(Object e) {
     _stopProcessingPhraseCycle();
     _hapticError();
     final l10n = AppLocalizations.of(context)!;
@@ -554,6 +563,7 @@ class _HomeScreenState extends State<HomeScreen> {
       showUpgrade: isQuotaExceeded && !isPro && !isMonthlyMinutesExceeded,
       showBuyMinutes: isMonthlyMinutesExceeded,
     );
+    return !isQuotaExceeded && !isMonthlyMinutesExceeded;
   }
 
   List<DraftItem> _buildDraftItems(JournalEntry entry) {
