@@ -43,7 +43,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingPage1Body =>
-      'Tippe auf den Aufnahmeknopf und sprich — Voice Brain kümmert sich um den Rest';
+      'Tippe auf den Aufnahmeknopf und rede drauflos, wie es dir gerade einfällt — du musst deine Gedanken nicht ordnen, Voice Brain übernimmt das für dich.';
 
   @override
   String get onboardingPage2Title => 'Die KI sortiert es für dich';
@@ -58,6 +58,46 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onboardingFreeTierBody =>
       'Der kostenlose Plan umfasst 3 Aufnahmen pro Tag, je bis zu 60 Sekunden. Möchtest du mehr? Schau dir den Pro-Plan für längere, häufigere Aufnahmen an.';
+
+  @override
+  String get onboardingTipsTitle =>
+      'Ein paar praktische Funktionen, die leicht übersehen werden';
+
+  @override
+  String get onboardingTipsBody =>
+      'Neben Sprachnotizen gibt es noch mehr, was deinen Alltag erleichtert.';
+
+  @override
+  String get onboardingTipTaskTitle =>
+      'Nenne eine Uhrzeit, erhalte eine Erinnerung';
+
+  @override
+  String get onboardingTipTaskDesc =>
+      'Sag zum Beispiel \"morgen um 15 Uhr\" und automatisch wird eine Erinnerung eingerichtet.';
+
+  @override
+  String get onboardingTipCalendarTitle =>
+      'Kalender & Erinnerungen in den Einstellungen verbinden';
+
+  @override
+  String get onboardingTipCalendarDesc =>
+      'Einmal verbunden, werden erstellte Aufgaben auch im Kalender und in der Erinnerungen-App deines Telefons angelegt.';
+
+  @override
+  String get onboardingTipWatchTitle =>
+      'Apple Watch in den Einstellungen koppeln';
+
+  @override
+  String get onboardingTipWatchDesc =>
+      'Einmal gekoppelt, kannst du direkt vom Handgelenk aus aufnehmen und sortieren — ganz ohne Handy.';
+
+  @override
+  String get onboardingTipDictionaryTitle =>
+      'Bring der KI Namen & Fachbegriffe bei';
+
+  @override
+  String get onboardingTipDictionaryDesc =>
+      'Trage einen Eintrag ins eigene Wörterbuch ein, und die Erkennung wird deutlich genauer.';
 
   @override
   String get onboardingMicTitle =>
@@ -191,11 +231,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get recordPromptQuestion4 =>
-      'Was würdest du deinem Ich dieser Woche sagen?';
+      'Hast du morgen um 10 Uhr einen Termin? Sag es einfach — ich trage ihn in deinen Kalender ein.';
 
   @override
   String get recordPromptQuestion5 =>
-      'Gibt es noch etwas, das du heute erledigen musst?';
+      'Musst du heute bis 18 Uhr noch etwas erledigen? Sag es, und ich erinnere dich daran.';
 
   @override
   String get statusRecording => 'Aufnahme läuft… nochmal tippen zum Stoppen';

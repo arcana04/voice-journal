@@ -43,7 +43,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingPage1Body =>
-      'Tap the record button and speak — Voice Brain takes care of the rest';
+      'Tap the record button and ramble however you like — no need to organize your thoughts, Voice Brain sorts it all out for you.';
 
   @override
   String get onboardingPage2Title => 'AI sorts it out for you';
@@ -58,6 +58,42 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingFreeTierBody =>
       'The free plan includes 3 recordings a day, up to 60 seconds each. Want more? Check out the Pro plan for longer, more frequent recording.';
+
+  @override
+  String get onboardingTipsTitle => 'A few handy features you might miss';
+
+  @override
+  String get onboardingTipsBody =>
+      'Beyond voice notes, there\'s more built in to make daily life easier.';
+
+  @override
+  String get onboardingTipTaskTitle => 'Say a time, get a reminder';
+
+  @override
+  String get onboardingTipTaskDesc =>
+      'Mention something like \"tomorrow at 3pm\" and a reminder notification is set automatically.';
+
+  @override
+  String get onboardingTipCalendarTitle =>
+      'Connect your calendar & reminders in Settings';
+
+  @override
+  String get onboardingTipCalendarDesc =>
+      'Once connected, tasks you create are also added to your phone\'s calendar and reminders app.';
+
+  @override
+  String get onboardingTipWatchTitle => 'Pair your Apple Watch in Settings';
+
+  @override
+  String get onboardingTipWatchDesc =>
+      'Once paired, you can record and sort right from your wrist — no need to reach for your phone.';
+
+  @override
+  String get onboardingTipDictionaryTitle => 'Teach the AI names & jargon';
+
+  @override
+  String get onboardingTipDictionaryDesc =>
+      'Add a custom dictionary entry and recognition accuracy goes way up.';
 
   @override
   String get onboardingMicTitle => 'Microphone use & sending data to AI';
@@ -187,11 +223,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordPromptQuestion4 =>
-      'What would you say to yourself this week?';
+      'Got a meeting tomorrow at 10am? Just mention it — I\'ll add it to your calendar.';
 
   @override
   String get recordPromptQuestion5 =>
-      'Is there anything you still need to get done today?';
+      'Need to pick something up by 6pm today? Say it and I\'ll set a reminder.';
 
   @override
   String get statusRecording => 'Recording… tap again to stop';

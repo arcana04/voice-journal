@@ -43,7 +43,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get onboardingPage1Body =>
-      'Toca el botón de grabar y habla — Voice Brain se encarga del resto';
+      'Toca el botón de grabar y habla como te salga, sin pensarlo — no hace falta organizar tus ideas, Voice Brain se encarga del resto.';
 
   @override
   String get onboardingPage2Title => 'La IA lo organiza por ti';
@@ -59,6 +59,43 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get onboardingFreeTierBody =>
       'El plan gratuito incluye 3 grabaciones al día, de hasta 60 segundos cada una. ¿Quieres más? Echa un vistazo al plan Pro para grabaciones más largas y frecuentes.';
+
+  @override
+  String get onboardingTipsTitle =>
+      'Algunas funciones útiles que quizás no conocías';
+
+  @override
+  String get onboardingTipsBody =>
+      'Además de las notas de voz, hay más funciones para facilitarte el día a día.';
+
+  @override
+  String get onboardingTipTaskTitle => 'Di una hora y se crea un recordatorio';
+
+  @override
+  String get onboardingTipTaskDesc =>
+      'Menciona algo como \"mañana a las 3pm\" y se configura automáticamente una notificación.';
+
+  @override
+  String get onboardingTipCalendarTitle =>
+      'Conecta tu calendario y recordatorios en Ajustes';
+
+  @override
+  String get onboardingTipCalendarDesc =>
+      'Una vez conectado, las tareas que creas también se añaden al calendario y a los recordatorios de tu teléfono.';
+
+  @override
+  String get onboardingTipWatchTitle => 'Empareja tu Apple Watch en Ajustes';
+
+  @override
+  String get onboardingTipWatchDesc =>
+      'Una vez emparejado, puedes grabar y clasificar desde tu muñeca sin sacar el teléfono.';
+
+  @override
+  String get onboardingTipDictionaryTitle => 'Enséñale nombres y jerga a la IA';
+
+  @override
+  String get onboardingTipDictionaryDesc =>
+      'Añade una entrada al diccionario personalizado y la precisión mejora mucho.';
 
   @override
   String get onboardingMicTitle => 'Uso del micrófono y envío de datos a la IA';
@@ -189,10 +226,12 @@ class AppLocalizationsEs extends AppLocalizations {
       'Si pudieras decir \"gracias\" a alguien (o a ti mismo/a) hoy, ¿a quién sería?';
 
   @override
-  String get recordPromptQuestion4 => '¿Qué le dirías a tu yo de esta semana?';
+  String get recordPromptQuestion4 =>
+      '¿Tienes una reunión mañana a las 10am? Dilo y la añadiré a tu calendario.';
 
   @override
-  String get recordPromptQuestion5 => '¿Hay algo que todavía debas hacer hoy?';
+  String get recordPromptQuestion5 =>
+      '¿Necesitas comprar algo antes de las 6pm de hoy? Dilo y te lo recordaré.';
 
   @override
   String get statusRecording => 'Grabando… toca de nuevo para detener';

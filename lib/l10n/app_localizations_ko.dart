@@ -41,7 +41,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get onboardingPage1Body =>
-      '녹음 버튼을 누르고 말하면, 나머지는 Voice Brain이 알아서 처리해요';
+      '녹음 버튼을 누르고 생각나는 대로 편하게 말하면 돼요 — 정리해서 말할 필요 없이, Voice Brain이 알아서 분류해줘요.';
 
   @override
   String get onboardingPage2Title => 'AI가 알아서 정리해요';
@@ -56,6 +56,38 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get onboardingFreeTierBody =>
       '무료 플랜에서는 하루 3회, 회당 최대 60초까지 녹음할 수 있어요. 더 필요하다면 더 길고 자주 녹음할 수 있는 Pro 플랜을 확인해 보세요.';
+
+  @override
+  String get onboardingTipsTitle => '의외로 놓치기 쉬운 편리한 기능들';
+
+  @override
+  String get onboardingTipsBody => '음성 메모 외에도 일상을 더 편하게 해주는 기능이 있어요.';
+
+  @override
+  String get onboardingTipTaskTitle => '시간만 말하면 알림이 설정돼요';
+
+  @override
+  String get onboardingTipTaskDesc => '\"내일 오후 3시\"처럼 말하면 자동으로 알림이 설정돼요.';
+
+  @override
+  String get onboardingTipCalendarTitle => '설정에서 캘린더·리마인더 연동하기';
+
+  @override
+  String get onboardingTipCalendarDesc =>
+      '연동해두면 만든 태스크가 휴대폰의 캘린더와 리마인더 앱에도 함께 반영돼요.';
+
+  @override
+  String get onboardingTipWatchTitle => '설정에서 Apple Watch 페어링하기';
+
+  @override
+  String get onboardingTipWatchDesc =>
+      '페어링해두면 휴대폰을 꺼내지 않아도 손목에서 바로 녹음하고 분류할 수 있어요.';
+
+  @override
+  String get onboardingTipDictionaryTitle => '이름이나 전문 용어를 AI에게 알려줄 수 있어요';
+
+  @override
+  String get onboardingTipDictionaryDesc => '커스텀 사전에 등록해두면 인식 정확도가 크게 좋아져요.';
 
   @override
   String get onboardingMicTitle => '마이크 사용 및 AI로의 데이터 전송 안내';
@@ -180,10 +212,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordPromptQuestion3 => '오늘 누군가에게(혹은 나 자신에게) \"고마워\"라고 말한다면?';
 
   @override
-  String get recordPromptQuestion4 => '이번 주의 나에게 한마디 건넨다면?';
+  String get recordPromptQuestion4 => '내일 오전 10시에 회의가 있나요? 말만 하면 캘린더에 등록돼요.';
 
   @override
-  String get recordPromptQuestion5 => '오늘 안에 꼭 해야 할 일이 있나요?';
+  String get recordPromptQuestion5 => '오늘 오후 6시까지 사야 할 게 있나요? 말하면 알림을 설정해드려요.';
 
   @override
   String get statusRecording => '녹음 중… 다시 탭하면 중지';

@@ -40,7 +40,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get onboardingPage1Title => '思いついた瞬間に、\nつぶやくだけ';
 
   @override
-  String get onboardingPage1Body => '録音ボタンをタップして話すだけで、Voice Brainが記録してくれます';
+  String get onboardingPage1Body =>
+      '録音ボタンをタップして、思いつくままにグダグダ話すだけでOK。整理して話さなくても、Voice Brainが仕分けてくれます。';
 
   @override
   String get onboardingPage2Title => 'AIが自動で仕分けします';
@@ -54,6 +55,38 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get onboardingFreeTierBody =>
       '1日3回・1回60秒まで無料でお使いいただけます。もっとたくさん、長く話したくなったらProプランもご用意しています。';
+
+  @override
+  String get onboardingTipsTitle => 'こんな便利機能もあります';
+
+  @override
+  String get onboardingTipsBody => '音声メモ以外にも、日々の管理をラクにする機能があります。';
+
+  @override
+  String get onboardingTipTaskTitle => '時刻を話すだけで通知設定';
+
+  @override
+  String get onboardingTipTaskDesc => '「明日15時に〇〇」のように話すと、自動でリマインド通知が設定されます。';
+
+  @override
+  String get onboardingTipCalendarTitle => '設定でカレンダー・リマインダーと連携';
+
+  @override
+  String get onboardingTipCalendarDesc =>
+      '連携しておくと、作成したタスクがiPhone標準カレンダーやリマインダーにも自動で反映されます。';
+
+  @override
+  String get onboardingTipWatchTitle => '設定でApple Watchとペアリング';
+
+  @override
+  String get onboardingTipWatchDesc =>
+      'ペアリングしておけば、iPhoneを取り出さずWatch単体で録音・仕分けができます。';
+
+  @override
+  String get onboardingTipDictionaryTitle => '名前や専門用語をAIに教えられる';
+
+  @override
+  String get onboardingTipDictionaryDesc => 'カスタム辞書に登録しておくと、聞き取り精度がぐっと上がります。';
 
   @override
   String get onboardingMicTitle => 'マイクの使用とAIへのデータ送信について';
@@ -178,10 +211,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordPromptQuestion3 => '今日、誰か（または自分）に「ありがとう」を言うなら？';
 
   @override
-  String get recordPromptQuestion4 => '今週の自分に、一言声をかけるなら？';
+  String get recordPromptQuestion4 => '明日10時に打ち合わせがある？そう話すだけでカレンダーに登録されるよ。';
 
   @override
-  String get recordPromptQuestion5 => '今日のうちにやっておかなきゃいけないことはある？';
+  String get recordPromptQuestion5 => '今日18時までに買っておきたいものは？言うだけでリマインダーが設定されるよ。';
 
   @override
   String get statusRecording => '録音中… もう一度タップで停止';

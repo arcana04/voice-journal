@@ -169,7 +169,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingPage1Body.
   ///
   /// In en, this message translates to:
-  /// **'Tap the record button and speak — Voice Brain takes care of the rest'**
+  /// **'Tap the record button and ramble however you like — no need to organize your thoughts, Voice Brain sorts it all out for you.'**
   String get onboardingPage1Body;
 
   /// No description provided for @onboardingPage2Title.
@@ -195,6 +195,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The free plan includes 3 recordings a day, up to 60 seconds each. Want more? Check out the Pro plan for longer, more frequent recording.'**
   String get onboardingFreeTierBody;
+
+  /// No description provided for @onboardingTipsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A few handy features you might miss'**
+  String get onboardingTipsTitle;
+
+  /// No description provided for @onboardingTipsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Beyond voice notes, there\'s more built in to make daily life easier.'**
+  String get onboardingTipsBody;
+
+  /// No description provided for @onboardingTipTaskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Say a time, get a reminder'**
+  String get onboardingTipTaskTitle;
+
+  /// No description provided for @onboardingTipTaskDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Mention something like \"tomorrow at 3pm\" and a reminder notification is set automatically.'**
+  String get onboardingTipTaskDesc;
+
+  /// No description provided for @onboardingTipCalendarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect your calendar & reminders in Settings'**
+  String get onboardingTipCalendarTitle;
+
+  /// No description provided for @onboardingTipCalendarDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Once connected, tasks you create are also added to your phone\'s calendar and reminders app.'**
+  String get onboardingTipCalendarDesc;
+
+  /// No description provided for @onboardingTipWatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair your Apple Watch in Settings'**
+  String get onboardingTipWatchTitle;
+
+  /// No description provided for @onboardingTipWatchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Once paired, you can record and sort right from your wrist — no need to reach for your phone.'**
+  String get onboardingTipWatchDesc;
+
+  /// No description provided for @onboardingTipDictionaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Teach the AI names & jargon'**
+  String get onboardingTipDictionaryTitle;
+
+  /// No description provided for @onboardingTipDictionaryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a custom dictionary entry and recognition accuracy goes way up.'**
+  String get onboardingTipDictionaryDesc;
 
   /// No description provided for @onboardingMicTitle.
   ///
@@ -433,13 +493,13 @@ abstract class AppLocalizations {
   /// No description provided for @recordPromptQuestion4.
   ///
   /// In en, this message translates to:
-  /// **'What would you say to yourself this week?'**
+  /// **'Got a meeting tomorrow at 10am? Just mention it — I\'ll add it to your calendar.'**
   String get recordPromptQuestion4;
 
   /// No description provided for @recordPromptQuestion5.
   ///
   /// In en, this message translates to:
-  /// **'Is there anything you still need to get done today?'**
+  /// **'Need to pick something up by 6pm today? Say it and I\'ll set a reminder.'**
   String get recordPromptQuestion5;
 
   /// No description provided for @statusRecording.

@@ -24,11 +24,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _page = 0;
   bool _aiConsentChecked = false;
 
-  static const _pageCount = 5;
+  static const _pageCount = 6;
   // マイク許可+OpenAIへのデータ送信の開示・同意ページ(App Store審査
   // ガイドライン5.1.1(i)/5.1.2(i)対応)。このページ以降はスキップ不可、
   // 同意チェックが入るまで先へ進めない。
-  static const _aiConsentPageIndex = 3;
+  static const _aiConsentPageIndex = 4;
 
   @override
   void dispose() {
@@ -119,6 +119,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     icon: Icons.card_giftcard_rounded,
                     title: l10n.onboardingFreeTierTitle,
                     body: l10n.onboardingFreeTierBody,
+                  ),
+                  _OnboardingPage(
+                    icon: Icons.tips_and_updates_rounded,
+                    title: l10n.onboardingTipsTitle,
+                    body: l10n.onboardingTipsBody,
+                    trailing: _FeatureTipsList(
+                      tips: [
+                        (
+                          Icons.notifications_active_rounded,
+                          l10n.onboardingTipTaskTitle,
+                          l10n.onboardingTipTaskDesc,
+                        ),
+                        (
+                          Icons.event_available_rounded,
+                          l10n.onboardingTipCalendarTitle,
+                          l10n.onboardingTipCalendarDesc,
+                        ),
+                        (
+                          Icons.watch_rounded,
+                          l10n.onboardingTipWatchTitle,
+                          l10n.onboardingTipWatchDesc,
+                        ),
+                        (
+                          Icons.spellcheck_rounded,
+                          l10n.onboardingTipDictionaryTitle,
+                          l10n.onboardingTipDictionaryDesc,
+                        ),
+                      ],
+                    ),
                   ),
                   _OnboardingPage(
                     icon: Icons.mic_none_rounded,
@@ -548,6 +577,65 @@ class _HeroNextButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _FeatureTipsList extends StatelessWidget {
+  final List<(IconData, String, String)> tips;
+
+  const _FeatureTipsList({required this.tips});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (final (icon, title, desc) in tips)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.12),
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 18),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        textAlign: TextAlign.left,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        desc,
+                        textAlign: TextAlign.left,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.65),
+                          fontSize: 12.5,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

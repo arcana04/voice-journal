@@ -43,7 +43,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onboardingPage1Body =>
-      'Appuie sur le bouton d\'enregistrement et parle — Voice Brain s\'occupe du reste';
+      'Appuie sur le bouton d\'enregistrement et parle librement, sans réfléchir — pas besoin d\'organiser tes idées, Voice Brain s\'occupe de tout trier.';
 
   @override
   String get onboardingPage2Title => 'L\'IA trie tout pour toi';
@@ -58,6 +58,45 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get onboardingFreeTierBody =>
       'Le plan gratuit inclut 3 enregistrements par jour, jusqu\'à 60 secondes chacun. Tu veux plus ? Découvre le plan Pro pour des enregistrements plus longs et plus fréquents.';
+
+  @override
+  String get onboardingTipsTitle =>
+      'Quelques fonctions pratiques faciles à manquer';
+
+  @override
+  String get onboardingTipsBody =>
+      'Au-delà des notes vocales, d\'autres fonctions simplifient ton quotidien.';
+
+  @override
+  String get onboardingTipTaskTitle => 'Dis une heure, obtiens un rappel';
+
+  @override
+  String get onboardingTipTaskDesc =>
+      'Dis par exemple \"demain à 15h\" et une notification de rappel est créée automatiquement.';
+
+  @override
+  String get onboardingTipCalendarTitle =>
+      'Connecte ton calendrier et tes rappels dans les réglages';
+
+  @override
+  String get onboardingTipCalendarDesc =>
+      'Une fois connectées, les tâches créées sont aussi ajoutées au calendrier et aux rappels de ton téléphone.';
+
+  @override
+  String get onboardingTipWatchTitle =>
+      'Associe ta Apple Watch dans les réglages';
+
+  @override
+  String get onboardingTipWatchDesc =>
+      'Une fois associée, tu peux enregistrer et trier directement depuis ton poignet, sans sortir ton téléphone.';
+
+  @override
+  String get onboardingTipDictionaryTitle =>
+      'Apprends des noms et des termes à l\'IA';
+
+  @override
+  String get onboardingTipDictionaryDesc =>
+      'Ajoute une entrée à ton dictionnaire personnalisé pour améliorer nettement la reconnaissance.';
 
   @override
   String get onboardingMicTitle =>
@@ -192,11 +231,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recordPromptQuestion4 =>
-      'Que dirais-tu à toi-même cette semaine ?';
+      'Une réunion demain à 10h ? Dis-le, et je l\'ajoute à ton calendrier.';
 
   @override
   String get recordPromptQuestion5 =>
-      'Reste-t-il quelque chose que tu dois absolument faire aujourd\'hui ?';
+      'Quelque chose à faire avant 18h aujourd\'hui ? Dis-le, je te le rappellerai.';
 
   @override
   String get statusRecording =>
