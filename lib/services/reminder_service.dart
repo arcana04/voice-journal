@@ -6,6 +6,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 import '../l10n/l10n_utils.dart';
 import 'db_service.dart';
+import 'settings_service.dart';
 
 const String _kWeeklyReportPayload = 'weekly_report';
 const int _kWeeklyReportNotificationId = 900000;
@@ -22,6 +23,7 @@ class ReminderService {
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
+  final SettingsService _settings = SettingsService();
   bool _initialized = false;
   bool _pluginInitialized = false;
 
@@ -159,6 +161,14 @@ class ReminderService {
         }
       }
     }
+
+    // トライアル終了通知もタスクリマインダーと同じく、Android再起動で消えた
+    // ぶんをここで復元する（クラスコメント参照）。永続化していなければ
+    // 何もしない（trial購入自体していない・既に終了/解約済みで消去済み）。
+    final trialEndsAt = await _settings.getTrialEndsAt();
+    if (trialEndsAt != null) {
+      await scheduleTrialEndingNotification(trialEndsAt, persist: false);
+    }
   }
 
   /// 今週分の週刊脳内レポート通知を、今週まだ1件も記録が無ければキャンセルし、
@@ -215,10 +225,25 @@ class ReminderService {
   /// isPro判定は実際に失効するまでtrueのままのため、この通知を確実に
   /// キャンセルする手段はない。文言は「課金されます」ではなく「解約して
   /// いない場合は課金が始まります」という防御的な表現にする。
-  Future<void> scheduleTrialEndingNotification(DateTime trialEndsAt) async {
+  Future<void> scheduleTrialEndingNotification(
+    DateTime trialEndsAt, {
+    bool persist = true,
+  }) async {
+    // Android再起動後の[rescheduleAllPending]から復元できるよう保存しておく
+    // （下のクラスコメント参照）。[rescheduleAllPending]自身がここを呼ぶ際は
+    // 保存済みの値を読み直しているだけなので、二重に書き込まないよう
+    // [persist]をfalseにする。
+    if (persist) await _settings.setTrialEndsAt(trialEndsAt);
+
     final fireAt = trialEndsAt.subtract(const Duration(days: 3));
     final scheduled = tz.TZDateTime.from(fireAt, tz.local);
-    if (scheduled.isBefore(tz.TZDateTime.now(tz.local))) return;
+    if (scheduled.isBefore(tz.TZDateTime.now(tz.local))) {
+      // 通知が発火する前に、トライアル終了時刻そのものを過ぎてしまった
+      // （3日を切ってからの復元など）場合は、以後の再起動のたびに無駄な
+      // 再スケジュール試行を繰り返さないよう保存値を消しておく。
+      await _settings.setTrialEndsAt(null);
+      return;
+    }
 
     final l10n = currentLocalizations();
     await _plugin.zonedSchedule(
@@ -242,8 +267,10 @@ class ReminderService {
     );
   }
 
-  Future<void> cancelTrialEndingNotification() =>
-      _plugin.cancel(_kTrialEndingNotificationId);
+  Future<void> cancelTrialEndingNotification() async {
+    await _settings.setTrialEndsAt(null);
+    await _plugin.cancel(_kTrialEndingNotificationId);
+  }
 
   /// 通知が現在許可されているかどうか。プラットフォームが判定できない場合はtrue扱い。
   Future<bool> hasNotificationPermission() async {

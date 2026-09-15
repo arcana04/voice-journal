@@ -8,6 +8,7 @@ import '../models/journal_entry.dart';
 import '../services/video_thumbnail_service.dart';
 import '../utils/media_type.dart';
 import 'emotion_bubble.dart';
+import 'missing_media_placeholder.dart';
 
 /// 日記画面の一覧に出す、タップで詳細画面を開くための読み取り専用プレビューカード。
 class DiaryEntryCard extends StatelessWidget {
@@ -185,10 +186,18 @@ class _MediaPreviewTileState extends State<_MediaPreviewTile> {
           children: [
             if (isVideo)
               videoThumb != null
-                  ? Image.file(File(videoThumb), fit: BoxFit.cover)
+                  ? Image.file(
+                      File(videoThumb),
+                      fit: BoxFit.cover,
+                      errorBuilder: missingMediaPlaceholder,
+                    )
                   : const ColoredBox(color: Colors.black87)
             else
-              Image.file(File(widget.path), fit: BoxFit.cover),
+              Image.file(
+                File(widget.path),
+                fit: BoxFit.cover,
+                errorBuilder: missingMediaPlaceholder,
+              ),
             if (isVideo)
               const Center(
                 child: Icon(

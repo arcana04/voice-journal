@@ -10,6 +10,7 @@ import '../services/video_thumbnail_service.dart';
 import '../state/journal_store.dart';
 import '../utils/media_type.dart';
 import 'media_gallery.dart';
+import 'missing_media_placeholder.dart';
 
 const double _kBaseTileSize = 110;
 const double _kMinScale = 0.5;
@@ -333,14 +334,22 @@ class _MediaTileVisualState extends State<_MediaTileVisual> {
   @override
   Widget build(BuildContext context) {
     if (!isVideoPath(widget.path)) {
-      return Image.file(File(widget.path), fit: BoxFit.cover);
+      return Image.file(
+        File(widget.path),
+        fit: BoxFit.cover,
+        errorBuilder: missingMediaPlaceholder,
+      );
     }
     final videoThumb = _videoThumbnailPath;
     return Stack(
       fit: StackFit.expand,
       children: [
         videoThumb != null
-            ? Image.file(File(videoThumb), fit: BoxFit.cover)
+            ? Image.file(
+                File(videoThumb),
+                fit: BoxFit.cover,
+                errorBuilder: missingMediaPlaceholder,
+              )
             : const ColoredBox(color: Colors.black87),
         const Center(
           child: Icon(Icons.play_circle_fill, color: Colors.white, size: 34),

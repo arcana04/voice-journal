@@ -25,6 +25,10 @@ class DiaryScreenBackground extends StatelessWidget {
       return Image.file(
         File(CustomBackgroundService.pathFromId(id!)),
         fit: BoxFit.cover,
+        // カスタム背景ファイルが見つからない場合（削除された、iOSのコンテナID
+        // 変更でパス無効化等）は、装飾用の背景なので壊れた画像アイコンではなく
+        // アプリ標準の背景へ静かにフォールバックする。
+        errorBuilder: (context, error, stackTrace) => const AppBackgroundImage(),
       );
     }
     final background = DiaryBackground.fromId(id);

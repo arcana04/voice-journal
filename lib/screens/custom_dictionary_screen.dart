@@ -24,15 +24,31 @@ class _CustomDictionaryScreenState extends State<CustomDictionaryScreen> {
     super.dispose();
   }
 
-  void _addWord() {
+  Future<void> _addWord() async {
     final word = _wordController.text.trim();
     if (word.isEmpty) return;
-    context.read<CustomWordsStore>().addWord(
+    final l10n = AppLocalizations.of(context)!;
+    final result = await context.read<CustomWordsStore>().addWord(
           word,
           description: _descriptionController.text.trim(),
         );
-    _wordController.clear();
-    _descriptionController.clear();
+    if (!mounted) return;
+    switch (result) {
+      case AddCustomWordResult.success:
+        _wordController.clear();
+        _descriptionController.clear();
+      case AddCustomWordResult.limitReached:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.customDictionaryLimitReached(CustomWordsStore.maxWords))),
+        );
+      case AddCustomWordResult.wordTooLong:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.customDictionaryWordTooLong(CustomWordsStore.maxWordLength))),
+        );
+      case AddCustomWordResult.duplicate:
+      case AddCustomWordResult.empty:
+        break;
+    }
   }
 
   @override
@@ -60,6 +76,7 @@ class _CustomDictionaryScreenState extends State<CustomDictionaryScreen> {
                 TextField(
                   controller: _wordController,
                   textInputAction: TextInputAction.next,
+                  maxLength: CustomWordsStore.maxWordLength,
                   decoration: InputDecoration(
                     border: const OutlineInputBorder(),
                     labelText: l10n.wordLabel,
@@ -75,6 +92,7 @@ class _CustomDictionaryScreenState extends State<CustomDictionaryScreen> {
                       child: TextField(
                         controller: _descriptionController,
                         textInputAction: TextInputAction.done,
+                        maxLength: CustomWordsStore.maxDescriptionLength,
                         decoration: InputDecoration(
                           border: const OutlineInputBorder(),
                           labelText: l10n.descriptionLabelOptional,

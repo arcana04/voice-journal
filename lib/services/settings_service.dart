@@ -7,6 +7,8 @@ class SettingsService {
   static const _summaryLevelPref = 'summary_level';
   static const _darkModePref = 'dark_mode';
   static const _hasSeenOnboardingPref = 'has_seen_onboarding';
+  static const _aiConsentGivenPref = 'ai_consent_given';
+  static const _trialEndsAtPref = 'trial_ends_at';
   static const _accentColorIndexPref = 'accent_color_index';
   static const _languageCodePref = 'language_code';
   static const _localDataOwnerUidPref = 'local_data_owner_uid';
@@ -144,5 +146,42 @@ class SettingsService {
   Future<void> setHasSeenOnboarding(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_hasSeenOnboardingPref, value);
+  }
+
+  /// マイク許可+OpenAIへのデータ送信への明示同意（App Store審査ガイドライン
+  /// 5.1.1(i)/5.1.2(i)対応）。以前はオンボーディング画面内のローカル変数
+  /// （チェックボックスの状態）のみで管理しており、どこにも永続化されておらず、
+  /// 実質的にUI上の見せかけのゲートに留まっていた（オンボーディングの
+  /// 「スキップ」ボタンが同意ページ自体を迂回できるバグと合わせて発覚）。
+  Future<bool> getAiConsentGiven() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_aiConsentGivenPref) ?? false;
+  }
+
+  Future<void> setAiConsentGiven(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_aiConsentGivenPref, value);
+  }
+
+  /// トライアル終了3日前通知([ReminderService.scheduleTrialEndingNotification])
+  /// の対象時刻を永続化する。AndroidのAlarmManagerベースのローカル通知は端末
+  /// 再起動で消えるため、以前はこの通知だけ再起動後に復元する手段が無く
+  /// （タスクリマインダーは[ReminderService.rescheduleAllPending]がDBから
+  /// 読み直して復元するが、トライアル終了通知はどこにも保存されていなかった）、
+  /// 再起動を挟むとユーザーが気づかないままトライアルが終了し課金される
+  /// リスクがあった。
+  Future<DateTime?> getTrialEndsAt() async {
+    final prefs = await SharedPreferences.getInstance();
+    final iso = prefs.getString(_trialEndsAtPref);
+    return iso == null ? null : DateTime.tryParse(iso);
+  }
+
+  Future<void> setTrialEndsAt(DateTime? value) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (value == null) {
+      await prefs.remove(_trialEndsAtPref);
+    } else {
+      await prefs.setString(_trialEndsAtPref, value.toIso8601String());
+    }
   }
 }

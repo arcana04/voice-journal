@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import '../utils/media_type.dart';
+import 'missing_media_placeholder.dart';
 
 /// 写真・動画をフルスクリーンでページ送り表示するビューア。
 class MediaViewer extends StatefulWidget {
@@ -42,7 +43,12 @@ class _MediaViewerState extends State<MediaViewer> {
             return _VideoPlayerView(path: path);
           }
           return InteractiveViewer(
-            child: Center(child: Image.file(File(path))),
+            child: Center(
+              child: Image.file(
+                File(path),
+                errorBuilder: missingMediaPlaceholder,
+              ),
+            ),
           );
         },
       ),

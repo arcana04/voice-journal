@@ -129,12 +129,30 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
       return;
     }
     if (picked.isEmpty || !mounted) return;
-    await store.addMediaToEntry(
-      entry,
-      picked.map((x) => File(x.path)).toList(),
-      canSyncMedia: context.read<SubscriptionStore>().isProWithMediaSync,
-    );
+    try {
+      await store.addMediaToEntry(
+        entry,
+        picked.map((x) => File(x.path)).toList(),
+        canSyncMedia: context.read<SubscriptionStore>().isProWithMediaSync,
+      );
+    } catch (e) {
+      // ディスク容量不足等でFile.copyが失敗した場合、以前はここで例外が
+      // 握りつぶされ、ユーザーには添付が失敗したことすら伝わらなかった。
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.mediaPickFailed('$e')),
+        ),
+      );
+    }
   }
+
+  // Pro/メディア同期の有無に関わらず、選んだ動画をまず端末のドキュメント
+  // ディレクトリへ無条件に全コピーする（ImageStorageService.saveImage）ため、
+  // 事前チェックが無いと数GB級の動画でも警告なく複製されディスクを圧迫しうる。
+  // アップロード時にだけ効くStorage側の上限（MediaSyncService、Pro同期時のみ）
+  // とは別に、ローカル添付そのものに対する上限をここで設ける。
+  static const _maxLocalVideoBytes = 500 * 1024 * 1024;
 
   Future<void> _pickVideo(JournalStore store, JournalEntry entry) async {
     final picker = ImagePicker();
@@ -151,11 +169,30 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
       return;
     }
     if (picked == null || !mounted) return;
-    await store.addMediaToEntry(
-      entry,
-      [File(picked.path)],
-      canSyncMedia: context.read<SubscriptionStore>().isProWithMediaSync,
-    );
+
+    final size = await File(picked.path).length();
+    if (!mounted) return;
+    if (size > _maxLocalVideoBytes) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.videoTooLargeToAttach)),
+      );
+      return;
+    }
+
+    try {
+      await store.addMediaToEntry(
+        entry,
+        [File(picked.path)],
+        canSyncMedia: context.read<SubscriptionStore>().isProWithMediaSync,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.mediaPickFailed('$e')),
+        ),
+      );
+    }
   }
 
   Future<void> _openMediaSheet(JournalStore store, JournalEntry entry) async {
