@@ -1663,7 +1663,7 @@ abstract class AppLocalizations {
   /// No description provided for @allDayReminderHourDescription.
   ///
   /// In en, this message translates to:
-  /// **'Notifies at this time, the day before the due date'**
+  /// **'Notifies at this time, the day before the due date (if due today, notifies 2 hours from now instead)'**
   String get allDayReminderHourDescription;
 
   /// No description provided for @allow.

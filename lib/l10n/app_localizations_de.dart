@@ -900,7 +900,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get allDayReminderHourDescription =>
-      'Erinnert zu dieser Uhrzeit, am Tag vor dem Fälligkeitsdatum';
+      'Erinnert zu dieser Uhrzeit, am Tag vor dem Fälligkeitsdatum (bei Fälligkeit heute stattdessen 2 Stunden ab jetzt)';
 
   @override
   String get allow => 'Erlauben';

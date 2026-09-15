@@ -843,7 +843,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get allDayReminderHourTitle => '終日タスクの通知時刻';
 
   @override
-  String get allDayReminderHourDescription => '期限日の前日、この時刻に通知します';
+  String get allDayReminderHourDescription =>
+      '期限日の前日、この時刻に通知します(期限が今日の場合は2時間後に通知します)';
 
   @override
   String get allow => '許可する';

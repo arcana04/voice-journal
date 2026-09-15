@@ -906,7 +906,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get allDayReminderHourDescription =>
-      'Notifie à cette heure, la veille de l\'échéance';
+      'Notifie à cette heure, la veille de l\'échéance (si l\'échéance est aujourd\'hui, notifie plutôt 2 heures à partir de maintenant)';
 
   @override
   String get allow => 'Autoriser';

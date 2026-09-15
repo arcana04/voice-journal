@@ -300,7 +300,7 @@
   "reminderOffsetMinutesBefore": "{minutes} min before",
   "reminderOffsetOneHourBefore": "1 hour before",
   "allDayReminderHourTitle": "All-day task reminder time",
-  "allDayReminderHourDescription": "Notifies at this time, the day before the due date",
+  "allDayReminderHourDescription": "Notifies at this time, the day before the due date (if due today, notifies 2 hours from now instead)",
   "allow": "Allow",
   "notificationPermissionDialogTitle": "Notifications aren't allowed",
   "notificationPermissionDialogMessage": "Allow notifications to receive reminders. You can change this in the Settings app.",

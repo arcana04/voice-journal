@@ -886,7 +886,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allDayReminderHourDescription =>
-      'Notifies at this time, the day before the due date';
+      'Notifies at this time, the day before the due date (if due today, notifies 2 hours from now instead)';
 
   @override
   String get allow => 'Allow';

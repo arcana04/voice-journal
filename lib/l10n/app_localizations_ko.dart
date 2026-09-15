@@ -846,7 +846,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get allDayReminderHourTitle => '종일 작업 알림 시각';
 
   @override
-  String get allDayReminderHourDescription => '마감일 전날 이 시각에 알림을 보냅니다';
+  String get allDayReminderHourDescription =>
+      '마감일 전날 이 시각에 알림을 보냅니다(마감일이 오늘이면 대신 2시간 후에 알려요)';
 
   @override
   String get allow => '허용';

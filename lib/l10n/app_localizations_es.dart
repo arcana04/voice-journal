@@ -897,7 +897,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get allDayReminderHourDescription =>
-      'Avisa a esta hora, el día antes de la fecha límite';
+      'Avisa a esta hora, el día antes de la fecha límite (si vence hoy, avisa 2 horas después en su lugar)';
 
   @override
   String get allow => 'Permitir';

@@ -274,7 +274,7 @@
   "reminderOffsetMinutesBefore": "{minutes}分前",
   "reminderOffsetOneHourBefore": "1時間前",
   "allDayReminderHourTitle": "終日タスクの通知時刻",
-  "allDayReminderHourDescription": "期限日の前日、この時刻に通知します",
+  "allDayReminderHourDescription": "期限日の前日、この時刻に通知します(期限が今日の場合は2時間後に通知します)",
   "notificationPermissionDialogTitle": "通知が許可されていません",
   "notificationPermissionDialogMessage": "リマインダーを届けるには通知を許可してください。設定アプリから変更できます。",
   "notifyAtPastError": "過去の日時には通知を設定できません",

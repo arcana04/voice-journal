@@ -300,7 +300,7 @@
   "reminderOffsetMinutesBefore": "{minutes}분 전",
   "reminderOffsetOneHourBefore": "1시간 전",
   "allDayReminderHourTitle": "종일 작업 알림 시각",
-  "allDayReminderHourDescription": "마감일 전날 이 시각에 알림을 보냅니다",
+  "allDayReminderHourDescription": "마감일 전날 이 시각에 알림을 보냅니다(마감일이 오늘이면 대신 2시간 후에 알려요)",
   "allow": "허용",
   "notificationPermissionDialogTitle": "알림이 허용되지 않았습니다",
   "notificationPermissionDialogMessage": "리마인더를 받으려면 알림을 허용해 주세요. 설정 앱에서 변경할 수 있어요.",

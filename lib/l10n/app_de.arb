@@ -300,7 +300,7 @@
   "reminderOffsetMinutesBefore": "{minutes} Min. vorher",
   "reminderOffsetOneHourBefore": "1 Stunde vorher",
   "allDayReminderHourTitle": "Erinnerungszeit für ganztägige Aufgaben",
-  "allDayReminderHourDescription": "Erinnert zu dieser Uhrzeit, am Tag vor dem Fälligkeitsdatum",
+  "allDayReminderHourDescription": "Erinnert zu dieser Uhrzeit, am Tag vor dem Fälligkeitsdatum (bei Fälligkeit heute stattdessen 2 Stunden ab jetzt)",
   "allow": "Erlauben",
   "notificationPermissionDialogTitle": "Benachrichtigungen sind nicht erlaubt",
   "notificationPermissionDialogMessage": "Erlaube Benachrichtigungen, um Erinnerungen zu erhalten. Du kannst dies in der Einstellungen-App ändern.",

@@ -300,7 +300,7 @@
   "reminderOffsetMinutesBefore": "{minutes} min avant",
   "reminderOffsetOneHourBefore": "1 heure avant",
   "allDayReminderHourTitle": "Heure de rappel pour les tâches journée entière",
-  "allDayReminderHourDescription": "Notifie à cette heure, la veille de l'échéance",
+  "allDayReminderHourDescription": "Notifie à cette heure, la veille de l'échéance (si l'échéance est aujourd'hui, notifie plutôt 2 heures à partir de maintenant)",
   "allow": "Autoriser",
   "notificationPermissionDialogTitle": "Les notifications ne sont pas autorisées",
   "notificationPermissionDialogMessage": "Autorise les notifications pour recevoir des rappels. Tu peux modifier cela dans l'application Réglages.",

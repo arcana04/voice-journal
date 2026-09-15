@@ -300,7 +300,7 @@
   "reminderOffsetMinutesBefore": "{minutes} min antes",
   "reminderOffsetOneHourBefore": "1 hora antes",
   "allDayReminderHourTitle": "Hora de aviso para tareas de todo el día",
-  "allDayReminderHourDescription": "Avisa a esta hora, el día antes de la fecha límite",
+  "allDayReminderHourDescription": "Avisa a esta hora, el día antes de la fecha límite (si vence hoy, avisa 2 horas después en su lugar)",
   "allow": "Permitir",
   "notificationPermissionDialogTitle": "Las notificaciones no están permitidas",
   "notificationPermissionDialogMessage": "Permite las notificaciones para recibir recordatorios. Puedes cambiar esto en la app de Ajustes.",
