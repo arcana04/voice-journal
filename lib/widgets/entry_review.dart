@@ -8,6 +8,7 @@ import '../models/review_category.dart';
 import '../services/nav_icon_anchors.dart';
 import '../state/settings_store.dart';
 import '../utils/task_format.dart';
+import 'notification_auto_set_hint.dart';
 
 enum DraftItemType { diary, task }
 
@@ -261,7 +262,7 @@ class _EntryReviewState extends State<EntryReview> {
             if (!shouldShow) return const SizedBox.shrink();
             return Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-              child: _NotificationAutoSetHint(
+              child: NotificationAutoSetHint(
                 message: l10n.notificationAutoSetHintMessage,
                 onDismiss: settings.dismissNotificationHint,
               ),
@@ -645,71 +646,6 @@ class _FlyingLightState extends State<_FlyingLight>
                 ),
               );
             },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 「時刻付きタスクには自動で通知が設定される」ことを伝える、一度きりで
-/// 消せるヒント。アプリ全体のアクセントカラーに寄せた淡い縁取りカードで、
-/// エラー/警告バナー([_StatusBanner]、root_screen.dart)とは違い押し付けが
-/// ましくならないよう常設ではなく閉じるボタンで即座に消せる。
-class _NotificationAutoSetHint extends StatelessWidget {
-  final String message;
-  final VoidCallback onDismiss;
-
-  const _NotificationAutoSetHint({
-    required this.message,
-    required this.onDismiss,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.25),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.notifications_active_rounded,
-            size: 18,
-            color: theme.colorScheme.primary,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Text(
-                message,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                  height: 1.4,
-                ),
-              ),
-            ),
-          ),
-          InkWell(
-            borderRadius: BorderRadius.circular(20),
-            onTap: onDismiss,
-            child: Padding(
-              padding: const EdgeInsets.all(6),
-              child: Icon(
-                Icons.close_rounded,
-                size: 16,
-                color: theme.colorScheme.primary,
-              ),
-            ),
           ),
         ],
       ),

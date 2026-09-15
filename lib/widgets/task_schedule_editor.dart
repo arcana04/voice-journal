@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/task_schedule_draft.dart';
 import '../state/settings_store.dart';
+import 'notification_auto_set_hint.dart';
 
 String _dateLabel(DateTime date, String locale) =>
     '${DateFormat.MMMd(locale).format(date)}(${DateFormat.E(locale).format(date)})';
@@ -432,6 +433,25 @@ class TaskScheduleEditor extends StatelessWidget {
         _buildLabel(theme, l10n.reminderLabel),
         const SizedBox(height: 6),
         _buildNotifySection(context, locale, l10n),
+        // 手動でのタスク作成・既存タスクの編集でも通知が自動設定される点は
+        // 変わらないため、AI仕分け画面（entry_review.dart）と同じヒントを
+        // ここにも出す。時刻を一度も声に出さず常に手動で追加するタイプの
+        // 使い方だと、entry_review.dart側だけでは永遠に気づけないため。
+        if (draft.notifyAt != null)
+          Consumer<SettingsStore>(
+            builder: (context, settings, _) {
+              if (settings.hasSeenNotificationHint) {
+                return const SizedBox.shrink();
+              }
+              return Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: NotificationAutoSetHint(
+                  message: l10n.notificationAutoSetHintMessage,
+                  onDismiss: settings.dismissNotificationHint,
+                ),
+              );
+            },
+          ),
       ],
     );
   }
