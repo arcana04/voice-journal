@@ -1403,6 +1403,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get recoveredRecordingProcess => 'Verarbeiten';
 
   @override
+  String get orphanedRecordingDiscardedMessage =>
+      'Eine nicht gespeicherte Aufnahme vom letzten Mal wurde gefunden, konnte aber nicht wiederhergestellt werden und wurde gelöscht';
+
+  @override
   String get dragCardHere => 'Ziehe eine Karte hierher';
 
   @override

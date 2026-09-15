@@ -1339,6 +1339,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recoveredRecordingProcess => '처리하기';
 
   @override
+  String get orphanedRecordingDiscardedMessage =>
+      '지난번에 저장되지 않은 녹음을 발견했지만 복구할 수 없어 삭제했어요';
+
+  @override
   String get dragCardHere => '카드를 여기로 드래그하세요';
 
   @override

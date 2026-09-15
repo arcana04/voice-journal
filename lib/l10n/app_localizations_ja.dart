@@ -1336,6 +1336,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recoveredRecordingProcess => '処理する';
 
   @override
+  String get orphanedRecordingDiscardedMessage =>
+      '前回保存されなかった録音が見つかりましたが、復旧できなかったため削除しました';
+
+  @override
   String get dragCardHere => 'ここにカードをドラッグ';
 
   @override

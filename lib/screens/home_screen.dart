@@ -147,16 +147,24 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  /// 前回、バックグラウンド録音中にAndroidがOSの電池最適化等でプロセスごと
-  /// 強制終了した場合、`record`パッケージが逐次書き込んでいた録音ファイルが
-  /// 端末に残ったまま気づかれず失われていた。起動のたびに残留ファイルを
-  /// 確認し、見つかれば処理するか破棄するかをユーザーに確認する
+  /// 端末に残留した録音ファイルを検知する。呼び出し元によって性質が異なる
+  /// 2パターンがある:
+  /// - [offerRecovery]=false(アプリ起動時、[initState]から): 前回
+  ///   バックグラウンド録音中にOSがプロセスごと強制終了した可能性がある
+  ///   ケース。`stop()`が呼ばれる前に落ちているため、m4aファイルに必須の
+  ///   moovアトム(メタデータ)が書き込まれておらず、ファイル自体がほぼ
+  ///   確実に構造的に壊れていて文字起こし不可能——「処理する」を提示しても
+  ///   まず成功しないため、ユーザーへの通知のみ行い黙って削除する。
+  /// - [offerRecovery]=true(処理失敗直後、以下2箇所の catch から):
+  ///   `stop()`は正常に完了しておりファイル自体は壊れていない
+  ///   （ネットワークエラー等で処理だけが失敗したケース）ため、
+  ///   引き続き「処理する」を提示する意味がある。
   /// （[[project_voicejournal_knowledge_base_chat]]参照）。
-  Future<void> _checkForOrphanedRecording() async {
+  Future<void> _checkForOrphanedRecording({bool offerRecovery = false}) async {
     final orphaned = await RecorderService.findOrphanedRecordings();
     if (orphaned.isEmpty || !mounted) return;
 
-    // 万一2件以上残っていても複雑にしないよう、最新の1件だけ復旧を提案し、
+    // 万一2件以上残っていても複雑にしないよう、最新の1件だけ扱い、
     // それ以外は静かに削除する。
     for (final extra in orphaned.skip(1)) {
       try {
@@ -164,6 +172,19 @@ class _HomeScreenState extends State<HomeScreen> {
       } catch (_) {}
     }
     if (!mounted) return;
+
+    final path = orphaned.first;
+
+    if (!offerRecovery) {
+      try {
+        await File(path).delete();
+      } catch (_) {}
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.orphanedRecordingDiscardedMessage)),
+      );
+      return;
+    }
 
     final l10n = AppLocalizations.of(context)!;
     final shouldRecover = await showDialog<bool>(
@@ -184,7 +205,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
 
-    final path = orphaned.first;
     if (shouldRecover != true) {
       try {
         await File(path).delete();
@@ -228,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       if (!mounted) return;
       _handleProcessingError(e);
-      unawaited(_checkForOrphanedRecording());
+      unawaited(_checkForOrphanedRecording(offerRecovery: true));
     }
   }
 
@@ -453,7 +473,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _handleProcessingError(e);
       // 録音ファイルは削除せず残してあるので、アプリ再起動を待たず
       // その場でオーファン録音として再処理を案内する。
-      unawaited(_checkForOrphanedRecording());
+      unawaited(_checkForOrphanedRecording(offerRecovery: true));
     }
   }
 

@@ -1387,6 +1387,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recoveredRecordingProcess => 'Process';
 
   @override
+  String get orphanedRecordingDiscardedMessage =>
+      'Found a recording that wasn\'t saved last time, but it couldn\'t be recovered, so it was deleted';
+
+  @override
   String get dragCardHere => 'Drag a card here';
 
   @override

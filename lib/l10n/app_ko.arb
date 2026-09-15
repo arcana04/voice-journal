@@ -477,6 +477,7 @@
   "recoveredRecordingTitle": "저장되지 않은 녹음을 발견했어요",
   "recoveredRecordingMessage": "앱이 예기치 않게 종료되기 전의 녹음이 기기에 남아 있어요. 지금 처리할까요?",
   "recoveredRecordingProcess": "처리하기",
+  "orphanedRecordingDiscardedMessage": "지난번에 저장되지 않은 녹음을 발견했지만 복구할 수 없어 삭제했어요",
   "dragCardHere": "카드를 여기로 드래그하세요",
   "addCardButton": "카드 추가",
 

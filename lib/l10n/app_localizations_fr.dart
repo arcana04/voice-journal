@@ -1410,6 +1410,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recoveredRecordingProcess => 'Traiter';
 
   @override
+  String get orphanedRecordingDiscardedMessage =>
+      'Un enregistrement non sauvegardé la dernière fois a été trouvé, mais il n\'a pas pu être récupéré et a donc été supprimé';
+
+  @override
   String get dragCardHere => 'Fais glisser une carte ici';
 
   @override

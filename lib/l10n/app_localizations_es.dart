@@ -1400,6 +1400,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recoveredRecordingProcess => 'Procesar';
 
   @override
+  String get orphanedRecordingDiscardedMessage =>
+      'Se encontró una grabación que no se guardó la última vez, pero no se pudo recuperar, así que se eliminó';
+
+  @override
   String get dragCardHere => 'Arrastra una tarjeta aquí';
 
   @override

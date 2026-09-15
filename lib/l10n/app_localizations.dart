@@ -2626,6 +2626,12 @@ abstract class AppLocalizations {
   /// **'Process'**
   String get recoveredRecordingProcess;
 
+  /// No description provided for @orphanedRecordingDiscardedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Found a recording that wasn\'t saved last time, but it couldn\'t be recovered, so it was deleted'**
+  String get orphanedRecordingDiscardedMessage;
+
   /// No description provided for @dragCardHere.
   ///
   /// In en, this message translates to:
