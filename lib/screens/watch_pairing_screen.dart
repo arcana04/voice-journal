@@ -55,9 +55,15 @@ class _WatchPairingScreenState extends State<WatchPairingScreen> {
     setState(() => _busy = true);
     try {
       final locale = Localizations.localeOf(context).languageCode;
-      await _service.pairWatch(locale: locale);
+      final outcome = await _service.pairWatch(locale: locale);
       if (!mounted) return;
-      await _showMessage(l10n.watchPairingSuccessTitle, l10n.watchPairingSuccessMessage);
+      if (outcome == WatchPairingOutcome.confirmed) {
+        await _showMessage(l10n.watchPairingSuccessTitle, l10n.watchPairingSuccessMessage);
+      } else {
+        // Watch側からの完了確認が時間内に届かなかった場合。送信自体は成功して
+        // いるので「失敗」とは言わず、確認が取れていない旨を伝える。
+        await _showMessage(l10n.watchPairingPendingTitle, l10n.watchPairingPendingMessage);
+      }
     } on WatchPairingException catch (e) {
       if (!mounted) return;
       await _showMessage(l10n.accountErrorTitle, e.message);

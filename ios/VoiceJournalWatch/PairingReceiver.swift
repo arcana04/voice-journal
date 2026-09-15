@@ -66,11 +66,32 @@ extension PairingReceiver: WCSessionDelegate {
                     self.isPaired = true
                     self.lastError = nil
                 }
+                sendPairingAck(deviceId: deviceId, succeeded: true)
             } catch {
                 await MainActor.run {
                     self.lastError = "\(error)"
                 }
+                sendPairingAck(deviceId: deviceId, succeeded: false, error: "\(error)")
             }
         }
+    }
+
+    // iPhone側(watch_pairing_service.dart)はペアリング情報の送信直後、実際に
+    // Watchでトークン交換まで完了したかを確認しないまま「ペアリング成功」を
+    // 表示していた。Watchアプリが即座にフォアグラウンドでない・Bluetoothが
+    // 不安定・customTokenのTTL切れ等でここが失敗しても、iPhone側には何も
+    // 伝わらず、ユーザーは失敗に気づく手段が無かった。ここで結果をiPhoneへ
+    // 明示的に返す。到達可能ならsendMessageで即時に、そうでなくても
+    // updateApplicationContextで後から確実に届くようにする（iPhone側は
+    // watch_pairing_service.dartのwaitForPairingAckで両方を待ち受ける）。
+    private func sendPairingAck(deviceId: String, succeeded: Bool, error: String? = nil) {
+        var payload: [String: Any] = ["pairingAckDeviceId": deviceId, "pairingSucceeded": succeeded]
+        if let error { payload["pairingError"] = error }
+
+        let session = WCSession.default
+        if session.isReachable {
+            session.sendMessage(payload, replyHandler: nil, errorHandler: nil)
+        }
+        try? session.updateApplicationContext(payload)
     }
 }

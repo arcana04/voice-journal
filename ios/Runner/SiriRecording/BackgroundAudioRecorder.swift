@@ -46,8 +46,14 @@ actor BackgroundAudioRecorder {
             try session.setCategory(.playAndRecord, mode: .default, options: [.mixWithOthers])
             try session.setActive(true)
 
+            // ファイル名にAndroid側(recorder_service.dart)と同じ"voicejournal_"
+            // プレフィックスを付ける。Dart側のfindOrphanedRecordings()はこの
+            // プレフィックスで一時ディレクトリ内の未処理録音を検知するが、以前は
+            // UUIDのみのファイル名だったため一度もマッチせず、iOSで録音中に
+            // アプリが強制終了された場合の復旧ダイアログが機能していなかった
+            // （録音が復旧手段なく失われていた）。
             let url = FileManager.default.temporaryDirectory
-                .appendingPathComponent(UUID().uuidString)
+                .appendingPathComponent("voicejournal_\(UUID().uuidString)")
                 .appendingPathExtension("m4a")
 
             let settings: [String: Any] = [
