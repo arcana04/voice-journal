@@ -344,6 +344,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucun calendrier modifiable n\'a été trouvé sur cet appareil. Ajoute un calendrier (comme un compte Google) dans l\'application Réglages du système, puis actualise.';
 
   @override
+  String get integrationsSelectedCalendarMissing =>
+      'Le calendrier que tu avais sélectionné est introuvable — il a peut-être été supprimé. Choisis-en un autre ci-dessous.';
+
+  @override
   String get integrationsGoogleCalendarHint =>
       'Envie d\'utiliser Google Agenda ? Ajoute ton compte Google dans Réglages iOS → Calendrier → Comptes, il apparaîtra ici.';
 
@@ -367,6 +371,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get appleRemindersNoLists =>
       'Aucune liste de rappels modifiable n\'a été trouvée. Crée une liste dans l\'application Rappels, puis actualise.';
+
+  @override
+  String get appleRemindersSelectedListMissing =>
+      'La liste que tu avais sélectionnée est introuvable — elle a peut-être été supprimée. Choisis-en une autre ci-dessous.';
 
   @override
   String get notionSettingsRowTitle => 'Notion';
@@ -484,6 +492,13 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get watchPairingSuccessMessage =>
       'Ton Apple Watch est couplée. Tu peux maintenant enregistrer directement depuis la Watch.';
+
+  @override
+  String get watchPairingPendingTitle => 'Confirmation impossible';
+
+  @override
+  String get watchPairingPendingMessage =>
+      'Les infos de couplage ont été envoyées à la Watch, mais on n\'a pas pu confirmer que ça s\'est terminé. Garde la Watch à proximité avec son app ouverte et réessaie.';
 
   @override
   String get integrationsWatchRowTitle => 'Apple Watch';
@@ -937,6 +952,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get customDictionaryEmpty => 'Aucun mot enregistré pour l\'instant';
 
   @override
+  String customDictionaryLimitReached(Object count) {
+    return 'Tu peux enregistrer jusqu\'à $count mots';
+  }
+
+  @override
+  String customDictionaryWordTooLong(Object count) {
+    return 'Les mots doivent faire $count caractères ou moins';
+  }
+
+  @override
   String get diaryDayEmpty => 'Aucune entrée de journal ce jour-là';
 
   @override
@@ -1013,6 +1038,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String mediaPickFailed(String error) {
     return 'Échec de la sélection de la photo/vidéo : $error';
   }
+
+  @override
+  String get videoTooLargeToAttach =>
+      'Cette vidéo est trop volumineuse pour être jointe (500 Mo max)';
 
   @override
   String get pickPhotosFromLibrary => 'Choisir des photos';

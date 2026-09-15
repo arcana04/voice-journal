@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
+import '../state/settings_store.dart';
 import 'account_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -39,13 +41,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       return;
     }
     if (_page == _pageCount - 1) {
-      widget.onFinished();
+      _finish();
       return;
     }
     _controller.nextPage(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
     );
+  }
+
+  // このメソッドに到達できるのは、必ず_aiConsentPageIndexで_aiConsentChecked
+  // がtrueになった場合のみ（_next()のガード、および_skip()が最終ページへ直接
+  // 飛ばさずスキップ不可の同意ページで止めることの両方で保証している）。
+  // 以前は「スキップ」ボタンが同意ページ自体を丸ごと迂回してこの完了処理を
+  // 直接呼べてしまい、マイク許可・AI送信への同意が一度も提示されないまま
+  // 録音・AI送信が可能になっていた（App Store審査ガイドライン5.1.1(i)/
+  // 5.1.2(i)対応が無効化される不具合）。
+  void _finish() {
+    context.read<SettingsStore>().setAiConsentGiven(_aiConsentChecked);
+    widget.onFinished();
+  }
+
+  // 「スキップ」は各ページの説明を読み飛ばせるようにするための機能であり、
+  // 同意そのものを省略させてはならない。同意ページより手前にいる場合は同意
+  // ページまでジャンプするだけにとどめ、そこから先は通常の_next()のガードに
+  // 従わせる（同意ページ自体は_page < _aiConsentPageIndexの間しかスキップ
+  // ボタンを表示しないため、このメソッドが同意ページより先へ飛ばすことはない）。
+  void _skipToConsent() {
+    _controller.jumpToPage(_aiConsentPageIndex);
   }
 
   @override
@@ -68,7 +91,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   maintainAnimation: true,
                   maintainSize: true,
                   child: TextButton(
-                    onPressed: widget.onFinished,
+                    onPressed: _skipToConsent,
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.white.withValues(alpha: 0.85),
                     ),

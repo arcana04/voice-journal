@@ -121,6 +121,7 @@
   "integrationsOff": "Desactivado",
   "integrationsPermissionDenied": "No se concedió acceso al calendario. Puedes permitirlo desde la app de Ajustes del sistema.",
   "integrationsNoCalendars": "No se encontraron calendarios editables en este dispositivo. Añade un calendario (como una cuenta de Google) en la app de Ajustes del sistema y luego actualiza.",
+  "integrationsSelectedCalendarMissing": "No se encontró el calendario que habías seleccionado; puede que se haya eliminado. Elige otro a continuación.",
   "integrationsGoogleCalendarHint": "¿Quieres usar Google Calendar? Añade tu cuenta de Google en Ajustes de iOS → Calendario → Cuentas y aparecerá aquí.",
   "integrationsRefresh": "Actualizar",
   "appleRemindersSettingsTitle": "Recordatorios",
@@ -128,6 +129,7 @@
   "appleRemindersDescription": "Elige una lista de la app Recordatorios del dispositivo. Una vez activado, cualquier tarea con fecha límite se añadirá allí automáticamente, y completarla en la app también la marcará como completada en Recordatorios.",
   "appleRemindersPermissionDenied": "No se concedió acceso a Recordatorios. Puedes permitirlo desde la app de Ajustes del sistema.",
   "appleRemindersNoLists": "No se encontraron listas de recordatorios editables. Crea una lista en la app Recordatorios y luego actualiza.",
+  "appleRemindersSelectedListMissing": "No se encontró la lista que habías seleccionado; puede que se haya eliminado. Elige otra a continuación.",
   "notionSettingsRowTitle": "Notion",
   "notionScreenTitle": "Integración con Notion",
   "notionIntroDescription": "Envía tareas, entradas de diario e ideas a una base de datos de Notion con un toque. Primero crea una integración en Notion y luego comparte con ella la página que quieras usar.",
@@ -166,6 +168,8 @@
   "watchPairingButton": "Emparejar Apple Watch",
   "watchPairingSuccessTitle": "Emparejado",
   "watchPairingSuccessMessage": "Tu Apple Watch está emparejado. Ahora puedes grabar desde el Watch por sí solo.",
+  "watchPairingPendingTitle": "No se pudo confirmar",
+  "watchPairingPendingMessage": "La información de emparejamiento se envió al Watch, pero no pudimos confirmar que terminara. Mantén el Watch cerca con su app abierta e inténtalo de nuevo.",
   "integrationsWatchRowTitle": "Apple Watch",
   "watchScreenTitle": "Apple Watch",
   "watchScreenDescription": "Al emparejar podrás grabar y clasificar con IA desde tu Apple Watch sin llevar el iPhone contigo. Mantén el iPhone y el Watch cerca con Bluetooth activado durante el emparejamiento.",
@@ -311,6 +315,8 @@
   "descriptionHint": "p. ej. Un amigo de la universidad",
   "add": "Añadir",
   "customDictionaryEmpty": "Aún no hay palabras registradas",
+  "customDictionaryLimitReached": "Puedes registrar hasta {count} palabras",
+  "customDictionaryWordTooLong": "Las palabras deben tener {count} caracteres o menos",
 
   "diaryDayEmpty": "No hay entradas de diario este día",
   "diaryPickDateTooltip": "Elegir una fecha",
@@ -339,6 +345,7 @@
   "fontImpact": "Impact",
   "fontCute": "Tierna",
   "mediaPickFailed": "Error al seleccionar la foto/vídeo: {error}",
+  "videoTooLargeToAttach": "Este vídeo es demasiado grande para adjuntarlo (máx. 500 MB)",
   "@mediaPickFailed": {
     "placeholders": { "error": { "type": "String" } }
   },

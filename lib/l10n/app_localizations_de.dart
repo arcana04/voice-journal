@@ -340,6 +340,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Auf diesem Gerät wurden keine beschreibbaren Kalender gefunden. Füge in der Systemeinstellungen-App einen Kalender (wie ein Google-Konto) hinzu und aktualisiere dann.';
 
   @override
+  String get integrationsSelectedCalendarMissing =>
+      'Der zuvor ausgewählte Kalender wurde nicht gefunden — er wurde möglicherweise gelöscht. Bitte wähle unten einen anderen aus.';
+
+  @override
   String get integrationsGoogleCalendarHint =>
       'Google Kalender nutzen? Füge dein Google-Konto unter iOS-Einstellungen → Kalender → Accounts hinzu, dann erscheint es hier.';
 
@@ -363,6 +367,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get appleRemindersNoLists =>
       'Es wurden keine beschreibbaren Erinnerungslisten gefunden. Erstelle eine Liste in der Erinnerungen-App und aktualisiere dann.';
+
+  @override
+  String get appleRemindersSelectedListMissing =>
+      'Die zuvor ausgewählte Liste wurde nicht gefunden — sie wurde möglicherweise gelöscht. Bitte wähle unten eine andere aus.';
 
   @override
   String get notionSettingsRowTitle => 'Notion';
@@ -479,6 +487,13 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get watchPairingSuccessMessage =>
       'Deine Apple Watch ist gekoppelt. Du kannst jetzt allein auf der Watch aufnehmen.';
+
+  @override
+  String get watchPairingPendingTitle => 'Bestätigung nicht möglich';
+
+  @override
+  String get watchPairingPendingMessage =>
+      'Die Kopplungsdaten wurden an die Watch gesendet, aber wir konnten den Abschluss nicht bestätigen. Halte die Watch in der Nähe, öffne die App darauf und versuche es erneut.';
 
   @override
   String get integrationsWatchRowTitle => 'Apple Watch';
@@ -931,6 +946,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get customDictionaryEmpty => 'Noch keine Wörter registriert';
 
   @override
+  String customDictionaryLimitReached(Object count) {
+    return 'Du kannst bis zu $count Wörter registrieren';
+  }
+
+  @override
+  String customDictionaryWordTooLong(Object count) {
+    return 'Wörter dürfen höchstens $count Zeichen lang sein';
+  }
+
+  @override
   String get diaryDayEmpty => 'Keine Tagebucheinträge an diesem Tag';
 
   @override
@@ -1006,6 +1031,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String mediaPickFailed(String error) {
     return 'Foto/Video konnte nicht ausgewählt werden: $error';
   }
+
+  @override
+  String get videoTooLargeToAttach =>
+      'Dieses Video ist zu groß zum Anhängen (max. 500 MB)';
 
   @override
   String get pickPhotosFromLibrary => 'Fotos auswählen';

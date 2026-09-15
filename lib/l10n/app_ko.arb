@@ -121,6 +121,7 @@
   "integrationsOff": "끄기",
   "integrationsPermissionDenied": "캘린더 접근 권한이 허용되지 않았습니다. 시스템 설정 앱에서 허용할 수 있어요.",
   "integrationsNoCalendars": "이 기기에서 쓰기 가능한 캘린더를 찾을 수 없습니다. 시스템 설정 앱에서 캘린더(예: Google 계정)를 추가한 후 새로고침하세요.",
+  "integrationsSelectedCalendarMissing": "이전에 선택한 캘린더를 찾을 수 없어요. 삭제되었을 수 있습니다. 아래에서 다시 선택해 주세요.",
   "integrationsGoogleCalendarHint": "Google 캘린더를 사용하고 싶다면, iOS 설정 → 캘린더 → 계정에서 Google 계정을 추가하면 여기에 표시됩니다.",
   "integrationsRefresh": "새로고침",
   "appleRemindersSettingsTitle": "미리 알림",
@@ -128,6 +129,7 @@
   "appleRemindersDescription": "기기의 미리 알림 앱에서 목록을 선택하세요. 켜두면 마감일이 있는 할 일이 자동으로 그곳에 추가되고, 앱에서 완료 처리하면 미리 알림에서도 완료로 표시됩니다.",
   "appleRemindersPermissionDenied": "미리 알림 접근 권한이 허용되지 않았습니다. 시스템 설정 앱에서 허용할 수 있어요.",
   "appleRemindersNoLists": "쓰기 가능한 미리 알림 목록을 찾을 수 없습니다. 미리 알림 앱에서 목록을 만든 후 새로고침하세요.",
+  "appleRemindersSelectedListMissing": "이전에 선택한 목록을 찾을 수 없어요. 삭제되었을 수 있습니다. 아래에서 다시 선택해 주세요.",
   "notionSettingsRowTitle": "Notion",
   "notionScreenTitle": "Notion 연동",
   "notionIntroDescription": "탭 한 번으로 태스크, 일기, 아이디어를 Notion 데이터베이스로 보낼 수 있습니다. 먼저 Notion에서 통합(Integration)을 만들고, 사용할 페이지를 그 통합과 공유하세요.",
@@ -166,6 +168,8 @@
   "watchPairingButton": "Apple Watch 페어링",
   "watchPairingSuccessTitle": "페어링됨",
   "watchPairingSuccessMessage": "Apple Watch가 페어링되었습니다. 이제 Watch만으로도 녹음할 수 있어요.",
+  "watchPairingPendingTitle": "확인할 수 없었어요",
+  "watchPairingPendingMessage": "페어링 정보를 Watch로 보냈지만 완료 여부를 확인하지 못했어요. Watch를 가까이 두고 앱을 연 상태에서 다시 시도해 주세요.",
   "integrationsWatchRowTitle": "Apple Watch",
   "watchScreenTitle": "Apple Watch",
   "watchScreenDescription": "페어링하면 iPhone 없이 Apple Watch만으로 녹음하고 AI 분류를 사용할 수 있습니다. 페어링하는 동안 iPhone과 Watch를 가까이 두고 블루투스를 켜 두세요.",
@@ -311,6 +315,8 @@
   "descriptionHint": "예: 대학교 친구",
   "add": "추가",
   "customDictionaryEmpty": "등록된 단어가 아직 없습니다",
+  "customDictionaryLimitReached": "단어는 최대 {count}개까지 등록할 수 있어요",
+  "customDictionaryWordTooLong": "단어는 {count}자 이내로 입력해 주세요",
 
   "diaryDayEmpty": "이 날의 일기가 없습니다",
   "diaryPickDateTooltip": "날짜 선택",
@@ -339,6 +345,7 @@
   "fontImpact": "임팩트",
   "fontCute": "귀여운체",
   "mediaPickFailed": "사진/동영상 선택에 실패했습니다: {error}",
+  "videoTooLargeToAttach": "동영상 용량이 너무 커서 첨부할 수 없어요 (최대 500MB)",
   "@mediaPickFailed": {
     "placeholders": { "error": { "type": "String" } }
   },

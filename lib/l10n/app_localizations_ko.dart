@@ -325,6 +325,10 @@ class AppLocalizationsKo extends AppLocalizations {
       '이 기기에서 쓰기 가능한 캘린더를 찾을 수 없습니다. 시스템 설정 앱에서 캘린더(예: Google 계정)를 추가한 후 새로고침하세요.';
 
   @override
+  String get integrationsSelectedCalendarMissing =>
+      '이전에 선택한 캘린더를 찾을 수 없어요. 삭제되었을 수 있습니다. 아래에서 다시 선택해 주세요.';
+
+  @override
   String get integrationsGoogleCalendarHint =>
       'Google 캘린더를 사용하고 싶다면, iOS 설정 → 캘린더 → 계정에서 Google 계정을 추가하면 여기에 표시됩니다.';
 
@@ -348,6 +352,10 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get appleRemindersNoLists =>
       '쓰기 가능한 미리 알림 목록을 찾을 수 없습니다. 미리 알림 앱에서 목록을 만든 후 새로고침하세요.';
+
+  @override
+  String get appleRemindersSelectedListMissing =>
+      '이전에 선택한 목록을 찾을 수 없어요. 삭제되었을 수 있습니다. 아래에서 다시 선택해 주세요.';
 
   @override
   String get notionSettingsRowTitle => 'Notion';
@@ -461,6 +469,13 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get watchPairingSuccessMessage =>
       'Apple Watch가 페어링되었습니다. 이제 Watch만으로도 녹음할 수 있어요.';
+
+  @override
+  String get watchPairingPendingTitle => '확인할 수 없었어요';
+
+  @override
+  String get watchPairingPendingMessage =>
+      '페어링 정보를 Watch로 보냈지만 완료 여부를 확인하지 못했어요. Watch를 가까이 두고 앱을 연 상태에서 다시 시도해 주세요.';
 
   @override
   String get integrationsWatchRowTitle => 'Apple Watch';
@@ -875,6 +890,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get customDictionaryEmpty => '등록된 단어가 아직 없습니다';
 
   @override
+  String customDictionaryLimitReached(Object count) {
+    return '단어는 최대 $count개까지 등록할 수 있어요';
+  }
+
+  @override
+  String customDictionaryWordTooLong(Object count) {
+    return '단어는 $count자 이내로 입력해 주세요';
+  }
+
+  @override
   String get diaryDayEmpty => '이 날의 일기가 없습니다';
 
   @override
@@ -950,6 +975,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String mediaPickFailed(String error) {
     return '사진/동영상 선택에 실패했습니다: $error';
   }
+
+  @override
+  String get videoTooLargeToAttach => '동영상 용량이 너무 커서 첨부할 수 없어요 (최대 500MB)';
 
   @override
   String get pickPhotosFromLibrary => '사진 선택';

@@ -694,6 +694,12 @@ abstract class AppLocalizations {
   /// **'No writable calendars were found on this device. Add a calendar (like a Google account) in the system Settings app, then refresh.'**
   String get integrationsNoCalendars;
 
+  /// No description provided for @integrationsSelectedCalendarMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The calendar you had selected couldn\'t be found — it may have been deleted. Please choose another one below.'**
+  String get integrationsSelectedCalendarMissing;
+
   /// No description provided for @integrationsGoogleCalendarHint.
   ///
   /// In en, this message translates to:
@@ -735,6 +741,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No writable reminder lists were found. Create a list in the Reminders app, then refresh.'**
   String get appleRemindersNoLists;
+
+  /// No description provided for @appleRemindersSelectedListMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The list you had selected couldn\'t be found — it may have been deleted. Please choose another one below.'**
+  String get appleRemindersSelectedListMissing;
 
   /// No description provided for @notionSettingsRowTitle.
   ///
@@ -945,6 +957,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your Apple Watch is paired. You can now record on the Watch by itself.'**
   String get watchPairingSuccessMessage;
+
+  /// No description provided for @watchPairingPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t confirm pairing'**
+  String get watchPairingPendingTitle;
+
+  /// No description provided for @watchPairingPendingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Pairing info was sent to your Watch, but we couldn\'t confirm it finished. Keep the Watch nearby with its app open and try again.'**
+  String get watchPairingPendingMessage;
 
   /// No description provided for @integrationsWatchRowTitle.
   ///
@@ -1720,6 +1744,18 @@ abstract class AppLocalizations {
   /// **'No words registered yet'**
   String get customDictionaryEmpty;
 
+  /// No description provided for @customDictionaryLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You can register up to {count} words'**
+  String customDictionaryLimitReached(Object count);
+
+  /// No description provided for @customDictionaryWordTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Words must be {count} characters or fewer'**
+  String customDictionaryWordTooLong(Object count);
+
   /// No description provided for @diaryDayEmpty.
   ///
   /// In en, this message translates to:
@@ -1869,6 +1905,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to select photo/video: {error}'**
   String mediaPickFailed(String error);
+
+  /// No description provided for @videoTooLargeToAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'This video is too large to attach (max 500MB)'**
+  String get videoTooLargeToAttach;
 
   /// No description provided for @pickPhotosFromLibrary.
   ///

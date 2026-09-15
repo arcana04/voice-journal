@@ -335,6 +335,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'No writable calendars were found on this device. Add a calendar (like a Google account) in the system Settings app, then refresh.';
 
   @override
+  String get integrationsSelectedCalendarMissing =>
+      'The calendar you had selected couldn\'t be found — it may have been deleted. Please choose another one below.';
+
+  @override
   String get integrationsGoogleCalendarHint =>
       'Want to use Google Calendar? Add your Google account under iOS Settings → Calendar → Accounts, and it will show up here.';
 
@@ -358,6 +362,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get appleRemindersNoLists =>
       'No writable reminder lists were found. Create a list in the Reminders app, then refresh.';
+
+  @override
+  String get appleRemindersSelectedListMissing =>
+      'The list you had selected couldn\'t be found — it may have been deleted. Please choose another one below.';
 
   @override
   String get notionSettingsRowTitle => 'Notion';
@@ -474,6 +482,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get watchPairingSuccessMessage =>
       'Your Apple Watch is paired. You can now record on the Watch by itself.';
+
+  @override
+  String get watchPairingPendingTitle => 'Couldn\'t confirm pairing';
+
+  @override
+  String get watchPairingPendingMessage =>
+      'Pairing info was sent to your Watch, but we couldn\'t confirm it finished. Keep the Watch nearby with its app open and try again.';
 
   @override
   String get integrationsWatchRowTitle => 'Apple Watch';
@@ -917,6 +932,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customDictionaryEmpty => 'No words registered yet';
 
   @override
+  String customDictionaryLimitReached(Object count) {
+    return 'You can register up to $count words';
+  }
+
+  @override
+  String customDictionaryWordTooLong(Object count) {
+    return 'Words must be $count characters or fewer';
+  }
+
+  @override
   String get diaryDayEmpty => 'No diary entries this day';
 
   @override
@@ -992,6 +1017,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String mediaPickFailed(String error) {
     return 'Failed to select photo/video: $error';
   }
+
+  @override
+  String get videoTooLargeToAttach =>
+      'This video is too large to attach (max 500MB)';
 
   @override
   String get pickPhotosFromLibrary => 'Choose photos';

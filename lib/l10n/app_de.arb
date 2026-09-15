@@ -121,6 +121,7 @@
   "integrationsOff": "Aus",
   "integrationsPermissionDenied": "Kalenderzugriff wurde nicht gewährt. Du kannst ihn in der Systemeinstellungen-App erlauben.",
   "integrationsNoCalendars": "Auf diesem Gerät wurden keine beschreibbaren Kalender gefunden. Füge in der Systemeinstellungen-App einen Kalender (wie ein Google-Konto) hinzu und aktualisiere dann.",
+  "integrationsSelectedCalendarMissing": "Der zuvor ausgewählte Kalender wurde nicht gefunden — er wurde möglicherweise gelöscht. Bitte wähle unten einen anderen aus.",
   "integrationsGoogleCalendarHint": "Google Kalender nutzen? Füge dein Google-Konto unter iOS-Einstellungen → Kalender → Accounts hinzu, dann erscheint es hier.",
   "integrationsRefresh": "Aktualisieren",
   "appleRemindersSettingsTitle": "Erinnerungen",
@@ -128,6 +129,7 @@
   "appleRemindersDescription": "Wähle eine Liste aus der Erinnerungen-App des Geräts. Sobald aktiviert, wird jede Aufgabe mit Fälligkeitsdatum automatisch dort hinzugefügt, und das Erledigen in der App markiert sie auch in Erinnerungen als erledigt.",
   "appleRemindersPermissionDenied": "Erinnerungen-Zugriff wurde nicht gewährt. Du kannst ihn in der Systemeinstellungen-App erlauben.",
   "appleRemindersNoLists": "Es wurden keine beschreibbaren Erinnerungslisten gefunden. Erstelle eine Liste in der Erinnerungen-App und aktualisiere dann.",
+  "appleRemindersSelectedListMissing": "Die zuvor ausgewählte Liste wurde nicht gefunden — sie wurde möglicherweise gelöscht. Bitte wähle unten eine andere aus.",
   "notionSettingsRowTitle": "Notion",
   "notionScreenTitle": "Notion-Integration",
   "notionIntroDescription": "Sende Aufgaben, Tagebucheinträge und Ideen mit einem Tipp an eine Notion-Datenbank. Erstelle zuerst eine Integration in Notion und teile dann die gewünschte Seite mit dieser Integration.",
@@ -166,6 +168,8 @@
   "watchPairingButton": "Apple Watch koppeln",
   "watchPairingSuccessTitle": "Gekoppelt",
   "watchPairingSuccessMessage": "Deine Apple Watch ist gekoppelt. Du kannst jetzt allein auf der Watch aufnehmen.",
+  "watchPairingPendingTitle": "Bestätigung nicht möglich",
+  "watchPairingPendingMessage": "Die Kopplungsdaten wurden an die Watch gesendet, aber wir konnten den Abschluss nicht bestätigen. Halte die Watch in der Nähe, öffne die App darauf und versuche es erneut.",
   "integrationsWatchRowTitle": "Apple Watch",
   "watchScreenTitle": "Apple Watch",
   "watchScreenDescription": "Nach dem Koppeln kannst du allein mit der Apple Watch aufnehmen und die KI-Sortierung nutzen, ganz ohne iPhone. Halte iPhone und Watch beim Koppeln in der Nähe und aktiviere Bluetooth.",
@@ -311,6 +315,8 @@
   "descriptionHint": "z. B. Ein Freund von der Universität",
   "add": "Hinzufügen",
   "customDictionaryEmpty": "Noch keine Wörter registriert",
+  "customDictionaryLimitReached": "Du kannst bis zu {count} Wörter registrieren",
+  "customDictionaryWordTooLong": "Wörter dürfen höchstens {count} Zeichen lang sein",
 
   "diaryDayEmpty": "Keine Tagebucheinträge an diesem Tag",
   "diaryPickDateTooltip": "Datum auswählen",
@@ -339,6 +345,7 @@
   "fontImpact": "Impact",
   "fontCute": "Niedlich",
   "mediaPickFailed": "Foto/Video konnte nicht ausgewählt werden: {error}",
+  "videoTooLargeToAttach": "Dieses Video ist zu groß zum Anhängen (max. 500 MB)",
   "@mediaPickFailed": {
     "placeholders": { "error": { "type": "String" } }
   },

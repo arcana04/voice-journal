@@ -121,6 +121,7 @@
   "integrationsOff": "Off",
   "integrationsPermissionDenied": "Calendar access wasn't granted. You can allow it from the system Settings app.",
   "integrationsNoCalendars": "No writable calendars were found on this device. Add a calendar (like a Google account) in the system Settings app, then refresh.",
+  "integrationsSelectedCalendarMissing": "The calendar you had selected couldn't be found — it may have been deleted. Please choose another one below.",
   "integrationsGoogleCalendarHint": "Want to use Google Calendar? Add your Google account under iOS Settings → Calendar → Accounts, and it will show up here.",
   "integrationsRefresh": "Refresh",
   "appleRemindersSettingsTitle": "Reminders",
@@ -128,6 +129,7 @@
   "appleRemindersDescription": "Choose a list from the device's Reminders app. Once turned on, any task with a due date will automatically be added there, and completing it in the app marks it as completed in Reminders too.",
   "appleRemindersPermissionDenied": "Reminders access wasn't granted. You can allow it from the system Settings app.",
   "appleRemindersNoLists": "No writable reminder lists were found. Create a list in the Reminders app, then refresh.",
+  "appleRemindersSelectedListMissing": "The list you had selected couldn't be found — it may have been deleted. Please choose another one below.",
   "notionSettingsRowTitle": "Notion",
   "notionScreenTitle": "Notion Integration",
   "notionIntroDescription": "Send tasks, diary entries, and ideas to a Notion database with one tap. First create an integration on Notion, then share the page you want to use with that integration.",
@@ -166,6 +168,8 @@
   "watchPairingButton": "Pair Apple Watch",
   "watchPairingSuccessTitle": "Paired",
   "watchPairingSuccessMessage": "Your Apple Watch is paired. You can now record on the Watch by itself.",
+  "watchPairingPendingTitle": "Couldn't confirm pairing",
+  "watchPairingPendingMessage": "Pairing info was sent to your Watch, but we couldn't confirm it finished. Keep the Watch nearby with its app open and try again.",
   "integrationsWatchRowTitle": "Apple Watch",
   "watchScreenTitle": "Apple Watch",
   "watchScreenDescription": "Pairing lets you record and get AI sorting on your Apple Watch alone, without carrying your iPhone. Keep your iPhone and Watch nearby with Bluetooth on while pairing.",
@@ -311,6 +315,8 @@
   "descriptionHint": "e.g. A friend from university",
   "add": "Add",
   "customDictionaryEmpty": "No words registered yet",
+  "customDictionaryLimitReached": "You can register up to {count} words",
+  "customDictionaryWordTooLong": "Words must be {count} characters or fewer",
 
   "diaryDayEmpty": "No diary entries this day",
   "diaryPickDateTooltip": "Pick a date",
@@ -339,6 +345,7 @@
   "fontImpact": "Impact",
   "fontCute": "Cute",
   "mediaPickFailed": "Failed to select photo/video: {error}",
+  "videoTooLargeToAttach": "This video is too large to attach (max 500MB)",
   "@mediaPickFailed": {
     "placeholders": { "error": { "type": "String" } }
   },

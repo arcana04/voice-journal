@@ -121,6 +121,7 @@
   "integrationsOff": "Désactivé",
   "integrationsPermissionDenied": "L'accès au calendrier n'a pas été accordé. Tu peux l'autoriser depuis l'application Réglages du système.",
   "integrationsNoCalendars": "Aucun calendrier modifiable n'a été trouvé sur cet appareil. Ajoute un calendrier (comme un compte Google) dans l'application Réglages du système, puis actualise.",
+  "integrationsSelectedCalendarMissing": "Le calendrier que tu avais sélectionné est introuvable — il a peut-être été supprimé. Choisis-en un autre ci-dessous.",
   "integrationsGoogleCalendarHint": "Envie d'utiliser Google Agenda ? Ajoute ton compte Google dans Réglages iOS → Calendrier → Comptes, il apparaîtra ici.",
   "integrationsRefresh": "Actualiser",
   "appleRemindersSettingsTitle": "Rappels",
@@ -128,6 +129,7 @@
   "appleRemindersDescription": "Choisis une liste depuis l'application Rappels de l'appareil. Une fois activé, toute tâche avec une date d'échéance y sera automatiquement ajoutée, et la marquer comme terminée dans l'application la marquera aussi comme terminée dans Rappels.",
   "appleRemindersPermissionDenied": "L'accès à Rappels n'a pas été accordé. Tu peux l'autoriser depuis l'application Réglages du système.",
   "appleRemindersNoLists": "Aucune liste de rappels modifiable n'a été trouvée. Crée une liste dans l'application Rappels, puis actualise.",
+  "appleRemindersSelectedListMissing": "La liste que tu avais sélectionnée est introuvable — elle a peut-être été supprimée. Choisis-en une autre ci-dessous.",
   "notionSettingsRowTitle": "Notion",
   "notionScreenTitle": "Intégration Notion",
   "notionIntroDescription": "Envoie tes tâches, entrées de journal et idées vers une base de données Notion en un geste. Crée d'abord une intégration sur Notion, puis partage avec elle la page que tu veux utiliser.",
@@ -166,6 +168,8 @@
   "watchPairingButton": "Coupler l'Apple Watch",
   "watchPairingSuccessTitle": "Couplée",
   "watchPairingSuccessMessage": "Ton Apple Watch est couplée. Tu peux maintenant enregistrer directement depuis la Watch.",
+  "watchPairingPendingTitle": "Confirmation impossible",
+  "watchPairingPendingMessage": "Les infos de couplage ont été envoyées à la Watch, mais on n'a pas pu confirmer que ça s'est terminé. Garde la Watch à proximité avec son app ouverte et réessaie.",
   "integrationsWatchRowTitle": "Apple Watch",
   "watchScreenTitle": "Apple Watch",
   "watchScreenDescription": "Une fois couplée, tu peux enregistrer et profiter du tri par IA directement sur ton Apple Watch, sans avoir ton iPhone sur toi. Garde l'iPhone et la Watch à proximité avec le Bluetooth activé pendant le couplage.",
@@ -311,6 +315,8 @@
   "descriptionHint": "p. ex. Un ami de l'université",
   "add": "Ajouter",
   "customDictionaryEmpty": "Aucun mot enregistré pour l'instant",
+  "customDictionaryLimitReached": "Tu peux enregistrer jusqu'à {count} mots",
+  "customDictionaryWordTooLong": "Les mots doivent faire {count} caractères ou moins",
 
   "diaryDayEmpty": "Aucune entrée de journal ce jour-là",
   "diaryPickDateTooltip": "Choisir une date",
@@ -339,6 +345,7 @@
   "fontImpact": "Impact",
   "fontCute": "Mignonne",
   "mediaPickFailed": "Échec de la sélection de la photo/vidéo : {error}",
+  "videoTooLargeToAttach": "Cette vidéo est trop volumineuse pour être jointe (500 Mo max)",
   "@mediaPickFailed": {
     "placeholders": { "error": { "type": "String" } }
   },

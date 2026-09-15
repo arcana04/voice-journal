@@ -321,6 +321,10 @@ class AppLocalizationsJa extends AppLocalizations {
       '書き込み可能なカレンダーが端末に見つかりませんでした。設定アプリでGoogleアカウントなどのカレンダーを追加してから、再読み込みしてください。';
 
   @override
+  String get integrationsSelectedCalendarMissing =>
+      '以前選択していたカレンダーが見つかりませんでした。削除された可能性があります。下から選び直してください。';
+
+  @override
   String get integrationsGoogleCalendarHint =>
       'Googleカレンダーを使いたい場合は、iOSの「設定」→「カレンダー」→「アカウント」からGoogleアカウントを追加すると、ここに表示されるようになります。';
 
@@ -344,6 +348,10 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get appleRemindersNoLists =>
       '書き込み可能なリマインダーリストが見つかりませんでした。リマインダーアプリでリストを作成してから、再読み込みしてください。';
+
+  @override
+  String get appleRemindersSelectedListMissing =>
+      '以前選択していたリストが見つかりませんでした。削除された可能性があります。下から選び直してください。';
 
   @override
   String get notionSettingsRowTitle => 'Notion';
@@ -456,6 +464,13 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get watchPairingSuccessMessage =>
       'Apple Watchとのペアリングが完了しました。Watch単体で録音できます。';
+
+  @override
+  String get watchPairingPendingTitle => '確認できませんでした';
+
+  @override
+  String get watchPairingPendingMessage =>
+      'ペアリング情報はWatchへ送信しましたが、完了したかの確認が取れませんでした。Watchが近くにあり、Watchアプリを開いた状態でもう一度お試しください。';
 
   @override
   String get integrationsWatchRowTitle => 'Apple Watch';
@@ -872,6 +887,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get customDictionaryEmpty => '登録された単語はまだありません';
 
   @override
+  String customDictionaryLimitReached(Object count) {
+    return '登録できる単語は最大$count件までです';
+  }
+
+  @override
+  String customDictionaryWordTooLong(Object count) {
+    return '単語は$count文字以内で入力してください';
+  }
+
+  @override
   String get diaryDayEmpty => 'この日の日記・感想はありません';
 
   @override
@@ -947,6 +972,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String mediaPickFailed(String error) {
     return '写真・動画の選択に失敗しました: $error';
   }
+
+  @override
+  String get videoTooLargeToAttach => '動画のサイズが大きすぎるため添付できません(500MBまで)';
 
   @override
   String get pickPhotosFromLibrary => '写真を選択';
