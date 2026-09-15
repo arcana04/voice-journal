@@ -1340,7 +1340,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get orphanedRecordingDiscardedMessage =>
-      '지난번에 저장되지 않은 녹음을 발견했지만 복구할 수 없어 삭제했어요';
+      '지난번 녹음 중에 앱이 종료되어 해당 녹음은 저장되지 않았어요';
 
   @override
   String get dragCardHere => '카드를 여기로 드래그하세요';

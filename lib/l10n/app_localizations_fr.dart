@@ -1411,7 +1411,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get orphanedRecordingDiscardedMessage =>
-      'Un enregistrement non sauvegardé la dernière fois a été trouvé, mais il n\'a pas pu être récupéré et a donc été supprimé';
+      'L\'appli s\'est fermée pendant l\'enregistrement la dernière fois, donc cet enregistrement n\'a pas été sauvegardé';
 
   @override
   String get dragCardHere => 'Fais glisser une carte ici';

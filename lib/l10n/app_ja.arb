@@ -447,7 +447,7 @@
   "recoveredRecordingTitle": "未保存の録音が見つかりました",
   "recoveredRecordingMessage": "前回、保存される前にアプリが終了してしまった録音が端末に残っています。今すぐ処理しますか?",
   "recoveredRecordingProcess": "処理する",
-  "orphanedRecordingDiscardedMessage": "前回保存されなかった録音が見つかりましたが、復旧できなかったため削除しました",
+  "orphanedRecordingDiscardedMessage": "録音中にアプリが終了したため、その録音は保存されませんでした",
   "dragCardHere": "ここにカードをドラッグ",
   "addCardButton": "カードを追加",
 

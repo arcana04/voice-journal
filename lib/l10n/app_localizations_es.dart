@@ -1401,7 +1401,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get orphanedRecordingDiscardedMessage =>
-      'Se encontró una grabación que no se guardó la última vez, pero no se pudo recuperar, así que se eliminó';
+      'La app se cerró mientras grababas la última vez, así que esa grabación no se guardó';
 
   @override
   String get dragCardHere => 'Arrastra una tarjeta aquí';

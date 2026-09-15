@@ -2629,7 +2629,7 @@ abstract class AppLocalizations {
   /// No description provided for @orphanedRecordingDiscardedMessage.
   ///
   /// In en, this message translates to:
-  /// **'Found a recording that wasn\'t saved last time, but it couldn\'t be recovered, so it was deleted'**
+  /// **'The app closed while recording last time, so that recording wasn\'t saved'**
   String get orphanedRecordingDiscardedMessage;
 
   /// No description provided for @dragCardHere.

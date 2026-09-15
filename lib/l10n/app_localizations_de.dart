@@ -1404,7 +1404,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get orphanedRecordingDiscardedMessage =>
-      'Eine nicht gespeicherte Aufnahme vom letzten Mal wurde gefunden, konnte aber nicht wiederhergestellt werden und wurde gelöscht';
+      'Die App wurde letztes Mal während der Aufnahme beendet, daher wurde diese Aufnahme nicht gespeichert';
 
   @override
   String get dragCardHere => 'Ziehe eine Karte hierher';

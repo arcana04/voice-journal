@@ -1388,7 +1388,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orphanedRecordingDiscardedMessage =>
-      'Found a recording that wasn\'t saved last time, but it couldn\'t be recovered, so it was deleted';
+      'The app closed while recording last time, so that recording wasn\'t saved';
 
   @override
   String get dragCardHere => 'Drag a card here';

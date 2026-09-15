@@ -477,7 +477,7 @@
   "recoveredRecordingTitle": "Se encontró una grabación sin guardar",
   "recoveredRecordingMessage": "Hay una grabación en este dispositivo de antes de que la app se cerrara inesperadamente. ¿Quieres procesarla ahora?",
   "recoveredRecordingProcess": "Procesar",
-  "orphanedRecordingDiscardedMessage": "Se encontró una grabación que no se guardó la última vez, pero no se pudo recuperar, así que se eliminó",
+  "orphanedRecordingDiscardedMessage": "La app se cerró mientras grababas la última vez, así que esa grabación no se guardó",
   "dragCardHere": "Arrastra una tarjeta aquí",
   "addCardButton": "Añadir tarjeta",
 

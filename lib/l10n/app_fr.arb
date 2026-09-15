@@ -477,7 +477,7 @@
   "recoveredRecordingTitle": "Enregistrement non sauvegardé trouvé",
   "recoveredRecordingMessage": "Il y a un enregistrement sur cet appareil datant d'avant la fermeture inattendue de l'application. Veux-tu le traiter maintenant ?",
   "recoveredRecordingProcess": "Traiter",
-  "orphanedRecordingDiscardedMessage": "Un enregistrement non sauvegardé la dernière fois a été trouvé, mais il n'a pas pu être récupéré et a donc été supprimé",
+  "orphanedRecordingDiscardedMessage": "L'appli s'est fermée pendant l'enregistrement la dernière fois, donc cet enregistrement n'a pas été sauvegardé",
   "dragCardHere": "Fais glisser une carte ici",
   "addCardButton": "Ajouter une carte",
 

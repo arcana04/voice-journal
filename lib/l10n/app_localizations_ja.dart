@@ -1337,7 +1337,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get orphanedRecordingDiscardedMessage =>
-      '前回保存されなかった録音が見つかりましたが、復旧できなかったため削除しました';
+      '録音中にアプリが終了したため、その録音は保存されませんでした';
 
   @override
   String get dragCardHere => 'ここにカードをドラッグ';
