@@ -107,7 +107,14 @@ class CloudSyncService {
             (t) => _taskToFirestoreMap(
               _stripLocalKeys(t.toMap())
                 ..remove('calendar_event_id')
-                ..remove('apple_reminder_id'),
+                ..remove('apple_reminder_id')
+                // 端末のカレンダーID（OS/コンテンツプロバイダのローカルな
+                // 整数/文字列ID）。他の端末・他のアカウントでは同じIDが
+                // 全く別のカレンダーを指し得るため、同期して良い情報ではない
+                // ——含めたまま同期すると、別端末側のjournal_store.dartが
+                // このIDを信じて誤った（無関係な）カレンダーに予定を作成・
+                // 更新・削除してしまう。
+                ..remove('calendar_id'),
             ),
           )
           .toList(),
