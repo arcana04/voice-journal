@@ -671,7 +671,10 @@ ${weekdayTable}
    - 【tasks（ToDo）】: 「確定した行動」。話者が実際にやる・やらないといけないと言っていること。
    - 【notes category="アイデア"】: 未確定な思いつき・疑問・アイデア・検討事項。
    - 【notes category="感情ログ"】: 感情・気分・愚痴・モヤモヤ・出来事の振り返りなど、行動を伴わない心情の吐露。
-4. 話が脱線している場合は、文脈ごとに適切に分類を分けてください。
+4. 話が脱線している場合は、文脈ごとに適切に分類を分けてください。これはタスクが連続して語られている場合にも当てはまります——同じ書き起こしのどこかで語られた感情・気分・振り返りや未確定なアイデアは、必ず独立したnoteにしてください。連続するタスクの陰に埋もれさせたり、黙って吸収させたりしないこと。出力を確定する前に、書き起こし全体をもう一度見直し、感情・気分・未確定なアイデアだけの文(ToDoではないもの)がすべてnotesに対応するエントリを持っているか確認してください。
+5. 冒頭の一文が「よく眠れてすごく元気！」のような短い感情・気分の一言である場合は、特に注意してください。冒頭に来たからといって単なる導入・前置きとして扱わず、書き起こしの途中や終わりに出てきた場合と全く同じように、独立した【notes category="感情ログ"】エントリとして扱ってください。冒頭の一文だからといって分類対象から除外されることはありません。
+6. 単に一覧を告知・導入・締めくくるだけの前置き・メタ的な発言(例:「明日と金曜日の予定を確認しておかないと」「予定を確認しよう」「よし、全部確認しておこう」)は、それ自体はタスクではありません。それ自体には具体的な成果が無く、あくまでこの後に続く具体的な項目への導入(または締めくくり)に過ぎません。このような前置き文をタイトルにしたタスクを作らないこと。タスクは、話者がその後に実際に挙げる具体的な出来事・行動だけから抽出してください。
+7. 話者が一息に多数(4件、5件以上)の予定・締切を列挙する場合(一日または一週間分の予定を読み上げる等)、それぞれを個別の時刻付きタスクとしてすべて抽出してください。項目数が多いことは、複数の項目を1つのタスクにまとめたり、統合したり、黙って取りこぼしたりする理由にはなりません。同じ書き起こしの中に他にアイデアや感情が含まれている場合も同様で、どのカテゴリも他のカテゴリを押しのけないようにしてください。
 
 【ヘッジ表現は「確定した行動」ではない】
 具体的な行動の内容が続くからといって、それだけでtasksにはなりません。「たぶん」「かも」「〜しようかな」「そのうち」「気が向いたら」「いつか」のようなヘッジ表現(断定を避ける言い回し)がある場合、具体的な行動名詞が続いていても【notes category="アイデア"】に分類してください(例:「たぶん今年スペイン語始めるかも」はアイデア、タスクではない。「そのうち椅子買い替えたいな」もアイデア)。話者が実際に決めた・既に始めている・確定した意志で述べている(「〜する」「〜しないと」とヘッジ無しで言い切っている)場合のみtasksにしてください。
@@ -687,6 +690,7 @@ tasksの中に「15時に」「明日の朝9時」「夜7時に病院」のよ�
 さらに「10時から17時まで」「15時〜16時半」のように終了時刻まで明言されている場合は、同じ日付を基準に reminder_end_at にも同じ形式で終了日時を入れてください。終了時刻が翌日にまたがる場合（例:「夜22時から翌朝6時まで」）は日付を1日進めてください。終了時刻の明言が無ければ reminder_end_at は null にしてください。
 「3時に」のように午前/午後や24時間表記で明確に区別できない時刻が出てきた場合は、その行動の内容から一日のうちどの時間帯が自然かを推測してください（例:「コーヒー」「朝食」「散歩」「送り出し」なら午前、「会議」「夕食」「夜の予定」なら午後・夜）。行動の内容からも判断材料が無い場合に限り、素の数字1〜6は午後（13〜18時）、7〜11は午前（7〜11時）として扱ってください——これはあくまで最後の手段の推測であり確実ではないため、行動から推測できる場合はそちらを優先してください。
 「今から3時間後」「30分後」「1時間したら」のように、絶対時刻ではなく録音している「今」を起点にした相対時間で言っている場合は、上記の現在時刻を起点として加算し、実際の日時をreminder_atに入れてください（日をまたぐ場合はdue_date/reminder_atの日付を1日進めてください）。
+同じタスクに due_date と reminder_at の両方を設定する場合、両者が指すカレンダー上の日付は必ず一致させてください。期限の言い回しと時刻の言い回しを別々に解釈して矛盾する日付にしないこと。
 
 【労いメッセージ】
 分類の結果、category="感情ログ" のnoteが1件以上ある場合のみ、その内容に寄り添う一言（10〜40文字程度、説教や解決策の押し付けにならない労いの言葉）を comfort_message に入れてください。感情ログが無い場合は comfort_message は null にしてください。
@@ -772,6 +776,7 @@ If a task explicitly states a time (e.g. "at 3pm", "tomorrow morning at 9", "7pm
 If an end time is also explicitly stated (e.g. "from 10am to 5pm", "3pm to 4:30pm"), put that end date/time in reminder_end_at using the same format and date. If the end time crosses into the next day (e.g. "10pm to 6am"), advance the date by one day. If no end time is stated, set reminder_end_at to null.
 When a stated time has no am/pm marker and isn't otherwise disambiguated (e.g. "at 8:00", "at 3"), infer am/pm from what the activity itself implies about the time of day — coffee/breakfast/a morning walk/school drop-off imply am; a work meeting/dinner/an evening event implies pm; use whatever everyday scheduling convention a reasonable person would assume for that specific activity. Only when the activity gives no such clue at all, fall back to treating bare hours 7-11 as am and bare hours 1-6 as pm (the more common everyday reading for an unqualified reminder time) — this fallback is a best-effort guess, not a certainty, so prefer genuine contextual inference over it whenever the activity offers any hint.
 If a task instead states a relative time from "now" (the moment of recording), such as "in 3 hours", "in 30 minutes", or "an hour from now", add that duration to the current time given above and put the resulting date/time in reminder_at (advance the date by one day if the addition crosses midnight).
+When a task gets both a due_date and a reminder_at, make sure the calendar date they point to agrees — don't interpret the due-date phrase and the time phrase independently in a way that produces contradictory dates.
 
 [Comforting message]
 Only if there is at least one note with category="感情ログ", write a short, warm one-liner (about 10-25 words) that acknowledges the feeling without lecturing or pushing a solution, and put it in comfort_message. If there is no 感情ログ note, set comfort_message to null.
@@ -838,7 +843,10 @@ Cuando el hablante mencione un día de la semana concreto (p. ej. "jueves", "el 
    - [tasks (tarea)]: una "acción confirmada" — algo que el hablante dice que hará o necesita hacer.
    - [notes category="アイデア"]: una idea, pregunta o pensamiento sin confirmar, o algo a considerar.
    - [notes category="感情ログ"]: un sentimiento, estado de ánimo, queja o reflexión sobre algo ocurrido, sin ninguna acción asociada.
-4. Si el hablante salta entre temas, divide el contenido en entradas separadas clasificadas apropiadamente.
+4. Si el hablante salta entre temas, divide el contenido en entradas separadas clasificadas apropiadamente. Esto aplica incluso cuando se mencionan varias tareas seguidas: un sentimiento/estado de ánimo/reflexión o una idea sin confirmar mencionados en cualquier parte de la misma transcripción deben convertirse igualmente en su propia nota — nunca dejes que una racha de tareas eclipse o absorba silenciosamente un sentimiento o idea mencionados en otra parte de la misma transcripción. Antes de finalizar tu respuesta, revisa una vez más toda la transcripción en busca de cualquier frase que sea puramente un sentimiento, estado de ánimo o idea sin confirmar (no una tarea) y asegúrate de que cada una tenga su entrada correspondiente en notes.
+5. Presta especial atención cuando la primera frase sea una breve exclamación de sentimiento/estado de ánimo (p. ej. "¡Dormí genial y hoy tengo muchísima energía!"). NO la trates como mera introducción o frase de relleno solo por venir primero — necesita su propia entrada [notes category="感情ログ"] exactamente igual que si apareciera en medio o al final de la transcripción. La primera línea de una transcripción no está exenta de clasificación.
+6. El lenguaje de encuadre/meta que solo anuncia, introduce o cierra una lista de elementos (p. ej. "tengo que confirmar mi agenda de mañana y el viernes", "repasemos mi horario", "bueno, asegurémonos de que todo esté listo") NO es en sí mismo una tarea. No tiene un resultado concreto propio — es solo una introducción a (o un comentario de cierre sobre) los elementos concretos que siguen. Nunca crees una tarea titulada con este tipo de frase de encuadre; extrae tareas solo de los eventos/acciones concretos que el hablante enumera después.
+7. Cuando el hablante enumera muchos eventos/citas/plazos de un tirón (cuatro, cinco o más — p. ej. recitando la agenda completa de un día o una semana), extrae cada uno como su propia tarea separada con su propia hora. Una lista larga nunca es motivo para resumir varios elementos en una sola tarea, fusionarlos o descartar alguno silenciosamente — y esto se cumple incluso cuando la misma transcripción también contiene una idea o un sentimiento en otra parte; ninguna categoría debe eclipsar a las demás.
 
 [Las intenciones con reservas NO son acciones confirmadas]
 Que se mencione una acción concreta no basta para clasificarlo como tarea. Presta atención a expresiones de duda como "quizás", "tal vez", "estoy pensando en", "si algún día", "me gustaría", "no sé cuándo/si" — cuando aparezca este tipo de lenguaje dubitativo, clasifícalo como [notes category="アイデア"] aunque le siga un sustantivo de acción concreto (por ejemplo, "tal vez empiece clases de español este año" es una idea, no una tarea; "si algún día me suben el sueldo, querría una silla nueva" es una idea, no una tarea). Clasifica como tarea solo cuando el hablante exprese o implique una decisión o compromiso real — ya programado, ya iniciado, o expresado con intención segura ("voy a", "tengo que") sin reservas.
@@ -854,6 +862,7 @@ Si una tarea indica explícitamente una hora (por ejemplo "a las 3pm", "mañana 
 Si también se indica explícitamente una hora de finalización (por ejemplo "de 10am a 5pm", "de 3pm a 4:30pm"), pon esa fecha/hora de fin en reminder_end_at con el mismo formato y fecha. Si la hora de fin cruza al día siguiente (por ejemplo "de 10pm a 6am"), avanza la fecha un día. Si no se indica hora de fin, deja reminder_end_at en null.
 Cuando una hora indicada no tiene marca am/pm y no queda desambiguada de otro modo (por ejemplo "a las 8:00", "a las 3"), infiere am/pm a partir de lo que la propia actividad sugiere sobre el momento del día — café/desayuno/un paseo matutino/llevar a los niños al colegio sugiere am; una reunión de trabajo/cena/un evento nocturno sugiere pm; usa la convención cotidiana que una persona razonable asumiría para esa actividad concreta. Solo cuando la actividad no dé ninguna pista, usa como último recurso: horas sueltas 7-11 como am y horas sueltas 1-6 como pm (la lectura más habitual para una hora sin especificar) — esto es una suposición de último recurso, no una certeza, así que prefiere siempre la inferencia contextual cuando la actividad la permita.
 Si en cambio una tarea indica una hora relativa a "ahora" (el momento de la grabación), como "dentro de 3 horas", "en 30 minutos" o "dentro de una hora", suma esa duración a la hora actual indicada arriba y pon la fecha/hora resultante en reminder_at (avanza la fecha un día si la suma cruza la medianoche).
+Cuando una tarea tenga tanto due_date como reminder_at, asegúrate de que la fecha del calendario a la que apuntan coincida — no interpretes la expresión de fecha límite y la expresión de hora por separado de forma que generen fechas contradictorias.
 
 [Mensaje de consuelo]
 Solo si hay al menos una nota con category="感情ログ", escribe una frase corta y cálida (unas 10-25 palabras) que reconozca el sentimiento sin sermonear ni imponer una solución, y ponla en comfort_message. Si no hay ninguna nota 感情ログ, deja comfort_message en null.
@@ -920,7 +929,10 @@ Wenn die sprechende Person einen konkreten Wochentag nennt (z. B. "Donnerstag", 
    - [tasks (Aufgabe)]: eine "bestätigte Handlung" — etwas, von dem die sprechende Person sagt, dass sie es tun wird oder muss.
    - [notes category="アイデア"]: eine unbestätigte Idee, Frage oder ein Gedanke, oder etwas zum Nachdenken.
    - [notes category="感情ログ"]: ein Gefühl, eine Stimmung, eine Beschwerde oder eine Reflexion über etwas Geschehenes, ohne zugehörige Handlung.
-4. Wenn die sprechende Person zwischen Themen springt, teile den Inhalt in separate, entsprechend klassifizierte Einträge auf.
+4. Wenn die sprechende Person zwischen Themen springt, teile den Inhalt in separate, entsprechend klassifizierte Einträge auf. Das gilt auch, wenn mehrere Aufgaben hintereinander genannt werden: ein Gefühl/eine Stimmung/eine Reflexion oder eine unbestätigte Idee, die irgendwo im selben Transkript erwähnt wird, muss trotzdem zu einer eigenen Notiz werden — lass niemals zu, dass eine Reihe von Aufgaben ein an anderer Stelle im selben Transkript erwähntes Gefühl oder eine Idee verdrängt oder stillschweigend aufnimmt. Überprüfe vor der endgültigen Ausgabe das gesamte Transkript noch einmal auf Sätze, die rein ein Gefühl, eine Stimmung oder eine unbestätigte Idee sind (keine Aufgabe), und stelle sicher, dass jeder davon einen passenden Eintrag in notes hat.
+5. Achte besonders darauf, wenn der allererste Satz ein kurzer Gefühls-/Stimmungsausruf ist (z. B. "Ich habe so gut geschlafen und fühle mich heute super energiegeladen!"). Behandle ihn NICHT nur deshalb, weil er zuerst kommt, als bloße Einleitung oder Nebensächlichkeit — er braucht genau wie in der Mitte oder am Ende des Transkripts einen eigenen [notes category="感情ログ"]-Eintrag. Die Eröffnungszeile eines Transkripts ist von der Klassifizierung nicht ausgenommen.
+6. Rahmen-/Meta-Sprache, die eine Liste von Punkten nur ankündigt, einleitet oder abschließt (z. B. "Ich muss meinen Zeitplan für morgen und Freitag festzurren", "gehen wir meinen Terminplan durch", "gut, stellen wir sicher, dass alles steht"), ist selbst KEINE Aufgabe. Sie hat kein eigenes konkretes Ergebnis — sie ist nur eine Einleitung zu (oder eine Abschlussbemerkung über) die konkreten Punkte, die danach folgen. Erstelle niemals eine Aufgabe, die nach so einem Rahmensatz benannt ist; extrahiere Aufgaben nur aus den tatsächlichen konkreten Ereignissen/Handlungen, die die sprechende Person danach aufzählt.
+7. Wenn die sprechende Person in einem Atemzug viele Termine/Ereignisse/Fristen aufzählt (vier, fünf oder mehr — z. B. den kompletten Tages- oder Wochenplan aufsagt), extrahiere jeden einzelnen als eigene separate Aufgabe mit eigener Uhrzeit. Eine lange Liste ist niemals ein Grund, mehrere Punkte zu einer Aufgabe zusammenzufassen, sie zu verschmelzen oder einen davon stillschweigend fallen zu lassen — das gilt auch, wenn dasselbe Transkript an anderer Stelle zusätzlich eine Idee oder ein Gefühl enthält; keine Kategorie darf eine andere verdrängen.
 
 [Vage formulierte Absichten sind KEINE bestätigten Handlungen]
 Eine konkrete Handlung wird nicht schon dadurch zur Aufgabe, dass sie genannt wird. Achte auf einschränkende Formulierungen wie "vielleicht", "ich glaube", "ich denke darüber nach", "falls ich mal", "ich würde gerne", "weiß nicht wann/ob" — wenn solche Formulierungen vorkommen, klassifiziere es als [notes category="アイデア"], auch wenn danach ein konkretes Handlungssubstantiv folgt (z. B. ist "vielleicht fange ich dieses Jahr mit Spanischkursen an" eine Idee, keine Aufgabe; "falls ich mal eine Gehaltserhöhung bekomme, würde ich gerne einen neuen Stuhl haben" ist eine Idee, keine Aufgabe). Klassifiziere nur dann als Aufgabe, wenn die sprechende Person eine tatsächliche Entscheidung oder Verpflichtung ausdrückt oder impliziert — bereits geplant, bereits begonnen, oder mit sicherer Absicht ohne Einschränkung geäußert ("ich werde", "ich muss").
@@ -936,6 +948,7 @@ Wenn eine Aufgabe explizit eine Uhrzeit nennt (z. B. "um 15 Uhr", "morgen früh 
 Wenn auch explizit eine Endzeit angegeben ist (z. B. "von 10 bis 17 Uhr", "15 bis 16:30 Uhr"), trage dieses Enddatum/diese Endzeit im gleichen Format und Datum in reminder_end_at ein. Wenn die Endzeit auf den nächsten Tag übergreift (z. B. "22 Uhr bis 6 Uhr morgens"), erhöhe das Datum um einen Tag. Wenn keine Endzeit angegeben ist, setze reminder_end_at auf null.
 Wenn eine genannte Uhrzeit nicht eindeutig ist (z. B. "um 8", "um 3" ohne "Uhr morgens/abends" oder 24-Stunden-Kontext), leite vormittags/nachmittags aus dem ab, was die Aktivität selbst über die Tageszeit nahelegt — Kaffee/Frühstück/ein Morgenspaziergang/Kinder zur Schule bringen deutet auf vormittags hin; ein Arbeitstermin/Abendessen/eine Abendveranstaltung deutet auf nachmittags/abends hin; orientiere dich daran, was eine vernünftige Person für diese konkrete Aktivität annehmen würde. Nur wenn die Aktivität keinerlei Hinweis gibt, nutze als letzten Ausweg: einzelne Stunden 7-11 als vormittags und 1-6 als nachmittags (die im Alltag üblichere Lesart bei nicht näher bestimmter Uhrzeit) — das ist nur eine Notlösung, keine Gewissheit, bevorzuge also immer die inhaltliche Ableitung, wenn die Aktivität einen Hinweis gibt.
 Wenn eine Aufgabe stattdessen eine relative Zeitangabe ab "jetzt" (dem Moment der Aufnahme) macht, z. B. "in 3 Stunden", "in 30 Minuten" oder "in einer Stunde", addiere diese Dauer zur oben angegebenen aktuellen Uhrzeit und trage das resultierende Datum/die Uhrzeit in reminder_at ein (erhöhe das Datum um einen Tag, wenn die Addition Mitternacht überschreitet).
+Wenn eine Aufgabe sowohl due_date als auch reminder_at erhält, stelle sicher, dass sich beide auf dasselbe Kalenderdatum beziehen — interpretiere die Fälligkeitsangabe und die Zeitangabe nicht unabhängig voneinander auf eine Weise, die zu widersprüchlichen Daten führt.
 
 [Trostspendende Nachricht]
 Nur wenn es mindestens eine Notiz mit category="感情ログ" gibt, schreibe einen kurzen, warmherzigen Einzeiler (etwa 10-25 Wörter), der das Gefühl anerkennt, ohne zu belehren oder eine Lösung aufzudrängen, und trage ihn in comfort_message ein. Wenn es keine 感情ログ-Notiz gibt, setze comfort_message auf null.
@@ -1002,7 +1015,10 @@ ${weekdayTable}
    - [tasks (할 일)]: "확정된 행동" — 화자가 하겠다고 말했거나 해야 한다고 말한 것.
    - [notes category="アイデア"]: 아직 확정되지 않은 아이디어, 질문, 생각, 또는 고려해볼 만한 것.
    - [notes category="感情ログ"]: 관련된 행동 없이, 감정·기분·불평·있었던 일에 대한 회고.
-4. 화자가 화제를 넘나들면, 각 문맥에 맞게 별도의 항목으로 나누어 분류하세요.
+4. 화자가 화제를 넘나들면, 각 문맥에 맞게 별도의 항목으로 나누어 분류하세요. 이는 할 일이 연달아 언급되는 경우에도 적용됩니다 — 같은 녹취록의 어딘가에서 언급된 감정/기분/회고나 미확정 아이디어는 반드시 별도의 note가 되어야 합니다. 연속된 할 일들이 다른 곳에서 언급된 감정이나 아이디어를 밀어내거나 조용히 흡수하게 두지 마세요. 최종 출력을 확정하기 전에 녹취록 전체를 한 번 더 훑어보며, 순수하게 감정·기분·미확정 아이디어만 담긴 문장(할 일이 아닌 것)이 모두 notes에 대응하는 항목을 갖고 있는지 확인하세요.
+5. 첫 문장이 "오늘 정말 잘 자서 기운이 넘쳐!"처럼 짧은 감정/기분 표현인 경우 특히 주의하세요. 맨 처음에 나온다는 이유만으로 단순한 도입부나 사족으로 취급하지 말고, 녹취록 중간이나 끝에 나왔을 때와 완전히 동일하게 독립된 [notes category="感情ログ"] 항목이 필요합니다. 녹취록의 첫 줄이라고 해서 분류 대상에서 제외되지 않습니다.
+6. 항목 목록을 단순히 알리거나 도입하거나 마무리하기만 하는 프레이밍/메타 발언(예: "내일이랑 금요일 일정을 확정해야 해", "일정 한번 점검해보자", "좋아, 다 확인됐는지 보자")은 그 자체로 할 일이 아닙니다. 그 자체에는 구체적인 결과물이 없고, 뒤이어 나오는 구체적인 항목들에 대한 도입(또는 마무리 멘트)일 뿐입니다. 이런 프레이밍 문장을 제목으로 한 할 일을 만들지 마세요. 할 일은 화자가 그 뒤에 실제로 나열하는 구체적인 사건/행동에서만 추출하세요.
+7. 화자가 한 번에 많은(4개, 5개 이상) 일정/약속/마감을 나열하는 경우(하루나 일주일치 일정을 쭉 읊는 등), 각각을 자신만의 시간을 가진 별도의 할 일로 모두 추출하세요. 목록이 길다는 이유로 여러 항목을 하나의 할 일로 요약하거나 합치거나 조용히 빠뜨려서는 안 됩니다 — 같은 녹취록에 아이디어나 감정이 다른 곳에 함께 있어도 마찬가지이며, 어떤 카테고리도 다른 카테고리를 밀어내서는 안 됩니다.
 
 [망설이는 표현은 "확정된 행동"이 아닙니다]
 구체적인 행동이 언급된다고 해서 그것만으로 tasks가 되지는 않습니다. "아마", "~인 것 같아", "~할까 생각 중이야", "혹시라도", "~하고 싶어", "언제/할지 모르겠어" 같은 망설이는 표현이 있으면, 구체적인 행동 명사가 뒤따르더라도 [notes category="アイデア"]로 분류하세요(예: "아마 올해 스페인어 시작할까 봐"는 아이디어이지 할 일이 아님, "혹시라도 월급 오르면 새 의자 사고 싶어"도 아이디어). 화자가 실제로 결정했거나, 이미 시작했거나, 망설임 없이 확실한 의지로 말한 경우("~할 거야", "~해야 해")에만 tasks로 분류하세요.
@@ -1018,6 +1034,7 @@ tasks 중 "오후 3시에", "내일 아침 9시", "저녁 7시 병원" 처럼 �
 "10시부터 5시까지", "오후 3시~4시 반"처럼 종료 시각까지 명시되어 있으면, 같은 형식과 날짜로 reminder_end_at에도 종료 일시를 넣으세요. 종료 시각이 다음 날로 넘어가는 경우(예: "밤 10시부터 다음 날 아침 6시까지")는 날짜를 하루 늘리세요. 종료 시각 언급이 없으면 reminder_end_at은 null로 두세요.
 "8시에", "3시에"처럼 오전/오후 구분이 없는 시각이 나오면, 그 활동 내용으로 미루어 하루 중 어느 시간대가 자연스러운지 추론하세요(예: "커피", "아침 식사", "산책", "등교"는 오전, "회의", "저녁 식사", "저녁 약속"은 오후/저녁). 활동 내용만으로도 판단 근거가 전혀 없을 때만 최후의 수단으로 1~6시는 오후, 7~11시는 오전으로 처리하세요 — 이는 어디까지나 최후의 추측이며 확실하지 않으므로, 활동에서 추론할 수 있다면 그쪽을 항상 우선하세요.
 "지금부터 3시간 후", "30분 후", "1시간 있다가"처럼 절대 시각이 아니라 녹음하는 "지금"을 기준으로 한 상대 시간을 말한 경우에는, 위에 제시된 현재 시각에 그 시간만큼 더해 실제 일시를 reminder_at에 넣으세요(자정을 넘기면 날짜를 하루 늘리세요).
+같은 할 일에 due_date와 reminder_at을 모두 넣는 경우, 두 값이 가리키는 달력상의 날짜가 반드시 일치해야 합니다 — 마감 표현과 시각 표현을 따로따로 해석해서 서로 모순되는 날짜가 되지 않도록 하세요.
 
 [위로 메시지]
 category="感情ログ"인 note가 하나 이상 있을 때만, 그 내용에 공감하는 짧고 따뜻한 한마디(약 10~25단어 분량)를 설교나 해결책 강요 없이 작성하여 comfort_message에 넣으세요. 感情ログ가 없으면 comfort_message는 null로 두세요.
@@ -1084,7 +1101,10 @@ Quand la personne nomme un jour de la semaine précis (par ex. "jeudi", "lundi p
    - [tasks (tâche)] : une "action confirmée" — quelque chose que la personne dit qu'elle va faire ou doit faire.
    - [notes category="アイデア"] : une idée, une question ou une pensée non confirmée, ou quelque chose à considérer.
    - [notes category="感情ログ"] : un sentiment, une humeur, une plainte ou une réflexion sur quelque chose qui s'est passé, sans action associée.
-4. Si la personne saute d'un sujet à l'autre, divise le contenu en entrées séparées classées de façon appropriée.
+4. Si la personne saute d'un sujet à l'autre, divise le contenu en entrées séparées classées de façon appropriée. Cela s'applique même quand plusieurs tâches sont mentionnées à la suite : un sentiment/une humeur/une réflexion ou une idée non confirmée mentionnés n'importe où dans la même transcription doivent quand même devenir leur propre note — ne laisse jamais une suite de tâches éclipser ou absorber silencieusement un sentiment ou une idée mentionnés ailleurs dans la même transcription. Avant de finaliser ta réponse, relis une fois toute la transcription à la recherche de toute phrase qui est purement un sentiment, une humeur ou une idée non confirmée (pas une tâche) et assure-toi que chacune ait une entrée correspondante dans notes.
+5. Fais particulièrement attention lorsque la toute première phrase est une courte exclamation de sentiment/humeur (par ex. "J'ai super bien dormi et je déborde d'énergie aujourd'hui !"). Ne la traite PAS comme une simple mise en contexte ou une remarque anodine juste parce qu'elle vient en premier — elle a quand même besoin de sa propre entrée [notes category="感情ログ"], exactement comme si elle apparaissait au milieu ou à la fin de la transcription. La première ligne d'une transcription n'est pas exemptée de classification.
+6. Le langage de cadrage/méta qui se contente d'annoncer, d'introduire ou de conclure une liste d'éléments (par ex. "il faut que je verrouille mon planning de demain et vendredi", "reprenons mon emploi du temps", "bon, assurons-nous que tout est en ordre") N'est PAS lui-même une tâche. Il n'a pas de résultat concret propre — ce n'est qu'une introduction à (ou une remarque de clôture sur) les éléments concrets qui suivent. Ne crée jamais de tâche intitulée d'après ce genre de phrase de cadrage ; n'extrais des tâches qu'à partir des événements/actions concrets que la personne énumère ensuite.
+7. Quand la personne énumère beaucoup d'événements/rendez-vous/échéances d'un coup (quatre, cinq ou plus — par ex. en récitant tout un planning de journée ou de semaine), extrais chacun comme sa propre tâche séparée avec sa propre heure. Une longue liste n'est jamais une raison de résumer plusieurs éléments en une seule tâche, de les fusionner, ou d'en laisser tomber un silencieusement — même lorsque la même transcription contient aussi une idée ou un sentiment ailleurs ; aucune catégorie ne doit en éclipser une autre.
 
 [Une intention hésitante n'est PAS une action confirmée]
 Ce n'est pas parce qu'une action concrète est mentionnée que c'est automatiquement une tâche. Fais attention aux formulations hésitantes comme "peut-être", "je pense", "je songe à", "si jamais", "j'aimerais", "je ne sais pas quand/si" — quand ce type de langage est présent, classe-le en [notes category="アイデア"] même si un nom d'action concret suit (par exemple, "je vais peut-être commencer des cours d'espagnol cette année" est une idée, pas une tâche ; "si jamais j'ai une augmentation, j'aimerais une nouvelle chaise" est une idée, pas une tâche). Ne classe en tâche que lorsque la personne exprime ou implique une décision ou un engagement réel — déjà planifié, déjà commencé, ou énoncé avec une intention affirmée sans hésitation ("je vais", "il faut que je").
@@ -1100,6 +1120,7 @@ Si une tâche indique explicitement une heure (par exemple "à 15h", "demain mat
 Si une heure de fin est aussi explicitement indiquée (par exemple "de 10h à 17h", "15h à 16h30"), place cette date/heure de fin dans reminder_end_at avec le même format et la même date. Si l'heure de fin se prolonge jusqu'au lendemain (par exemple "22h à 6h du matin"), avance la date d'un jour. Si aucune heure de fin n'est indiquée, laisse reminder_end_at à null.
 Quand une heure indiquée n'a pas d'indication matin/après-midi et n'est pas désambiguïsée autrement (par exemple "à 8h", "à 3" sans contexte 24h), déduis matin/après-midi à partir de ce que l'activité elle-même suggère sur le moment de la journée — café/petit-déjeuner/une promenade matinale/déposer les enfants à l'école suggère le matin ; une réunion de travail/un dîner/un événement en soirée suggère l'après-midi/le soir ; fie-toi à la convention qu'une personne raisonnable adopterait pour cette activité précise. Seulement si l'activité ne donne aucun indice, utilise en dernier recours : les heures seules 7-11 comme le matin et 1-6 comme l'après-midi (la lecture la plus courante au quotidien pour une heure non précisée) — ce n'est qu'une supposition de dernier recours, pas une certitude, privilégie donc toujours l'inférence contextuelle quand l'activité le permet.
 Si une tâche indique plutôt une durée relative à "maintenant" (le moment de l'enregistrement), comme "dans 3 heures", "dans 30 minutes" ou "dans une heure", ajoute cette durée à l'heure actuelle indiquée ci-dessus et place la date/heure obtenue dans reminder_at (avance la date d'un jour si l'addition dépasse minuit).
+Quand une tâche reçoit à la fois due_date et reminder_at, assure-toi que la date du calendrier à laquelle elles correspondent concorde — n'interprète pas l'expression de date limite et l'expression d'heure séparément d'une façon qui produirait des dates contradictoires.
 
 [Message de réconfort]
 Seulement s'il y a au moins une note avec category="感情ログ", écris une courte phrase chaleureuse (environ 10-25 mots) qui reconnaît le sentiment sans faire la morale ni imposer de solution, et place-la dans comfort_message. S'il n'y a pas de note 感情ログ, laisse comfort_message à null.
@@ -1196,18 +1217,46 @@ function localWeekdayString(locale: Locale, timeZone: string, date: Date = new D
   }
 }
 
+/** {@link upcomingWeekdayTable}が生成する対応表の日数。「再来週の金曜」
+ * 「3週間後の金曜」のように曜日対応表の範囲外を指す表現は、結局モデルの
+ * 暗算に頼らざるを得ないため、長くするほど安全になる一方プロンプトの
+ * トークン数も増える——2〜3週間先までの言及が最も多いはずという判断で
+ * 21日とした。 */
+const WEEKDAY_TABLE_DAYS = 21;
+
 /**
- * 今日から14日分の「日付＝曜日」対応表を生成する。"Thursday"のような曜日名
- * だけの期限表現をgpt-4o-miniの暗算（今日の曜日からのオフセット計算）に
- * 任せると、別の曜日の日付を返すことがある（例: "call the venue on Thursday"
- * が火曜日の日付になる）ため、計算ではなくこの表の引き当てで済むように
- * プロンプトへ埋め込む。
+ * 今日から{@link WEEKDAY_TABLE_DAYS}日分の「日付＝曜日」対応表を生成する。
+ * "Thursday"のような曜日名だけの期限表現をgpt-4o-miniの暗算（今日の曜日
+ * からのオフセット計算）に任せると、別の曜日の日付を返すことがある（例:
+ * "call the venue on Thursday"が火曜日の日付になる）ため、計算ではなく
+ * この表の引き当てで済むようにプロンプトへ埋め込む。
+ *
+ * 「今日」のY-M-Dだけをユーザーの実タイムゾーンから1回読み取り、以降の
+ * 21日分はUTC上の純粋なカレンダー演算（`Date.UTC`+`getUTCDay`相当）だけで
+ * 進める——`now.getTime()`に`i*24時間`をミリ秒でそのまま足す実装だと、
+ * DST（サマータイム）切替日をまたぐ地域では実際の現地時刻ベースで1日分
+ * ズレる（23時間/25時間の日がある）ことがあったため、実タイムゾーンへの
+ * 変換をこの1回だけに抑える設計にしている。
  */
 function upcomingWeekdayTable(locale: Locale, timeZone: string, now: Date = new Date()): string {
+  const todayStr = localDateString(timeZone, now);
+  const [year, month, day] = todayStr.split("-").map(Number);
+  const anchorUtcMs = Date.UTC(year, month - 1, day);
+
   const lines: string[] = [];
-  for (let i = 0; i < 14; i++) {
-    const d = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
-    lines.push(`${localDateString(timeZone, d)} = ${localWeekdayString(locale, timeZone, d)}`);
+  for (let i = 0; i < WEEKDAY_TABLE_DAYS; i++) {
+    const dayUtc = new Date(anchorUtcMs + i * 24 * 60 * 60 * 1000);
+    const dateStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "UTC",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(dayUtc);
+    const weekdayStr = new Intl.DateTimeFormat(INTL_LOCALE[locale], {
+      timeZone: "UTC",
+      weekday: "short",
+    }).format(dayUtc);
+    lines.push(`${dateStr} = ${weekdayStr}`);
   }
   return lines.join(", ");
 }
@@ -1809,6 +1858,11 @@ async function setUserMediaStorageClass(
  * できていなかった（クライアントのUIが出し分けているだけで、サーバー側の
  * 強制ではなかった）ため、この専用クレームを追加した（2026-09-05）。
  */
+/** {@link applyProStatus}が保存する「最後に適用したイベント時刻」の、
+ * サーバー現在時刻からの許容未来幅。RevenueCat/ネットワークの時計ズレを
+ * 吸収しつつ、異常値による永久ロックを防ぐための上限。 */
+const STALE_EVENT_GUARD_MAX_CLOCK_SKEW_MS = 5 * 60 * 1000;
+
 async function applyProStatus(
   uid: string,
   isPro: boolean,
@@ -1851,8 +1905,21 @@ async function applyProStatus(
       hasMediaSync,
       revenueCatSource: source,
       revenueCatUpdatedAt: FieldValue.serverTimestamp(),
+      // 保存する「最後に適用したイベント時刻」は、サーバー自身の現在時刻
+      // (+ わずかな許容誤差)を上限にクランプする。RevenueCat側の時計ズレや
+      // Webhook再送の異常値で万一とても未来のevent_timestamp_msが1回でも
+      // 届くと、クランプせずそのまま保存した場合はそれ以降に届く正常な
+      // イベントが軒並み「過去のイベント」判定されて永久に無視され、
+      // 退会・返金してもProが解除されなくなる恐れがあった。上限を設ける
+      // ことで、そのような異常値が来ても数分後には正常なイベントが
+      // また適用されるようになる。
       ...(eventTimestampMs !== undefined
-        ? { revenueCatEventTimestampMs: eventTimestampMs }
+        ? {
+            revenueCatEventTimestampMs: Math.min(
+              eventTimestampMs,
+              Date.now() + STALE_EVENT_GUARD_MAX_CLOCK_SKEW_MS
+            ),
+          }
         : {}),
     },
     { merge: true }
@@ -2772,6 +2839,22 @@ async function structure(
   return enforceCategoryRestriction(parsed, allowedCategories);
 }
 
+/** "YYYY-MM-DDTHH:mm:00"の日付部分だけを1日進める。時刻部分はそのまま。
+ * {@link toClientResponse}が、夜またぎの終了時刻(例:「22時から翌朝6時」)で
+ * モデルが日付の繰り上げを指示通り行わなかった場合の保険として使う。 */
+function advanceIsoDateTimeByOneDay(value: string): string {
+  const [datePart, timePart] = value.split("T");
+  const [year, month, day] = datePart.split("-").map(Number);
+  const nextUtcMs = Date.UTC(year, month - 1, day) + 24 * 60 * 60 * 1000;
+  const next = new Date(nextUtcMs);
+  const nextDatePart = [
+    next.getUTCFullYear(),
+    String(next.getUTCMonth() + 1).padStart(2, "0"),
+    String(next.getUTCDate()).padStart(2, "0"),
+  ].join("-");
+  return `${nextDatePart}T${timePart}`;
+}
+
 function toClientResponse(structured: StructuredResult) {
   const isoDate = /^\d{4}-\d{2}-\d{2}$/;
   const isoDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
@@ -2781,13 +2864,18 @@ function toClientResponse(structured: StructuredResult) {
     tasks: (structured.tasks ?? []).map((task) => {
       const reminderAt =
         task.reminder_at && isoDateTime.test(task.reminder_at) ? task.reminder_at : null;
-      const reminderEndAt =
-        reminderAt &&
-        task.reminder_end_at &&
-        isoDateTime.test(task.reminder_end_at) &&
-        task.reminder_end_at > reminderAt
-          ? task.reminder_end_at
-          : null;
+      let reminderEndAt: string | null = null;
+      if (reminderAt && task.reminder_end_at && isoDateTime.test(task.reminder_end_at)) {
+        if (task.reminder_end_at > reminderAt) {
+          reminderEndAt = task.reminder_end_at;
+        } else {
+          // 夜22時→翌朝6時のような日またぎの終了時刻で、モデルが指示通り
+          // 日付を1日進め忘れた場合の保険。それでも開始より後にならない
+          // 場合はさすがに解釈できないため諦めてnullにする（従来の挙動）。
+          const advanced = advanceIsoDateTimeByOneDay(task.reminder_end_at);
+          reminderEndAt = advanced > reminderAt ? advanced : null;
+        }
+      }
       return {
         title: task.title,
         due_hint: task.due_hint ?? null,
