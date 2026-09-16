@@ -1950,6 +1950,15 @@ export const revenueCatWebhook = onRequest(
              * Webhookで、古いイベントが新しいイベントより後に届いた場合に
              * 適用をスキップするため使う（[applyProStatus]参照）。 */
             event_timestamp_ms?: number;
+            /** TRANSFERイベントのみに付随する、権利の移動元/移動先の
+             * app_user_id配列。RevenueCat公式ドキュメント（Webhooks > Event
+             * Types and Fields）で確認済み：フィールド名はtransferred_from/
+             * transferred_to（どちらも文字列配列）。「webhook送信は移動先
+             * ユーザーに対してのみ行われる」（移動元には別途EXPIRATION等は
+             * 一切飛ばない）とも明記されているため、移動元のisPro失効は
+             * このtransferred_fromを見て自分で行う必要がある。 */
+            transferred_from?: string[];
+            transferred_to?: string[];
           }
         | undefined;
       const uid = event?.app_user_id;
@@ -2073,6 +2082,22 @@ export const revenueCatWebhook = onRequest(
           await decrementLifetimePurchaseCounter();
         }
         logger.info("revenueCatWebhook applied", { uid, eventType, isPro, hasMediaSync });
+
+        // TRANSFER（同じApple/Google購入を別のuidへ復元/引き継いだ場合）は
+        // webhookが移動先(app_user_id=uid、上でPro付与済み)にしか届かず、
+        // 移動元には対応するEXPIRATIONイベントが一切来ない。ここで対応しないと
+        // 移動元アカウントのisPro/カスタムクレームが永久にtrueのまま残り、
+        // 実質タダでPro権限を持ち続けてしまう。
+        if (eventType === "TRANSFER" && event?.transferred_from) {
+          for (const fromUid of event.transferred_from) {
+            if (!fromUid || fromUid === uid) continue;
+            await applyProStatus(fromUid, false, false, "webhook:TRANSFER:source", eventTimestampMs);
+          }
+          logger.info("revenueCatWebhook revoked transfer source", {
+            uid,
+            transferredFrom: event.transferred_from,
+          });
+        }
       }
 
       res.status(200).send("ok");
