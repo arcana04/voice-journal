@@ -48,10 +48,19 @@ extension PairingReceiver: WCSessionDelegate {
     }
 
     private func handlePairingPayload(_ payload: [String: Any]) {
-        guard !isPaired else { return }
+        guard let deviceId = payload["deviceId"] as? String else { return }
+        if isPaired {
+            // 既にペアリング済みの状態へペアリング情報が再度届いた場合
+            // （再インストール後の再送・ユーザーの再ペアリング操作の重複等）。
+            // 従来はここで何もせず黙って抜けていたため、iPhone側の
+            // waitForPairingAck（watch_pairing_service.dart）が必ず
+            // タイムアウトし、実際には何も失敗していないのに「ペアリングを
+            // 確認できませんでした」という誤解を招く表示になっていた。
+            sendPairingAck(deviceId: deviceId, succeeded: true)
+            return
+        }
         guard
             let customToken = payload["customToken"] as? String,
-            let deviceId = payload["deviceId"] as? String,
             let deviceSecret = payload["deviceSecret"] as? String
         else { return }
 
