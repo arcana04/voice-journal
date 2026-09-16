@@ -39,7 +39,17 @@ bool _isThisWeek(DateTime date, DateTime now) {
 
 bool _isWithinOneMonth(DateTime date, DateTime now) {
   final today = DateTime(now.year, now.month, now.day);
-  final oneMonthLater = DateTime(now.year, now.month + 1, now.day);
+  // DateTime(y, m, day)はdayが対象月の日数を超えると翌月へ繰り上がって
+  // 正規化される（例: 1/31 + 1ヶ月を素朴に計算すると2/31→3/3になってしまう）。
+  // 翌月の最終日でクランプすることで、月末の日付でも1ヶ月後の上限が
+  // ちょうど1〜3日余分に伸びないようにする。
+  // DateTime(y, m+2, 0)は「(m+1)月の0日目」=(m+1)月の最終日になる。
+  final lastDayOfNextMonth = DateTime(now.year, now.month + 2, 0).day;
+  final oneMonthLater = DateTime(
+    now.year,
+    now.month + 1,
+    now.day > lastDayOfNextMonth ? lastDayOfNextMonth : now.day,
+  );
   final target = DateTime(date.year, date.month, date.day);
   return !target.isBefore(today) && !target.isAfter(oneMonthLater);
 }

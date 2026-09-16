@@ -224,6 +224,15 @@ class JournalStore extends ChangeNotifier {
     TaskItem task,
   ) async {
     final selectedCalendarId = await _calendarSettings.getCalendarId();
+    if (selectedCalendarId == null) {
+      // 連携オフ。既にカレンダー予定を持つタスクであっても、[task.calendarId]
+      // （予定作成時のカレンダーID）へフォールバックして更新を続けてしまうと
+      // 「オフにしたのに前から連携していたタスクだけ同期され続ける」ことに
+      // なる（新規タスクだけがオフの恩恵を受け、既存タスクは取り残される
+      // バグだった）。Appleリマインダー連携（[_syncTaskAppleReminder]）と
+      // 同じく、以後は一切触らない。
+      return (eventId: task.calendarEventId, calendarId: task.calendarId);
+    }
     final existingCalendarId = task.calendarEventId == null
         ? null
         : (task.calendarId ?? selectedCalendarId);
@@ -245,11 +254,8 @@ class JournalStore extends ChangeNotifier {
     }
 
     // 既存予定があればそのカレンダーを、無ければ現在選択中のカレンダーを
-    // 新規作成先にする。どちらも無ければ連携オフ扱いで何もしない。
+    // 新規作成先にする（連携オフの場合は関数の先頭で既にreturn済み）。
     final targetCalendarId = existingCalendarId ?? selectedCalendarId;
-    if (targetCalendarId == null) {
-      return (eventId: task.calendarEventId, calendarId: task.calendarId);
-    }
 
     try {
       final result = await _calendar.upsertEvent(

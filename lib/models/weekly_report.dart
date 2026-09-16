@@ -215,6 +215,11 @@ class SavedWeeklyReport {
   /// この署名も一致した場合のみキャッシュを再利用する。
   final String entryIdsSignature;
 
+  /// 生成時点でのアプリ表示言語（言語コード、例: 'ja'/'en'）。表示言語を
+  /// 切り替えた後も古い言語のまま表示され続けるのを防ぐため、キャッシュの
+  /// 再利用判定([weekly_report_screen.dart]参照)に使う。
+  final String locale;
+
   SavedWeeklyReport({
     this.id,
     required this.weekKey,
@@ -231,6 +236,7 @@ class SavedWeeklyReport {
     required this.completedTasks,
     required this.createdAt,
     this.entryIdsSignature = '',
+    this.locale = '',
   });
 
   Map<String, Object?> toMap() {
@@ -267,6 +273,7 @@ class SavedWeeklyReport {
       'completed_tasks': completedTasks,
       'created_at': createdAt.toIso8601String(),
       'entry_ids_signature': entryIdsSignature,
+      'locale': locale,
     };
   }
 
@@ -340,6 +347,7 @@ class SavedWeeklyReport {
       completedTasks: map['completed_tasks'] as int,
       createdAt: DateTime.parse(map['created_at'] as String),
       entryIdsSignature: map['entry_ids_signature'] as String? ?? '',
+      locale: map['locale'] as String? ?? '',
     );
   }
 }

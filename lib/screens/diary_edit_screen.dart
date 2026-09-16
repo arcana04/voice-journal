@@ -750,7 +750,13 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
       fontSize: (base.fontSize ?? 16) * _fontScale,
       color: _textColor ?? base.color,
     );
-    return noteFontOptions[_fontFamilyIndex].apply(scaled);
+    // _fontFamilyIndexは保存済みの値をそのまま引き継ぐため、フォント選択肢が
+    // 減った場合等に範囲外になり得る（note_text_style.dartのapplyNoteStyle
+    // と同じ範囲チェック）。
+    final index = _fontFamilyIndex >= 0 && _fontFamilyIndex < noteFontOptions.length
+        ? _fontFamilyIndex
+        : 0;
+    return noteFontOptions[index].apply(scaled);
   }
 
   Widget _buildNoteBlock(ThemeData theme, _NoteDraft d) {

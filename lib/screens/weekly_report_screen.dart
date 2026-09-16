@@ -199,7 +199,9 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
     // のを防ぐ。
     final cached = await DbService.instance.getWeeklyReportByWeekKey(_weekKey);
     if (!mounted) return;
+    final currentLocale = Localizations.localeOf(context).languageCode;
     if (cached != null &&
+        cached.locale == currentLocale &&
         cached.entryIdsSignature == entryIdsSignature &&
         cached.diaryCount == diaryCount &&
         cached.ideaCount == ideaCount &&
@@ -211,15 +213,14 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       return;
     }
 
-    final locale = Localizations.localeOf(context).languageCode;
-    final contextText = formatEntriesAsContext(entries, locale);
+    final contextText = formatEntriesAsContext(entries, currentLocale);
     final emotionBreakdown = {
       for (final e in emotionCounts.entries) e.key.id: e.value,
     };
     final future = _backend.generateWeeklyReport(
       context: contextText,
       emotionBreakdown: emotionBreakdown,
-      locale: locale,
+      locale: currentLocale,
     );
     setState(() {
       _insightsFuture = future;
@@ -243,6 +244,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
           completedTasks: completedTasks,
           entryIdsSignature: entryIdsSignature,
           createdAt: DateTime.now(),
+          locale: currentLocale,
         ),
       );
     } catch (_) {

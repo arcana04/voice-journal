@@ -53,7 +53,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 25,
+      version: 26,
       // tasks/notes/entry_imagesはON DELETE CASCADEをスキーマに宣言しているが、
       // SQLiteは外部キー制約自体をデフォルトで無効にしており、接続のたびに
       // 明示的に有効化しないとその宣言は一切効かない（各deleteメソッドが手動で
@@ -149,7 +149,8 @@ class DbService {
             total_tasks INTEGER NOT NULL,
             completed_tasks INTEGER NOT NULL,
             created_at TEXT NOT NULL,
-            entry_ids_signature TEXT NOT NULL DEFAULT ''
+            entry_ids_signature TEXT NOT NULL DEFAULT '',
+            locale TEXT NOT NULL DEFAULT ''
           )
         ''');
       },
@@ -386,6 +387,17 @@ class DbService {
           await _addColumnIfMissing(
             db,
             'ALTER TABLE tasks ADD COLUMN calendar_id TEXT',
+          );
+        }
+        if (oldVersion < 26) {
+          // 週次レポートのキャッシュ判定に表示言語を含めていなかったため、
+          // ある言語設定で一度生成したレポートを別の言語に切り替えた後も、
+          // 中身（キーワード・レター等）が古い言語のまま表示され続けていた。
+          // 既存行はデフォルト値''になり、現在の表示言語と一致しないため
+          // 次回開いたときに必ず再生成される。
+          await _addColumnIfMissing(
+            db,
+            "ALTER TABLE weekly_reports ADD COLUMN locale TEXT NOT NULL DEFAULT ''",
           );
         }
       },

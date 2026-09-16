@@ -1731,18 +1731,47 @@ async function applyProStatus(
   uid: string,
   isPro: boolean,
   hasMediaSync: boolean,
-  source: string
+  source: string,
+  /** Webhookイベント自体のタイムスタンプ（event.event_timestamp_ms）。
+   * RevenueCatはWebhookの配信順序を保証せず、リトライ/遅延により
+   * 実際には新しいイベントより後に古いイベントが届くことがある
+   * （例: RENEWAL適用後に、それより前に発生した遅延EXPIRATIONが届き、
+   * 有効に課金継続中のユーザーを誤ってPro解除してしまう）。このタイムスタンプ
+   * より新しいイベントを既に適用済みなら、古いイベントの適用はスキップする。
+   * syncProStatus（RevenueCat APIへの直接問い合わせによる自己修復）は
+   * イベントではなく「今の実際の状態」を反映するものなので、undefinedのまま
+   * 呼び出して常に適用させる。 */
+  eventTimestampMs?: number
 ): Promise<void> {
   const db = getFirestore();
   const userRef = db.collection("users").doc(uid);
   const previousData = (await userRef.get()).data();
   const previousHasMediaSync = previousData?.hasMediaSync === true;
+  if (eventTimestampMs !== undefined) {
+    const lastAppliedEventTimestampMs =
+      previousData?.revenueCatEventTimestampMs as number | undefined;
+    if (
+      lastAppliedEventTimestampMs !== undefined &&
+      eventTimestampMs < lastAppliedEventTimestampMs
+    ) {
+      logger.info("applyProStatus skipped stale/out-of-order webhook event", {
+        uid,
+        source,
+        eventTimestampMs,
+        lastAppliedEventTimestampMs,
+      });
+      return;
+    }
+  }
   await userRef.set(
     {
       isPro,
       hasMediaSync,
       revenueCatSource: source,
       revenueCatUpdatedAt: FieldValue.serverTimestamp(),
+      ...(eventTimestampMs !== undefined
+        ? { revenueCatEventTimestampMs: eventTimestampMs }
+        : {}),
     },
     { merge: true }
   );
@@ -1834,10 +1863,16 @@ export const revenueCatWebhook = onRequest(
              * に分類される。 */
             cancel_reason?: string;
             expiration_reason?: string;
+            /** イベント発生時刻（ミリ秒）。公式ドキュメント「Event Types and
+             * Fields」に記載の共通フィールド。配信順序保証が無いRevenueCat
+             * Webhookで、古いイベントが新しいイベントより後に届いた場合に
+             * 適用をスキップするため使う（[applyProStatus]参照）。 */
+            event_timestamp_ms?: number;
           }
         | undefined;
       const uid = event?.app_user_id;
       const eventType = event?.type;
+      const eventTimestampMs = event?.event_timestamp_ms;
       const cancelOrExpirationReason = event?.cancel_reason ?? event?.expiration_reason;
       const isRefund = cancelOrExpirationReason === "CUSTOMER_SUPPORT";
       if (!uid || !eventType) {
@@ -1909,7 +1944,7 @@ export const revenueCatWebhook = onRequest(
       // 届くため、cancel_reasonがCUSTOMER_SUPPORT（返金）の場合だけ即座に
       // 失効させる（返金なのにProのままという状態を防ぐ）。
       if (eventType === "CANCELLATION" && isRefund) {
-        await applyProStatus(uid, false, false, "webhook:CANCELLATION:refund");
+        await applyProStatus(uid, false, false, "webhook:CANCELLATION:refund", eventTimestampMs);
         // 買い切りプラン（非失効=expiration_at_msが無い）の返金なら、購入時の
         // 増分と対称にカウンタも1減らす。サブスクの返金ではスキップする。
         if (event?.expiration_at_ms === null || event?.expiration_at_ms === undefined) {
@@ -1945,7 +1980,7 @@ export const revenueCatWebhook = onRequest(
           isPro &&
           event?.expiration_at_ms !== null &&
           event?.expiration_at_ms !== undefined;
-        await applyProStatus(uid, isPro, hasMediaSync, `webhook:${eventType}`);
+        await applyProStatus(uid, isPro, hasMediaSync, `webhook:${eventType}`, eventTimestampMs);
         // EXPIRATIONで、かつ非失効（買い切り等）の権利が失われた場合も
         // 返金と同じ扱いでカウンタを1減らす。
         if (
@@ -2730,8 +2765,12 @@ export const processVoiceMemo = onCall(
         await consumeWatchRateLimit(uid, watchAuth.deviceId, loc);
       }
 
-      await consumeDailyQuota(uid, loc, effectiveTimeZone);
+      // 月間分数の上限チェックは副作用の無い読み取り専用チェックなので、
+      // 消費を伴うconsumeDailyQuotaより先に行う。逆順だと、月間分数を
+      // 使い切ったProユーザーがリクエストするたびに、失敗するのに日次回数
+      // だけ消費され続け、対になる払い戻し処理も無いため蓄積してしまう。
       await checkMonthlyMinutesBudget(uid, loc, effectiveTimeZone);
+      await consumeDailyQuota(uid, loc, effectiveTimeZone);
 
       const apiKey = openAiApiKey.value();
       const rawAudioBuffer = Buffer.from(audioBase64, "base64");
@@ -4902,6 +4941,21 @@ async function generateWeeklyReportInsights(
   return JSON.parse(data.choices[0].message.content) as WeeklyReportInsightsResult;
 }
 
+/** 相談チャット（[CRISIS_KEYWORD_PATTERN]参照）と同じ判定を週刊レポートにも
+ * 適用するための安全なフォールバック結果。今週の記録に自傷・希死念慮に
+ * 関連する内容が含まれる場合、それをAIに渡して「今週の名言」やレターに
+ * 引用させてしまわないよう、AI呼び出し自体を行わずここで固定内容を返す。 */
+function buildCrisisWeeklyReportResult(loc: Locale): WeeklyReportInsightsResult {
+  return {
+    mood_headline: "",
+    emotion_narrative: "",
+    top_keywords: [],
+    highlight_quote: { quote: "", reason: "" },
+    advice: "",
+    weekly_letter: CRISIS_RESOURCE_MESSAGE[loc],
+  };
+}
+
 function toWeeklyReportResponse(result: WeeklyReportInsightsResult) {
   return {
     mood_headline: result.mood_headline ?? "",
@@ -5260,11 +5314,19 @@ export const generateWeeklyReport = onCall(
       throw new HttpsError("permission-denied", MESSAGES[loc].proRequired);
     }
 
+    const trimmedContext = (context ?? "").trim();
+    // 相談チャット（askKnowledgeBase）と同じ理由：今週の記録に自傷・希死念慮
+    // に関連する内容が含まれる場合、AIに自由に要約・引用させず、ここで
+    // 固定の相談窓口案内に差し替える。以降の通常のレポート生成には進ませない。
+    if (trimmedContext && CRISIS_KEYWORD_PATTERN[loc].test(trimmedContext.toLowerCase())) {
+      return toWeeklyReportResponse(buildCrisisWeeklyReportResult(loc));
+    }
+
     try {
       const apiKey = openAiApiKey.value();
       const result = await generateWeeklyReportInsights(
         apiKey,
-        (context ?? "").trim(),
+        trimmedContext,
         emotionBreakdown ?? {},
         loc
       );
