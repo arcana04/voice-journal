@@ -31,6 +31,9 @@ class RootScreen extends StatefulWidget {
 
 class _RootScreenState extends State<RootScreen> with WidgetsBindingObserver {
   int _index = 0;
+  // フォアグラウンド復帰時にキャッシュされた白紙レイヤーを確実に上書き
+  // するためのnonce（下の[didChangeAppLifecycleState]参照）。
+  int _navBarRepaintNonce = 0;
   final DeepLinkService _deepLinks = DeepLinkService();
   bool? _lastIsPro;
   bool? _lastHasEntriesThisWeek;
@@ -72,7 +75,12 @@ class _RootScreenState extends State<RootScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && mounted) {
-      setState(() {});
+      // 単純なsetState(() {})だけでは、[FloatingNavBar]に渡すプロパティが
+      // 変化していない場合にRenderObjectのsetterがmarkNeedsPaintを呼ばずに
+      // 素通りしてしまい、GPU側でキャッシュ破棄された白紙レイヤーが
+      // そのまま残ることがあった。キーを変えてElement/RenderObjectごと
+      // 作り直させることで、プロパティの差分に関わらず確実に再描画させる。
+      setState(() => _navBarRepaintNonce++);
     }
   }
 
@@ -204,6 +212,7 @@ class _RootScreenState extends State<RootScreen> with WidgetsBindingObserver {
         ],
       ),
       bottomNavigationBar: FloatingNavBar(
+        key: ValueKey(_navBarRepaintNonce),
         selectedIndex: _index,
         onDestinationSelected: (value) => setState(() => _index = value),
         destinations: [
