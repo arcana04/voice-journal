@@ -170,6 +170,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   ///   引き続き「処理する」を提示する意味がある。
   /// （[[project_voicejournal_knowledge_base_chat]]参照）。
   Future<void> _checkForOrphanedRecording({bool offerRecovery = false}) async {
+    // OSがメモリ整理でこの画面のStateごと作り直した場合、ネイティブ側の
+    // 録音（バックグラウンドサービス/AVAudioSession）は生きたまま続いている
+    // ことがある。その録音が書き込んでいる一時ファイルを「前回の未処理
+    // ファイル」と誤認識して削除してしまわないよう、録音中は何もしない
+    // （UIの復元は[_reconcileRecordingState]に任せる）。
+    if (await _recorder.isRecording() || !mounted) return;
     final orphaned = await RecorderService.findOrphanedRecordings();
     if (orphaned.isEmpty || !mounted) return;
 

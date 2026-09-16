@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:record/record.dart' as record_pkg;
 
 import 'background_recording_service.dart';
@@ -96,7 +97,15 @@ class RecorderService {
           .invokeMethod<bool>('isRecording')
           .then((recording) => recording ?? false);
     }
-    return _androidRecorder!.isRecording();
+    // `_androidRecorder`(package:record)はFlutterエンジン単位で発行される
+    // recorderIdでネイティブ側の録音セッションと紐付いているため、OSが
+    // メモリ整理でActivity/エンジンごと作り直すと、この[RecorderService]も
+    // 新しい`AudioRecorder()`インスタンス（＝別recorderId）になり、実際は
+    // 録音が続いているのに`isRecording()`がfalseを返してしまう。フォア
+    // グラウンドサービスの起動状態は`start()`/`stop()`/`cancel()`と厳密に
+    // 対で管理されるOSレベルの状態でエンジンの生き死にに影響されないため、
+    // こちらを正とする。
+    return FlutterForegroundTask.isRunningService;
   }
 
   Future<void> start() async {
