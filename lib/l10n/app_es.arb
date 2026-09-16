@@ -315,6 +315,7 @@
   "notificationPermissionDialogTitle": "Las notificaciones no están permitidas",
   "notificationPermissionDialogMessage": "Permite las notificaciones para recibir recordatorios. Puedes cambiar esto en la app de Ajustes.",
   "notifyAtPastError": "No se puede programar un recordatorio en el pasado",
+  "reminderSkippedPastMessage": "Algunas tareas no recibieron notificación porque su hora ya había pasado",
   "openSettings": "Abrir ajustes",
 
   "customDictionaryTitle": "Diccionario personalizado",

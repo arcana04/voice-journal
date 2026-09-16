@@ -315,6 +315,7 @@
   "notificationPermissionDialogTitle": "Benachrichtigungen sind nicht erlaubt",
   "notificationPermissionDialogMessage": "Erlaube Benachrichtigungen, um Erinnerungen zu erhalten. Du kannst dies in der Einstellungen-App ändern.",
   "notifyAtPastError": "Für einen vergangenen Zeitpunkt kann keine Erinnerung gesetzt werden",
+  "reminderSkippedPastMessage": "Für einige Aufgaben wurde keine Benachrichtigung gesetzt, da ihr Zeitpunkt bereits vergangen war",
   "openSettings": "Einstellungen öffnen",
 
   "customDictionaryTitle": "Eigenes Wörterbuch",

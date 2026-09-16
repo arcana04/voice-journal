@@ -940,6 +940,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Can\'t set a reminder for a time in the past';
 
   @override
+  String get reminderSkippedPastMessage =>
+      'Some tasks weren\'t given a notification because their time had already passed';
+
+  @override
   String get openSettings => 'Open settings';
 
   @override

@@ -1750,6 +1750,12 @@ abstract class AppLocalizations {
   /// **'Can\'t set a reminder for a time in the past'**
   String get notifyAtPastError;
 
+  /// No description provided for @reminderSkippedPastMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Some tasks weren\'t given a notification because their time had already passed'**
+  String get reminderSkippedPastMessage;
+
   /// No description provided for @openSettings.
   ///
   /// In en, this message translates to:

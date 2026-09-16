@@ -954,6 +954,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se puede programar un recordatorio en el pasado';
 
   @override
+  String get reminderSkippedPastMessage =>
+      'Algunas tareas no recibieron notificación porque su hora ya había pasado';
+
+  @override
   String get openSettings => 'Abrir ajustes';
 
   @override

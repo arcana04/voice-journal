@@ -315,6 +315,7 @@
   "notificationPermissionDialogTitle": "Notifications aren't allowed",
   "notificationPermissionDialogMessage": "Allow notifications to receive reminders. You can change this in the Settings app.",
   "notifyAtPastError": "Can't set a reminder for a time in the past",
+  "reminderSkippedPastMessage": "Some tasks weren't given a notification because their time had already passed",
   "openSettings": "Open settings",
 
   "customDictionaryTitle": "Custom dictionary",

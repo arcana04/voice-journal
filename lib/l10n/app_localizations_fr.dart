@@ -963,6 +963,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de programmer un rappel dans le passé';
 
   @override
+  String get reminderSkippedPastMessage =>
+      'Certaines tâches n\'ont pas reçu de notification car leur heure était déjà passée';
+
+  @override
   String get openSettings => 'Ouvrir les réglages';
 
   @override

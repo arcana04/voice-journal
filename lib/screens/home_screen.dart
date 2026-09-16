@@ -669,8 +669,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _rerollPrompt();
     });
     final store = context.read<JournalStore>();
-    await store.addEntry(entry);
+    final requestedNotifyCount =
+        tasks.where((t) => t.notifyAt != null).length;
+    final finalEntry = await store.addEntry(entry);
     if (!mounted) return;
+    // addEntryは、指定時刻が保存時点で既に過ぎていたタスクのnotifyAtを
+    // 黙ってnullにクリアする（通知は予約されないのに画面上は設定済みに
+    // 見える状態を防ぐため）。手動編集画面(TaskScheduleEditor)は同じ状況を
+    // notifyAtPastErrorで即座に警告するが、AI仕分け経由のこの保存では
+    // 従来何の説明も無かったため、ここでも一言添える。
+    final scheduledNotifyCount =
+        finalEntry.tasks.where((t) => t.notifyAt != null).length;
+    if (scheduledNotifyCount < requestedNotifyCount) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.reminderSkippedPastMessage,
+          ),
+        ),
+      );
+    }
     setState(
       () =>
           _statusMessage = AppLocalizations.of(context)!

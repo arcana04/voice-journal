@@ -315,6 +315,7 @@
   "notificationPermissionDialogTitle": "Les notifications ne sont pas autorisées",
   "notificationPermissionDialogMessage": "Autorise les notifications pour recevoir des rappels. Tu peux modifier cela dans l'application Réglages.",
   "notifyAtPastError": "Impossible de programmer un rappel dans le passé",
+  "reminderSkippedPastMessage": "Certaines tâches n'ont pas reçu de notification car leur heure était déjà passée",
   "openSettings": "Ouvrir les réglages",
 
   "customDictionaryTitle": "Dictionnaire personnalisé",

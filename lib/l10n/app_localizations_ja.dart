@@ -893,6 +893,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get notifyAtPastError => '過去の日時には通知を設定できません';
 
   @override
+  String get reminderSkippedPastMessage =>
+      '一部のタスクは指定時刻がすでに過ぎていたため、通知は設定されませんでした';
+
+  @override
   String get openSettings => '設定を開く';
 
   @override

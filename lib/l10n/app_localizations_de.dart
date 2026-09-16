@@ -958,6 +958,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Für einen vergangenen Zeitpunkt kann keine Erinnerung gesetzt werden';
 
   @override
+  String get reminderSkippedPastMessage =>
+      'Für einige Aufgaben wurde keine Benachrichtigung gesetzt, da ihr Zeitpunkt bereits vergangen war';
+
+  @override
   String get openSettings => 'Einstellungen öffnen';
 
   @override

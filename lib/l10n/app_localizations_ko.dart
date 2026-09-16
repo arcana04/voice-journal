@@ -895,6 +895,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notifyAtPastError => '이미 지난 시간에는 알림을 설정할 수 없어요';
 
   @override
+  String get reminderSkippedPastMessage =>
+      '일부 할 일은 지정한 시간이 이미 지나서 알림이 설정되지 않았어요';
+
+  @override
   String get openSettings => '설정 열기';
 
   @override

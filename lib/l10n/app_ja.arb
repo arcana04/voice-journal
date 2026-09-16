@@ -288,6 +288,7 @@
   "notificationPermissionDialogTitle": "通知が許可されていません",
   "notificationPermissionDialogMessage": "リマインダーを届けるには通知を許可してください。設定アプリから変更できます。",
   "notifyAtPastError": "過去の日時には通知を設定できません",
+  "reminderSkippedPastMessage": "一部のタスクは指定時刻がすでに過ぎていたため、通知は設定されませんでした",
   "openSettings": "設定を開く",
 
   "customDictionaryTitle": "カスタム辞書",
