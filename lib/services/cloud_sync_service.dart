@@ -42,12 +42,43 @@ class CloudSyncService {
   /// 恒久的に失敗し続けるのを防ぐための保険。
   static const _noteContentCharCap = 100000;
 
+  /// 1エントリ内の全note合計に対する安全マージン（文字数）。
+  /// [_noteContentCharCap]はnote単体の暴走を止めるが、firestore.rulesは
+  /// 1エントリあたり最大200 noteを許可しているため、note単体は上限内でも
+  /// 合計では依然としてFirestoreの1ドキュメント1MiB上限を超えて同期が
+  /// 恒久的に失敗しうる。マルチバイト文字（日本語等）は1文字あたり最大
+  /// 3バイトになり得るため、バイト数ではなく十分保守的な文字数で見積もる。
+  static const _totalNoteContentCharCap = 300000;
+
   Map<String, dynamic> _capNoteForFirestore(Map<String, dynamic> map) {
     final content = map['content'] as String?;
     if (content != null && content.length > _noteContentCharCap) {
       map['content'] = content.substring(0, _noteContentCharCap);
     }
     return map;
+  }
+
+  /// 各noteに[_capNoteForFirestore]を適用した後、note合計の文字数が
+  /// [_totalNoteContentCharCap]を超えないよう、超過分から後ろのnoteの
+  /// contentを先頭側から優先して切り詰める（一部のnoteを丸ごと消すより、
+  /// できるだけ多くのnoteの内容を部分的にでも残す方針）。
+  List<Map<String, dynamic>> _capNotesTotalForFirestore(
+    List<Map<String, dynamic>> notes,
+  ) {
+    var remainingBudget = _totalNoteContentCharCap;
+    for (final note in notes) {
+      final content = note['content'] as String?;
+      if (content == null) continue;
+      if (remainingBudget <= 0) {
+        note['content'] = '';
+      } else if (content.length > remainingBudget) {
+        note['content'] = content.substring(0, remainingBudget);
+        remainingBudget = 0;
+      } else {
+        remainingBudget -= content.length;
+      }
+    }
+    return notes;
   }
 
   /// TaskItem.toMap()が返す日時フィールドは、created_atと同じくローカル時刻の
@@ -118,9 +149,11 @@ class CloudSyncService {
             ),
           )
           .toList(),
-      'notes': entry.notes
-          .map((n) => _capNoteForFirestore(_stripLocalKeys(n.toMap())))
-          .toList(),
+      'notes': _capNotesTotalForFirestore(
+        entry.notes
+            .map((n) => _capNoteForFirestore(_stripLocalKeys(n.toMap())))
+            .toList(),
+      ),
     };
   }
 
