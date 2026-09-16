@@ -42,7 +42,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final RecorderService _recorder = RecorderService();
   final BackendService _backend = BackendService();
   final ReviewPromptService _reviewPrompt = ReviewPromptService();
@@ -134,11 +134,20 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkForOrphanedRecording());
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _reconcileRecordingState();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _recordTrigger?.removeListener(_onRecordTriggered);
     _timer?.cancel();
     _amplitudeSub?.cancel();
@@ -370,7 +379,15 @@ class _HomeScreenState extends State<HomeScreen> {
     BackgroundRecordingService.updateNotificationText(
       '${_formatDuration(_elapsed)} / ${_formatDuration(_maxDuration)}',
     );
+    _startTrackingTimers();
+  }
+
+  /// 振幅監視（無音自動停止用）と経過時間タイマーを開始する。通常の録音開始
+  /// ([_startRecording])と、バックグラウンド復帰時に録音継続を検知して
+  /// 画面状態を復元する場合（[_reconcileRecordingState]）の両方から呼ばれる。
+  void _startTrackingTimers() {
     _lastSoundAt = DateTime.now();
+    _amplitudeSub?.cancel();
     _amplitudeSub = _recorder
         .onAmplitudeChanged(const Duration(milliseconds: 300))
         .listen((amplitude) {
@@ -386,6 +403,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _micLevel = ((amplitude.current + 50) / 45).clamp(0.0, 1.0);
           });
         });
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       final next = _elapsed + const Duration(seconds: 1);
       if (next >= _maxDuration) {
@@ -404,6 +422,38 @@ class _HomeScreenState extends State<HomeScreen> {
         '${_formatDuration(next)} / ${_formatDuration(_maxDuration)}',
       );
     });
+  }
+
+  /// OSのメモリ整理等でウィジェットの状態だけ作り直された場合に備え、
+  /// フォアグラウンド復帰時に実際の録音エンジンの状態と画面表示を
+  /// 突き合わせる。ネイティブ側の録音はバックグラウンドサービス/
+  /// AVAudioSessionで独立に継続しているため、画面の[_state]だけが
+  /// idleに巻き戻り「録音していないように見える」ことがある一方、
+  /// 逆にネイティブ側が止まっているのに画面だけ録音中表示のまま
+  /// 残るケースにも対応する。
+  Future<void> _reconcileRecordingState() async {
+    if (_isStartingRecording || _state == RecordButtonState.processing) return;
+    final recording = await _recorder.isRecording();
+    if (!mounted) return;
+    if (recording && _state != RecordButtonState.recording) {
+      // 経過時間そのものは復元できないため0から数え直すが、「録音中」で
+      // あることと通知の更新はすぐに復帰する。
+      final isPro = context.read<SubscriptionStore>().isPro;
+      setState(() {
+        _state = RecordButtonState.recording;
+        _maxDuration = maxRecordingDurationFor(isPro);
+      });
+      _startTrackingTimers();
+    } else if (!recording && _state == RecordButtonState.recording) {
+      _timer?.cancel();
+      _amplitudeSub?.cancel();
+      _amplitudeSub = null;
+      setState(() {
+        _state = RecordButtonState.idle;
+        _elapsed = Duration.zero;
+        _micLevel = 0.0;
+      });
+    }
   }
 
   Future<void> _stopAndProcess({bool auto = false}) async {

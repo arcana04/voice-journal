@@ -148,7 +148,7 @@ class TaskItem {
     return TaskItem(
       id: map['id'] as int?,
       entryId: map['entry_id'] as int?,
-      title: map['title'] as String,
+      title: (map['title'] as String?) ?? '',
       dueHint: map['due_hint'] as String?,
       dueDate: dueDateStr != null ? DateTime.tryParse(dueDateStr) : null,
       reminderAt: reminderAtStr != null
@@ -325,9 +325,9 @@ class NoteItem {
     return NoteItem(
       id: map['id'] as int?,
       entryId: map['entry_id'] as int?,
-      category: map['category'] as String,
+      category: (map['category'] as String?) ?? kNoteCategoryFeeling,
       title: map['title'] as String?,
-      content: map['content'] as String,
+      content: (map['content'] as String?) ?? '',
       fontFamilyIndex: map['font_family_index'] as int?,
       textColorValue: map['text_color'] as int?,
       fontScale: (map['font_scale'] as num?)?.toDouble(),

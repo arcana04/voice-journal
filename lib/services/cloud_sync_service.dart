@@ -35,6 +35,21 @@ class CloudSyncService {
     return copy;
   }
 
+  /// Firestoreの1ドキュメント上限（1MiB）に対する安全マージン。実際の音声
+  /// メモは（15分話しても）この何分の1にも収まらないはずなので、正常な
+  /// エントリを削ることはない想定 — 万一異常に長い本文があっても、それ
+  /// だけを理由に同期全体が`invalid-argument`/`resource-exhausted`で
+  /// 恒久的に失敗し続けるのを防ぐための保険。
+  static const _noteContentCharCap = 100000;
+
+  Map<String, dynamic> _capNoteForFirestore(Map<String, dynamic> map) {
+    final content = map['content'] as String?;
+    if (content != null && content.length > _noteContentCharCap) {
+      map['content'] = content.substring(0, _noteContentCharCap);
+    }
+    return map;
+  }
+
   /// TaskItem.toMap()が返す日時フィールドは、created_atと同じくローカル時刻の
   /// タイムゾーン印なし文字列（TaskItem.dueDate等はAIのJSON応答/ローカル
   /// SQLiteとの往復用にローカル時刻のまま扱う設計のため）。ローカル
@@ -67,6 +82,12 @@ class CloudSyncService {
     return map;
   }
 
+  // 返り値のトップレベルキーは firestore.rules の
+  // `users/{uid}/entries/{entryId}` にある `hasOnly([...])` の許可リストと
+  // 一致していなければならない。ここに新しいフィールドを足すときは必ず
+  // 両方同時に更新すること — ずれると全ユーザーの書き込みが恒久的に
+  // permission-deniedで失敗し、UIは「サインインし直してください」という
+  // 見当違いの案内を出してしまう（再サインインでは直らない）。
   Map<String, dynamic> _entryToFirestoreMap(JournalEntry entry) {
     return {
       'summary': entry.summary,
@@ -90,7 +111,9 @@ class CloudSyncService {
             ),
           )
           .toList(),
-      'notes': entry.notes.map((n) => _stripLocalKeys(n.toMap())).toList(),
+      'notes': entry.notes
+          .map((n) => _capNoteForFirestore(_stripLocalKeys(n.toMap())))
+          .toList(),
     };
   }
 
@@ -169,9 +192,18 @@ class CloudSyncService {
     if (collection == null) return [];
     try {
       final snapshot = await collection.get();
-      return snapshot.docs
-          .map((doc) => _entryFromFirestore(doc.id, doc.data()))
-          .toList();
+      final entries = <JournalEntry>[];
+      for (final doc in snapshot.docs) {
+        try {
+          entries.add(_entryFromFirestore(doc.id, doc.data()));
+        } catch (e) {
+          // 1件のドキュメントの型不整合（壊れた/古い形式のデータ）で同期
+          // 全体を失敗させない。そのドキュメントだけ復元をスキップし、
+          // 他の正常なエントリは通常通り取得する。
+          debugPrint('cloud sync: skipping malformed entry ${doc.id}: $e');
+        }
+      }
+      return entries;
     } catch (e) {
       lastFailureReason = SyncFailureReason.classify(e);
       debugPrint('cloud sync fetch failed: $e');

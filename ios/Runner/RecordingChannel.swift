@@ -51,6 +51,11 @@ class RecordingChannel: NSObject {
                 let value = await BackgroundAudioRecorder.shared.currentAmplitude()
                 result(value.map { Double($0) })
             }
+        case "isRecording":
+            Task {
+                let recording = await BackgroundAudioRecorder.shared.isRecording
+                result(recording)
+            }
         default:
             result(FlutterMethodNotImplemented)
         }

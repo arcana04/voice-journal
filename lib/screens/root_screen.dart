@@ -29,7 +29,7 @@ class RootScreen extends StatefulWidget {
   State<RootScreen> createState() => _RootScreenState();
 }
 
-class _RootScreenState extends State<RootScreen> {
+class _RootScreenState extends State<RootScreen> with WidgetsBindingObserver {
   int _index = 0;
   final DeepLinkService _deepLinks = DeepLinkService();
   bool? _lastIsPro;
@@ -55,10 +55,34 @@ class _RootScreenState extends State<RootScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _deepLinks.init(onRecordRequested: _handleRecordRequested);
     ReminderService.instance.weeklyReportRequests
         .addListener(_handleWeeklyReportRequested);
     WidgetsBinding.instance.addPostFrameCallback((_) => _syncOnStartupIfSignedIn());
+  }
+
+  // [FloatingNavBar]はBackdropFilterでぼかしを掛けている都合上、選択されて
+  // いない（＝毎フレーム再描画される理由が無い）タブのアイコン層がバック
+  // グラウンド中にGPU側でキャッシュ破棄され、復帰後も白紙のまま残ることが
+  // ある（録音中の長時間バックグラウンドで再現、Diary/Idea/Taskのアイコンが
+  // 消えるが、常時アニメーションしているRecordタブは巻き込まれない）。
+  // フォアグラウンド復帰時に一度setStateしてサブツリーを再描画させ、
+  // キャッシュされた白紙レイヤーを新しい描画で上書きする。
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _deepLinks.dispose();
+    ReminderService.instance.weeklyReportRequests
+        .removeListener(_handleWeeklyReportRequested);
+    super.dispose();
   }
 
   /// アプリ起動のたびに、サインイン済み(匿名でない)アカウントならクラウドから
@@ -77,14 +101,6 @@ class _RootScreenState extends State<RootScreen> {
     if (!mounted) return;
     final canSyncMedia = context.read<SubscriptionStore>().isProWithMediaSync;
     await store.fullSync(canSyncMedia: canSyncMedia);
-  }
-
-  @override
-  void dispose() {
-    _deepLinks.dispose();
-    ReminderService.instance.weeklyReportRequests
-        .removeListener(_handleWeeklyReportRequested);
-    super.dispose();
   }
 
   void _handleRecordRequested() {

@@ -86,6 +86,19 @@ class RecorderService {
     }
   }
 
+  /// バックグラウンド復帰時、UI側の状態（[RecordButtonState]等）が実際の
+  /// 録音状態と食い違っていないかを確認するために使う。OSがメモリ不足で
+  /// Flutter側のウィジェット状態だけを作り直した場合でも、ネイティブの
+  /// 録音エンジン自体は生きていることがあるため、UIを復元する判断材料になる。
+  Future<bool> isRecording() {
+    if (Platform.isIOS) {
+      return _channel
+          .invokeMethod<bool>('isRecording')
+          .then((recording) => recording ?? false);
+    }
+    return _androidRecorder!.isRecording();
+  }
+
   Future<void> start() async {
     if (Platform.isIOS) {
       await _channel.invokeMethod('start');
