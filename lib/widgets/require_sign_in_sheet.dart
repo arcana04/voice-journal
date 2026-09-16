@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../state/account_store.dart';
+import '../state/journal_store.dart';
+import '../state/subscription_store.dart';
 
 /// 購入直前に匿名ユーザーへログインを促すボトムシート。ログイン成功で`true`を
 /// 返して閉じ、シートを閉じた/キャンセルした場合は`false`を返す。
@@ -45,7 +47,18 @@ class _RequireSignInSheetState extends State<_RequireSignInSheet> {
     setState(() => _busy = true);
     try {
       final accountStore = context.read<AccountStore>();
-      await accountStore.signInWithCredential(credentialProvider);
+      final subscriptionStore = context.read<SubscriptionStore>();
+      final journalStore = context.read<JournalStore>();
+      final uid = await accountStore.signInWithCredential(credentialProvider);
+      // サインインで別の既存アカウントに切り替わった場合、
+      // AccountStore._guardAccountSwitchが端末ローカルのSQLiteを消して
+      // いるが、メモリ上のJournalStore/RevenueCatの識別子はまだ古いuid
+      // のまま——ここで揃えておかないと、あとで何かがfullSync等を呼んだ
+      // 際に前のアカウントの内容が新アカウントのFirestoreへ誤って
+      // 送信されてしまう（account_screen.dartの_afterAuthSuccessと
+      // 同じ手順をここでも踏む）。
+      await subscriptionStore.switchUser(uid);
+      await journalStore.load();
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } on SignInCancelledException {

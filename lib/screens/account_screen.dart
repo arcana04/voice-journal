@@ -198,7 +198,12 @@ class _AccountScreenState extends State<AccountScreen> {
     setState(() => _busy = true);
     try {
       final canSyncMedia = context.read<SubscriptionStore>().isProWithMediaSync;
-      await context.read<JournalStore>().fullSync(canSyncMedia: canSyncMedia);
+      final journalStore = context.read<JournalStore>();
+      // メモリ上の内容が万一(別画面での不完全なアカウント切替等で)ディスクと
+      // ずれていても、それを他アカウントのFirestoreへ送ってしまわないよう
+      // 送信直前に必ずディスクから読み直す（_afterAuthSuccessと同じ理由）。
+      await journalStore.load();
+      await journalStore.fullSync(canSyncMedia: canSyncMedia);
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(
