@@ -257,7 +257,7 @@ class _EntryReviewState extends State<EntryReview> {
             final shouldShow =
                 !settings.hasSeenNotificationHint &&
                 _items.any(
-                  (i) => i.type == DraftItemType.task && i.reminderAt != null,
+                  (i) => i.type == DraftItemType.task && i.notifyAt != null,
                 );
             if (!shouldShow) return const SizedBox.shrink();
             return Padding(
