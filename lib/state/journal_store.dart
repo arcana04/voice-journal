@@ -212,6 +212,25 @@ class JournalStore extends ChangeNotifier {
     return total;
   }
 
+  /// [calendarId]が端末上にまだ実在するかを確認する。ユーザーがOS標準の
+  /// カレンダーアプリ側で連携先カレンダーそのものを削除した場合、そのIDを
+  /// 使った操作は毎回同じエラーで失敗し続け、アプリ内に復旧手段が無いまま
+  /// [calendarSyncError]が永久にtrueのまま治らなくなる。この判定を使って、
+  /// 「カレンダー自体が無くなった」場合だけは一時的な失敗として保持せず、
+  /// 古い参照を諦めて手放す（[calendarSyncError]も立てない）。
+  Future<bool> _calendarStillExists(String calendarId) async {
+    try {
+      final calendars = await _calendar.retrieveCalendars();
+      return calendars.any((c) => c.id == calendarId);
+    } catch (e) {
+      // 実在確認自体が失敗した場合は「一時的な問題」の可能性を捨てきれない
+      // ため、安全側に倒して「まだ存在する」ものとして扱う（＝従来通り
+      // エラー保持・再試行に回す）。
+      debugPrint('calendar existence check failed: $e');
+      return true;
+    }
+  }
+
   /// 連携先カレンダーが選ばれていれば、タスクの状態に合わせて予定を作成・更新・
   /// 削除し、新しいカレンダーイベントIDとそのカレンダーIDを返す（連携オフや
   /// 失敗時は元の値のまま）。既にカレンダー予定を持っているタスクは、ユーザーが
@@ -243,11 +262,15 @@ class JournalStore extends ChangeNotifier {
           await _calendar.deleteEvent(existingCalendarId, task.calendarEventId!);
         } catch (e) {
           debugPrint('calendar sync (delete) failed: $e');
-          if (!calendarSyncError) {
-            calendarSyncError = true;
-            notifyListeners();
+          if (await _calendarStillExists(existingCalendarId)) {
+            if (!calendarSyncError) {
+              calendarSyncError = true;
+              notifyListeners();
+            }
+            return (eventId: task.calendarEventId, calendarId: task.calendarId);
           }
-          return (eventId: task.calendarEventId, calendarId: task.calendarId);
+          // カレンダー自体がもう無いので、消せなかった予定への参照を諦めて
+          // 手放す——保持し続けても二度と成功しない。
         }
       }
       return (eventId: null, calendarId: null);
@@ -273,11 +296,20 @@ class JournalStore extends ChangeNotifier {
       return (eventId: result, calendarId: result == null ? null : targetCalendarId);
     } catch (e) {
       debugPrint('calendar sync failed: $e');
-      if (!calendarSyncError) {
-        calendarSyncError = true;
+      if (await _calendarStillExists(targetCalendarId)) {
+        if (!calendarSyncError) {
+          calendarSyncError = true;
+          notifyListeners();
+        }
+        return (eventId: task.calendarEventId, calendarId: task.calendarId);
+      }
+      // 作成先のカレンダー自体が無くなっている。古い予定への参照も一緒に
+      // 手放す——同じカレンダーIDで再試行しても二度と成功しない。
+      if (calendarSyncError) {
+        calendarSyncError = false;
         notifyListeners();
       }
-      return (eventId: task.calendarEventId, calendarId: task.calendarId);
+      return (eventId: null, calendarId: null);
     }
   }
 

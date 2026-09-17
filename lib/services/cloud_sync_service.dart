@@ -19,6 +19,32 @@ class CloudSyncService {
   /// 失敗に紛れ込むことはない。
   SyncFailureReason? lastFailureReason;
 
+  /// [operation]を実行し、失敗が[SyncFailureReason.network]（一時的な通信の
+  /// 途切れ）に分類される場合だけ、短い待機を挟んで1回だけ再試行する。
+  /// 権限エラーや未認証はリトライしても直らないため対象外。ユーザーが
+  /// 削除操作をしただけで、単発のWi-Fi切れのようなごく一時的な事象で毎回
+  /// 「同期に失敗しました」バナーが出てしまうのを減らす狙い。
+  Future<bool> _withNetworkRetry(Future<void> Function() operation) async {
+    try {
+      await operation();
+      return true;
+    } catch (e) {
+      final reason = SyncFailureReason.classify(e);
+      if (reason != SyncFailureReason.network) {
+        lastFailureReason = reason;
+        return false;
+      }
+      await Future.delayed(const Duration(seconds: 2));
+      try {
+        await operation();
+        return true;
+      } catch (e2) {
+        lastFailureReason = SyncFailureReason.classify(e2);
+        return false;
+      }
+    }
+  }
+
   CollectionReference<Map<String, dynamic>>? get _collection {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.isAnonymous) return null;
@@ -195,18 +221,13 @@ class CloudSyncService {
     // ローカルデータの持ち主記録はまだ前のアカウントのまま）に、前アカウントの
     // データが新アカウントのFirestoreへ紛れ込むのを防ぐ最終防衛ライン。
     if (!await SettingsService().currentUserOwnsLocalData()) return true;
-    try {
+    final success = await _withNetworkRetry(
       // merge:true でないと、この端末が知らないフィールド（サーバー側で計算される
       // 相談機能の埋め込みベクトルなど）を毎回の同期で消してしまう。
-      await collection
-          .doc(remoteId)
-          .set(_entryToFirestoreMap(entry), SetOptions(merge: true));
-      return true;
-    } catch (e) {
-      lastFailureReason = SyncFailureReason.classify(e);
-      debugPrint('cloud sync push failed: $e');
-      return false;
-    }
+      () => collection.doc(remoteId).set(_entryToFirestoreMap(entry), SetOptions(merge: true)),
+    );
+    if (!success) debugPrint('cloud sync push failed: $lastFailureReason');
+    return success;
   }
 
   Future<bool> deleteEntry(String? remoteId) async {
@@ -216,14 +237,9 @@ class CloudSyncService {
     // remoteIdは前アカウントのローカルエントリのものなので、削除も新アカウント
     // 側の同名ドキュメントを誤って消してしまわないよう同様にブロックする。
     if (!await SettingsService().currentUserOwnsLocalData()) return true;
-    try {
-      await collection.doc(remoteId).delete();
-      return true;
-    } catch (e) {
-      lastFailureReason = SyncFailureReason.classify(e);
-      debugPrint('cloud sync delete failed: $e');
-      return false;
-    }
+    final success = await _withNetworkRetry(() => collection.doc(remoteId).delete());
+    if (!success) debugPrint('cloud sync delete failed: $lastFailureReason');
+    return success;
   }
 
   /// nullは取得失敗（UIへの同期状態表示に使う）、空リストは「同期対象0件」を表す。

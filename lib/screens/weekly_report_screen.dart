@@ -55,6 +55,11 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
   SavedWeeklyReport? _previousReport;
 
   Future<WeeklyReportInsights>? _insightsFuture;
+  /// [_load]を呼んだかどうか。初回はisProがまだfalseで[build]がペイウォールを
+  /// 表示するだけの画面と、その場で購入してPro化した後の再ビルドを区別する
+  /// ため——両方とも同じ画面インスタンスのままなので、[_insightsFuture]が
+  /// nullでisProがtrueになった時点で一度だけ[_load]を呼ぶ。
+  bool _proLoadTriggered = false;
 
   @override
   void initState() {
@@ -94,7 +99,10 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _loadPreviousReport();
-      if (context.read<SubscriptionStore>().isPro) _load();
+      if (context.read<SubscriptionStore>().isPro) {
+        _proLoadTriggered = true;
+        _load();
+      }
     });
   }
 
@@ -297,6 +305,14 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       );
     }
 
+    if (!_isHistoryView && !_proLoadTriggered && _insightsFuture == null) {
+      // 画面を開いた時点ではPro未契約でペイウォールが表示されていたが、
+      // その場で購入して戻ってきたケース（画面インスタンスはそのまま）。
+      // initStateの一度きりのチェックでは拾えないので、ここでisProが
+      // trueになった最初のビルドで一度だけ読み込みを始める。
+      _proLoadTriggered = true;
+      _load();
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.weeklyReportTitle),
