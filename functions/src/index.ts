@@ -1226,9 +1226,9 @@ function localWeekdayString(locale: Locale, timeZone: string, date: Date = new D
 /** {@link upcomingWeekdayTable}が生成する対応表の日数。「再来週の金曜」
  * 「3週間後の金曜」のように曜日対応表の範囲外を指す表現は、結局モデルの
  * 暗算に頼らざるを得ないため、長くするほど安全になる一方プロンプトの
- * トークン数も増える——2〜3週間先までの言及が最も多いはずという判断で
- * 21日とした。 */
-const WEEKDAY_TABLE_DAYS = 21;
+ * トークン数も増える——「今月中」のような単発の曜日言及が大体1ヶ月以内に
+ * 収まるという判断で30日とした（21日からの変更）。 */
+const WEEKDAY_TABLE_DAYS = 30;
 
 /**
  * 今日から{@link WEEKDAY_TABLE_DAYS}日分の「日付＝曜日」対応表を生成する。
