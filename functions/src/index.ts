@@ -2101,6 +2101,18 @@ export const revenueCatWebhook = onRequest(
       // 据え置くが、Apple/Googleが起こした返金も同じCANCELLATIONイベントで
       // 届くため、cancel_reasonがCUSTOMER_SUPPORT（返金）の場合だけ即座に
       // 失効させる（返金なのにProのままという状態を防ぐ）。
+      // 追加分数パック（Proエンタイトルメント無しの消費型IAP）の返金も同じ
+      // CANCELLATIONイベントで届くため、ここで先に除外する。除外しないと
+      // Pro本体とは無関係な返金でPro会員が誤って失効し、買い切りカウンタも
+      // 誤って減算されてしまう。
+      if (eventType === "CANCELLATION" && isRefund && event?.product_id === EXTRA_MINUTES_PACK_PRODUCT_ID) {
+        logger.info("revenueCatWebhook refund for extra-minutes pack ignored (not Pro-related)", {
+          uid,
+          eventType,
+        });
+        res.status(200).send("ok");
+        return;
+      }
       if (eventType === "CANCELLATION" && isRefund) {
         await applyProStatus(uid, false, false, "webhook:CANCELLATION:refund", eventTimestampMs);
         // 買い切りプラン（非失効=expiration_at_msが無い）の返金なら、購入時の
@@ -4802,7 +4814,7 @@ export const askKnowledgeBase = onCall(
     const { question, context, locale, history, timeZone } =
       (request.data ?? {}) as AskKnowledgeBaseRequest;
     const loc = normalizeLocale(locale);
-    const effectiveTimeZone = isValidTimeZone(timeZone) ? timeZone : "UTC";
+    const effectiveTimeZone = isValidTimeZone(timeZone) ? timeZone : "Asia/Tokyo";
 
     const uid = request.auth?.uid;
     if (!uid) {

@@ -563,6 +563,31 @@ class JournalStore extends ChangeNotifier {
     _trackSync(_mediaSync.deleteAllMedia(entry.remoteId));
   }
 
+  /// アカウント切り替え/アカウント削除で[DbService.wipeAllLocalData]がSQLiteの
+  /// 行を丸ごと消す直前に呼ぶ。DB側は行ごと消えるため、消える前にこの端末上の
+  /// 副作用（予約済みローカル通知、カレンダー予定、Appleリマインダー、添付画像
+  /// ファイル）を先に片付けておかないと、前のアカウントの内容が端末に残り続けて
+  /// しまう（例: 家族共有端末で別アカウントに切り替えた後、前の持ち主のタスク内容の
+  /// 通知が鳴る）。クラウド（Firestore/Storage）側のデータには一切触れない——
+  /// アカウント切り替えでは前の持ち主のクラウドデータは消さない仕様であり、
+  /// アカウント削除ではサーバー側の`deleteAccount`が別途クラウド側を消すため。
+  Future<void> teardownAllLocalSideEffects() async {
+    for (final entry in entries) {
+      for (final task in entry.tasks) {
+        if (task.id != null) {
+          await _reminders.cancelTaskReminder(task.id!);
+        }
+        await _deleteTaskCalendarEvent(task);
+        await _deleteTaskAppleReminder(task);
+      }
+    }
+    // 上のループはメモリ上の[entries]（＝現在の持ち主のもの）が正しく読み込め
+    // ている前提だが、念のための安全網として通知は全消去もしておく。画像は
+    // ディレクトリごと消すため、個別ファイルを辿る必要はない。
+    await _reminders.cancelAll();
+    await _images.deleteAllImages();
+  }
+
   /// entry丸ごとではなく、指定したnote（同じカテゴリの内容）だけを削除する。
   /// 日記・アイデアの削除ボタンから使う——1回の録音がタスク・日記・アイデアに
   /// 同時に仕分けられることがあるため、削除操作が他カテゴリの内容まで

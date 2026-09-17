@@ -137,6 +137,12 @@ class ReminderService {
 
   Future<void> cancelTaskReminder(int taskId) => _plugin.cancel(taskId);
 
+  /// 予約済みの通知を全て取り消す（週刊レポート/トライアル終了通知含む）。
+  /// アカウント切り替え/削除でローカルデータを丸ごと消す際、個々のタスク単位の
+  /// キャンセルだけでは取りこぼしうる（消えた後のDBには辿れないため）ための
+  /// 安全網として使う。
+  Future<void> cancelAll() => _plugin.cancelAll();
+
   /// DBに保存済みの未完了タスクを読み直し、通知が消えていても再スケジュールする。
   /// アプリ起動時（[JournalStore.load]）に加えて、端末再起動後もWorkManager経由の
   /// バックグラウンドタスク（[reminderCallbackDispatcher]）から呼ばれる — Android の

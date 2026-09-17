@@ -74,9 +74,15 @@ class AccountStore extends ChangeNotifier {
   /// missing-or-invalid-nonce（"Duplicate credential received"）で必ず失敗
   /// する。フォールバック時は[credentialProvider]を呼び直して新しい
   /// クレデンシャルを取得する。
+  /// [beforeLocalWipe]は、端末に残ったローカルデータが実際にワイプされる前に
+  /// 呼ばれる（別アカウントへの切り替えを検知した場合のみ）。予約済みの
+  /// ローカル通知・カレンダー予定・Appleリマインダー・添付画像など、
+  /// SQLite外に残る「前の持ち主」の副作用を後始末するために使う
+  /// （[JournalStore.teardownAllLocalSideEffects]を渡す想定）。
   Future<String> signInWithCredential(
-    Future<AuthCredential> Function() credentialProvider,
-  ) async {
+    Future<AuthCredential> Function() credentialProvider, {
+    Future<void> Function()? beforeLocalWipe,
+  }) async {
     try {
       final credential = await credentialProvider();
       final user = FirebaseAuth.instance.currentUser;
@@ -84,7 +90,7 @@ class AccountStore extends ChangeNotifier {
         final result = await FirebaseAuth.instance.signInWithCredential(
           credential,
         );
-        await _guardAccountSwitch(result.user!.uid);
+        await _guardAccountSwitch(result.user!.uid, beforeLocalWipe);
         notifyListeners();
         return result.user!.uid;
       }
@@ -105,7 +111,7 @@ class AccountStore extends ChangeNotifier {
         final result = await FirebaseAuth.instance.signInWithCredential(
           freshCredential,
         );
-        await _guardAccountSwitch(result.user!.uid);
+        await _guardAccountSwitch(result.user!.uid, beforeLocalWipe);
         notifyListeners();
         return result.user!.uid;
       }
@@ -124,9 +130,13 @@ class AccountStore extends ChangeNotifier {
   /// （この端末で初めての実アカウント紐付け）は消さずにそのまま採用する——
   /// 匿名のまま使っていたデータを初回サインインで引き継ぐ既存の挙動を壊さない
   /// ため。
-  Future<void> _guardAccountSwitch(String newUid) async {
+  Future<void> _guardAccountSwitch(
+    String newUid, [
+    Future<void> Function()? beforeLocalWipe,
+  ]) async {
     final previousOwner = await _settings.getLocalDataOwnerUid();
     if (previousOwner != null && previousOwner != newUid) {
+      await beforeLocalWipe?.call();
       await DbService.instance.wipeAllLocalData();
     }
     await _settings.setLocalDataOwnerUid(newUid);
@@ -154,7 +164,11 @@ class AccountStore extends ChangeNotifier {
   /// のみローカルデータを消す — 途中でネットワークエラーなどが起きた場合に、
   /// サーバーは消えていないのにローカルだけ消えてしまう事態を避けるため。
   /// 成功後は新しい匿名セッションを再確立する。戻り値は新しい匿名uid。
-  Future<String> deleteAccount() async {
+  /// [beforeLocalWipe]は[JournalStore.teardownAllLocalSideEffects]参照
+  /// （[signInWithCredential]の同名パラメータと同じ役割）。
+  Future<String> deleteAccount({
+    Future<void> Function()? beforeLocalWipe,
+  }) async {
     try {
       await FirebaseFunctions.instanceFor(
         region: 'us-central1',
@@ -167,6 +181,7 @@ class AccountStore extends ChangeNotifier {
         e,
       );
     }
+    await beforeLocalWipe?.call();
     await DbService.instance.wipeAllLocalData();
     await _settings.setLocalDataOwnerUid(null);
     await FirebaseAuth.instance.signOut();

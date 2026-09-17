@@ -91,8 +91,10 @@ class _AccountScreenState extends State<AccountScreen> {
     setState(() => _busy = true);
     try {
       final accountStore = context.read<AccountStore>();
+      final journalStore = context.read<JournalStore>();
       final uid = await accountStore.signInWithCredential(
         accountStore.googleCredential,
+        beforeLocalWipe: journalStore.teardownAllLocalSideEffects,
       );
       await _afterAuthSuccess(uid);
     } on SignInCancelledException {
@@ -108,8 +110,10 @@ class _AccountScreenState extends State<AccountScreen> {
     setState(() => _busy = true);
     try {
       final accountStore = context.read<AccountStore>();
+      final journalStore = context.read<JournalStore>();
       final uid = await accountStore.signInWithCredential(
         accountStore.appleCredential,
+        beforeLocalWipe: journalStore.teardownAllLocalSideEffects,
       );
       await _afterAuthSuccess(uid);
     } on SignInCancelledException {
@@ -178,7 +182,9 @@ class _AccountScreenState extends State<AccountScreen> {
     if (!mounted) return;
     setState(() => _busy = true);
     try {
-      final uid = await context.read<AccountStore>().deleteAccount();
+      final uid = await context.read<AccountStore>().deleteAccount(
+        beforeLocalWipe: context.read<JournalStore>().teardownAllLocalSideEffects,
+      );
       if (!mounted) return;
       await context.read<SubscriptionStore>().switchUser(uid);
       if (!mounted) return;

@@ -42,4 +42,12 @@ class ImageStorageService {
       await file.delete();
     }
   }
+
+  /// アカウント切り替え/削除時、端末ローカルの添付画像を全て消す。
+  Future<void> deleteAllImages() async {
+    final imagesDir = await _imagesDir();
+    if (await imagesDir.exists()) {
+      await imagesDir.delete(recursive: true);
+    }
+  }
 }
