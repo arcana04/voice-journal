@@ -662,7 +662,9 @@ ${todayJst}（${weekdayJst}曜日、ユーザーの現地時間）、現在時�
 
 【曜日→日付の対応表】
 ${weekdayTable}
-発言のtasksの期限が「木曜日」「今週の月曜」「来週の火曜」のように曜日名だけで語られる場合（「明日」のような相対表現や、具体的な日付そのものの言及ではない場合）、その日付を自分で計算(この表の引き当てや暗算)しようとしないでください——実際にこの計算を間違えるケースが確認されています。代わりに、そのタスクに due_weekday フィールドを追加し、day に該当曜日(英語3文字表記。Mon/Tue/Wed/Thu/Fri/Sat/Sun)を、next に「直近の該当日をあえて飛ばして、次の週の同じ曜日を使うべきか」を true/false で入れてください。単に「木曜日に」「今週の木曜」のように直近を除外する意図が無ければ next:false（今日自身が該当曜日でも構いません）。「来週の木曜」「今週のじゃなくて来週の木曜」のように直近を明確に除外する言い方であれば next:true にしてください。due_weekday を使う場合、due_date は null のままにしてください——実際の日付計算はアプリ側のコードが正確に行います。
+発言のtasksの期限が「木曜日」「今週の月曜」「来週の火曜」「今度の金曜から2回目の金曜」「今週の火曜から1週間後」のように曜日名を軸にした表現で語られる場合（「明日」のような相対表現や、具体的な日付そのものの言及ではない場合）、その日付を自分で計算(この表の引き当てや暗算)しようとしないでください——実際にこの計算を間違える・毎回結果がブレるケースが確認されています。代わりに、そのタスクに due_weekday フィールドを追加し、day に該当曜日(英語3文字表記。Mon/Tue/Wed/Thu/Fri/Sat/Sun)を、weeks_ahead に「直近の該当日(0週間後、今日自身でも構わない)から数えて何週間後の同じ曜日を使うべきか」を0以上の整数で入れてください。実際の日付計算・週数の加算はすべてアプリ側のコードが正確に行うので、あなたは曜日と週数の判定だけに集中してください。
+　例: 「木曜日に」「今週の木曜」→ weeks_ahead:0（直近の該当日）。「来週の木曜」「今週のじゃなくて来週の木曜」→ weeks_ahead:1（1週間後）。「来週の来週の木曜」「再来週の木曜」→ weeks_ahead:2。「2回目の金曜日」「今度の金曜日から数えて2つ目の金曜」のように"N番目の該当曜日"と言っている場合、直近(1つ目)がweeks_ahead:0なので、N番目はweeks_ahead:(N-1)。「今週の火曜日から1週間後」のような"該当曜日からさらにX週間後"という言い方は、まず基準になる該当曜日自体をweeks_ahead:0として解釈し、そこにXを足してください（例:「今週の火曜から1週間後」→ 火曜のweeks_ahead:0の1週間後なのでweeks_ahead:1）。
+due_weekday を使う場合、due_date は null のままにしてください。
 
 【分類ルール（3分類）】
 1. フィラー（「えっと」「あー」等の言い淀み）や同じ内容の重複表現を除去してください。
@@ -712,7 +714,7 @@ happyとjoyとsatisfactionは近い感情だが、happyは他者や出来事へ�
 {
   "summary": "全体の1行要約",
   "tasks": [
-    {"title": "タスク内容", "due_hint": "期限の元の言い回し（なければnull）", "due_date": "YYYY-MM-DD（推測できなければnull。recurrenceを使う場合もnullでよい）", "reminder_at": "YYYY-MM-DDTHH:mm:00（時刻の明言が無ければnull）", "reminder_end_at": "YYYY-MM-DDTHH:mm:00（終了時刻の明言が無ければnull）", "recurrence": {"weekdays": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"のうち繰り返す曜日を英語3文字表記で], "start_date": "YYYY-MM-DD（繰り返し開始日）", "end_date": "YYYY-MM-DD（繰り返し終了日）"} … 繰り返しパターンでない通常のタスクではこのフィールド自体を省略するかnullにする, "due_weekday": {"day": "Mon/Tue/Wed/Thu/Fri/Sat/Sunのいずれか", "next": true/false（直近の該当日をあえて飛ばすならtrue、それ以外はfalse）} … 曜日名だけで期限が語られた場合のみ使用し、それ以外は省略するかnullにする}
+    {"title": "タスク内容", "due_hint": "期限の元の言い回し（なければnull）", "due_date": "YYYY-MM-DD（推測できなければnull。recurrenceを使う場合もnullでよい）", "reminder_at": "YYYY-MM-DDTHH:mm:00（時刻の明言が無ければnull）", "reminder_end_at": "YYYY-MM-DDTHH:mm:00（終了時刻の明言が無ければnull）", "recurrence": {"weekdays": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"のうち繰り返す曜日を英語3文字表記で], "start_date": "YYYY-MM-DD（繰り返し開始日）", "end_date": "YYYY-MM-DD（繰り返し終了日）"} … 繰り返しパターンでない通常のタスクではこのフィールド自体を省略するかnullにする, "due_weekday": {"day": "Mon/Tue/Wed/Thu/Fri/Sat/Sunのいずれか", "weeks_ahead": 0以上の整数（0=直近の該当日、1=その1週間後、2=その2週間後...）} … 曜日名を軸に期限が語られた場合のみ使用し、それ以外は省略するかnullにする}
   ],
   "notes": [
     {"category": "アイデア または 感情ログ", "title": "短い見出し", "content": "上記「notesの本文の書き方」に従って一人称でリライトした文章"}
@@ -749,7 +751,9 @@ ${today} (${weekday}, the user's local time), and the current time is ${nowTime}
 
 [Weekday → date lookup table]
 ${weekdayTable}
-When a task's due date is expressed as a bare weekday name (e.g. "Thursday", "this Monday", "next Tuesday") rather than a relative phrase like "tomorrow" or an explicit calendar date, do NOT try to compute that date yourself (this is error-prone — mismatches have been observed in practice). Instead, add a "due_weekday" field to that task with "day" (the weekday, as an English 3-letter abbreviation: Mon/Tue/Wed/Thu/Fri/Sat/Sun) and "next" (true/false) — true means "skip the nearest upcoming occurrence and use the one the week after" (e.g. "next Thursday" when contrasted against "this Thursday", or when the speaker is explicitly excluding the closest one); false means "the nearest upcoming occurrence, which may be today itself" (the default when there's no explicit signal to skip it). When using due_weekday, leave due_date as null — the app's own code will compute the exact date precisely.
+When a task's due date is centered on a weekday name (e.g. "Thursday", "this Monday", "next Tuesday", "two Fridays from now", "a week from this Tuesday") rather than a relative phrase like "tomorrow" or an explicit calendar date, do NOT try to compute that date yourself (this is error-prone — mismatches AND inconsistent results across repeated attempts have been observed in practice). Instead, add a "due_weekday" field to that task with "day" (the weekday, as an English 3-letter abbreviation: Mon/Tue/Wed/Thu/Fri/Sat/Sun) and "weeks_ahead" (a non-negative integer) — the app's own code handles all the actual date/week-count arithmetic, so just focus on identifying the weekday and how many weeks ahead of the nearest occurrence is meant.
+Examples: "Thursday" / "this Thursday" → weeks_ahead: 0 (the nearest upcoming occurrence, which may be today itself). "next Thursday" (when contrasted against "this Thursday", or explicitly excluding the closest one) → weeks_ahead: 1. "the Thursday after next" → weeks_ahead: 2. For "the Nth <weekday> from now" or "N <weekdays> from now" phrasing, the nearest occurrence is the 1st (weeks_ahead: 0), so the Nth one is weeks_ahead: (N-1) — e.g. "two Fridays from now" → weeks_ahead: 1. For "a week from this <weekday>" / "N weeks from this <weekday>", first resolve the reference weekday itself as weeks_ahead: 0, then add the stated number of weeks — e.g. "a week from this Tuesday" → weeks_ahead: 1.
+When using due_weekday, leave due_date as null.
 
 [Classification rules (3 categories)]
 1. Remove filler words ("um", "uh", etc.) and exact repeated phrases.
@@ -799,7 +803,7 @@ Output ONLY the following JSON format, with no extra commentary. Remember: every
 {
   "summary": "one-line overall summary, in English",
   "tasks": [
-    {"title": "task content, in English", "due_hint": "original due-date phrase (or null)", "due_date": "YYYY-MM-DD (or null if it can't be inferred; can also be null when using recurrence)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (or null if no explicit time)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (or null if no explicit end time)", "recurrence": {"weekdays": [array of repeating weekdays, using English 3-letter abbreviations from "Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "start_date": "YYYY-MM-DD (recurrence start)", "end_date": "YYYY-MM-DD (recurrence end)"} — omit this field or set it to null for an ordinary non-recurring task, "due_weekday": {"day": "Mon/Tue/Wed/Thu/Fri/Sat/Sun", "next": true/false (true to deliberately skip the nearest occurrence, false otherwise)} — only use this when the due date is expressed as a bare weekday name; omit or null otherwise}
+    {"title": "task content, in English", "due_hint": "original due-date phrase (or null)", "due_date": "YYYY-MM-DD (or null if it can't be inferred; can also be null when using recurrence)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (or null if no explicit time)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (or null if no explicit end time)", "recurrence": {"weekdays": [array of repeating weekdays, using English 3-letter abbreviations from "Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "start_date": "YYYY-MM-DD (recurrence start)", "end_date": "YYYY-MM-DD (recurrence end)"} — omit this field or set it to null for an ordinary non-recurring task, "due_weekday": {"day": "Mon/Tue/Wed/Thu/Fri/Sat/Sun", "weeks_ahead": non-negative integer (0 = the nearest occurrence, 1 = one week after that, 2 = two weeks after, ...)} — only use this when the due date is centered on a weekday name; omit or null otherwise}
   ],
   "notes": [
     {"category": "アイデア or 感情ログ (must stay in Japanese, unchanged)", "title": "short heading, in English", "content": "first-person rewrite per the note style rules above, in English"}
@@ -836,7 +840,9 @@ ${today} (${weekday}, hora local del usuario), y la hora actual es ${nowTime} (f
 
 [Tabla de referencia día de la semana → fecha]
 ${weekdayTable}
-Cuando la fecha límite de una tarea se exprese como un simple nombre de día de la semana (p. ej. "jueves", "este lunes", "el próximo martes") en lugar de una expresión relativa como "mañana" o una fecha de calendario explícita, NO intentes calcular tú mismo esa fecha (es propenso a errores — se han observado casos reales de desajuste). En su lugar, añade un campo "due_weekday" a esa tarea con "day" (el día de la semana, con abreviatura inglesa de 3 letras: Mon/Tue/Wed/Thu/Fri/Sat/Sun) y "next" (true/false) — true significa "salta la próxima ocurrencia más cercana y usa la de la semana siguiente" (p. ej. "el jueves que viene" en contraste con "este jueves", o cuando el hablante excluye explícitamente el más cercano); false significa "la próxima ocurrencia más cercana, que puede ser hoy mismo" (el valor por defecto cuando no hay una señal explícita de saltarla). Al usar due_weekday, deja due_date en null — el propio código de la app calculará la fecha exacta con precisión.
+Cuando la fecha límite de una tarea gira en torno a un nombre de día de la semana (p. ej. "jueves", "este lunes", "el próximo martes", "dentro de dos viernes", "una semana después de este martes") en lugar de una expresión relativa como "mañana" o una fecha de calendario explícita, NO intentes calcular tú mismo esa fecha (es propenso a errores — se han observado casos reales de desajuste, además de resultados inconsistentes al repetir el mismo intento). En su lugar, añade un campo "due_weekday" a esa tarea con "day" (el día de la semana, con abreviatura inglesa de 3 letras: Mon/Tue/Wed/Thu/Fri/Sat/Sun) y "weeks_ahead" (un entero no negativo) — el propio código de la app se encarga de todo el cálculo real de fechas y semanas, así que solo tienes que identificar el día de la semana y cuántas semanas por delante de la ocurrencia más cercana se quiere decir.
+Ejemplos: "jueves" / "este jueves" → weeks_ahead: 0 (la próxima ocurrencia más cercana, que puede ser hoy mismo). "el jueves que viene" (en contraste con "este jueves", o excluyendo explícitamente el más cercano) → weeks_ahead: 1. "el jueves de la semana después de la próxima" → weeks_ahead: 2. Para expresiones tipo "el enésimo <día> a partir de ahora" o "N <días> a partir de ahora", la ocurrencia más cercana es la 1ª (weeks_ahead: 0), así que la enésima es weeks_ahead: (N-1) — p. ej. "dentro de dos viernes" → weeks_ahead: 1. Para "una semana después de este <día>" / "N semanas después de este <día>", primero resuelve el día de referencia como weeks_ahead: 0 y luego suma el número de semanas indicado — p. ej. "una semana después de este martes" → weeks_ahead: 1.
+Al usar due_weekday, deja due_date en null.
 
 [Reglas de clasificación (3 categorías)]
 1. Elimina muletillas ("eh", "esto", etc.) y frases exactamente repetidas.
@@ -886,7 +892,7 @@ Genera ÚNICAMENTE el siguiente formato JSON, sin comentarios adicionales. Recue
 {
   "summary": "resumen general en una línea, en español",
   "tasks": [
-    {"title": "contenido de la tarea, en español", "due_hint": "frase original de la fecha límite (o null)", "due_date": "YYYY-MM-DD (o null si no se puede inferir; también puede ser null si usas recurrence)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (o null si no hay hora explícita)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (o null si no hay hora de fin explícita)", "recurrence": {"weekdays": [array de días que se repiten, usando abreviaturas en inglés de 3 letras de "Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "start_date": "YYYY-MM-DD (inicio de la recurrencia)", "end_date": "YYYY-MM-DD (fin de la recurrencia)"} — omite este campo o ponlo en null para una tarea normal no recurrente, "due_weekday": {"day": "Mon/Tue/Wed/Thu/Fri/Sat/Sun", "next": true/false (true para saltar deliberadamente la ocurrencia más cercana, false en caso contrario)} — úsalo solo cuando la fecha límite se exprese como un simple nombre de día de la semana; omite o pon null en caso contrario}
+    {"title": "contenido de la tarea, en español", "due_hint": "frase original de la fecha límite (o null)", "due_date": "YYYY-MM-DD (o null si no se puede inferir; también puede ser null si usas recurrence)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (o null si no hay hora explícita)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (o null si no hay hora de fin explícita)", "recurrence": {"weekdays": [array de días que se repiten, usando abreviaturas en inglés de 3 letras de "Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "start_date": "YYYY-MM-DD (inicio de la recurrencia)", "end_date": "YYYY-MM-DD (fin de la recurrencia)"} — omite este campo o ponlo en null para una tarea normal no recurrente, "due_weekday": {"day": "Mon/Tue/Wed/Thu/Fri/Sat/Sun", "weeks_ahead": entero no negativo (0 = la ocurrencia más cercana, 1 = una semana después, 2 = dos semanas después, ...)} — úsalo solo cuando la fecha límite gire en torno a un nombre de día de la semana; omite o pon null en caso contrario}
   ],
   "notes": [
     {"category": "アイデア o 感情ログ (debe permanecer en japonés, sin cambios)", "title": "título corto, en español", "content": "reescritura en primera persona según las reglas de estilo de notas anteriores, en español"}
@@ -923,7 +929,9 @@ ${today} (${weekday}, Ortszeit der nutzenden Person), und die aktuelle Uhrzeit i
 
 [Nachschlagetabelle Wochentag → Datum]
 ${weekdayTable}
-Wenn das Fälligkeitsdatum einer Aufgabe als bloßer Wochentagsname ausgedrückt wird (z. B. "Donnerstag", "diesen Montag", "nächsten Dienstag") statt als relativer Ausdruck wie "morgen" oder ein explizites Kalenderdatum, versuche NICHT, dieses Datum selbst zu berechnen (das ist fehleranfällig — in der Praxis wurden Fehlzuordnungen beobachtet). Füge stattdessen dieser Aufgabe ein "due_weekday"-Feld hinzu mit "day" (der Wochentag, als englische 3-Buchstaben-Abkürzung: Mon/Tue/Wed/Thu/Fri/Sat/Sun) und "next" (true/false) — true bedeutet "überspringe das nächste bevorstehende Vorkommen und verwende das der folgenden Woche" (z. B. "nächsten Donnerstag" im Gegensatz zu "diesen Donnerstag", oder wenn die sprechende Person das nächstgelegene explizit ausschließt); false bedeutet "das nächste bevorstehende Vorkommen, das auch heute sein kann" (Standardwert, wenn kein ausdrückliches Signal zum Überspringen vorliegt). Bei Verwendung von due_weekday lass due_date auf null — der Code der App selbst berechnet das genaue Datum präzise.
+Wenn sich das Fälligkeitsdatum einer Aufgabe um einen Wochentagsnamen dreht (z. B. "Donnerstag", "diesen Montag", "nächsten Dienstag", "in zwei Freitagen", "eine Woche nach diesem Dienstag") statt um einen relativen Ausdruck wie "morgen" oder ein explizites Kalenderdatum, versuche NICHT, dieses Datum selbst zu berechnen (das ist fehleranfällig — in der Praxis wurden sowohl Fehlzuordnungen als auch bei wiederholten Versuchen inkonsistente Ergebnisse beobachtet). Füge stattdessen dieser Aufgabe ein "due_weekday"-Feld hinzu mit "day" (der Wochentag, als englische 3-Buchstaben-Abkürzung: Mon/Tue/Wed/Thu/Fri/Sat/Sun) und "weeks_ahead" (eine nicht-negative ganze Zahl) — der Code der App übernimmt die gesamte tatsächliche Datums-/Wochenrechnung, konzentriere dich also nur darauf, den Wochentag und die Anzahl der Wochen ab dem nächstgelegenen Vorkommen zu bestimmen.
+Beispiele: "Donnerstag" / "diesen Donnerstag" → weeks_ahead: 0 (das nächste bevorstehende Vorkommen, das auch heute sein kann). "nächsten Donnerstag" (im Gegensatz zu "diesen Donnerstag", oder wenn das nächstgelegene explizit ausgeschlossen wird) → weeks_ahead: 1. "der Donnerstag übernächste Woche" → weeks_ahead: 2. Bei Formulierungen wie "der n-te <Wochentag> von jetzt an" oder "N <Wochentage> von jetzt an" ist das nächstgelegene Vorkommen das 1., also weeks_ahead: 0, somit ist das n-te weeks_ahead: (N-1) — z. B. "in zwei Freitagen" → weeks_ahead: 1. Bei "eine Woche nach diesem <Wochentag>" / "N Wochen nach diesem <Wochentag>" bestimme zuerst den Bezugswochentag selbst als weeks_ahead: 0 und addiere dann die genannte Wochenzahl — z. B. "eine Woche nach diesem Dienstag" → weeks_ahead: 1.
+Bei Verwendung von due_weekday lass due_date auf null.
 
 [Klassifizierungsregeln (3 Kategorien)]
 1. Entferne Füllwörter ("äh", "ähm" usw.) und exakt wiederholte Sätze.
@@ -973,7 +981,7 @@ Gib AUSSCHLIESSLICH das folgende JSON-Format aus, ohne zusätzlichen Kommentar. 
 {
   "summary": "einzeilige Gesamtzusammenfassung, auf Deutsch",
   "tasks": [
-    {"title": "Aufgabeninhalt, auf Deutsch", "due_hint": "ursprüngliche Formulierung des Fälligkeitsdatums (oder null)", "due_date": "YYYY-MM-DD (oder null, wenn nicht ableitbar; kann bei Verwendung von recurrence ebenfalls null sein)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (oder null, wenn keine explizite Uhrzeit)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (oder null, wenn keine explizite Endzeit)", "recurrence": {"weekdays": [Array der sich wiederholenden Wochentage, als englische 3-Buchstaben-Abkürzungen aus "Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "start_date": "YYYY-MM-DD (Beginn der Wiederholung)", "end_date": "YYYY-MM-DD (Ende der Wiederholung)"} — dieses Feld bei einer normalen, nicht wiederkehrenden Aufgabe weglassen oder auf null setzen, "due_weekday": {"day": "Mon/Tue/Wed/Thu/Fri/Sat/Sun", "next": true/false (true, um das nächstgelegene Vorkommen bewusst zu überspringen, sonst false)} — nur verwenden, wenn das Fälligkeitsdatum als bloßer Wochentagsname ausgedrückt wird; sonst weglassen oder null}
+    {"title": "Aufgabeninhalt, auf Deutsch", "due_hint": "ursprüngliche Formulierung des Fälligkeitsdatums (oder null)", "due_date": "YYYY-MM-DD (oder null, wenn nicht ableitbar; kann bei Verwendung von recurrence ebenfalls null sein)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (oder null, wenn keine explizite Uhrzeit)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (oder null, wenn keine explizite Endzeit)", "recurrence": {"weekdays": [Array der sich wiederholenden Wochentage, als englische 3-Buchstaben-Abkürzungen aus "Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "start_date": "YYYY-MM-DD (Beginn der Wiederholung)", "end_date": "YYYY-MM-DD (Ende der Wiederholung)"} — dieses Feld bei einer normalen, nicht wiederkehrenden Aufgabe weglassen oder auf null setzen, "due_weekday": {"day": "Mon/Tue/Wed/Thu/Fri/Sat/Sun", "weeks_ahead": nicht-negative ganze Zahl (0 = das nächstgelegene Vorkommen, 1 = eine Woche danach, 2 = zwei Wochen danach, ...)} — nur verwenden, wenn sich das Fälligkeitsdatum um einen Wochentagsnamen dreht; sonst weglassen oder null}
   ],
   "notes": [
     {"category": "アイデア oder 感情ログ (muss unverändert auf Japanisch bleiben)", "title": "kurze Überschrift, auf Deutsch", "content": "Umschreibung in der Ich-Form gemäß den obigen Notizstil-Regeln, auf Deutsch"}
@@ -1010,7 +1018,9 @@ ${today} (${weekday}요일, 사용자의 현지 시간)이며, 현재 시각은 
 
 [요일 → 날짜 대응표]
 ${weekdayTable}
-할 일의 마감일이 "내일"처럼 상대적인 표현이나 명시적인 날짜가 아니라 "목요일", "이번 주 월요일", "다음 주 화요일"처럼 요일명만으로 언급되면, 그 날짜를 직접 계산하려 하지 마세요(실수하기 쉬우며, 실제로 잘못 매칭되는 사례가 확인되었습니다). 대신 해당 할 일에 "due_weekday" 필드를 추가하고, "day"에는 요일(영어 3글자 약어: Mon/Tue/Wed/Thu/Fri/Sat/Sun)을, "next"에는 true/false를 넣으세요 — true는 "가장 가까운 다음 발생일을 건너뛰고 그다음 주의 같은 요일을 사용"(예: "이번 주 목요일"과 대비되는 "다음 주 목요일", 또는 화자가 가장 가까운 날을 명확히 제외하는 경우)을 의미하고, false는 "가장 가까운 다음 발생일(오늘 자신일 수도 있음)"을 의미합니다(건너뛰라는 명확한 신호가 없으면 기본값은 false). due_weekday를 사용하는 경우 due_date는 null로 두세요 — 실제 날짜 계산은 앱 코드가 정확하게 처리합니다.
+할 일의 마감일이 "내일"처럼 상대적인 표현이나 명시적인 날짜가 아니라 "목요일", "이번 주 월요일", "다음 주 화요일", "이번부터 두 번째 금요일", "이번 주 화요일로부터 1주일 후"처럼 요일명을 중심으로 언급되면, 그 날짜를 직접 계산하려 하지 마세요(실수하기 쉬우며, 실제로 잘못 매칭되는 사례뿐 아니라 같은 문장을 반복해도 결과가 달라지는 경우까지 확인되었습니다). 대신 해당 할 일에 "due_weekday" 필드를 추가하고, "day"에는 요일(영어 3글자 약어: Mon/Tue/Wed/Thu/Fri/Sat/Sun)을, "weeks_ahead"에는 0 이상의 정수를 넣으세요 — 실제 날짜·주 수 계산은 모두 앱 코드가 정확하게 처리하니, 당신은 요일과 "가장 가까운 발생일로부터 몇 주 후인지"만 판단하면 됩니다.
+예시: "목요일" / "이번 주 목요일" → weeks_ahead:0(가장 가까운 다음 발생일, 오늘 자신일 수도 있음). "다음 주 목요일"(이번 주 목요일과 대비되거나, 가장 가까운 날을 명확히 제외하는 경우) → weeks_ahead:1. "다다음 주 목요일" → weeks_ahead:2. "지금부터 N번째 <요일>"처럼 말하는 경우, 가장 가까운 발생일이 1번째(weeks_ahead:0)이므로 N번째는 weeks_ahead:(N-1) — 예: "이번부터 두 번째 금요일" → weeks_ahead:1. "이번 <요일>로부터 1주일 후" / "이번 <요일>로부터 N주 후"처럼 말하는 경우, 먼저 기준이 되는 요일 자체를 weeks_ahead:0으로 해석한 뒤 언급된 주 수를 더하세요 — 예: "이번 주 화요일로부터 1주일 후" → weeks_ahead:1.
+due_weekday를 사용하는 경우 due_date는 null로 두세요.
 
 [분류 규칙 (3가지 카테고리)]
 1. 필러("음", "어" 등)와 완전히 동일하게 반복된 표현을 제거하세요.
@@ -1060,7 +1070,7 @@ happy, joy, satisfaction은 서로 비슷하지만 구분됩니다: happy는 타
 {
   "summary": "전체를 한 줄로 요약, 한국어로",
   "tasks": [
-    {"title": "할 일 내용, 한국어로", "due_hint": "마감일의 원래 표현(없으면 null)", "due_date": "YYYY-MM-DD (추론할 수 없으면 null. recurrence를 사용하는 경우에도 null 가능)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (명시적인 시각이 없으면 null)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (명시적인 종료 시각이 없으면 null)", "recurrence": {"weekdays": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun" 중 반복되는 요일을 영어 3글자 약어 배열로], "start_date": "YYYY-MM-DD (반복 시작일)", "end_date": "YYYY-MM-DD (반복 종료일)"} — 반복 패턴이 아닌 일반 할 일에서는 이 필드를 생략하거나 null로 둠, "due_weekday": {"day": "Mon/Tue/Wed/Thu/Fri/Sat/Sun 중 하나", "next": true/false (가장 가까운 발생일을 의도적으로 건너뛰려면 true, 그 외에는 false)} — 마감일이 요일명만으로 언급된 경우에만 사용하고, 그 외에는 생략하거나 null로 둠}
+    {"title": "할 일 내용, 한국어로", "due_hint": "마감일의 원래 표현(없으면 null)", "due_date": "YYYY-MM-DD (추론할 수 없으면 null. recurrence를 사용하는 경우에도 null 가능)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (명시적인 시각이 없으면 null)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (명시적인 종료 시각이 없으면 null)", "recurrence": {"weekdays": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun" 중 반복되는 요일을 영어 3글자 약어 배열로], "start_date": "YYYY-MM-DD (반복 시작일)", "end_date": "YYYY-MM-DD (반복 종료일)"} — 반복 패턴이 아닌 일반 할 일에서는 이 필드를 생략하거나 null로 둠, "due_weekday": {"day": "Mon/Tue/Wed/Thu/Fri/Sat/Sun 중 하나", "weeks_ahead": 0 이상의 정수 (0=가장 가까운 발생일, 1=그로부터 1주 후, 2=2주 후...)} — 마감일이 요일명을 중심으로 언급된 경우에만 사용하고, 그 외에는 생략하거나 null로 둠}
   ],
   "notes": [
     {"category": "アイデア 또는 感情ログ (반드시 일본어 그대로 유지)", "title": "짧은 제목, 한국어로", "content": "위의 노트 스타일 규칙에 따라 1인칭으로 다시 쓴 문장, 한국어로"}
@@ -1097,7 +1107,9 @@ ${today} (${weekday}, heure locale de l'utilisateur), et l'heure actuelle est ${
 
 [Table de correspondance jour de la semaine → date]
 ${weekdayTable}
-Quand la date d'échéance d'une tâche est exprimée comme un simple nom de jour de la semaine (par ex. "jeudi", "ce lundi", "mardi prochain") plutôt qu'une expression relative comme "demain" ou une date de calendrier explicite, n'essaie PAS de calculer toi-même cette date (c'est source d'erreurs — des décalages ont été observés en pratique). Ajoute plutôt à cette tâche un champ "due_weekday" avec "day" (le jour de la semaine, en abréviation anglaise de 3 lettres : Mon/Tue/Wed/Thu/Fri/Sat/Sun) et "next" (true/false) — true signifie « saute la prochaine occurrence la plus proche et utilise celle de la semaine suivante » (par ex. « jeudi prochain » par opposition à « ce jeudi », ou quand la personne exclut explicitement la plus proche) ; false signifie « la prochaine occurrence la plus proche, qui peut être aujourd'hui même » (valeur par défaut en l'absence de signal explicite pour la sauter). En utilisant due_weekday, laisse due_date à null — le code de l'application calculera lui-même la date exacte avec précision.
+Quand la date d'échéance d'une tâche s'articule autour d'un nom de jour de la semaine (par ex. "jeudi", "ce lundi", "mardi prochain", "dans deux vendredis", "une semaine après ce mardi") plutôt qu'une expression relative comme "demain" ou une date de calendrier explicite, n'essaie PAS de calculer toi-même cette date (c'est source d'erreurs — des décalages ainsi que des résultats incohérents d'une tentative à l'autre ont été observés en pratique). Ajoute plutôt à cette tâche un champ "due_weekday" avec "day" (le jour de la semaine, en abréviation anglaise de 3 lettres : Mon/Tue/Wed/Thu/Fri/Sat/Sun) et "weeks_ahead" (un entier non négatif) — le code de l'application se charge de tout le calcul réel des dates et des semaines, contente-toi donc d'identifier le jour de la semaine et le nombre de semaines après l'occurrence la plus proche.
+Exemples : "jeudi" / "ce jeudi" → weeks_ahead : 0 (la prochaine occurrence la plus proche, qui peut être aujourd'hui même). "jeudi prochain" (par opposition à "ce jeudi", ou quand la personne exclut explicitement la plus proche) → weeks_ahead : 1. "le jeudi de la semaine d'après la prochaine" → weeks_ahead : 2. Pour des formulations comme « le n-ième <jour> à partir de maintenant » ou « N <jours> à partir de maintenant », l'occurrence la plus proche est la 1ère (weeks_ahead : 0), donc la n-ième est weeks_ahead : (N-1) — par ex. « dans deux vendredis » → weeks_ahead : 1. Pour « une semaine après ce <jour> » / « N semaines après ce <jour> », résous d'abord le jour de référence lui-même comme weeks_ahead : 0, puis ajoute le nombre de semaines indiqué — par ex. « une semaine après ce mardi » → weeks_ahead : 1.
+En utilisant due_weekday, laisse due_date à null.
 
 [Règles de classification (3 catégories)]
 1. Supprime les mots de remplissage ("euh", "hum", etc.) et les phrases exactement répétées.
@@ -1147,7 +1159,7 @@ Génère UNIQUEMENT le format JSON suivant, sans commentaire supplémentaire. Ra
 {
   "summary": "résumé général en une ligne, en français",
   "tasks": [
-    {"title": "contenu de la tâche, en français", "due_hint": "phrase originale de la date limite (ou null)", "due_date": "YYYY-MM-DD (ou null si non déductible ; peut aussi être null si recurrence est utilisé)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (ou null si aucune heure explicite)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (ou null si aucune heure de fin explicite)", "recurrence": {"weekdays": [tableau des jours qui se répètent, avec les abréviations anglaises de 3 lettres parmi "Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "start_date": "YYYY-MM-DD (début de la récurrence)", "end_date": "YYYY-MM-DD (fin de la récurrence)"} — omets ce champ ou mets-le à null pour une tâche normale non récurrente, "due_weekday": {"day": "Mon/Tue/Wed/Thu/Fri/Sat/Sun", "next": true/false (true pour sauter délibérément l'occurrence la plus proche, false sinon)} — à utiliser uniquement quand la date d'échéance est exprimée comme un simple nom de jour de la semaine ; omets ou mets null sinon}
+    {"title": "contenu de la tâche, en français", "due_hint": "phrase originale de la date limite (ou null)", "due_date": "YYYY-MM-DD (ou null si non déductible ; peut aussi être null si recurrence est utilisé)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (ou null si aucune heure explicite)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (ou null si aucune heure de fin explicite)", "recurrence": {"weekdays": [tableau des jours qui se répètent, avec les abréviations anglaises de 3 lettres parmi "Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "start_date": "YYYY-MM-DD (début de la récurrence)", "end_date": "YYYY-MM-DD (fin de la récurrence)"} — omets ce champ ou mets-le à null pour une tâche normale non récurrente, "due_weekday": {"day": "Mon/Tue/Wed/Thu/Fri/Sat/Sun", "weeks_ahead": entier non négatif (0 = l'occurrence la plus proche, 1 = une semaine après, 2 = deux semaines après, ...)} — à utiliser uniquement quand la date d'échéance s'articule autour d'un nom de jour de la semaine ; omets ou mets null sinon}
   ],
   "notes": [
     {"category": "アイデア ou 感情ログ (doit rester en japonais, inchangé)", "title": "titre court, en français", "content": "réécriture à la première personne selon les règles de style de notes ci-dessus, en français"}
@@ -2604,13 +2616,16 @@ interface StructuredResult {
       start_date: string;
       end_date: string;
     } | null;
-    /** due_dateが「木曜日」のような曜日名だけで語られた場合のみ。実際の
-     * 日付解決({@link resolveTaskDueWeekday})はモデルではなくコード側で
-     * 確定的に行う——「this/next Thursday」のような曜日名だけの期限で、
-     * モデルが無関係な曜日の日付を出す事例が確認されたため。 */
+    /** due_dateが「木曜日」「2回目の金曜日」のような曜日名を軸にした表現で
+     * 語られた場合のみ。実際の日付解決({@link resolveTaskDueWeekday})は
+     * モデルではなくコード側で確定的に行う——「this/next Thursday」「two
+     * Fridays from now」のような曜日名主体の期限で、モデルが無関係な曜日の
+     * 日付を出したり、同じ入力でも毎回違う結果になったりする事例が確認され
+     * たため。weeks_ahead: 0=直近の該当日（今日自身を含む）、1=その1週間後
+     * （「next」相当）、2=その2週間後、……という0始まりの週数。 */
     due_weekday?: {
       day: string;
-      next: boolean;
+      weeks_ahead: number;
     } | null;
   }[];
   notes: { category: string; title: string | null; content: string }[];
@@ -2697,17 +2712,16 @@ function expandRecurringTask(
 }
 
 /** {@link todayDateStr}を基準に、指定した曜日の「直近の該当日（今日自身を
- * 含む）」または{@link skipNearest}がtrueなら「その1週間後」の日付を返す。 */
+ * 含む、0週間後）」から{@link weeksAhead}週間後の日付を返す。 */
 function resolveWeekdayDate(
   todayDateStr: string,
   weekday: number,
-  skipNearest: boolean
+  weeksAhead: number
 ): string {
   const [y, m, d] = todayDateStr.split("-").map(Number);
   const todayMs = Date.UTC(y, m - 1, d);
   const todayDow = new Date(todayMs).getUTCDay();
-  let diffDays = (weekday - todayDow + 7) % 7;
-  if (skipNearest) diffDays += 7;
+  const diffDays = ((weekday - todayDow + 7) % 7) + Math.max(0, weeksAhead) * 7;
   const targetMs = todayMs + diffDays * 24 * 60 * 60 * 1000;
   const target = new Date(targetMs);
   return [
@@ -2728,7 +2742,10 @@ function resolveTaskDueWeekday(
   const weekdayIndex = dw ? RECURRENCE_WEEKDAY_INDEX[dw.day] : undefined;
   if (!dw || weekdayIndex === undefined) return task;
 
-  const resolvedDate = resolveWeekdayDate(todayDateStr, weekdayIndex, !!dw.next);
+  const weeksAhead = typeof dw.weeks_ahead === "number" && Number.isFinite(dw.weeks_ahead)
+    ? Math.round(dw.weeks_ahead)
+    : 0;
+  const resolvedDate = resolveWeekdayDate(todayDateStr, weekdayIndex, weeksAhead);
   const isoDateTime = /^\d{4}-\d{2}-\d{2}T(\d{2}:\d{2}:\d{2})$/;
   const startTimeMatch = task.reminder_at ? isoDateTime.exec(task.reminder_at) : null;
   const endTimeMatch = task.reminder_end_at ? isoDateTime.exec(task.reminder_end_at) : null;
