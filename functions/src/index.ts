@@ -1905,49 +1905,64 @@ async function applyProStatus(
 ): Promise<void> {
   const db = getFirestore();
   const userRef = db.collection("users").doc(uid);
-  const previousData = (await userRef.get()).data();
-  const previousHasMediaSync = previousData?.hasMediaSync === true;
-  if (eventTimestampMs !== undefined) {
-    const lastAppliedEventTimestampMs =
-      previousData?.revenueCatEventTimestampMs as number | undefined;
-    if (
-      lastAppliedEventTimestampMs !== undefined &&
-      eventTimestampMs < lastAppliedEventTimestampMs
-    ) {
-      logger.info("applyProStatus skipped stale/out-of-order webhook event", {
-        uid,
-        source,
-        eventTimestampMs,
-        lastAppliedEventTimestampMs,
-      });
-      return;
+
+  // 読み取り(古いイベント判定)と書き込みを1つのFirestoreトランザクションに
+  // まとめる。以前はただのget()+set()だったため、同じuid宛のWebhookが
+  // ほぼ同時に2件届く(RevenueCatの再送、または遅延した返金イベントと直後の
+  // 更新イベントが競合する等)と、両方が「古いイベント判定」の読み取りを
+  // 済ませてから書き込むため、実際には新しいイベントの方が先に書き込まれ、
+  // 後から書き込まれた古いイベントの内容で上書きされてしまうことがあった
+  // （有効な契約者が誤ってfreeに落とされる、あるいはその逆）。トランザクション化
+  // することで、この読み取り→判定→書き込みが1件ずつ直列に実行されるようになる。
+  const applied = await db.runTransaction(async (tx) => {
+    const previousData = (await tx.get(userRef)).data();
+    if (eventTimestampMs !== undefined) {
+      const lastAppliedEventTimestampMs =
+        previousData?.revenueCatEventTimestampMs as number | undefined;
+      if (
+        lastAppliedEventTimestampMs !== undefined &&
+        eventTimestampMs < lastAppliedEventTimestampMs
+      ) {
+        logger.info("applyProStatus skipped stale/out-of-order webhook event", {
+          uid,
+          source,
+          eventTimestampMs,
+          lastAppliedEventTimestampMs,
+        });
+        return { applied: false, previousHasMediaSync: false };
+      }
     }
-  }
-  await userRef.set(
-    {
-      isPro,
-      hasMediaSync,
-      revenueCatSource: source,
-      revenueCatUpdatedAt: FieldValue.serverTimestamp(),
-      // 保存する「最後に適用したイベント時刻」は、サーバー自身の現在時刻
-      // (+ わずかな許容誤差)を上限にクランプする。RevenueCat側の時計ズレや
-      // Webhook再送の異常値で万一とても未来のevent_timestamp_msが1回でも
-      // 届くと、クランプせずそのまま保存した場合はそれ以降に届く正常な
-      // イベントが軒並み「過去のイベント」判定されて永久に無視され、
-      // 退会・返金してもProが解除されなくなる恐れがあった。上限を設ける
-      // ことで、そのような異常値が来ても数分後には正常なイベントが
-      // また適用されるようになる。
-      ...(eventTimestampMs !== undefined
-        ? {
-            revenueCatEventTimestampMs: Math.min(
-              eventTimestampMs,
-              Date.now() + STALE_EVENT_GUARD_MAX_CLOCK_SKEW_MS
-            ),
-          }
-        : {}),
-    },
-    { merge: true }
-  );
+    tx.set(
+      userRef,
+      {
+        isPro,
+        hasMediaSync,
+        revenueCatSource: source,
+        revenueCatUpdatedAt: FieldValue.serverTimestamp(),
+        // 保存する「最後に適用したイベント時刻」は、サーバー自身の現在時刻
+        // (+ わずかな許容誤差)を上限にクランプする。RevenueCat側の時計ズレや
+        // Webhook再送の異常値で万一とても未来のevent_timestamp_msが1回でも
+        // 届くと、クランプせずそのまま保存した場合はそれ以降に届く正常な
+        // イベントが軒並み「過去のイベント」判定されて永久に無視され、
+        // 退会・返金してもProが解除されなくなる恐れがあった。上限を設ける
+        // ことで、そのような異常値が来ても数分後には正常なイベントが
+        // また適用されるようになる。
+        ...(eventTimestampMs !== undefined
+          ? {
+              revenueCatEventTimestampMs: Math.min(
+                eventTimestampMs,
+                Date.now() + STALE_EVENT_GUARD_MAX_CLOCK_SKEW_MS
+              ),
+            }
+          : {}),
+      },
+      { merge: true }
+    );
+    return { applied: true, previousHasMediaSync: previousData?.hasMediaSync === true };
+  });
+  if (!applied.applied) return;
+  const previousHasMediaSync = applied.previousHasMediaSync;
+
   // Storage Security Rulesはfirestore.get()によるクロスサービス参照が
   // 使えないため、カスタムクレームで持たせて`request.auth.token.hasMediaSync`
   // として直接参照できるようにする（Firestore側のisProUser()はこれまで通り

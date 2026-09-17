@@ -133,6 +133,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   Future<void> _restore() async {
     final l10n = AppLocalizations.of(context)!;
+    // _purchase()と同じ理由。匿名のままRestoreすると、購入履歴が今の匿名
+    // uidに紐付いてしまい、本来使っているアカウントのFirestoreへは
+    // isProが反映されない（サインインし直しても復元されない状態になる）。
+    if (!context.read<AccountStore>().isSignedIn) {
+      final signedIn = await showRequireSignInSheet(context);
+      if (!mounted || !signedIn) return;
+    }
     setState(() => _busy = true);
     try {
       final restored = await context.read<SubscriptionStore>().restore();
