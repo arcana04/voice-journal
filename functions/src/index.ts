@@ -3013,7 +3013,42 @@ function advanceIsoDateTimeByOneDay(value: string): string {
   return `${nextDatePart}T${timePart}`;
 }
 
-function toClientResponse(structured: StructuredResult, todayDateStr: string) {
+/** "YYYY-MM-DD"を1日進める（{@link advanceIsoDateTimeByOneDay}の日付のみ版）。 */
+function advanceIsoDateByOneDay(dateStr: string): string {
+  return advanceIsoDateTimeByOneDay(`${dateStr}T00:00:00`).split("T")[0];
+}
+
+/** 「正午に」「深夜0時に」のように時刻のみで期限が語られた場合、モデルは
+ * 「その時刻が発話時点で既に過ぎていれば翌日にする」という指示に従うはずだが、
+ * 実際には一部のケース（正午等）でこれを忘れ、深夜0時など別のケースでは
+ * 正しく繰り上げる、という一貫しない挙動が確認された。繰り返しパターン
+ * ({@link expandRecurringTask}用、recurrenceを持つ元タスク)はここでは
+ * 触らない——各出現日ごとの時刻はexpandRecurringTask側で個別に決まるため。 */
+function rollPastTimeOfDayToTomorrow(
+  task: StructuredResult["tasks"][number],
+  nowLocalDateTime: string
+): StructuredResult["tasks"][number] {
+  if (task.recurrence) return task;
+  const isoDateTime = /^(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}:\d{2}$/;
+  const m = task.reminder_at ? isoDateTime.exec(task.reminder_at) : null;
+  if (!m || task.reminder_at! >= nowLocalDateTime) return task;
+
+  const originalDate = m[1];
+  return {
+    ...task,
+    due_date: task.due_date === originalDate ? advanceIsoDateByOneDay(originalDate) : task.due_date,
+    reminder_at: advanceIsoDateTimeByOneDay(task.reminder_at!),
+    reminder_end_at: task.reminder_end_at
+      ? advanceIsoDateTimeByOneDay(task.reminder_end_at)
+      : task.reminder_end_at,
+  };
+}
+
+function toClientResponse(
+  structured: StructuredResult,
+  todayDateStr: string,
+  nowLocalDateTime: string
+) {
   const isoDate = /^\d{4}-\d{2}-\d{2}$/;
   const isoDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
 
@@ -3021,6 +3056,7 @@ function toClientResponse(structured: StructuredResult, todayDateStr: string) {
     summary: structured.summary ?? "",
     tasks: (structured.tasks ?? [])
       .map((task) => resolveTaskDueWeekday(task, todayDateStr))
+      .map((task) => rollPastTimeOfDayToTomorrow(task, nowLocalDateTime))
       .flatMap(expandRecurringTask)
       .map((task) => {
       const reminderAt =
@@ -3180,7 +3216,11 @@ export const processVoiceMemo = onCall(
           effectiveTimeZone,
           glossary
         );
-        return toClientResponse(structured, localDateString(effectiveTimeZone, new Date()));
+        return toClientResponse(
+          structured,
+          localDateString(effectiveTimeZone, new Date()),
+          `${localDateString(effectiveTimeZone, new Date())}T${localTimeString(effectiveTimeZone, new Date())}:00`
+        );
       } catch (structureErr) {
         await refundDailyQuota(uid, effectiveTimeZone);
         if (monthlyUsage) await refundMonthlyMinutesUsage(uid, monthlyUsage, effectiveTimeZone);
@@ -5751,7 +5791,11 @@ export const processTextMemo = onCall(
         await refundDailyQuota(uid, effectiveTimeZone);
         throw structureErr;
       }
-      return toClientResponse(structured, localDateString(effectiveTimeZone, new Date()));
+      return toClientResponse(
+        structured,
+        localDateString(effectiveTimeZone, new Date()),
+        `${localDateString(effectiveTimeZone, new Date())}T${localTimeString(effectiveTimeZone, new Date())}:00`
+      );
     } catch (err) {
       if (err instanceof HttpsError) {
         throw err;
