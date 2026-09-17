@@ -666,7 +666,7 @@ ${weekdayTable}
 
 【分類ルール（3分類）】
 1. フィラー（「えっと」「あー」等の言い淀み）や同じ内容の重複表現を除去してください。
-2. tasksは文脈から主語や時系列を補完し、簡潔な行動内容に要約してください。
+2. tasksは文脈から主語や時系列を補完し、簡潔な行動内容に要約してください。タイトルには日付や時刻を含めないでください（due_date/reminder_at/reminder_end_atに別途格納され、アプリ側でタイトルの隣に表示されるため、タイトル内で重複させる必要はありません）。例えば「9月18日17時〜21時のバイトを追加」ではなく「バイト」のように、行動内容だけを短く表現してください。同じリストの中で複数の項目がほぼ同じ内容でも、日付・時刻はタイトルで区別する必要はありません。
 3. 発言は以下の3種類のいずれかに分類してください。
    - 【tasks（ToDo）】: 「確定した行動」。話者が実際にやる・やらないといけないと言っていること。
    - 【notes category="アイデア"】: 未確定な思いつき・疑問・アイデア・検討事項。
@@ -752,7 +752,7 @@ When the speaker names a specific weekday (e.g. "Thursday", "next Monday") inste
 
 [Classification rules (3 categories)]
 1. Remove filler words ("um", "uh", etc.) and exact repeated phrases.
-2. For tasks, infer the missing subject/timing from context and summarize into a concise action.
+2. For tasks, infer the missing subject/timing from context and summarize into a concise action. Do not include the date or time in the title — that's captured separately in due_date/reminder_at/reminder_end_at and shown next to the title in the app, so it doesn't need to be repeated in the title text. Write just the action itself, concisely (e.g. "Restaurant shift", not "Add restaurant shift from 5pm to 9pm on September 18th"). Even when several list items are nearly identical, you don't need the date/time in the title to distinguish them.
 3. Classify each utterance into exactly one of these three categories:
    - [tasks (to-do)]: a "confirmed action" — something the speaker says they will do or need to do.
    - [notes category="アイデア"]: an unconfirmed idea, question, thought, or something to consider.
@@ -838,7 +838,7 @@ Cuando el hablante mencione un día de la semana concreto (p. ej. "jueves", "el 
 
 [Reglas de clasificación (3 categorías)]
 1. Elimina muletillas ("eh", "esto", etc.) y frases exactamente repetidas.
-2. Para las tareas, infiere el sujeto o el momento que falte a partir del contexto y resume en una acción concisa.
+2. Para las tareas, infiere el sujeto o el momento que falte a partir del contexto y resume en una acción concisa. No incluyas la fecha ni la hora en el título — eso ya se guarda por separado en due_date/reminder_at/reminder_end_at y la app lo muestra junto al título, así que no es necesario repetirlo en el texto del título. Escribe solo la acción en sí, de forma breve (por ejemplo, "Turno en el restaurante", no "Añadir turno en el restaurante de 17:00 a 21:00 el 18 de septiembre"). Aunque varios elementos de la lista sean casi idénticos, no necesitas la fecha/hora en el título para diferenciarlos.
 3. Clasifica cada enunciado en exactamente una de estas tres categorías:
    - [tasks (tarea)]: una "acción confirmada" — algo que el hablante dice que hará o necesita hacer.
    - [notes category="アイデア"]: una idea, pregunta o pensamiento sin confirmar, o algo a considerar.
@@ -924,7 +924,7 @@ Wenn die sprechende Person einen konkreten Wochentag nennt (z. B. "Donnerstag", 
 
 [Klassifizierungsregeln (3 Kategorien)]
 1. Entferne Füllwörter ("äh", "ähm" usw.) und exakt wiederholte Sätze.
-2. Ergänze bei Aufgaben das fehlende Subjekt/den fehlenden Zeitpunkt aus dem Kontext und fasse sie zu einer prägnanten Handlung zusammen.
+2. Ergänze bei Aufgaben das fehlende Subjekt/den fehlenden Zeitpunkt aus dem Kontext und fasse sie zu einer prägnanten Handlung zusammen. Nimm Datum oder Uhrzeit NICHT in den Titel auf — das wird bereits separat in due_date/reminder_at/reminder_end_at gespeichert und von der App direkt neben dem Titel angezeigt, muss also im Titeltext nicht wiederholt werden. Schreibe nur die Handlung selbst, kurz und knapp (z. B. "Restaurant-Schicht", nicht "Restaurant-Schicht von 17 bis 21 Uhr am 18. September hinzufügen"). Auch wenn mehrere Listeneinträge fast identisch sind, brauchst du Datum/Uhrzeit nicht im Titel, um sie zu unterscheiden.
 3. Klassifiziere jede Äußerung in genau eine dieser drei Kategorien:
    - [tasks (Aufgabe)]: eine "bestätigte Handlung" — etwas, von dem die sprechende Person sagt, dass sie es tun wird oder muss.
    - [notes category="アイデア"]: eine unbestätigte Idee, Frage oder ein Gedanke, oder etwas zum Nachdenken.
@@ -1010,7 +1010,7 @@ ${weekdayTable}
 
 [분류 규칙 (3가지 카테고리)]
 1. 필러("음", "어" 등)와 완전히 동일하게 반복된 표현을 제거하세요.
-2. tasks의 경우 문맥에서 빠진 주어나 시점을 보완하여 간결한 행동으로 요약하세요.
+2. tasks의 경우 문맥에서 빠진 주어나 시점을 보완하여 간결한 행동으로 요약하세요. 제목에 날짜나 시간을 넣지 마세요 — due_date/reminder_at/reminder_end_at에 별도로 저장되며 앱에서 제목 옆에 표시되므로, 제목 텍스트에 다시 넣을 필요가 없습니다. 행동 내용만 짧게 쓰세요(예: "식당 근무 5시부터 9시까지 9월 18일에 추가"가 아니라 "식당 근무"). 목록의 여러 항목이 거의 동일해도, 구분을 위해 제목에 날짜/시간을 넣을 필요는 없습니다.
 3. 각 발화를 다음 세 카테고리 중 정확히 하나로 분류하세요:
    - [tasks (할 일)]: "확정된 행동" — 화자가 하겠다고 말했거나 해야 한다고 말한 것.
    - [notes category="アイデア"]: 아직 확정되지 않은 아이디어, 질문, 생각, 또는 고려해볼 만한 것.
@@ -1096,7 +1096,7 @@ Quand la personne nomme un jour de la semaine précis (par ex. "jeudi", "lundi p
 
 [Règles de classification (3 catégories)]
 1. Supprime les mots de remplissage ("euh", "hum", etc.) et les phrases exactement répétées.
-2. Pour les tâches, déduis le sujet ou le moment manquant à partir du contexte et résume en une action concise.
+2. Pour les tâches, déduis le sujet ou le moment manquant à partir du contexte et résume en une action concise. N'inclus pas la date ni l'heure dans le titre — elles sont déjà stockées séparément dans due_date/reminder_at/reminder_end_at et affichées par l'application juste à côté du titre, donc il n'est pas nécessaire de les répéter dans le texte du titre. N'écris que l'action elle-même, de façon concise (par exemple « Service au restaurant », pas « Ajouter le service au restaurant de 17h à 21h le 18 septembre »). Même si plusieurs éléments de la liste sont presque identiques, tu n'as pas besoin de la date/l'heure dans le titre pour les distinguer.
 3. Classe chaque énoncé dans exactement une de ces trois catégories :
    - [tasks (tâche)] : une "action confirmée" — quelque chose que la personne dit qu'elle va faire ou doit faire.
    - [notes category="アイデア"] : une idée, une question ou une pensée non confirmée, ou quelque chose à considérer.
