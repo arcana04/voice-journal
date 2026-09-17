@@ -2992,8 +2992,11 @@ async function structure(
     },
     body: JSON.stringify({
       model: "gpt-4o-mini",
-      // 事実の捏造を減らすため低めに設定。
-      temperature: 0.3,
+      // 事実の捏造を減らすため低めに設定。日付計算関連の判定（due_weekdayの
+      // weeks_ahead等）で、同じ入力でも毎回結果がブレる事例が確認された
+      // ため、0.3から0へさらに下げた——再現性の悪さの一部はサンプリングの
+      // 確率的ゆらぎ自体が原因である可能性が高い。
+      temperature: 0,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: systemPrompt },
