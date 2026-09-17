@@ -675,7 +675,7 @@ ${weekdayTable}
 5. 冒頭の一文が「よく眠れてすごく元気！」のような短い感情・気分の一言である場合は、特に注意してください。冒頭に来たからといって単なる導入・前置きとして扱わず、書き起こしの途中や終わりに出てきた場合と全く同じように、独立した【notes category="感情ログ"】エントリとして扱ってください。冒頭の一文だからといって分類対象から除外されることはありません。
 6. 単に一覧を告知・導入・締めくくるだけの前置き・メタ的な発言(例:「明日と金曜日の予定を確認しておかないと」「予定を確認しよう」「よし、全部確認しておこう」)は、それ自体はタスクではありません。それ自体には具体的な成果が無く、あくまでこの後に続く具体的な項目への導入(または締めくくり)に過ぎません。このような前置き文をタイトルにしたタスクを作らないこと。タスクは、話者がその後に実際に挙げる具体的な出来事・行動だけから抽出してください。
 7. 話者が一息に多数(4件、5件以上)の予定・締切を列挙する場合(一日または一週間分の予定を読み上げる等)、それぞれを個別の時刻付きタスクとしてすべて抽出してください。項目数が多いことは、複数の項目を1つのタスクにまとめたり、統合したり、黙って取りこぼしたりする理由にはなりません。同じ書き起こしの中に他にアイデアや感情が含まれている場合も同様で、どのカテゴリも他のカテゴリを押しのけないようにしてください。
-8. 話者が個々の日付を列挙するのではなく、繰り返しのパターンで期間を指定する場合(例:「今月末まで毎週火曜と木曜」「今週の月・水・金」「今週は毎日」)、上記の曜日対応表を使って、その条件に合う日付をすべて自分で洗い出し、列挙された場合と全く同じように、出現日ごとに個別の時刻付きタスクを作成してください。「毎週火・木のバイト」のように繰り返し規則そのものをタイトルにした1件のタスクにまとめないこと。
+8. 話者が個々の日付を列挙するのではなく、繰り返しのパターンで期間を指定する場合(例:「今月末まで毎週火曜と木曜」「今週の月・水・金」「今週は毎日」)、日付を自分で1つずつ計算しようとしないでください（間違いやすいため）。代わりに、そのタスクのオブジェクトに recurrence フィールドを追加し、繰り返す曜日・開始日・終了日を構造化して渡してください。実際の日付展開はアプリ側のコードが正確に行います。recurrence を使う場合、due_date は null のままにして構いません。reminder_at/reminder_end_at に時刻の言及があれば、日付部分は start_date と同じ値にした上でいつも通り入れてください（時刻部分だけが使われます）。
 
 【ヘッジ表現は「確定した行動」ではない】
 具体的な行動の内容が続くからといって、それだけでtasksにはなりません。「たぶん」「かも」「〜しようかな」「そのうち」「気が向いたら」「いつか」のようなヘッジ表現(断定を避ける言い回し)がある場合、具体的な行動名詞が続いていても【notes category="アイデア"】に分類してください(例:「たぶん今年スペイン語始めるかも」はアイデア、タスクではない。「そのうち椅子買い替えたいな」もアイデア)。話者が実際に決めた・既に始めている・確定した意志で述べている(「〜する」「〜しないと」とヘッジ無しで言い切っている)場合のみtasksにしてください。
@@ -712,7 +712,7 @@ happyとjoyとsatisfactionは近い感情だが、happyは他者や出来事へ�
 {
   "summary": "全体の1行要約",
   "tasks": [
-    {"title": "タスク内容", "due_hint": "期限の元の言い回し（なければnull）", "due_date": "YYYY-MM-DD（推測できなければnull）", "reminder_at": "YYYY-MM-DDTHH:mm:00（時刻の明言が無ければnull）", "reminder_end_at": "YYYY-MM-DDTHH:mm:00（終了時刻の明言が無ければnull）"}
+    {"title": "タスク内容", "due_hint": "期限の元の言い回し（なければnull）", "due_date": "YYYY-MM-DD（推測できなければnull。recurrenceを使う場合もnullでよい）", "reminder_at": "YYYY-MM-DDTHH:mm:00（時刻の明言が無ければnull）", "reminder_end_at": "YYYY-MM-DDTHH:mm:00（終了時刻の明言が無ければnull）", "recurrence": {"weekdays": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"のうち繰り返す曜日を英語3文字表記で], "start_date": "YYYY-MM-DD（繰り返し開始日）", "end_date": "YYYY-MM-DD（繰り返し終了日）"} … 繰り返しパターンでない通常のタスクではこのフィールド自体を省略するかnullにする}
   ],
   "notes": [
     {"category": "アイデア または 感情ログ", "title": "短い見出し", "content": "上記「notesの本文の書き方」に従って一人称でリライトした文章"}
@@ -762,7 +762,7 @@ When the speaker names a specific weekday (e.g. "Thursday", "next Monday") inste
 5. Pay special attention when the very first sentence is a short feeling/mood exclamation (e.g. "I slept so well and feel super energized today!"). Do NOT treat it as mere scene-setting or a throwaway opener just because it comes first — it still needs its own [notes category="感情ログ"] entry exactly like it would if it appeared in the middle or at the end of the transcript. A transcript's opening line is not exempt from classification.
 6. Framing/meta language that merely announces, introduces, or wraps up a list of items (e.g. "I need to lock down my timeline for tomorrow and Friday", "let's go over my schedule", "alright, let's make sure everything is set") is NOT itself a task. It has no concrete outcome of its own — it is only an introduction to (or a closing remark about) the specific items that follow. Never create a task titled after this kind of framing sentence; extract tasks only from the actual concrete events/actions the speaker then lists.
 7. When the speaker lists many events/appointments/deadlines in one breath (four, five, or more — e.g. reciting a full day's or week's schedule), extract every single one as its own separate task with its own time. A long list is never a reason to summarize multiple items into one task, merge them, or silently drop any of them — and this holds even when the same transcript also contains an idea or a feeling elsewhere; no category should crowd out any other.
-8. When the speaker describes a recurring pattern over a date range instead of literally listing each date (e.g. "every Tuesday and Thursday for the rest of this month", "Monday, Wednesday, and Friday this week", "every day this week"), use the date↔weekday lookup table above to work out every matching date within that range yourself, and create one separate timed task per occurrence — exactly as if the speaker had listed them individually. Do not collapse this into a single task whose title just describes the recurrence rule itself (e.g. do not create one task titled "Recurring restaurant shift every Tuesday and Thursday").
+8. When the speaker describes a recurring pattern over a date range instead of literally listing each date (e.g. "every Tuesday and Thursday for the rest of this month", "Monday, Wednesday, and Friday this week", "every day this week"), do NOT try to compute the individual matching dates yourself (this is error-prone). Instead, add a "recurrence" field to that task object with the repeating weekdays, start date, and end date, structured — the app's own code will expand this into the correct individual dates precisely. When using recurrence, due_date can stay null. If a time is mentioned, still fill reminder_at/reminder_end_at as usual, using start_date as the date portion (only the time-of-day part is actually used).
 
 [Hedged intentions are NOT confirmed actions]
 A statement is not a task just because it names a concrete thing to do. Watch for hedge language such as "maybe", "I think", "I've been thinking about", "if I ever", "I'd want to", "not sure when/if" — when hedge language like this is present, classify it as [notes category="アイデア"] even if a specific action noun follows (e.g. "maybe I'll start Spanish lessons this year" is an idea, not a task; "if I ever get a raise, I'd want a new chair" is an idea, not a task). Only classify as a task when the speaker states or implies an actual decision or commitment — already scheduled, already started, or stated with confident intent ("I'm going to", "I need to") without hedging.
@@ -799,7 +799,7 @@ Output ONLY the following JSON format, with no extra commentary. Remember: every
 {
   "summary": "one-line overall summary, in English",
   "tasks": [
-    {"title": "task content, in English", "due_hint": "original due-date phrase (or null)", "due_date": "YYYY-MM-DD (or null if it can't be inferred)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (or null if no explicit time)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (or null if no explicit end time)"}
+    {"title": "task content, in English", "due_hint": "original due-date phrase (or null)", "due_date": "YYYY-MM-DD (or null if it can't be inferred; can also be null when using recurrence)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (or null if no explicit time)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (or null if no explicit end time)", "recurrence": {"weekdays": [array of repeating weekdays, using English 3-letter abbreviations from "Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "start_date": "YYYY-MM-DD (recurrence start)", "end_date": "YYYY-MM-DD (recurrence end)"} — omit this field or set it to null for an ordinary non-recurring task}
   ],
   "notes": [
     {"category": "アイデア or 感情ログ (must stay in Japanese, unchanged)", "title": "short heading, in English", "content": "first-person rewrite per the note style rules above, in English"}
@@ -849,7 +849,7 @@ Cuando el hablante mencione un día de la semana concreto (p. ej. "jueves", "el 
 5. Presta especial atención cuando la primera frase sea una breve exclamación de sentimiento/estado de ánimo (p. ej. "¡Dormí genial y hoy tengo muchísima energía!"). NO la trates como mera introducción o frase de relleno solo por venir primero — necesita su propia entrada [notes category="感情ログ"] exactamente igual que si apareciera en medio o al final de la transcripción. La primera línea de una transcripción no está exenta de clasificación.
 6. El lenguaje de encuadre/meta que solo anuncia, introduce o cierra una lista de elementos (p. ej. "tengo que confirmar mi agenda de mañana y el viernes", "repasemos mi horario", "bueno, asegurémonos de que todo esté listo") NO es en sí mismo una tarea. No tiene un resultado concreto propio — es solo una introducción a (o un comentario de cierre sobre) los elementos concretos que siguen. Nunca crees una tarea titulada con este tipo de frase de encuadre; extrae tareas solo de los eventos/acciones concretos que el hablante enumera después.
 7. Cuando el hablante enumera muchos eventos/citas/plazos de un tirón (cuatro, cinco o más — p. ej. recitando la agenda completa de un día o una semana), extrae cada uno como su propia tarea separada con su propia hora. Una lista larga nunca es motivo para resumir varios elementos en una sola tarea, fusionarlos o descartar alguno silenciosamente — y esto se cumple incluso cuando la misma transcripción también contiene una idea o un sentimiento en otra parte; ninguna categoría debe eclipsar a las demás.
-8. Cuando el hablante describe un patrón recurrente en un rango de fechas en lugar de enumerar cada fecha literalmente (p. ej. "todos los martes y jueves durante el resto de este mes", "lunes, miércoles y viernes esta semana", "todos los días esta semana"), usa la tabla de fecha↔día de la semana de arriba para calcular tú mismo cada fecha que coincida dentro de ese rango, y crea una tarea separada con hora para cada ocurrencia — exactamente como si el hablante las hubiera enumerado una por una. No lo reduzcas a una sola tarea cuyo título solo describa la regla de recurrencia en sí (por ejemplo, no crees una tarea titulada "Turno recurrente en el restaurante todos los martes y jueves").
+8. Cuando el hablante describe un patrón recurrente en un rango de fechas en lugar de enumerar cada fecha literalmente (p. ej. "todos los martes y jueves durante el resto de este mes", "lunes, miércoles y viernes esta semana", "todos los días esta semana"), NO intentes calcular tú mismo cada fecha coincidente (es propenso a errores). En su lugar, añade un campo "recurrence" a esa tarea con los días de la semana que se repiten, la fecha de inicio y la fecha de fin, de forma estructurada — el propio código de la app expandirá esto en las fechas individuales correctas. Si usas recurrence, due_date puede quedar en null. Si se menciona una hora, rellena igualmente reminder_at/reminder_end_at como de costumbre, usando start_date como parte de fecha (solo se usará la parte de la hora).
 
 [Las intenciones con reservas NO son acciones confirmadas]
 Que se mencione una acción concreta no basta para clasificarlo como tarea. Presta atención a expresiones de duda como "quizás", "tal vez", "estoy pensando en", "si algún día", "me gustaría", "no sé cuándo/si" — cuando aparezca este tipo de lenguaje dubitativo, clasifícalo como [notes category="アイデア"] aunque le siga un sustantivo de acción concreto (por ejemplo, "tal vez empiece clases de español este año" es una idea, no una tarea; "si algún día me suben el sueldo, querría una silla nueva" es una idea, no una tarea). Clasifica como tarea solo cuando el hablante exprese o implique una decisión o compromiso real — ya programado, ya iniciado, o expresado con intención segura ("voy a", "tengo que") sin reservas.
@@ -886,7 +886,7 @@ Genera ÚNICAMENTE el siguiente formato JSON, sin comentarios adicionales. Recue
 {
   "summary": "resumen general en una línea, en español",
   "tasks": [
-    {"title": "contenido de la tarea, en español", "due_hint": "frase original de la fecha límite (o null)", "due_date": "YYYY-MM-DD (o null si no se puede inferir)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (o null si no hay hora explícita)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (o null si no hay hora de fin explícita)"}
+    {"title": "contenido de la tarea, en español", "due_hint": "frase original de la fecha límite (o null)", "due_date": "YYYY-MM-DD (o null si no se puede inferir; también puede ser null si usas recurrence)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (o null si no hay hora explícita)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (o null si no hay hora de fin explícita)", "recurrence": {"weekdays": [array de días que se repiten, usando abreviaturas en inglés de 3 letras de "Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "start_date": "YYYY-MM-DD (inicio de la recurrencia)", "end_date": "YYYY-MM-DD (fin de la recurrencia)"} — omite este campo o ponlo en null para una tarea normal no recurrente}
   ],
   "notes": [
     {"category": "アイデア o 感情ログ (debe permanecer en japonés, sin cambios)", "title": "título corto, en español", "content": "reescritura en primera persona según las reglas de estilo de notas anteriores, en español"}
@@ -936,7 +936,7 @@ Wenn die sprechende Person einen konkreten Wochentag nennt (z. B. "Donnerstag", 
 5. Achte besonders darauf, wenn der allererste Satz ein kurzer Gefühls-/Stimmungsausruf ist (z. B. "Ich habe so gut geschlafen und fühle mich heute super energiegeladen!"). Behandle ihn NICHT nur deshalb, weil er zuerst kommt, als bloße Einleitung oder Nebensächlichkeit — er braucht genau wie in der Mitte oder am Ende des Transkripts einen eigenen [notes category="感情ログ"]-Eintrag. Die Eröffnungszeile eines Transkripts ist von der Klassifizierung nicht ausgenommen.
 6. Rahmen-/Meta-Sprache, die eine Liste von Punkten nur ankündigt, einleitet oder abschließt (z. B. "Ich muss meinen Zeitplan für morgen und Freitag festzurren", "gehen wir meinen Terminplan durch", "gut, stellen wir sicher, dass alles steht"), ist selbst KEINE Aufgabe. Sie hat kein eigenes konkretes Ergebnis — sie ist nur eine Einleitung zu (oder eine Abschlussbemerkung über) die konkreten Punkte, die danach folgen. Erstelle niemals eine Aufgabe, die nach so einem Rahmensatz benannt ist; extrahiere Aufgaben nur aus den tatsächlichen konkreten Ereignissen/Handlungen, die die sprechende Person danach aufzählt.
 7. Wenn die sprechende Person in einem Atemzug viele Termine/Ereignisse/Fristen aufzählt (vier, fünf oder mehr — z. B. den kompletten Tages- oder Wochenplan aufsagt), extrahiere jeden einzelnen als eigene separate Aufgabe mit eigener Uhrzeit. Eine lange Liste ist niemals ein Grund, mehrere Punkte zu einer Aufgabe zusammenzufassen, sie zu verschmelzen oder einen davon stillschweigend fallen zu lassen — das gilt auch, wenn dasselbe Transkript an anderer Stelle zusätzlich eine Idee oder ein Gefühl enthält; keine Kategorie darf eine andere verdrängen.
-8. Wenn die sprechende Person statt einzelne Daten aufzuzählen ein wiederkehrendes Muster über einen Zeitraum beschreibt (z. B. "jeden Dienstag und Donnerstag für den Rest dieses Monats", "Montag, Mittwoch und Freitag diese Woche", "jeden Tag diese Woche"), nutze die obige Datum↔Wochentag-Tabelle, um selbst jedes passende Datum in diesem Zeitraum zu bestimmen, und erstelle für jedes Vorkommen eine eigene Aufgabe mit Uhrzeit — genau so, als hätte die sprechende Person sie einzeln aufgezählt. Fasse dies nicht zu einer einzigen Aufgabe zusammen, deren Titel nur die Wiederholungsregel selbst beschreibt (erstelle also z. B. keine Aufgabe mit dem Titel "Wiederkehrende Restaurant-Schicht jeden Dienstag und Donnerstag").
+8. Wenn die sprechende Person statt einzelne Daten aufzuzählen ein wiederkehrendes Muster über einen Zeitraum beschreibt (z. B. "jeden Dienstag und Donnerstag für den Rest dieses Monats", "Montag, Mittwoch und Freitag diese Woche", "jeden Tag diese Woche"), versuche NICHT, die einzelnen passenden Daten selbst zu berechnen (das ist fehleranfällig). Füge stattdessen dieser Aufgabe ein "recurrence"-Feld hinzu, das die sich wiederholenden Wochentage, das Start- und das Enddatum strukturiert enthält — der Code der App selbst berechnet daraus präzise die einzelnen Daten. Bei Verwendung von recurrence kann due_date null bleiben. Wenn eine Uhrzeit genannt wird, fülle reminder_at/reminder_end_at trotzdem wie gewohnt, wobei du als Datumsteil start_date verwendest (nur der Uhrzeit-Teil wird tatsächlich benutzt).
 
 [Vage formulierte Absichten sind KEINE bestätigten Handlungen]
 Eine konkrete Handlung wird nicht schon dadurch zur Aufgabe, dass sie genannt wird. Achte auf einschränkende Formulierungen wie "vielleicht", "ich glaube", "ich denke darüber nach", "falls ich mal", "ich würde gerne", "weiß nicht wann/ob" — wenn solche Formulierungen vorkommen, klassifiziere es als [notes category="アイデア"], auch wenn danach ein konkretes Handlungssubstantiv folgt (z. B. ist "vielleicht fange ich dieses Jahr mit Spanischkursen an" eine Idee, keine Aufgabe; "falls ich mal eine Gehaltserhöhung bekomme, würde ich gerne einen neuen Stuhl haben" ist eine Idee, keine Aufgabe). Klassifiziere nur dann als Aufgabe, wenn die sprechende Person eine tatsächliche Entscheidung oder Verpflichtung ausdrückt oder impliziert — bereits geplant, bereits begonnen, oder mit sicherer Absicht ohne Einschränkung geäußert ("ich werde", "ich muss").
@@ -973,7 +973,7 @@ Gib AUSSCHLIESSLICH das folgende JSON-Format aus, ohne zusätzlichen Kommentar. 
 {
   "summary": "einzeilige Gesamtzusammenfassung, auf Deutsch",
   "tasks": [
-    {"title": "Aufgabeninhalt, auf Deutsch", "due_hint": "ursprüngliche Formulierung des Fälligkeitsdatums (oder null)", "due_date": "YYYY-MM-DD (oder null, wenn nicht ableitbar)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (oder null, wenn keine explizite Uhrzeit)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (oder null, wenn keine explizite Endzeit)"}
+    {"title": "Aufgabeninhalt, auf Deutsch", "due_hint": "ursprüngliche Formulierung des Fälligkeitsdatums (oder null)", "due_date": "YYYY-MM-DD (oder null, wenn nicht ableitbar; kann bei Verwendung von recurrence ebenfalls null sein)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (oder null, wenn keine explizite Uhrzeit)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (oder null, wenn keine explizite Endzeit)", "recurrence": {"weekdays": [Array der sich wiederholenden Wochentage, als englische 3-Buchstaben-Abkürzungen aus "Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "start_date": "YYYY-MM-DD (Beginn der Wiederholung)", "end_date": "YYYY-MM-DD (Ende der Wiederholung)"} — dieses Feld bei einer normalen, nicht wiederkehrenden Aufgabe weglassen oder auf null setzen}
   ],
   "notes": [
     {"category": "アイデア oder 感情ログ (muss unverändert auf Japanisch bleiben)", "title": "kurze Überschrift, auf Deutsch", "content": "Umschreibung in der Ich-Form gemäß den obigen Notizstil-Regeln, auf Deutsch"}
@@ -1023,7 +1023,7 @@ ${weekdayTable}
 5. 첫 문장이 "오늘 정말 잘 자서 기운이 넘쳐!"처럼 짧은 감정/기분 표현인 경우 특히 주의하세요. 맨 처음에 나온다는 이유만으로 단순한 도입부나 사족으로 취급하지 말고, 녹취록 중간이나 끝에 나왔을 때와 완전히 동일하게 독립된 [notes category="感情ログ"] 항목이 필요합니다. 녹취록의 첫 줄이라고 해서 분류 대상에서 제외되지 않습니다.
 6. 항목 목록을 단순히 알리거나 도입하거나 마무리하기만 하는 프레이밍/메타 발언(예: "내일이랑 금요일 일정을 확정해야 해", "일정 한번 점검해보자", "좋아, 다 확인됐는지 보자")은 그 자체로 할 일이 아닙니다. 그 자체에는 구체적인 결과물이 없고, 뒤이어 나오는 구체적인 항목들에 대한 도입(또는 마무리 멘트)일 뿐입니다. 이런 프레이밍 문장을 제목으로 한 할 일을 만들지 마세요. 할 일은 화자가 그 뒤에 실제로 나열하는 구체적인 사건/행동에서만 추출하세요.
 7. 화자가 한 번에 많은(4개, 5개 이상) 일정/약속/마감을 나열하는 경우(하루나 일주일치 일정을 쭉 읊는 등), 각각을 자신만의 시간을 가진 별도의 할 일로 모두 추출하세요. 목록이 길다는 이유로 여러 항목을 하나의 할 일로 요약하거나 합치거나 조용히 빠뜨려서는 안 됩니다 — 같은 녹취록에 아이디어나 감정이 다른 곳에 함께 있어도 마찬가지이며, 어떤 카테고리도 다른 카테고리를 밀어내서는 안 됩니다.
-8. 화자가 개별 날짜를 나열하는 대신 기간에 대한 반복 패턴으로 말하는 경우(예: "이번 달 말까지 매주 화요일과 목요일", "이번 주 월·수·금", "이번 주 매일"), 위의 날짜↔요일 대응표를 사용해 해당 기간 내에서 조건에 맞는 날짜를 모두 스스로 찾아내고, 개별로 나열된 경우와 완전히 동일하게 각 발생일마다 별도의 시간이 있는 할 일을 만드세요. "매주 화·목 식당 근무"처럼 반복 규칙 자체를 제목으로 한 할 일 1건으로 합치지 마세요.
+8. 화자가 개별 날짜를 나열하는 대신 기간에 대한 반복 패턴으로 말하는 경우(예: "이번 달 말까지 매주 화요일과 목요일", "이번 주 월·수·금", "이번 주 매일"), 개별 날짜를 직접 계산하려 하지 마세요(실수하기 쉽습니다). 대신 해당 할 일 객체에 반복되는 요일, 시작일, 종료일을 구조화한 recurrence 필드를 추가하세요 — 실제 개별 날짜 전개는 앱 코드가 정확하게 처리합니다. recurrence를 사용하는 경우 due_date는 null로 두어도 됩니다. 시각이 언급되었다면 reminder_at/reminder_end_at도 평소처럼 채우되, 날짜 부분은 start_date와 동일한 값을 사용하세요(실제로는 시각 부분만 사용됩니다).
 
 [망설이는 표현은 "확정된 행동"이 아닙니다]
 구체적인 행동이 언급된다고 해서 그것만으로 tasks가 되지는 않습니다. "아마", "~인 것 같아", "~할까 생각 중이야", "혹시라도", "~하고 싶어", "언제/할지 모르겠어" 같은 망설이는 표현이 있으면, 구체적인 행동 명사가 뒤따르더라도 [notes category="アイデア"]로 분류하세요(예: "아마 올해 스페인어 시작할까 봐"는 아이디어이지 할 일이 아님, "혹시라도 월급 오르면 새 의자 사고 싶어"도 아이디어). 화자가 실제로 결정했거나, 이미 시작했거나, 망설임 없이 확실한 의지로 말한 경우("~할 거야", "~해야 해")에만 tasks로 분류하세요.
@@ -1060,7 +1060,7 @@ happy, joy, satisfaction은 서로 비슷하지만 구분됩니다: happy는 타
 {
   "summary": "전체를 한 줄로 요약, 한국어로",
   "tasks": [
-    {"title": "할 일 내용, 한국어로", "due_hint": "마감일의 원래 표현(없으면 null)", "due_date": "YYYY-MM-DD (추론할 수 없으면 null)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (명시적인 시각이 없으면 null)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (명시적인 종료 시각이 없으면 null)"}
+    {"title": "할 일 내용, 한국어로", "due_hint": "마감일의 원래 표현(없으면 null)", "due_date": "YYYY-MM-DD (추론할 수 없으면 null. recurrence를 사용하는 경우에도 null 가능)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (명시적인 시각이 없으면 null)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (명시적인 종료 시각이 없으면 null)", "recurrence": {"weekdays": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun" 중 반복되는 요일을 영어 3글자 약어 배열로], "start_date": "YYYY-MM-DD (반복 시작일)", "end_date": "YYYY-MM-DD (반복 종료일)"} — 반복 패턴이 아닌 일반 할 일에서는 이 필드를 생략하거나 null로 둠}
   ],
   "notes": [
     {"category": "アイデア 또는 感情ログ (반드시 일본어 그대로 유지)", "title": "짧은 제목, 한국어로", "content": "위의 노트 스타일 규칙에 따라 1인칭으로 다시 쓴 문장, 한국어로"}
@@ -1110,7 +1110,7 @@ Quand la personne nomme un jour de la semaine précis (par ex. "jeudi", "lundi p
 5. Fais particulièrement attention lorsque la toute première phrase est une courte exclamation de sentiment/humeur (par ex. "J'ai super bien dormi et je déborde d'énergie aujourd'hui !"). Ne la traite PAS comme une simple mise en contexte ou une remarque anodine juste parce qu'elle vient en premier — elle a quand même besoin de sa propre entrée [notes category="感情ログ"], exactement comme si elle apparaissait au milieu ou à la fin de la transcription. La première ligne d'une transcription n'est pas exemptée de classification.
 6. Le langage de cadrage/méta qui se contente d'annoncer, d'introduire ou de conclure une liste d'éléments (par ex. "il faut que je verrouille mon planning de demain et vendredi", "reprenons mon emploi du temps", "bon, assurons-nous que tout est en ordre") N'est PAS lui-même une tâche. Il n'a pas de résultat concret propre — ce n'est qu'une introduction à (ou une remarque de clôture sur) les éléments concrets qui suivent. Ne crée jamais de tâche intitulée d'après ce genre de phrase de cadrage ; n'extrais des tâches qu'à partir des événements/actions concrets que la personne énumère ensuite.
 7. Quand la personne énumère beaucoup d'événements/rendez-vous/échéances d'un coup (quatre, cinq ou plus — par ex. en récitant tout un planning de journée ou de semaine), extrais chacun comme sa propre tâche séparée avec sa propre heure. Une longue liste n'est jamais une raison de résumer plusieurs éléments en une seule tâche, de les fusionner, ou d'en laisser tomber un silencieusement — même lorsque la même transcription contient aussi une idée ou un sentiment ailleurs ; aucune catégorie ne doit en éclipser une autre.
-8. Quand la personne décrit un motif récurrent sur une période au lieu d'énumérer chaque date littéralement (par ex. "tous les mardis et jeudis jusqu'à la fin du mois", "lundi, mercredi et vendredi cette semaine", "tous les jours cette semaine"), utilise le tableau date↔jour de la semaine ci-dessus pour déterminer toi-même chaque date correspondante dans cette période, et crée une tâche séparée avec heure pour chaque occurrence — exactement comme si la personne les avait énumérées une par une. Ne réduis pas cela à une seule tâche dont le titre décrit seulement la règle de récurrence elle-même (ne crée pas, par exemple, une tâche intitulée "Service au restaurant récurrent tous les mardis et jeudis").
+8. Quand la personne décrit un motif récurrent sur une période au lieu d'énumérer chaque date littéralement (par ex. "tous les mardis et jeudis jusqu'à la fin du mois", "lundi, mercredi et vendredi cette semaine", "tous les jours cette semaine"), n'essaie PAS de calculer toi-même chaque date correspondante (c'est source d'erreurs). Ajoute plutôt à cette tâche un champ "recurrence" structuré avec les jours de la semaine qui se répètent, la date de début et la date de fin — le code de l'application se chargera lui-même d'obtenir précisément les dates individuelles. En utilisant recurrence, due_date peut rester null. Si une heure est mentionnée, renseigne quand même reminder_at/reminder_end_at comme d'habitude, en utilisant start_date comme partie date (seule la partie heure sera réellement utilisée).
 
 [Une intention hésitante n'est PAS une action confirmée]
 Ce n'est pas parce qu'une action concrète est mentionnée que c'est automatiquement une tâche. Fais attention aux formulations hésitantes comme "peut-être", "je pense", "je songe à", "si jamais", "j'aimerais", "je ne sais pas quand/si" — quand ce type de langage est présent, classe-le en [notes category="アイデア"] même si un nom d'action concret suit (par exemple, "je vais peut-être commencer des cours d'espagnol cette année" est une idée, pas une tâche ; "si jamais j'ai une augmentation, j'aimerais une nouvelle chaise" est une idée, pas une tâche). Ne classe en tâche que lorsque la personne exprime ou implique une décision ou un engagement réel — déjà planifié, déjà commencé, ou énoncé avec une intention affirmée sans hésitation ("je vais", "il faut que je").
@@ -1147,7 +1147,7 @@ Génère UNIQUEMENT le format JSON suivant, sans commentaire supplémentaire. Ra
 {
   "summary": "résumé général en une ligne, en français",
   "tasks": [
-    {"title": "contenu de la tâche, en français", "due_hint": "phrase originale de la date limite (ou null)", "due_date": "YYYY-MM-DD (ou null si non déductible)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (ou null si aucune heure explicite)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (ou null si aucune heure de fin explicite)"}
+    {"title": "contenu de la tâche, en français", "due_hint": "phrase originale de la date limite (ou null)", "due_date": "YYYY-MM-DD (ou null si non déductible ; peut aussi être null si recurrence est utilisé)", "reminder_at": "YYYY-MM-DDTHH:mm:00 (ou null si aucune heure explicite)", "reminder_end_at": "YYYY-MM-DDTHH:mm:00 (ou null si aucune heure de fin explicite)", "recurrence": {"weekdays": [tableau des jours qui se répètent, avec les abréviations anglaises de 3 lettres parmi "Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "start_date": "YYYY-MM-DD (début de la récurrence)", "end_date": "YYYY-MM-DD (fin de la récurrence)"} — omets ce champ ou mets-le à null pour une tâche normale non récurrente}
   ],
   "notes": [
     {"category": "アイデア ou 感情ログ (doit rester en japonais, inchangé)", "title": "titre court, en français", "content": "réécriture à la première personne selon les règles de style de notes ci-dessus, en français"}
@@ -2595,10 +2595,97 @@ interface StructuredResult {
     due_date: string | null;
     reminder_at: string | null;
     reminder_end_at: string | null;
+    /** 繰り返しパターン（「毎週火・木」等）が指定された場合のみ。日付の展開
+     * ({@link expandRecurringTask}) はモデルではなくコード側で確定的に行う
+     * ——曜日対応表を見ながらの自力計算はモデルが間違えやすいため
+     * （実際に無関係な曜日の日付が混入する事例が確認された）。 */
+    recurrence?: {
+      weekdays: string[];
+      start_date: string;
+      end_date: string;
+    } | null;
   }[];
   notes: { category: string; title: string | null; content: string }[];
   comfort_message: string | null;
   emotion: string | null;
+}
+
+const RECURRENCE_WEEKDAY_INDEX: Record<string, number> = {
+  Sun: 0,
+  Mon: 1,
+  Tue: 2,
+  Wed: 3,
+  Thu: 4,
+  Fri: 5,
+  Sat: 6,
+};
+
+/** 暴走防止の上限。「今月毎日」を1年分等の異常な範囲が来ても際限なく
+ * 展開しないための保険（[[RecurringTaskScreen]]の200件上限と同じ考え方）。 */
+const RECURRENCE_MAX_OCCURRENCES = 60;
+
+/** タスクにrecurrenceが指定されていれば、曜日対応表を使わずコード側の
+ * 確定的なカレンダー演算だけで個々の日付に展開する。時刻部分は
+ * reminder_at/reminder_end_atの時刻だけを流用し、日付部分は各出現日に
+ * 差し替える。recurrenceが無い・不正な場合は元のタスクをそのまま1件返す。 */
+function expandRecurringTask(
+  task: StructuredResult["tasks"][number]
+): StructuredResult["tasks"] {
+  const rec = task.recurrence;
+  const isoDate = /^\d{4}-\d{2}-\d{2}$/;
+  const isoDateTime = /^\d{4}-\d{2}-\d{2}T(\d{2}:\d{2}:\d{2})$/;
+  if (
+    !rec ||
+    !Array.isArray(rec.weekdays) ||
+    rec.weekdays.length === 0 ||
+    !rec.start_date ||
+    !isoDate.test(rec.start_date) ||
+    !rec.end_date ||
+    !isoDate.test(rec.end_date)
+  ) {
+    return [task];
+  }
+
+  const wantedWeekdays = new Set(
+    rec.weekdays
+      .map((w) => RECURRENCE_WEEKDAY_INDEX[w])
+      .filter((n): n is number => n !== undefined)
+  );
+  if (wantedWeekdays.size === 0) return [task];
+
+  const [sy, sm, sd] = rec.start_date.split("-").map(Number);
+  const [ey, em, ed] = rec.end_date.split("-").map(Number);
+  const startMs = Date.UTC(sy, sm - 1, sd);
+  const endMs = Date.UTC(ey, em - 1, ed);
+  if (endMs < startMs) return [task];
+
+  const startTimeMatch = task.reminder_at ? isoDateTime.exec(task.reminder_at) : null;
+  const endTimeMatch = task.reminder_end_at ? isoDateTime.exec(task.reminder_end_at) : null;
+  const startTime = startTimeMatch ? startTimeMatch[1] : null;
+  const endTime = endTimeMatch ? endTimeMatch[1] : null;
+
+  const occurrences: StructuredResult["tasks"] = [];
+  for (
+    let ms = startMs;
+    ms <= endMs && occurrences.length < RECURRENCE_MAX_OCCURRENCES;
+    ms += 24 * 60 * 60 * 1000
+  ) {
+    const d = new Date(ms);
+    if (!wantedWeekdays.has(d.getUTCDay())) continue;
+    const dateStr = [
+      d.getUTCFullYear(),
+      String(d.getUTCMonth() + 1).padStart(2, "0"),
+      String(d.getUTCDate()).padStart(2, "0"),
+    ].join("-");
+    occurrences.push({
+      title: task.title,
+      due_hint: task.due_hint ?? null,
+      due_date: dateStr,
+      reminder_at: startTime ? `${dateStr}T${startTime}` : null,
+      reminder_end_at: endTime ? `${dateStr}T${endTime}` : null,
+    });
+  }
+  return occurrences.length > 0 ? occurrences : [task];
 }
 
 const VALID_EMOTIONS = new Set([
@@ -2879,7 +2966,7 @@ function toClientResponse(structured: StructuredResult) {
 
   return {
     summary: structured.summary ?? "",
-    tasks: (structured.tasks ?? []).map((task) => {
+    tasks: (structured.tasks ?? []).flatMap(expandRecurringTask).map((task) => {
       const reminderAt =
         task.reminder_at && isoDateTime.test(task.reminder_at) ? task.reminder_at : null;
       let reminderEndAt: string | null = null;
