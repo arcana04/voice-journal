@@ -22,6 +22,7 @@
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		50BFA00627EB53B3C5DDA3ED /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F07E101B8661E36666A872B9 /* Pods_RunnerTests.framework */; };
 		63B955745758D175E7E52085 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 489A481FADF3D5C52C89AB40 /* InfoPlist.strings */; };
+		AA00110022003300440055BC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA00110022003300440055BB /* InfoPlist.strings */; };
 		73E63FBBD53A5C5D02EAA265 /* BackgroundAudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 850519EC233F079F702EF6FA /* BackgroundAudioRecorder.swift */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */; };
@@ -149,6 +150,12 @@
 		3C4D5E6F7A8B9C0D1E2F3A4B /* de */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		4D5E6F7A8B9C0D1E2F3A4B5C /* ko */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		5E6F7A8B9C0D1E2F3A4B5C6D /* fr */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AA00110022003300440055C1 /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AA00110022003300440055C2 /* ja */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AA00110022003300440055C3 /* es */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AA00110022003300440055C4 /* de */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AA00110022003300440055C5 /* ko */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AA00110022003300440055C6 /* fr */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		D2BC09C6B1040E74C02529F3 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		E4F7B17356C45B79BB0B19C8 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		EC6981E656E123A51BD719F7 /* VoiceJournalWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VoiceJournalWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -246,6 +253,7 @@
 				98EDA894548A353FDD2C8FA6 /* VoiceMemoUploader.swift */,
 				03EEEC3EC3B75CC4958AC1E9 /* EntryStore.swift */,
 				73CBCC76E2A8F34511C1866A /* Info.plist */,
+				AA00110022003300440055BB /* InfoPlist.strings */,
 				30FCF29F6CBF4471AA3508F2 /* Assets.xcassets */,
 			);
 			path = VoiceJournalWatch;
@@ -488,6 +496,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				120C94F0B3FF0B2D7CCAB04F /* Assets.xcassets in Resources */,
+				AA00110022003300440055BC /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -673,6 +682,19 @@
 				3C4D5E6F7A8B9C0D1E2F3A4B /* de */,
 				4D5E6F7A8B9C0D1E2F3A4B5C /* ko */,
 				5E6F7A8B9C0D1E2F3A4B5C6D /* fr */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		AA00110022003300440055BB /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AA00110022003300440055C2 /* ja */,
+				AA00110022003300440055C1 /* en */,
+				AA00110022003300440055C3 /* es */,
+				AA00110022003300440055C4 /* de */,
+				AA00110022003300440055C5 /* ko */,
+				AA00110022003300440055C6 /* fr */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
