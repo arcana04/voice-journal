@@ -1560,6 +1560,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get weeklyReportWordDetailEmpty => '이 단어가 언급된 기록을 찾을 수 없습니다';
 
   @override
+  String get weeklyReportConstellationNoData => '이번 주는 아직 기분 기록이 없어요';
+
+  @override
   String get emotionCategoryPositive => '긍정';
 
   @override

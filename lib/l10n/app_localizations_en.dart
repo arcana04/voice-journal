@@ -1591,7 +1591,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weeklyReportEmotionSectionTitle => 'Emotional trends';
 
   @override
-  String get weeklyReportNoEmotionData => 'No mood entries yet this week';
+  String get weeklyReportNoEmotionData => 'No emotional entries yet this week';
 
   @override
   String get weeklyReportConstellationSectionTitle => 'Mood Constellation';
@@ -1618,6 +1618,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get weeklyReportWordDetailEmpty =>
       'No entries mentioning this word were found';
+
+  @override
+  String get weeklyReportConstellationNoData => 'No mood entries yet this week';
 
   @override
   String get emotionCategoryPositive => 'Positive';

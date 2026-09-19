@@ -84,6 +84,16 @@ const WATCH_DEVICE_SECRET_BYTES = 32;
 const WATCH_RATE_LIMIT_WINDOW_SECONDS = 60;
 const WATCH_RATE_LIMIT_MAX_CALLS = 5;
 
+/** askKnowledgeBase/transcribeQuestionは日次クォータ・月間録音時間の対象外
+ * （相談チャット/音声質問はPro限定機能だが「録音」そのものではないため）。
+ * ただしisProUser()だけでは呼び出し回数に上限が無く、有効なPro契約・App Check
+ * トークンさえあればスクリプトでループしてOpenAI課金を無限に発生させられて
+ * しまう。正規のチャット/音声質問利用（人間が手で使う分には1時間に何十回も
+ * 呼ぶことはまず無い）を妨げない範囲で、Watchと同様のバースト型レート制限を
+ * 掛けて自動ループ濫用だけを弾く（2026-09-19）。 */
+const AI_RATE_LIMIT_WINDOW_SECONDS = 60 * 60;
+const AI_RATE_LIMIT_MAX_CALLS = 100;
+
 type SummaryLevel = "preserve" | "standard" | "compact";
 
 function normalizeSummaryLevel(value: unknown): SummaryLevel {
@@ -141,6 +151,7 @@ const MESSAGES: Record<
     quotaExceeded: (limit: number) => string;
     monthlyMinutesExceeded: (limitMinutes: number) => string;
     watchRateLimited: string;
+    aiRateLimited: string;
     unknownWatchDevice: string;
     proRequired: string;
     transcriptionFailed: (body: string) => string;
@@ -161,6 +172,7 @@ const MESSAGES: Record<
       `今月の録音時間の上限（${limitMinutes}分）に達しました。追加の録音パックを購入するか、来月までお待ちください。`,
     watchRateLimited:
       "Apple Watchからのリクエストが多すぎます。少し時間をおいてから再度お試しください。",
+    aiRateLimited: "リクエストが多すぎます。しばらくしてから再度お試しください。",
     unknownWatchDevice: "このApple Watchはまだペアリングされていません。iPhoneアプリで再度ペアリングしてください。",
     proRequired: "この機能はProプラン限定です。",
     transcriptionFailed: (body) => `文字起こしに失敗しました: ${body}`,
@@ -180,6 +192,7 @@ const MESSAGES: Record<
       `You've reached this month's recording limit of ${limitMinutes} minutes. Buy an extra minutes pack, or wait until next month.`,
     watchRateLimited:
       "Too many requests from Apple Watch. Please wait a moment and try again.",
+    aiRateLimited: "Too many requests. Please wait a while and try again.",
     unknownWatchDevice:
       "This Apple Watch hasn't been paired yet. Please pair it again from the iPhone app.",
     proRequired: "This feature is only available on the Pro plan.",
@@ -201,6 +214,7 @@ const MESSAGES: Record<
       `Has alcanzado el límite de grabación de este mes de ${limitMinutes} minutos. Compra un paquete de minutos adicionales o espera hasta el próximo mes.`,
     watchRateLimited:
       "Demasiadas solicitudes desde Apple Watch. Espera un momento e inténtalo de nuevo.",
+    aiRateLimited: "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
     unknownWatchDevice:
       "Este Apple Watch aún no está emparejado. Vuelve a emparejarlo desde la app de iPhone.",
     proRequired: "Esta función solo está disponible en el plan Pro.",
@@ -222,6 +236,7 @@ const MESSAGES: Record<
       `Du hast das monatliche Aufnahmelimit von ${limitMinutes} Minuten erreicht. Kaufe ein zusätzliches Minutenpaket oder warte bis zum nächsten Monat.`,
     watchRateLimited:
       "Zu viele Anfragen von der Apple Watch. Bitte warte einen Moment und versuche es erneut.",
+    aiRateLimited: "Zu viele Anfragen. Bitte warte einen Moment und versuche es erneut.",
     unknownWatchDevice:
       "Diese Apple Watch ist noch nicht gekoppelt. Bitte koppele sie erneut über die iPhone-App.",
     proRequired: "Diese Funktion ist nur im Pro-Plan verfügbar.",
@@ -242,6 +257,7 @@ const MESSAGES: Record<
     monthlyMinutesExceeded: (limitMinutes) =>
       `이번 달 녹음 시간 한도(${limitMinutes}분)에 도달했습니다. 추가 녹음 팩을 구매하거나 다음 달까지 기다려 주세요.`,
     watchRateLimited: "Apple Watch에서 온 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+    aiRateLimited: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
     unknownWatchDevice:
       "이 Apple Watch는 아직 페어링되지 않았습니다. iPhone 앱에서 다시 페어링해 주세요.",
     proRequired: "이 기능은 Pro 플랜 전용입니다.",
@@ -262,6 +278,7 @@ const MESSAGES: Record<
       `Tu as atteint la limite d'enregistrement de ce mois de ${limitMinutes} minutes. Achète un pack de minutes supplémentaires ou attends le mois prochain.`,
     watchRateLimited:
       "Trop de requêtes depuis l'Apple Watch. Attends un instant et réessaie.",
+    aiRateLimited: "Trop de requêtes. Attends un instant et réessaie.",
     unknownWatchDevice:
       "Cette Apple Watch n'est pas encore couplée. Recouple-la depuis l'application iPhone.",
     proRequired: "Cette fonctionnalité est réservée au plan Pro.",
@@ -1375,8 +1392,76 @@ async function refundDailyQuota(uid: string, timeZone: string): Promise<void> {
   });
 }
 
+/** 1日あたりにconsumeDailyQuota/recordMonthlyMinutesUsageを払い戻せる回数の上限。
+ * 通常の一時的な失敗（ネットワーク不調・OpenAI側の一過性エラー等）が1日に
+ * この回数を超えて起きることはまず無い想定で、多少余裕を持たせた値にしている。 */
+const DAILY_REFUND_CAP = 15;
+
+/**
+ * 払い戻し（refundDailyQuota/refundMonthlyMinutesUsage）を実行して良いかどうかを、
+ * 日次usageドキュメントに同居させた回数カウンタで判定する。
+ *
+ * 従来はWhisper/GPT呼び出しが失敗するたびに無条件で払い戻していたため、
+ * 意図的に失敗を起こし続ければ「日次回数は一切減らないのにOpenAI課金だけが
+ * 積み上がる」形で無制限に処理を試行できてしまっていた。呼び出し元
+ * （processVoiceMemo/processTextMemo）は、この関数がfalseを返した場合は
+ * 払い戻しをスキップする——その回の失敗自体はユーザーにそのまま返るが、
+ * 消費した枠は戻さない（=それ以上は本物の日次上限に達したのと同じ扱いになる）。
+ */
+async function tryConsumeRefundAllowance(uid: string, timeZone: string): Promise<boolean> {
+  const db = getFirestore();
+  const usageRef = db.collection("usage").doc(`${uid}_${localDateString(timeZone)}`);
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(usageRef);
+    const refundCount = (snap.data()?.refundCount as number | undefined) ?? 0;
+    if (refundCount >= DAILY_REFUND_CAP) return false;
+    tx.set(usageRef, { refundCount: refundCount + 1 }, { merge: true });
+    return true;
+  });
+}
+
 function usageMonthRef(uid: string, timeZone: string) {
   return getFirestore().collection("usageMonth").doc(`${uid}_${localMonthString(timeZone)}`);
+}
+
+/**
+ * 日次/月間クォータの集計バケットに使うタイムゾーンを、リクエストが自己申告する
+ * timeZoneからではなく、users/{uid}に保存された値を基準に解決する。
+ *
+ * 従来はリクエストごとのtimeZoneをそのままバケットキー（日付文字列）の算出に
+ * 使っていたため、同じユーザーが呼び出しごとに異なる（が形式的には正しい）
+ * IANAタイムゾーン文字列を送るだけで、実時間はほぼ変わらないまま何十個もの
+ * 別々のバケット（＝別々の無料枠）を作り出せてしまっていた。
+ *
+ * ここでは「UTCの暦日が変わって初めて、その日最初のリクエストが申告した
+ * タイムゾーンを新しい基準として採用し、以降は同じUTC暦日中は保存済みの値を
+ * 使い続ける」方式にする：
+ *   - 同じユーザーからの短時間の連続呼び出しは、送ってくるtimeZoneの値に
+ *     関わらず必ず同じバケットに落ちる（これがこの関数で塞ぐ抜け穴）。
+ *   - 実際に海外渡航してタイムゾーンが変わったユーザーは、UTCの日付が
+ *     変わるたびに（＝最悪でも1日に1回）新しい申告値に追従できる。
+ */
+async function resolveQuotaTimeZone(uid: string, requestedTimeZone: string): Promise<string> {
+  const db = getFirestore();
+  const userRef = db.collection("users").doc(uid);
+  const todayUtc = localDateString("UTC");
+
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(userRef);
+    const storedTimeZone = snap.data()?.quotaTimeZone as string | undefined;
+    const anchorDate = snap.data()?.quotaTimeZoneAnchorDate as string | undefined;
+
+    if (storedTimeZone && anchorDate === todayUtc) {
+      return storedTimeZone;
+    }
+
+    tx.set(
+      userRef,
+      { quotaTimeZone: requestedTimeZone, quotaTimeZoneAnchorDate: todayUtc },
+      { merge: true }
+    );
+    return requestedTimeZone;
+  });
 }
 
 /**
@@ -1598,6 +1683,35 @@ async function consumeWatchRateLimit(
   });
 }
 
+/** askKnowledgeBase/transcribeQuestion向けの、uid+関数名単位の固定窓レート制限。
+ * consumeWatchRateLimitと同じ「固定時間窓バケットのカウンタ」方式——スライディング
+ * ウィンドウほど厳密ではないが、自動ループ濫用を弾くには十分でトランザクション
+ * 1回で完結する。functionNameを鍵に含めるのは、チャット(askKnowledgeBase)と
+ * 音声質問(transcribeQuestion)を合算せず、それぞれ独立に1時間あたりの上限まで
+ * 使わせるため（両方合わせて厳しく絞ると正当な利用まで妨げかねない）。 */
+async function consumeAiRateLimit(
+  uid: string,
+  functionName: string,
+  locale: Locale
+): Promise<void> {
+  const db = getFirestore();
+  const windowStart = Math.floor(Date.now() / 1000 / AI_RATE_LIMIT_WINDOW_SECONDS);
+  const bucketRef = db.collection("aiRateLimit").doc(`${uid}_${functionName}_${windowStart}`);
+
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(bucketRef);
+    const count = (snap.data()?.count as number | undefined) ?? 0;
+    if (count >= AI_RATE_LIMIT_MAX_CALLS) {
+      throw new HttpsError("resource-exhausted", MESSAGES[locale].aiRateLimited);
+    }
+    tx.set(
+      bucketRef,
+      { count: count + 1, updatedAt: FieldValue.serverTimestamp() },
+      { merge: true }
+    );
+  });
+}
+
 export const getUsageStatus = onCall(
   { enforceAppCheck: APP_CHECK_ENFORCED },
   async (request) => {
@@ -1607,9 +1721,14 @@ export const getUsageStatus = onCall(
     }
     const { timeZone } = (request.data ?? {}) as { timeZone?: string };
     const effectiveTimeZone = isValidTimeZone(timeZone) ? timeZone : "Asia/Tokyo";
+    // クォータの集計バケットは、このリクエストの自己申告timeZoneをそのまま
+    // 信用せず、保存済みの値を基準に解決する（resolveQuotaTimeZone参照）。
+    // 表示する使用量が実際にconsumeDailyQuota等で使われるバケットと必ず
+    // 一致するよう、ここでも同じ解決関数を通す。
+    const quotaTimeZone = await resolveQuotaTimeZone(uid, effectiveTimeZone);
 
     const db = getFirestore();
-    const usageRef = db.collection("usage").doc(`${uid}_${localDateString(effectiveTimeZone)}`);
+    const usageRef = db.collection("usage").doc(`${uid}_${localDateString(quotaTimeZone)}`);
     const [snap, limit, isPro] = await Promise.all([
       usageRef.get(),
       dailyLimitFor(uid),
@@ -1622,7 +1741,7 @@ export const getUsageStatus = onCall(
     }
 
     const [monthSnap, userSnap] = await Promise.all([
-      usageMonthRef(uid, effectiveTimeZone).get(),
+      usageMonthRef(uid, quotaTimeZone).get(),
       db.collection("users").doc(uid).get(),
     ]);
     const monthlyUsedSeconds = (monthSnap.data()?.audioSecondsUsed as number | undefined) ?? 0;
@@ -2460,6 +2579,26 @@ async function deleteDocsWithIdPrefix(
   }
 }
 
+/** `collection`のうち、`field`が`value`と一致するドキュメントを全て削除する。
+ * processedWebhookEvents/{eventId}のように、uidがドキュメントID自体ではなく
+ * フィールドとして格納されているコレクションを掃除するために使う
+ * （単純な等価条件のみなので、複合インデックスの追加設定は不要）。 */
+async function deleteDocsWithField(
+  db: FirebaseFirestore.Firestore,
+  collection: string,
+  field: string,
+  value: string
+): Promise<void> {
+  for (;;) {
+    const snap = await db.collection(collection).where(field, "==", value).limit(400).get();
+    if (snap.empty) return;
+    const batch = db.batch();
+    snap.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+    if (snap.size < 400) return;
+  }
+}
+
 /**
  * ユーザー自身のアカウントとそれに紐づく全データを完全に削除する。
  * App Storeガイドライン5.1.1(v)（アカウント作成を提供するアプリは、アプリ内
@@ -2467,9 +2606,14 @@ async function deleteDocsWithIdPrefix(
  * 操作できない（他人のデータを消す経路にはならない）。
  * 削除対象: Firestoreの users/{uid} 以下（entries/watchDevicesサブコレクション
  * を含め再帰削除）、usage/{uid}_*・watchRateLimit/{uid}_* の複合キー方式
- * ドキュメント群、Storageの users/{uid}/ 配下の写真・動画、最後にFirebase Auth
- * のユーザー本体。各ステップは冪等（すでに無いものを消そうとしても失敗しない）
- * ため、途中でタイムアウトしても安全に再試行できる。
+ * ドキュメント群、processedWebhookEvents/{eventId}のうちこのuid分、
+ * （買い切りプラン保有者なら）counters/lifetimePurchasesの解放、Storageの
+ * users/{uid}/ 配下の写真・動画、最後にFirebase Authのユーザー本体。
+ * 各ステップは冪等（すでに無いものを消そうとしても失敗しない）ため、途中で
+ * タイムアウトしても安全に再試行できる。RevenueCat側のサブスクライバー状態
+ * 自体はここでは操作しない（Apple/Google課金の解約はストア側でしか行えず、
+ * RevenueCatもアプリ削除では自動解約されないため、サーバー側で消せるものが
+ * 無い——ユーザーはストアのサブスク管理から別途解約する必要がある）。
  */
 export const deleteAccount = onCall(
   { timeoutSeconds: 300, memory: "256MiB", enforceAppCheck: APP_CHECK_ENFORCED },
@@ -2495,9 +2639,42 @@ export const deleteAccount = onCall(
       logger.error("deleteAccount revokeRefreshTokens failed", { uid, err });
     }
 
+    // 先着100人限定カウンタ(counters/lifetimePurchases)の解放。recursiveDeleteが
+    // users/{uid}を消してしまう前に読んでおく必要がある。買い切りプラン保有の
+    // 判定は、revenueCatWebhookの返金/EXPIRATION分岐(decrementLifetimePurchaseCounter
+    // の既存の呼び出し箇所)と同じ考え方——買い切りは「非失効の権利」であり、
+    // hasMediaSync(サブスク限定クレームの元になるフィールド)はexpiration_at_ms
+    // ありのサブスクにしか立たないため、isPro=true かつ hasMediaSync=false は
+    // 「現時点で非失効(買い切り)の権利を持っている」ことの代理指標として使える。
+    // ここではイベント単体ではなくアカウントの「今の状態」を見ているので、
+    // 買い切り+サブスク併用者(hasMediaSync=true)は対象外のままでよい
+    // （そちらは買い切り枠を実際には消費していないケースを含むため、
+    // 誤ってカウンタを減らさない安全側の判定）。
+    try {
+      const userSnap = await db.collection("users").doc(uid).get();
+      const userData = userSnap.data();
+      if (userData?.isPro === true && userData?.hasMediaSync === false) {
+        await decrementLifetimePurchaseCounter();
+      }
+    } catch (err) {
+      logger.error("deleteAccount lifetimePurchases counter cleanup failed", { uid, err });
+    }
+
     await db.recursiveDelete(db.collection("users").doc(uid));
     await deleteDocsWithIdPrefix(db, "usage", `${uid}_`);
     await deleteDocsWithIdPrefix(db, "watchRateLimit", `${uid}_`);
+
+    // processedWebhookEvents/{eventId}はrevenueCatWebhookの冪等性マーカーで、
+    // uidをドキュメントIDではなくフィールドとして持つ(eventMarkerRef.create時に
+    // uidを保存している)。単純な等価条件のクエリなので複合インデックス追加は
+    // 不要。イベント自体はこのアカウント固有の情報でしかなく、消し忘れても
+    // 別アカウントへの権限漏洩等にはならないが、退会したアカウントの痕跡として
+    // 残り続けるだけなので合わせて掃除する。
+    try {
+      await deleteDocsWithField(db, "processedWebhookEvents", "uid", uid);
+    } catch (err) {
+      logger.error("deleteAccount processedWebhookEvents cleanup failed", { uid, err });
+    }
 
     try {
       const bucket = getStorage().bucket();
@@ -3341,12 +3518,18 @@ export const processVoiceMemo = onCall(
         await consumeWatchRateLimit(uid, watchAuth.deviceId, loc);
       }
 
+      // クォータの集計バケットは、このリクエストの自己申告timeZoneをそのまま
+      // 信用せず、保存済みの値を基準に解決する（resolveQuotaTimeZone参照）。
+      // 文字起こし結果の曜日解決等コンテンツ側の「今」にはeffectiveTimeZoneを
+      // そのまま使い続け、クォータの集計にだけこのquotaTimeZoneを使う。
+      const quotaTimeZone = await resolveQuotaTimeZone(uid, effectiveTimeZone);
+
       // 月間分数の上限チェックは副作用の無い読み取り専用チェックなので、
       // 消費を伴うconsumeDailyQuotaより先に行う。逆順だと、月間分数を
       // 使い切ったProユーザーがリクエストするたびに、失敗するのに日次回数
       // だけ消費され続け、対になる払い戻し処理も無いため蓄積してしまう。
-      await checkMonthlyMinutesBudget(uid, loc, effectiveTimeZone);
-      await consumeDailyQuota(uid, loc, effectiveTimeZone);
+      await checkMonthlyMinutesBudget(uid, loc, quotaTimeZone);
+      await consumeDailyQuota(uid, loc, quotaTimeZone);
 
       const apiKey = openAiApiKey.value();
       const rawAudioBuffer = Buffer.from(audioBase64, "base64");
@@ -3356,7 +3539,7 @@ export const processVoiceMemo = onCall(
         monthlyUsage = await recordMonthlyMinutesUsage(
           uid,
           enhanced.durationSeconds,
-          effectiveTimeZone
+          quotaTimeZone
         );
       }
       const words = normalizeCustomWords(customWords);
@@ -3366,6 +3549,10 @@ export const processVoiceMemo = onCall(
       // ユーザーは何も得られていないのに日次回数・月間録音時間だけ消費された
       // ままにしない——ここで消費した分だけ対になる関数で取り消してから
       // 再スローする（下の外側catchが最終的なエラー整形を担当する）。
+      // ただし払い戻し自体は1日あたりtryConsumeRefundAllowanceで上限を掛ける
+      // ——意図的に失敗させ続けて「日次回数は減らないままOpenAI課金だけ
+      // 積み上がる」形の悪用を防ぐため（上限に達した後の失敗は、消費した
+      // 枠を戻さないまま通常のエラーとしてユーザーに返る）。
       let transcript: string;
       try {
         transcript = await transcribe(
@@ -3379,15 +3566,17 @@ export const processVoiceMemo = onCall(
           throw new HttpsError("invalid-argument", MESSAGES[loc].transcriptionEmpty);
         }
       } catch (transcribeErr) {
-        await refundDailyQuota(uid, effectiveTimeZone);
-        if (monthlyUsage) await refundMonthlyMinutesUsage(uid, monthlyUsage, effectiveTimeZone);
+        if (await tryConsumeRefundAllowance(uid, quotaTimeZone)) {
+          await refundDailyQuota(uid, quotaTimeZone);
+          if (monthlyUsage) await refundMonthlyMinutesUsage(uid, monthlyUsage, quotaTimeZone);
+        }
         throw transcribeErr;
       }
 
       const glossary = buildGlossaryContext(words, loc);
       // structure()（GPT-4o-mini呼び出し・enforceCategoryRestriction含む）が
       // 失敗した場合も、文字起こし自体は成功しているのに何も得られない点は
-      // transcribe()の失敗と同じなので、ここでも同様に払い戻す。
+      // transcribe()の失敗と同じなので、ここでも同様に（同じ上限のもとで）払い戻す。
       try {
         // structure()に渡す「今」をここで一度だけ確定させ、toClientResponse()
         // の曜日解決・時刻繰り上げ判定にも同じ値を使う——別々に`new Date()`を
@@ -3410,8 +3599,10 @@ export const processVoiceMemo = onCall(
           `${localDateString(effectiveTimeZone, now)}T${localTimeString(effectiveTimeZone, now)}:00`
         );
       } catch (structureErr) {
-        await refundDailyQuota(uid, effectiveTimeZone);
-        if (monthlyUsage) await refundMonthlyMinutesUsage(uid, monthlyUsage, effectiveTimeZone);
+        if (await tryConsumeRefundAllowance(uid, quotaTimeZone)) {
+          await refundDailyQuota(uid, quotaTimeZone);
+          if (monthlyUsage) await refundMonthlyMinutesUsage(uid, monthlyUsage, quotaTimeZone);
+        }
         throw structureErr;
       }
     } catch (err) {
@@ -5200,6 +5391,7 @@ export const askKnowledgeBase = onCall(
     if (!(await isProUser(uid))) {
       throw new HttpsError("permission-denied", MESSAGES[loc].proRequired);
     }
+    await consumeAiRateLimit(uid, "askKnowledgeBase", loc);
     if (!question || !question.trim()) {
       throw new HttpsError("invalid-argument", MESSAGES[loc].noText);
     }
@@ -5315,6 +5507,7 @@ export const transcribeQuestion = onCall(
     if (!(await isProUser(uid))) {
       throw new HttpsError("permission-denied", MESSAGES[loc].proRequired);
     }
+    await consumeAiRateLimit(uid, "transcribeQuestion", loc);
     if (!audioBase64) {
       throw new HttpsError("invalid-argument", MESSAGES[loc].noAudio);
     }
@@ -5972,7 +6165,10 @@ export const processTextMemo = onCall(
     }
 
     try {
-      await consumeDailyQuota(uid, loc, effectiveTimeZone);
+      // クォータの集計バケットは自己申告timeZoneをそのまま信用せず、保存済みの
+      // 値を基準に解決する（processVoiceMemoと同じくresolveQuotaTimeZone参照）。
+      const quotaTimeZone = await resolveQuotaTimeZone(uid, effectiveTimeZone);
+      await consumeDailyQuota(uid, loc, quotaTimeZone);
 
       const apiKey = openAiApiKey.value();
       // structure()に渡す「今」をここで一度だけ確定させ、toClientResponse()の
@@ -5992,7 +6188,10 @@ export const processTextMemo = onCall(
       } catch (structureErr) {
         // GPT呼び出しが失敗した場合、ユーザーは何も得られていないのに
         // 日次回数だけ消費されたままにしない（processVoiceMemoと同じ対処）。
-        await refundDailyQuota(uid, effectiveTimeZone);
+        // ただし払い戻し自体は1日あたりの上限つき（tryConsumeRefundAllowance参照）。
+        if (await tryConsumeRefundAllowance(uid, quotaTimeZone)) {
+          await refundDailyQuota(uid, quotaTimeZone);
+        }
         throw structureErr;
       }
       return toClientResponse(

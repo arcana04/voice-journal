@@ -1557,6 +1557,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get weeklyReportWordDetailEmpty => 'この言葉を含む記録は見つかりませんでした';
 
   @override
+  String get weeklyReportConstellationNoData => '今週はまだ感情の記録がありません';
+
+  @override
   String get emotionCategoryPositive => 'ポジティブ';
 
   @override

@@ -53,7 +53,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 27,
+      version: 28,
       // tasks/notes/entry_imagesはON DELETE CASCADEをスキーマに宣言しているが、
       // SQLiteは外部キー制約自体をデフォルトで無効にしており、接続のたびに
       // 明示的に有効化しないとその宣言は一切効かない（各deleteメソッドが手動で
@@ -89,6 +89,7 @@ class DbService {
             calendar_event_id TEXT,
             calendar_id TEXT,
             apple_reminder_id TEXT,
+            apple_reminder_list_id TEXT,
             is_all_day INTEGER NOT NULL DEFAULT 0,
             notify_at TEXT,
             notion_page_url TEXT,
@@ -495,6 +496,22 @@ class DbService {
             }
           }
         }
+        if (oldVersion < 28) {
+          // apple_reminder_idが「どのリマインダーリストの項目か」を記録して
+          // いなかったため、calendar_id（v25）と同じ理由の不具合があった:
+          // ユーザーが連携先リマインダーリストを切り替えた後にタスクを編集・
+          // 完了操作すると、既存のリマインダーが無断で新しいリストへ移動して
+          // いた（Apple Reminders側のcalendarプロパティを、現在選択中のリスト
+          // で上書きしてしまうため）。以後は作成時点のリストIDを別途保持し、
+          // 既存リマインダーへの更新は常にこのIDが指すリストを対象にする。
+          // 既存行はNULLのままになるため、移行前に作られたリマインダーに
+          // ついては従来どおり現在選択中のリストへフォールバックする
+          // （journal_store.dart参照）。
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE tasks ADD COLUMN apple_reminder_list_id TEXT',
+          );
+        }
       },
     );
   }
@@ -846,11 +863,15 @@ class DbService {
     );
   }
 
-  Future<void> updateTaskAppleReminderId(int taskId, String? reminderId) async {
+  Future<void> updateTaskAppleReminderId(
+    int taskId,
+    String? reminderId, {
+    String? listId,
+  }) async {
     final db = await _database;
     await db.update(
       'tasks',
-      {'apple_reminder_id': reminderId},
+      {'apple_reminder_id': reminderId, 'apple_reminder_list_id': listId},
       where: 'id = ?',
       whereArgs: [taskId],
     );

@@ -1648,6 +1648,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Keine Einträge gefunden, die dieses Wort erwähnen';
 
   @override
+  String get weeklyReportConstellationNoData =>
+      'Diese Woche noch keine Stimmungseinträge';
+
+  @override
   String get emotionCategoryPositive => 'Positiv';
 
   @override

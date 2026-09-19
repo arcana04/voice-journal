@@ -2989,7 +2989,7 @@ abstract class AppLocalizations {
   /// No description provided for @weeklyReportNoEmotionData.
   ///
   /// In en, this message translates to:
-  /// **'No mood entries yet this week'**
+  /// **'No emotional entries yet this week'**
   String get weeklyReportNoEmotionData;
 
   /// No description provided for @weeklyReportConstellationSectionTitle.
@@ -3039,6 +3039,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No entries mentioning this word were found'**
   String get weeklyReportWordDetailEmpty;
+
+  /// No description provided for @weeklyReportConstellationNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No mood entries yet this week'**
+  String get weeklyReportConstellationNoData;
 
   /// No description provided for @emotionCategoryPositive.
   ///

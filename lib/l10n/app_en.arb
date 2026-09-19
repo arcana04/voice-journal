@@ -552,7 +552,7 @@
   "weeklyReportWordsSectionTitle": "Words of the Week",
   "weeklyReportWordsEmpty": "No standout words yet",
   "weeklyReportWordDetailEmpty": "No entries mentioning this word were found",
-  "weeklyReportNoEmotionData": "No mood entries yet this week",
+  "weeklyReportConstellationNoData": "No mood entries yet this week",
   "emotionCategoryPositive": "Positive",
   "emotionCategoryNormal": "Normal",
   "emotionCategoryNegative": "Negative",

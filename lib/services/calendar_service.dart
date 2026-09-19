@@ -1,6 +1,20 @@
 import 'package:device_calendar/device_calendar.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+/// device_calendarの呼び出しが失敗したことを表す例外(権限が取り消された、
+/// 対象のカレンダー/予定がOS側で操作できない等)。device_calendarパッケージ
+/// 自体は失敗を例外ではなく`Result.errors`(データはnull/空のまま)として返す
+/// 設計のため、呼び出し元のtry/catchが確実に拾えるよう、ここで明示的に
+/// 例外へ変換する——「取得・操作できたが対象が0件/該当なし」という正当な
+/// 結果と、「取得・操作そのものに失敗した」を混同しないための境界。
+class CalendarServiceException implements Exception {
+  final String message;
+  CalendarServiceException(this.message);
+
+  @override
+  String toString() => 'CalendarServiceException: $message';
+}
+
 /// 端末のカレンダー（iOS標準カレンダー・Googleカレンダーなど、端末側に登録済みの
 /// カレンダーアカウント）と連携するためのラッパー。EventKit（iOS）/
 /// カレンダープロバイダ（Android）にOS標準のプラグイン経由でアクセスする。
@@ -27,11 +41,20 @@ class CalendarService {
     return result.data ?? false;
   }
 
-  /// 書き込み可能なカレンダーの一覧を返す。
+  /// 書き込み可能なカレンダーの一覧を返す。取得そのものが失敗した場合（権限が
+  /// 取り消された、OS側のエラー等）は[CalendarServiceException]を投げる——
+  /// 「正常に取得できたが対象カレンダーが1つも無い」という正当な空リストと、
+  /// 呼び出し元(JournalStore._calendarStillExists等)が区別できるようにする。
   Future<List<Calendar>> retrieveCalendars() async {
     final result = await _plugin.retrieveCalendars();
-    final calendars = result.data ?? const <Calendar>[];
-    return calendars.where((c) => c.isReadOnly != true).toList();
+    if (result.hasErrors || result.data == null) {
+      throw CalendarServiceException(
+        result.errors.isEmpty
+            ? 'retrieveCalendars returned no data'
+            : result.errors.map((e) => e.errorMessage).join('; '),
+      );
+    }
+    return result.data!.where((c) => c.isReadOnly != true).toList();
   }
 
   /// [calendarId]に予定を作成・更新する。既存の[eventId]を渡すとその予定を更新する。
@@ -66,10 +89,30 @@ class CalendarService {
       allDay: allDay,
     );
     final result = await _plugin.createOrUpdateEvent(event);
-    return result?.data;
+    // device_calendarは権限取り消し等の失敗を例外ではなく`Result.errors`
+    // (dataはnullのまま)として返すため、ここでチェックせずdataだけを見ると
+    // 「予定を作成/更新できなかった」ことが「連携オフ・予定なし」と同じ
+    // 見た目(null)になり、呼び出し元(JournalStore._syncTaskCalendarEvent)の
+    // try/catchが失敗を検知できず、既存の予定IDを静かに手放してしまう。
+    if (result == null || result.hasErrors) {
+      throw CalendarServiceException(
+        (result?.errors ?? const <ResultError>[]).isEmpty
+            ? 'createOrUpdateEvent returned no data'
+            : result!.errors.map((e) => e.errorMessage).join('; '),
+      );
+    }
+    return result.data;
   }
 
+  /// 予定を削除する。削除そのものが失敗した場合（権限が取り消された等）は
+  /// [CalendarServiceException]を投げる——[upsertEvent]と同じ理由で、
+  /// 呼び出し元が「削除に失敗した」を検知できるようにする。
   Future<void> deleteEvent(String calendarId, String eventId) async {
-    await _plugin.deleteEvent(calendarId, eventId);
+    final result = await _plugin.deleteEvent(calendarId, eventId);
+    if (result.hasErrors) {
+      throw CalendarServiceException(
+        result.errors.map((e) => e.errorMessage).join('; '),
+      );
+    }
   }
 }

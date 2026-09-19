@@ -105,7 +105,7 @@ class _WeeklyConstellationState extends State<WeeklyConstellation>
         ),
         alignment: Alignment.center,
         child: Text(
-          l10n.weeklyReportNoEmotionData,
+          l10n.weeklyReportConstellationNoData,
           style: const TextStyle(color: Colors.white54, fontSize: 13),
         ),
       );

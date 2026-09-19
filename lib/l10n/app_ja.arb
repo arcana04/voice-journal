@@ -522,7 +522,7 @@
   "weeklyReportWordsSectionTitle": "今週のよく話した言葉",
   "weeklyReportWordsEmpty": "目立って多く話した言葉はまだありません",
   "weeklyReportWordDetailEmpty": "この言葉を含む記録は見つかりませんでした",
-  "weeklyReportNoEmotionData": "今週はまだ感情の記録がありません",
+  "weeklyReportConstellationNoData": "今週はまだ感情の記録がありません",
   "emotionCategoryPositive": "ポジティブ",
   "emotionCategoryNormal": "ノーマル",
   "emotionCategoryNegative": "ネガティブ",

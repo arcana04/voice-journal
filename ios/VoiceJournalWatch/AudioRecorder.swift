@@ -53,7 +53,14 @@ final class AudioRecorder: NSObject, ObservableObject {
             try session.setActive(true)
             didActivateSession = true
 
-            let url = FileManager.default.temporaryDirectory
+            // NSTemporaryDirectory(FileManager.default.temporaryDirectory)は
+            // アプリ未起動中にOSがいつでも中身を消してよい領域と定義されており、
+            // 強制終了からのリカバリ(次回起動までファイルが残っている前提の
+            // recoverableRecordingURL)と矛盾するため使わない。iPhone側
+            // (ios/Runner/SiriRecording/BackgroundAudioRecorder.swift)と同じ
+            // Application Support配下の`recordings`ディレクトリに保存する。
+            let recordingsDir = try Self.recordingsDirectory()
+            let url = recordingsDir
                 .appendingPathComponent(UUID().uuidString)
                 .appendingPathExtension("m4a")
 
@@ -134,6 +141,28 @@ final class AudioRecorder: NSObject, ObservableObject {
         @unknown default:
             break
         }
+    }
+
+    // MARK: - 保存先ディレクトリ
+
+    /// 録音ファイルの保存先。[start]内のコメント、およびiPhone側の
+    /// BackgroundAudioRecorder.recordingsDirectory()と同じ理由でtmpは使わない。
+    private static func recordingsDirectory() throws -> URL {
+        let base = try FileManager.default.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+        let dir = base.appendingPathComponent("recordings", isDirectory: true)
+        if !FileManager.default.fileExists(atPath: dir.path) {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            var values = URLResourceValues()
+            values.isExcludedFromBackup = true
+            var mutableDir = dir
+            try? mutableDir.setResourceValues(values)
+        }
+        return dir
     }
 
     // MARK: - 強制終了からの復元

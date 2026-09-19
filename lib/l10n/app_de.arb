@@ -552,6 +552,7 @@
   "weeklyReportWordsSectionTitle": "Wörter der Woche",
   "weeklyReportWordsEmpty": "Noch keine herausragenden Wörter",
   "weeklyReportWordDetailEmpty": "Keine Einträge gefunden, die dieses Wort erwähnen",
+  "weeklyReportConstellationNoData": "Diese Woche noch keine Stimmungseinträge",
   "emotionCategoryPositive": "Positiv",
   "emotionCategoryNormal": "Normal",
   "emotionCategoryNegative": "Negativ",

@@ -25,6 +25,13 @@ class TaskItem {
 
   /// iPhone標準のリマインダーアプリ（EventKitのEKReminder）に連携登録した際のID。
   final String? appleReminderId;
+
+  /// [appleReminderId]が実際に存在するリマインダーリストのID。[calendarId]と
+  /// 同じ理由で「連携先リスト」の現在の設定値とは独立して保持する——ユーザーが
+  /// 後で連携先リストを切り替えても、既存のリマインダーに対する更新は必ず
+  /// このIDが指すリストを対象にする（切り替え後に「現在選択中のリスト」を
+  /// 見てしまうと、既存のリマインダーが無断で新しいリストへ移動してしまう）。
+  final String? reminderListId;
   final bool isAllDay;
 
   /// 端末に届くプッシュ通知の発火時刻。[reminderAt]/[reminderEndAt]（カレンダー用の
@@ -47,6 +54,7 @@ class TaskItem {
     this.calendarEventId,
     this.calendarId,
     this.appleReminderId,
+    this.reminderListId,
     this.isAllDay = false,
     this.notifyAt,
     this.notionPageUrl,
@@ -87,6 +95,7 @@ class TaskItem {
     String? calendarId,
     String? appleReminderId,
     bool clearAppleReminderId = false,
+    String? reminderListId,
     bool? isAllDay,
     DateTime? notifyAt,
     bool clearNotify = false,
@@ -113,6 +122,9 @@ class TaskItem {
       appleReminderId: clearAppleReminderId
           ? null
           : (appleReminderId ?? this.appleReminderId),
+      reminderListId: clearAppleReminderId
+          ? null
+          : (reminderListId ?? this.reminderListId),
       isAllDay: clearReminder ? false : (isAllDay ?? this.isAllDay),
       notifyAt: clearNotify ? null : (notifyAt ?? this.notifyAt),
       notionPageUrl: clearNotionPageUrl
@@ -134,6 +146,7 @@ class TaskItem {
       'calendar_event_id': calendarEventId,
       'calendar_id': calendarId,
       'apple_reminder_id': appleReminderId,
+      'apple_reminder_list_id': reminderListId,
       'is_all_day': isAllDay ? 1 : 0,
       'notify_at': notifyAt?.toIso8601String(),
       'notion_page_url': notionPageUrl,
@@ -161,6 +174,7 @@ class TaskItem {
       calendarEventId: map['calendar_event_id'] as String?,
       calendarId: map['calendar_id'] as String?,
       appleReminderId: map['apple_reminder_id'] as String?,
+      reminderListId: map['apple_reminder_list_id'] as String?,
       isAllDay: (map['is_all_day'] as int? ?? 0) == 1,
       notifyAt: notifyAtStr != null ? DateTime.tryParse(notifyAtStr) : null,
       notionPageUrl: map['notion_page_url'] as String?,
