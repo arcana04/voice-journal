@@ -238,6 +238,37 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       setState(() {
         _insightsFuture = Future.value(cached.insights);
       });
+      // 保存時点ではまだレター解禁前（週の途中）だったが、その後日曜20:00を
+      // 過ぎて解禁済みになったケース。記録の中身が変わらない限りここで
+      // キャッシュがそのまま再利用されsaveWeeklyReportが呼ばれないため、
+      // 何もしないとDB上のletterUnlockedがfalseのまま固定されてしまう。
+      // 次週にこの週を「先週」として比較する際、_loadPreviousReportが
+      // letterUnlocked==falseを「未確定の途中経過」と誤判定し、本来出る
+      // べき先週比バッジが永久に出なくなる（[[project_voicejournal_weekly_report]]
+      // 参照）。解禁状態が変わった分だけ更新して保存し直す。
+      if (_letterUnlocked && !cached.letterUnlocked) {
+        await DbService.instance.saveWeeklyReport(
+          SavedWeeklyReport(
+            id: cached.id,
+            weekKey: cached.weekKey,
+            weekStart: cached.weekStart,
+            weekEnd: _weekEnd,
+            insights: cached.insights,
+            emotionCounts: cached.emotionCounts,
+            dailyEmotionCounts: cached.dailyEmotionCounts,
+            moodMoments: cached.moodMoments,
+            brainMapBubbles: cached.brainMapBubbles,
+            diaryCount: cached.diaryCount,
+            ideaCount: cached.ideaCount,
+            totalTasks: cached.totalTasks,
+            completedTasks: cached.completedTasks,
+            entryIdsSignature: cached.entryIdsSignature,
+            createdAt: cached.createdAt,
+            locale: cached.locale,
+            letterUnlocked: true,
+          ),
+        );
+      }
       return;
     }
 

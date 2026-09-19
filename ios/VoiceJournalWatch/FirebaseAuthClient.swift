@@ -5,6 +5,7 @@ enum FirebaseAuthError: Error {
     case invalidResponse
     case server(String)
     case notPaired
+    case keychainWriteFailed
 }
 
 /// Firebase Auth SDKを使わず、REST APIを直接叩いてWatch単体でトークンを
@@ -42,9 +43,18 @@ actor FirebaseAuthClient {
         }
         let result = try JSONDecoder().decode(SignInResult.self, from: data)
 
-        KeychainStore.set(result.refreshToken, for: .refreshToken)
-        KeychainStore.set(deviceId, for: .deviceId)
-        KeychainStore.set(deviceSecret, for: .deviceSecret)
+        // 3つ全ての書き込みが成功したことを確認する。1つでも失敗すると
+        // (端末ロック中のKeychainアクセス不可等)、この場では「ペアリング成功」
+        // に見えてしまうが、後でvalidIdToken()がKeychainからrefreshTokenを
+        // 読めず「未ペアリング」扱いになる、という食い違いが生まれるため。
+        let refreshTokenSaved = KeychainStore.set(result.refreshToken, for: .refreshToken)
+        let deviceIdSaved = KeychainStore.set(deviceId, for: .deviceId)
+        let deviceSecretSaved = KeychainStore.set(deviceSecret, for: .deviceSecret)
+        guard refreshTokenSaved, deviceIdSaved, deviceSecretSaved else {
+            // 中途半端に一部だけ保存された状態を残さない。
+            KeychainStore.removeAll()
+            throw FirebaseAuthError.keychainWriteFailed
+        }
 
         cachedIdToken = result.idToken
         cachedIdTokenExpiry = Date().addingTimeInterval(TimeInterval(result.expiresIn) ?? 3600)

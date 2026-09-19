@@ -176,7 +176,15 @@ class CloudSyncService {
                 // ——含めたまま同期すると、別端末側のjournal_store.dartが
                 // このIDを信じて誤った（無関係な）カレンダーに予定を作成・
                 // 更新・削除してしまう。
-                ..remove('calendar_id'),
+                ..remove('calendar_id')
+                // apple_reminder_list_idもcalendar_idと全く同じ理由で除外する
+                // 必要がある(端末のEventKitリマインダーリストのローカルID)。
+                // これが漏れていたため、別端末で同じエントリを取り込むと、
+                // その端末には存在しない/無関係なリストIDを持つタスクが
+                // 出来上がり、以後そのタスクを更新・完了するたびに無関係な
+                // リマインダーリストを誤って操作してしまっていた
+                // (calendar_idについてv25で修正済みの不具合と同型)。
+                ..remove('apple_reminder_list_id'),
             ),
           )
           .toList(),

@@ -116,6 +116,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
       setState(() => _voiceState = _VoiceState.idle);
       return;
     }
+    if (!mounted) return;
 
     final locale = Localizations.localeOf(context).languageCode;
     try {

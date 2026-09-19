@@ -1178,6 +1178,14 @@ class JournalStore extends ChangeNotifier {
   }) async {
     if (local.id == null) return null;
     for (final task in local.tasks) {
+      // replaceEntryContentは古いtask行を削除し新しいidで作り直すため、旧idに
+      // 紐づく副作用は新しい行には引き継がれない。カレンダー予定/Apple
+      // リマインダーと同じ理由で、予約済みのローカル通知（プッシュ通知）も
+      // 先にキャンセルしておかないと、置き換え後もOS側には旧タスクの通知が
+      // 孤立して残り、内容が変わった後も古いタイトル・時刻で鳴ってしまう。
+      if (task.id != null && task.notifyAt != null) {
+        await _reminders.cancelTaskReminder(task.id!);
+      }
       await _deleteTaskCalendarEvent(task);
       await _deleteTaskAppleReminder(task);
     }

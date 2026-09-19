@@ -30,11 +30,38 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen>
+    with WidgetsBindingObserver {
   final ReminderService _reminders = ReminderService.instance;
 
   late Future<bool> _notificationFuture = _reminders
       .hasNotificationPermission();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // 通知が拒否されている場合、「開く」ボタンで端末の設定アプリへ遷移させて
+    // そこで許可を切り替えてもらう導線になっているため、その設定アプリから
+    // このアプリへ戻ってきた（=resumed）タイミングで再チェックしないと、
+    // 実際には許可済みになっているのに画面上はいつまでも「拒否」のまま
+    // 表示され続けてしまう。
+    if (state == AppLifecycleState.resumed && mounted) {
+      setState(
+        () => _notificationFuture = _reminders.hasNotificationPermission(),
+      );
+    }
+  }
 
   Future<void> _requestNotificationPermission() async {
     final granted = await _reminders.requestNotificationPermission();

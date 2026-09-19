@@ -266,7 +266,11 @@ class MediaSyncService {
     for (final ref in remoteItems) {
       if (localFileNames.contains(ref.name)) continue;
       try {
-        final bytes = await ref.getData(20 * 1024 * 1024);
+        // 圧縮後の動画は[_maxVideoUploadBytes](100MB)までアップロードを許容して
+        // いるため、ここの上限をそれより低くすると、20MB超100MB以下の動画は
+        // アップロード自体は成功するのに他端末へは絶対にダウンロードできず
+        // （毎回maxSize超過で失敗し続ける）、恒久的な同期エラーになっていた。
+        final bytes = await ref.getData(_maxVideoUploadBytes);
         if (bytes == null) continue;
         final localPath = await _images.saveBytes(bytes, ref.name);
         newPaths.add(localPath);

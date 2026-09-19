@@ -41,6 +41,7 @@ class TaskScheduleEditor extends StatelessWidget {
       initialTime: TimeOfDay.now(),
     );
     if (time == null) return;
+    if (!context.mounted) return;
     draft.startAt = DateTime(
       date.year,
       date.month,
@@ -60,6 +61,7 @@ class TaskScheduleEditor extends StatelessWidget {
       lastDate: DateTime(2100),
     );
     if (picked == null) return;
+    if (!context.mounted) return;
     draft.startAt = DateTime(
       picked.year,
       picked.month,
@@ -78,6 +80,7 @@ class TaskScheduleEditor extends StatelessWidget {
       initialTime: TimeOfDay.fromDateTime(base),
     );
     if (picked == null) return;
+    if (!context.mounted) return;
     draft.startAt = DateTime(
       base.year,
       base.month,
@@ -117,6 +120,7 @@ class TaskScheduleEditor extends StatelessWidget {
       initialTime: TimeOfDay.fromDateTime(base),
     );
     if (time == null) return;
+    if (!context.mounted) return;
     draft.endAt = DateTime(
       date.year,
       date.month,
@@ -141,6 +145,7 @@ class TaskScheduleEditor extends StatelessWidget {
       lastDate: DateTime(2100),
     );
     if (picked == null) return;
+    if (!context.mounted) return;
     draft.endAt = DateTime(
       picked.year,
       picked.month,
@@ -162,6 +167,7 @@ class TaskScheduleEditor extends StatelessWidget {
       initialTime: TimeOfDay.fromDateTime(base),
     );
     if (picked == null) return;
+    if (!context.mounted) return;
     draft.endAt = DateTime(
       base.year,
       base.month,

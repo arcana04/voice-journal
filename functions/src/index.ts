@@ -6167,8 +6167,22 @@ export const generateWeeklyReport = onCall(
     if (!(await isProUser(uid))) {
       throw new HttpsError("permission-denied", MESSAGES[loc].proRequired);
     }
+    // askKnowledgeBase/transcribeQuestionと同じ理由（AI_RATE_LIMIT_*のコメント
+    // 参照）：isProUser()だけでは呼び出し回数に上限が無く、有効なPro契約さえ
+    // あればスクリプトでループしてOpenAI課金を無限に発生させられてしまう。
+    // この関数には元々日次クォータも無かったため、他の2関数より先に同種の
+    // バースト型レート制限を掛け忘れていた抜け穴を塞ぐ。
+    await consumeAiRateLimit(uid, "generateWeeklyReport", loc);
 
-    const trimmedContext = (context ?? "").trim();
+    // クライアントが自由に組み立てて渡すcontextには元々長さの上限が無く、
+    // レート制限内であっても1回の呼び出しで巨大な文字列を送るだけでOpenAI
+    // 課金を跳ね上げられてしまう（askKnowledgeBaseのhistoryは
+    // HISTORY_TURN_MAX_CHARSで既に上限つきだが、こちらは対応漏れだった）。
+    // 通常の1週間分の記録で現実的に収まる範囲より十分大きい値で切り詰める。
+    const GENERATE_WEEKLY_REPORT_CONTEXT_MAX_CHARS = 40000;
+    const trimmedContext = (context ?? "")
+      .trim()
+      .slice(0, GENERATE_WEEKLY_REPORT_CONTEXT_MAX_CHARS);
     // 相談チャット（askKnowledgeBase）と同じ理由：今週の記録に自傷・希死念慮
     // に関連する内容が含まれる場合、AIに自由に要約・引用させず、ここで
     // 固定の相談窓口案内に差し替える。以降の通常のレポート生成には進ませない。
