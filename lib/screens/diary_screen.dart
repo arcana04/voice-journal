@@ -192,7 +192,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
                             isPro: context.read<SubscriptionStore>().isPro,
                             onTap: () => pickCustomBackground(
                               sheetContext,
-                              onPicked: defaults.setDefaultBackground,
+                              onPicked: (id) {
+                                if (!mounted) return;
+                                defaults.setDefaultBackground(id);
+                              },
                             ),
                           ),
                         ],

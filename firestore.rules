@@ -15,7 +15,7 @@ service cloud.firestore {
       allow read, delete: if request.auth != null && request.auth.uid == uid;
       allow create, update: if request.auth != null && request.auth.uid == uid
         && request.resource.data.keys().hasOnly(
-             ['summary', 'created_at', 'comfort_message', 'emotion', 'tasks', 'notes',
+             ['summary', 'created_at', 'updated_at', 'comfort_message', 'emotion', 'tasks', 'notes',
               'embedding', 'embedding_source_hash']
            )
         && request.resource.data.summary is string
@@ -38,6 +38,9 @@ service cloud.firestore {
     // Everything else (users/{uid} root doc with isPro/bonusSecondsBalance/notion,
     // usage/{uid}_{date}, usageMonth/{uid}_{yyyyMM},
     // users/{uid}/watchDevices/{deviceId}, watchRateLimit/{uid}_{deviceId}_{window},
+    // users/{uid}/mediaObjectSizes/{hash} — per-object byte counts backing
+    // mediaBytesUsed, keyed by a hash of the Storage object path (see
+    // reconcileMediaObjectSize in functions/src/index.ts),
     // processedWebhookEvents/{eventId} — revenueCatWebhook's idempotency markers)
     // goes through Cloud Functions (Admin SDK), which bypasses these rules.
     // No client reads or writes those paths directly. The 'notion' field (Notion

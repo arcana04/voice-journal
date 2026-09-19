@@ -377,6 +377,13 @@ class JournalEntry {
   /// 未設定なら自動生成される。
   final String? remoteId;
   final DateTime createdAt;
+
+  /// このエントリの内容(summary/tasks/notes/emotion/comfort_message、つまり
+  /// [CloudSyncService]がpush/pullする範囲)が最後に変更された時刻。
+  /// [fullSync]が同じremoteIdのエントリが端末とリモートの両方に存在する場合に
+  /// どちらが新しいかを判定する基準として使う([JournalStore.fullSync]参照)。
+  /// 未指定なら[createdAt]と同じ扱いにする(新規作成時は「作成=更新」のため)。
+  final DateTime updatedAt;
   final String summary;
   final List<TaskItem> tasks;
   final List<NoteItem> notes;
@@ -391,13 +398,14 @@ class JournalEntry {
     this.id,
     this.remoteId,
     required this.createdAt,
+    DateTime? updatedAt,
     required this.summary,
     required this.tasks,
     required this.notes,
     this.comfortMessage,
     this.emotion,
     this.images = const [],
-  });
+  }) : updatedAt = updatedAt ?? createdAt;
 
   JournalEntry copyWith({
     List<TaskItem>? tasks,
@@ -405,11 +413,13 @@ class JournalEntry {
     List<EntryImage>? images,
     EmotionTag? emotion,
     bool clearEmotion = false,
+    DateTime? updatedAt,
   }) {
     return JournalEntry(
       id: id,
       remoteId: remoteId,
       createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       summary: summary,
       tasks: tasks ?? this.tasks,
       notes: notes ?? this.notes,

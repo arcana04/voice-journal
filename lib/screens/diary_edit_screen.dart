@@ -316,7 +316,10 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                         isPro: context.read<SubscriptionStore>().isPro,
                         onTap: () => pickCustomBackground(
                           sheetContext,
-                          onPicked: (id) => setState(() => _backgroundId = id),
+                          onPicked: (id) {
+                            if (!mounted) return;
+                            setState(() => _backgroundId = id);
+                          },
                         ),
                       ),
                     ],

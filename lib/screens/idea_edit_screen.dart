@@ -41,6 +41,7 @@ class IdeaEditScreen extends StatefulWidget {
 
 class _IdeaEditScreenState extends State<IdeaEditScreen> {
   List<_IdeaDraft>? _drafts;
+  bool _saving = false;
 
   List<_IdeaDraft> _ensureDrafts(JournalEntry entry) {
     return _drafts ??= entry.notes
@@ -58,26 +59,35 @@ class _IdeaEditScreenState extends State<IdeaEditScreen> {
   }
 
   Future<void> _save(JournalStore store, JournalEntry entry) async {
-    for (final d in _drafts ?? const <_IdeaDraft>[]) {
-      final title = d.titleController.text.trim();
-      var content = d.contentController.text.trim();
-      if (content.isEmpty) content = d.note.content;
-      final tag = d.tagController.text.trim();
-      await store.updateNoteText(
-        entry,
-        d.note,
-        title: title.isEmpty ? null : title,
-        content: content,
-      );
-      await store.updateIdeaMeta(
-        entry,
-        d.note,
-        ideaStatus: d.ideaStatus,
-        pinned: d.pinned,
-        tag: tag.isEmpty ? null : tag,
-      );
+    // 保存中に連打されると非同期のDB更新が並行して走った上、それぞれが
+    // 完了時にNavigator.pop()を呼ぶため1回のタップのつもりで2画面分
+    // 戻ってしまう。保存中はボタンを無効化して二重発火を防ぐ。
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      for (final d in _drafts ?? const <_IdeaDraft>[]) {
+        final title = d.titleController.text.trim();
+        var content = d.contentController.text.trim();
+        if (content.isEmpty) content = d.note.content;
+        final tag = d.tagController.text.trim();
+        await store.updateNoteText(
+          entry,
+          d.note,
+          title: title.isEmpty ? null : title,
+          content: content,
+        );
+        await store.updateIdeaMeta(
+          entry,
+          d.note,
+          ideaStatus: d.ideaStatus,
+          pinned: d.pinned,
+          tag: tag.isEmpty ? null : tag,
+        );
+      }
+      if (mounted) Navigator.of(context).pop();
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
-    if (mounted) Navigator.of(context).pop();
   }
 
   @override
@@ -100,8 +110,14 @@ class _IdeaEditScreenState extends State<IdeaEditScreen> {
             title: Text(l10n.editIdeaTitle),
             actions: [
               TextButton(
-                onPressed: () => _save(store, entry),
-                child: Text(l10n.save),
+                onPressed: _saving ? null : () => _save(store, entry),
+                child: _saving
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.save),
               ),
             ],
           ),

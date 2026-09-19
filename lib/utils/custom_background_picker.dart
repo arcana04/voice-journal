@@ -45,9 +45,20 @@ Future<void> pickCustomBackground(
   }
   if (picked == null) return;
 
-  final backgroundId = await CustomBackgroundService().saveCustomBackground(
-    File(picked.path),
-  );
+  String backgroundId;
+  try {
+    backgroundId = await CustomBackgroundService().saveCustomBackground(
+      File(picked.path),
+    );
+  } catch (e) {
+    if (!sheetContext.mounted) return;
+    ScaffoldMessenger.of(sheetContext).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(sheetContext)!.mediaPickFailed('$e')),
+      ),
+    );
+    return;
+  }
   onPicked(backgroundId);
   if (sheetContext.mounted) Navigator.of(sheetContext).pop();
 }

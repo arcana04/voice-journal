@@ -157,6 +157,11 @@ class CloudSyncService {
       // Firestoreに書く瞬間だけ明示的にUTCへ変換し、Z付きの曖昧さの無い
       // 文字列にする。
       'created_at': entry.createdAt.toUtc().toIso8601String(),
+      // fullSyncが同じremoteIdのエントリを端末とリモートの両方で見つけた際に
+      // どちらが新しいか判定する基準([JournalStore.fullSync]参照)。UTCへ
+      // 変換する理由はcreated_atと同じ(Firestore/他端末との間で曖昧さの無い
+      // 文字列にするため)。
+      'updated_at': entry.updatedAt.toUtc().toIso8601String(),
       'comfort_message': entry.comfortMessage,
       'emotion': entry.emotion?.id,
       'tasks': entry.tasks
@@ -194,15 +199,34 @@ class CloudSyncService {
     final notes = (data['notes'] as List? ?? [])
         .map((m) => NoteItem.fromMap(Map<String, Object?>.from(m as Map)))
         .toList();
+    final createdAt =
+        DateTime.tryParse(data['created_at'] as String? ?? '')?.toLocal() ??
+            DateTime.now();
+    // 'updated_at'は今回のfullSync同期修正で追加したフィールドのため、それ
+    // 以前に書き込まれた古いドキュメントには存在しない。無い場合はcreated_at
+    // を代わりに使う — fullSyncの新旧比較にとっては「実際の最終編集時刻より
+    // 古い可能性がある値」でしかないが、少なくとも「常にローカルが勝つ」
+    // 従来の挙動よりは正確な比較ができる。マイグレーション未完了のドキュメント
+    // が残っていることを追跡できるよう、ここでログに残しておく。
+    final updatedAtRaw = data['updated_at'] as String?;
+    if (updatedAtRaw == null) {
+      debugPrint(
+        'cloud sync: entry $remoteId has no updated_at (pre-migration doc); '
+        'falling back to created_at for sync comparison',
+      );
+    }
+    final updatedAt =
+        (updatedAtRaw != null ? DateTime.tryParse(updatedAtRaw) : null)
+                ?.toLocal() ??
+            createdAt;
     return JournalEntry(
       remoteId: remoteId,
       // Firestoreの文字列はUTC（Z付き）で保存されている（_entryToFirestoreMap
       // 参照）。toLocal()でこの端末のローカル時刻に戻し、アプリの他の部分
       // （日記のカレンダー表示・並び替え等）が期待する「ローカル時刻の
       // DateTime」という形を崩さないようにする。
-      createdAt:
-          DateTime.tryParse(data['created_at'] as String? ?? '')?.toLocal() ??
-              DateTime.now(),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
       summary: data['summary'] as String? ?? '',
       tasks: tasks,
       notes: notes,

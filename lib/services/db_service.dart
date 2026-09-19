@@ -53,7 +53,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 28,
+      version: 29,
       // tasks/notes/entry_imagesはON DELETE CASCADEをスキーマに宣言しているが、
       // SQLiteは外部キー制約自体をデフォルトで無効にしており、接続のたびに
       // 明示的に有効化しないとその宣言は一切効かない（各deleteメソッドが手動で
@@ -70,7 +70,8 @@ class DbService {
             summary TEXT NOT NULL,
             comfort_message TEXT,
             emotion TEXT,
-            remote_id TEXT
+            remote_id TEXT,
+            updated_at TEXT
           )
         ''');
         await db.execute(
@@ -512,6 +513,25 @@ class DbService {
             'ALTER TABLE tasks ADD COLUMN apple_reminder_list_id TEXT',
           );
         }
+        if (oldVersion < 29) {
+          // fullSyncが同じremoteIdのエントリを端末とリモートの両方で見つけた際に
+          // どちらの内容が新しいか判定できず、常にローカル側の(古いかもしれない)
+          // 内容でリモートを無条件に上書きしてしまっていた不具合の修正用
+          // ([[project_voicejournal_knowledge_base_chat]]参照)。以後は
+          // エントリの内容(summary/tasks/notes/emotion/comfort_message)を
+          // 変更するたびにこの列を更新し、fullSyncはこれとFirestore側の
+          // 同名フィールドを比較して新しい方を採用する。既存行にはこの概念が
+          // 無かったため、created_atをそのまま「最終更新時刻」の代わりとして
+          // 埋める(実際の最終編集時刻より古い可能性はあるが、少なくとも
+          // 「常にローカルが勝つ」よりは正確な比較ができる)。
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE entries ADD COLUMN updated_at TEXT',
+          );
+          await db.execute(
+            'UPDATE entries SET updated_at = created_at WHERE updated_at IS NULL',
+          );
+        }
       },
     );
   }
@@ -525,6 +545,7 @@ class DbService {
       'comfort_message': entry.comfortMessage,
       'emotion': entry.emotion?.id,
       'remote_id': remoteId,
+      'updated_at': entry.updatedAt.toIso8601String(),
     });
 
     final savedTasks = <TaskItem>[];
@@ -591,6 +612,7 @@ class DbService {
       id: entryId,
       remoteId: remoteId,
       createdAt: entry.createdAt,
+      updatedAt: entry.updatedAt,
       summary: entry.summary,
       tasks: savedTasks,
       notes: savedNotes,
@@ -631,6 +653,11 @@ class DbService {
           id: row['id'] as int,
           remoteId: row['remote_id'] as String?,
           createdAt: DateTime.parse(row['created_at'] as String),
+          // 移行(v29)未完了/バックフィル漏れの行に対する保険としてcreated_atへ
+          // フォールバックする。通常はマイグレーションで必ず埋まっている。
+          updatedAt:
+              DateTime.tryParse(row['updated_at'] as String? ?? '') ??
+              DateTime.parse(row['created_at'] as String),
           summary: row['summary'] as String,
           tasks: (tasksByEntry[row['id'] as int] ?? const [])
               .map(TaskItem.fromMap)
@@ -909,6 +936,128 @@ class DbService {
       whereArgs: [entryId],
     );
     await db.delete('entries', where: 'id = ?', whereArgs: [entryId]);
+  }
+
+  /// エントリ内容(summary/tasks/notes/emotion/comfort_message)を変更する
+  /// メソッドから呼ぶ。[JournalStore]の各更新メソッドはtasks/notesの各行を
+  /// 個別のメソッドで更新するため、親のentries行の`updated_at`はここで
+  /// 別途明示的に更新する必要がある([fullSync]の新旧比較の基準になる)。
+  Future<void> touchEntry(int entryId, DateTime updatedAt) async {
+    final db = await _database;
+    await db.update(
+      'entries',
+      {'updated_at': updatedAt.toIso8601String()},
+      where: 'id = ?',
+      whereArgs: [entryId],
+    );
+  }
+
+  /// [fullSync]がリモート側の方が新しい(updated_atが後)と判定した既存ローカル
+  /// エントリに対して使う。ローカルの`id`(端末固有の連番)はそのまま維持しつつ、
+  /// summary/comfort_message/emotion/created_at/updated_atとtasks/notesの
+  /// 中身をリモートの内容で丸ごと置き換える(フィールド単位のマージではなく、
+  /// タイムスタンプによるlast-write-winsの「巻き戻し」)。tasks/notesは
+  /// entry_idに紐づく子テーブルごと作り直すため、置き換え前のtask/note idとの
+  /// 対応は失われる — calendar_event_id/apple_reminder_id等、置き換え前の
+  /// タスクが持っていた端末ローカルな連携リンクの後始末は呼び出し元
+  /// ([JournalStore])の責任。entry_images(添付画像)はこのエントリのローカル
+  /// 専用データ(クラウド同期対象外)のため一切触らない。
+  Future<JournalEntry> replaceEntryContent(
+    int entryId,
+    JournalEntry remote,
+  ) async {
+    final db = await _database;
+    await db.update(
+      'entries',
+      {
+        'created_at': remote.createdAt.toIso8601String(),
+        'summary': remote.summary,
+        'comfort_message': remote.comfortMessage,
+        'emotion': remote.emotion?.id,
+        'updated_at': remote.updatedAt.toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [entryId],
+    );
+    await db.delete('tasks', where: 'entry_id = ?', whereArgs: [entryId]);
+    await db.delete('notes', where: 'entry_id = ?', whereArgs: [entryId]);
+
+    final savedTasks = <TaskItem>[];
+    for (final task in remote.tasks) {
+      final taskId = await db.insert('tasks', {
+        'entry_id': entryId,
+        'title': task.title,
+        'due_hint': task.dueHint,
+        'due_date': task.dueDate?.toIso8601String(),
+        'reminder_at': task.reminderAt?.toIso8601String(),
+        'reminder_end_at': task.reminderEndAt?.toIso8601String(),
+        'done': task.done ? 1 : 0,
+        'is_all_day': task.isAllDay ? 1 : 0,
+        'notify_at': task.notifyAt?.toIso8601String(),
+        'notion_page_url': task.notionPageUrl,
+      });
+      savedTasks.add(
+        TaskItem(
+          id: taskId,
+          entryId: entryId,
+          title: task.title,
+          dueHint: task.dueHint,
+          dueDate: task.dueDate,
+          reminderAt: task.reminderAt,
+          reminderEndAt: task.reminderEndAt,
+          done: task.done,
+          isAllDay: task.isAllDay,
+          notifyAt: task.notifyAt,
+          notionPageUrl: task.notionPageUrl,
+        ),
+      );
+    }
+    final savedNotes = <NoteItem>[];
+    for (final note in remote.notes) {
+      final noteId = await db.insert('notes', {
+        'entry_id': entryId,
+        'category': note.category,
+        'title': note.title,
+        'content': note.content,
+        'font_family_index': note.fontFamilyIndex,
+        'text_color': note.textColorValue,
+        'font_scale': note.fontScale,
+        'background_id': note.backgroundId,
+        'idea_status': note.ideaStatus,
+        'pinned': note.pinned ? 1 : 0,
+        'tag': note.tag,
+        'notion_page_url': note.notionPageUrl,
+      });
+      savedNotes.add(
+        NoteItem(
+          id: noteId,
+          entryId: entryId,
+          category: note.category,
+          title: note.title,
+          content: note.content,
+          fontFamilyIndex: note.fontFamilyIndex,
+          textColorValue: note.textColorValue,
+          fontScale: note.fontScale,
+          backgroundId: note.backgroundId,
+          ideaStatus: note.ideaStatus,
+          pinned: note.pinned,
+          tag: note.tag,
+          notionPageUrl: note.notionPageUrl,
+        ),
+      );
+    }
+
+    return JournalEntry(
+      id: entryId,
+      remoteId: remote.remoteId,
+      createdAt: remote.createdAt,
+      updatedAt: remote.updatedAt,
+      summary: remote.summary,
+      tasks: savedTasks,
+      notes: savedNotes,
+      comfortMessage: remote.comfortMessage,
+      emotion: remote.emotion,
+    );
   }
 
   /// アカウント削除時に端末ローカルのデータを全て消す。`entries`を消せば

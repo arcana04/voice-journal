@@ -40,6 +40,7 @@ class TaskEditScreen extends StatefulWidget {
 
 class _TaskEditScreenState extends State<TaskEditScreen> {
   List<_TaskDraft>? _drafts;
+  bool _saving = false;
 
   List<_TaskDraft> _ensureDrafts(JournalEntry entry) {
     return _drafts ??= entry.tasks.map((t) => _TaskDraft(t)).toList();
@@ -54,28 +55,37 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
   }
 
   Future<void> _save(JournalStore store, JournalEntry entry) async {
-    for (final d in _drafts ?? const <_TaskDraft>[]) {
-      final title = d.titleController.text.trim();
-      if (title.isNotEmpty && title != d.task.title) {
-        await store.updateTaskTitle(entry, d.task, title);
+    // 保存中に連打されると非同期のDB更新が並行して走った上、それぞれが
+    // 完了時にNavigator.pop()を呼ぶため1回のタップのつもりで2画面分
+    // 戻ってしまう。保存中はボタンを無効化して二重発火を防ぐ。
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      for (final d in _drafts ?? const <_TaskDraft>[]) {
+        final title = d.titleController.text.trim();
+        if (title.isNotEmpty && title != d.task.title) {
+          await store.updateTaskTitle(entry, d.task, title);
+        }
+        final schedule = d.schedule;
+        if (schedule.startAt != d.task.reminderAt ||
+            schedule.endAt != d.task.reminderEndAt ||
+            schedule.isAllDay != d.task.isAllDay) {
+          await store.updateTaskSchedule(
+            entry,
+            d.task,
+            startAt: schedule.startAt,
+            endAt: schedule.endAt,
+            isAllDay: schedule.isAllDay,
+          );
+        }
+        if (schedule.notifyAt != d.task.notifyAt) {
+          await store.updateTaskNotifyAt(entry, d.task, schedule.notifyAt);
+        }
       }
-      final schedule = d.schedule;
-      if (schedule.startAt != d.task.reminderAt ||
-          schedule.endAt != d.task.reminderEndAt ||
-          schedule.isAllDay != d.task.isAllDay) {
-        await store.updateTaskSchedule(
-          entry,
-          d.task,
-          startAt: schedule.startAt,
-          endAt: schedule.endAt,
-          isAllDay: schedule.isAllDay,
-        );
-      }
-      if (schedule.notifyAt != d.task.notifyAt) {
-        await store.updateTaskNotifyAt(entry, d.task, schedule.notifyAt);
-      }
+      if (mounted) Navigator.of(context).pop();
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
-    if (mounted) Navigator.of(context).pop();
   }
 
   @override
@@ -96,8 +106,14 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
           appBar: AppBar(
             actions: [
               TextButton(
-                onPressed: () => _save(store, entry),
-                child: Text(AppLocalizations.of(context)!.save),
+                onPressed: _saving ? null : () => _save(store, entry),
+                child: _saving
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(AppLocalizations.of(context)!.save),
               ),
             ],
           ),

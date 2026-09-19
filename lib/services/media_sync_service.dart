@@ -30,6 +30,18 @@ class MediaSyncService {
 
   final ImageStorageService _images = ImageStorageService();
 
+  /// アップロード中のローカルパスの集合（多重アップロード防止用ミューテックス）。
+  /// [addMediaToEntry]（fire-and-forget）と[JournalStore.fullSync]が同じ添付
+  /// ファイルに対してほぼ同時に[uploadPendingMedia]を呼ぶことがあり得る——
+  /// どちらも呼び出し時点ではまだ[DbService.markImageUploaded]が完了していない
+  /// ため、対策が無いと両方が同じStorageオブジェクトパスへ並行してputDataして
+  /// しまう。putData自体は同じpathへの上書きなので実データは壊れないが、
+  /// サーバー側のonMediaObjectFinalizedがその都度発火してmediaBytesUsed
+  /// カウンタが二重に加算され、実使用量より過大に乖離する原因になっていた。
+  /// パス単位で「アップロード中」を記録し、既に進行中のパスは後から来た
+  /// 呼び出し側でスキップする（結果は先行呼び出しの成否に委ねる）。
+  final Set<String> _uploadingPaths = <String>{};
+
   /// 直近の失敗の分類（[JournalStore.syncErrorReason]に使う）。5GB上限超過
   /// による失敗（[_confirmUploadSurvived]がfalseを返すケース）は既に専用の
   /// バナー（[JournalStore.mediaUsage]）で案内済みなので、ここでは対象外——
@@ -107,6 +119,17 @@ class MediaSyncService {
   /// 参照——以前はputData成功の時点で無条件にmarkImageUploadedしていたため、
   /// 上限超過分がサーバー側で静かに削除されても端末側は「アップロード済み」
   /// のまま気づけず、実質的な永久データ損失になっていた）。
+  /// getMetadata()が成功した場合のみ「生存確認できた」とみなす。
+  /// - 'object-not-found'は5GB上限超過でサーバーに削除された可能性があるので
+  ///   リトライの上、最終的にfalse（＝markImageUploadedを呼ばせない）。
+  /// - それ以外の例外（ネットワーク瞬断等の判別不能なエラー）も、以前は
+  ///   「削除ではなさそうだから」と無条件にtrue扱いしていたが、これだと
+  ///   実際には上限超過で削除済みのファイルが偶然別種の例外として観測された
+  ///   場合に誤って「アップロード済み」にしてしまい、[_confirmUploadSurvived]
+  ///   本来の目的（サイレントなデータ損失の防止）が骨抜きになる。判別できない
+  ///   間はリトライし、リトライし尽くしても判別できなければ「生存確認できな
+  ///   かった」として扱う（＝次回の同期で再送——データ損失より無害な再送の
+  ///   方を選ぶ）。
   Future<bool> _confirmUploadSurvived(Reference ref) async {
     const delays = [
       Duration(seconds: 1),
@@ -119,10 +142,14 @@ class MediaSyncService {
         await ref.getMetadata();
         return true;
       } on FirebaseException catch (e) {
-        if (e.code != 'object-not-found') return true;
+        if (e.code != 'object-not-found') {
+          // 判別不能なエラー。まだリトライが残っていれば次へ、
+          // 尽きていれば「未確認」としてfalseを返す（下のreturn false）。
+          continue;
+        }
         // まだ削除されていないだけの可能性があるので次のリトライへ。
       } catch (_) {
-        return true;
+        // 同上（FirebaseException以外の判別不能なエラー）。
       }
     }
     return false;
@@ -148,6 +175,9 @@ class MediaSyncService {
     final pending = await DbService.instance.getUnuploadedImagePaths(entryId);
     var success = true;
     for (final path in pending) {
+      // 既に同じパスのアップロードが進行中なら、ここではスキップして先行
+      // 呼び出しに任せる（_uploadingPathsのクラスコメント参照）。
+      if (!_uploadingPaths.add(path)) continue;
       try {
         final bytes = await _prepareBytesForUpload(path);
         if (bytes == null) continue;
@@ -163,6 +193,8 @@ class MediaSyncService {
         lastFailureReason = SyncFailureReason.classify(e);
         debugPrint('media upload failed: $e');
         success = false;
+      } finally {
+        _uploadingPaths.remove(path);
       }
     }
     return success;

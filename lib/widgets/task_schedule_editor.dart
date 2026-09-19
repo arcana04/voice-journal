@@ -124,6 +124,11 @@ class TaskScheduleEditor extends StatelessWidget {
       time.hour,
       time.minute,
     );
+    // 日付はfirstDate制約で開始日以降に絞られるが、時刻はここで初めて
+    // 決まるため、開始日と同じ日付を選んで開始時刻より前の時刻を選ぶと
+    // 終了が開始より前になり得る。開始側の変更時と同じ規則
+    // (keepEndAfterStart)で、意味のない範囲になった終了は静かに消す。
+    draft.keepEndAfterStart();
     onChanged();
   }
 
@@ -143,6 +148,10 @@ class TaskScheduleEditor extends StatelessWidget {
       base.hour,
       base.minute,
     );
+    // firstDateは開始日以降に絞っているが、同じ日付を選んだ場合は既存の
+    // 終了時刻(base.hour/minute)がそのまま使われるため、開始時刻より前の
+    // 時刻が残っていると終了が開始より前になり得る。
+    draft.keepEndAfterStart();
     onChanged();
   }
 
@@ -160,6 +169,9 @@ class TaskScheduleEditor extends StatelessWidget {
       picked.hour,
       picked.minute,
     );
+    // baseの日付が開始日と同じ場合、開始時刻より前の時刻を選ぶと終了が
+    // 開始より前になり得る。開始側の変更時と同じ規則で静かに消す。
+    draft.keepEndAfterStart();
     onChanged();
   }
 

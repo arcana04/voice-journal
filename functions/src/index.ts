@@ -1761,30 +1761,89 @@ export const getUsageStatus = onCall(
  * 対象に、[uid]と抽出してマッチさせる。それ以外のパスにはマッチしない。 */
 const MEDIA_OBJECT_PATH_RE = /^users\/([^/]+)\/entries\/[^/]+\/media\/[^/]+$/;
 
-/** users/{uid}.mediaBytesUsedを加算/減算し、更新後の値を返す。トランザクション
- * にしているのは、onMediaObjectFinalizedが更新直後の値を見て5GB上限
- * （MEDIA_STORAGE_CAP_BYTES）超過を判定する必要があるため
- * （FieldValue.incrementだけでは呼び出し側が結果値を取得できない）。 */
-/** [createIfMissing]がfalseかつusers/{uid}ドキュメントが既に存在しない場合は
- * 何も書き込まない（0を返す）。deleteAccountはFirestoreの再帰削除の後に
- * Storageのファイルを削除しており、そのonMediaObjectDeletedトリガーが非同期に
- * 遅れて発火すると、set+mergeが既に消したはずのusersドキュメントを
- * mediaBytesUsedフィールドだけの状態で復活させてしまっていた。アップロード側
- * （onMediaObjectFinalized）は逆に、初回アップロード時などドキュメントがまだ
- * 無くても正しく作成できる必要があるため、デフォルトはtrueのまま。 */
-async function adjustMediaBytesUsed(
+/** Storageのオブジェクトpath（"users/{uid}/entries/{entryId}/media/{fileName}"）を
+ * users/{uid}/mediaObjectSizesサブコレクションのドキュメントIDとして使えるよう、
+ * SHA-1ハッシュ値に変換する（Firestoreのドキュメント名に"/"を含められないため）。 */
+function mediaObjectSizeDocId(objectPath: string): string {
+  return createHash("sha1").update(objectPath).digest("hex");
+}
+
+/** users/{uid}.mediaBytesUsedを、オブジェクトpathごとに直近カウント済みの
+ * サイズ（users/{uid}/mediaObjectSizes/{hash}.sizeBytes）との差分だけ加算し、
+ * 更新後の値を返す。
+ *
+ * 以前は[onMediaObjectFinalized]が発火のたびに無条件で+event.data.sizeしていた
+ * ため、同一オブジェクトpath（クライアント側は添付ファイルごとに決め打ちの
+ * ファイル名を使う）への再アップロード——putData失敗時の再送、
+ * addMediaToEntryとfullSyncが同じ添付ファイルに対して競合して同時にアップロード
+ * するケース等——のたびに、実際のStorage使用量は変わらないのにカウンタだけ
+ * 際限なく増え続け、実際は5GB未満のユーザーが上限超過と誤判定されてアップロード
+ * 済みファイルを誤って削除されるバグがあった（[[project_voicejournal_knowledge_base_chat]]
+ * 参照）。同じpathへの再アップロードは「前回カウントした値との差分」だけを
+ * 反映することで、何度onMediaObjectFinalizedが発火しても正しい合計に収束する
+ * ようにする（トランザクションにしているのは複数発火が競合した場合の一貫性
+ * のため）。 */
+async function reconcileMediaObjectSize(
   uid: string,
-  deltaBytes: number,
-  createIfMissing = true
+  objectPath: string,
+  newSize: number
 ): Promise<number> {
   const db = getFirestore();
   const userRef = db.collection("users").doc(uid);
+  const objectRef = userRef
+    .collection("mediaObjectSizes")
+    .doc(mediaObjectSizeDocId(objectPath));
   return db.runTransaction(async (tx) => {
-    const snap = await tx.get(userRef);
-    if (!snap.exists && !createIfMissing) return 0;
-    const current = (snap.data()?.mediaBytesUsed as number | undefined) ?? 0;
-    const next = Math.max(0, current + deltaBytes);
+    const [userSnap, objectSnap] = await Promise.all([
+      tx.get(userRef),
+      tx.get(objectRef),
+    ]);
+    const previousSize =
+      (objectSnap.data()?.sizeBytes as number | undefined) ?? 0;
+    const delta = newSize - previousSize;
+    const current = (userSnap.data()?.mediaBytesUsed as number | undefined) ?? 0;
+    const next = Math.max(0, current + delta);
     tx.set(userRef, { mediaBytesUsed: next }, { merge: true });
+    tx.set(objectRef, { sizeBytes: newSize, objectPath }, { merge: true });
+    return next;
+  });
+}
+
+/** [reconcileMediaObjectSize]で記録したオブジェクトpathごとのサイズを、
+ * オブジェクト削除時に取り消す（mediaBytesUsedから差し引き、記録も削除する）。
+ * 記録が無い場合（アカウント削除後の遅延削除等、一度もreconcileMediaObjectSize
+ * を通っていないオブジェクト）は差し引く量が0になるだけで安全。
+ *
+ * users/{uid}ドキュメントが既に存在しない場合は何も書き込まない。deleteAccount
+ * はFirestoreの再帰削除の後にStorageのファイルを削除しており、その
+ * onMediaObjectDeletedトリガーが非同期に遅れて発火すると、set+mergeが既に
+ * 消したはずのusersドキュメントをmediaBytesUsedフィールドだけの状態で
+ * 復活させてしまっていた（旧adjustMediaBytesUsedのcreateIfMissing=false相当）。 */
+async function forgetMediaObjectSize(
+  uid: string,
+  objectPath: string
+): Promise<number> {
+  const db = getFirestore();
+  const userRef = db.collection("users").doc(uid);
+  const objectRef = userRef
+    .collection("mediaObjectSizes")
+    .doc(mediaObjectSizeDocId(objectPath));
+  return db.runTransaction(async (tx) => {
+    const [userSnap, objectSnap] = await Promise.all([
+      tx.get(userRef),
+      tx.get(objectRef),
+    ]);
+    if (!objectSnap.exists) return 0;
+    if (!userSnap.exists) {
+      tx.delete(objectRef);
+      return 0;
+    }
+    const previousSize =
+      (objectSnap.data()?.sizeBytes as number | undefined) ?? 0;
+    const current = (userSnap.data()?.mediaBytesUsed as number | undefined) ?? 0;
+    const next = Math.max(0, current - previousSize);
+    tx.set(userRef, { mediaBytesUsed: next }, { merge: true });
+    tx.delete(objectRef);
     return next;
   });
 }
@@ -1823,7 +1882,11 @@ export const onMediaObjectFinalized = onObjectFinalized(async (event) => {
     return;
   }
 
-  const newTotal = await adjustMediaBytesUsed(uid, Number(event.data.size ?? 0));
+  const newTotal = await reconcileMediaObjectSize(
+    uid,
+    event.data.name,
+    Number(event.data.size ?? 0)
+  );
 
   if (newTotal > MEDIA_STORAGE_CAP_BYTES) {
     try {
@@ -1843,7 +1906,7 @@ export const onMediaObjectFinalized = onObjectFinalized(async (event) => {
 export const onMediaObjectDeleted = onObjectDeleted(async (event) => {
   const match = MEDIA_OBJECT_PATH_RE.exec(event.data.name);
   if (!match) return;
-  await adjustMediaBytesUsed(match[1], -Number(event.data.size ?? 0), false);
+  await forgetMediaObjectSize(match[1], event.data.name);
 });
 
 /** クライアントはusers/{uid}を直接読めない（firestore.rules参照）ため、写真・

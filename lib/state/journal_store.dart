@@ -410,15 +410,12 @@ class JournalStore extends ChangeNotifier {
     }
   }
 
-  /// [skipCloudPush]は、クラウドから復元してきたエントリを再度クラウドへ
-  /// 送り返さないようにするためのフラグ（[fullSync]から使う）。
-  Future<JournalEntry> addEntry(
-    JournalEntry entry, {
-    bool skipCloudPush = false,
-  }) async {
-    final saved = await _db.insertEntry(entry);
+  /// 新規保存/クラウド復元されたタスク群に対して、通知予約・カレンダー/
+  /// Appleリマインダー連携を行う（[addEntry]と、リモート側が新しい場合に
+  /// ローカルへ上書きする[_pullRemoteIntoLocal]の両方から使う共通処理）。
+  Future<List<TaskItem>> _finalizeImportedTasks(List<TaskItem> tasks) async {
     final syncedTasks = <TaskItem>[];
-    for (var task in saved.tasks) {
+    for (var task in tasks) {
       if (task.id != null && task.notifyAt != null) {
         final scheduled = await _reminders.scheduleTaskReminder(
           taskId: task.id!,
@@ -469,6 +466,17 @@ class JournalStore extends ChangeNotifier {
         syncedTasks.add(task);
       }
     }
+    return syncedTasks;
+  }
+
+  /// [skipCloudPush]は、クラウドから復元してきたエントリを再度クラウドへ
+  /// 送り返さないようにするためのフラグ（[fullSync]から使う）。
+  Future<JournalEntry> addEntry(
+    JournalEntry entry, {
+    bool skipCloudPush = false,
+  }) async {
+    final saved = await _db.insertEntry(entry);
+    final syncedTasks = await _finalizeImportedTasks(saved.tasks);
     final finalEntry = saved.copyWith(tasks: syncedTasks);
     entries.insert(0, finalEntry);
     notifyListeners();
@@ -539,7 +547,12 @@ class JournalStore extends ChangeNotifier {
         reminderListId: reminderListId,
       );
     }).toList();
-    entries[index] = entries[index].copyWith(tasks: updatedTasks);
+    final now = DateTime.now();
+    if (entry.id != null) await _db.touchEntry(entry.id!, now);
+    entries[index] = entries[index].copyWith(
+      tasks: updatedTasks,
+      updatedAt: now,
+    );
     notifyListeners();
     _trackSync(_cloudSync.pushEntry(entries[index]));
   }
@@ -750,9 +763,11 @@ class JournalStore extends ChangeNotifier {
       _trackSync(_mediaSync.deleteAllMedia(updated.remoteId));
       return;
     }
-    entries[index] = updated;
+    final now = DateTime.now();
+    if (updated.id != null) await _db.touchEntry(updated.id!, now);
+    entries[index] = updated.copyWith(updatedAt: now);
     notifyListeners();
-    _trackSync(_cloudSync.pushEntry(updated));
+    _trackSync(_cloudSync.pushEntry(entries[index]));
   }
 
   /// 写真・動画のファイルを entry に追加する。[canSyncMedia]なら、Firebase Storageへの
@@ -854,7 +869,12 @@ class JournalStore extends ChangeNotifier {
         content: content,
       );
     }).toList();
-    entries[index] = entries[index].copyWith(notes: updatedNotes);
+    final now = DateTime.now();
+    if (entry.id != null) await _db.touchEntry(entry.id!, now);
+    entries[index] = entries[index].copyWith(
+      notes: updatedNotes,
+      updatedAt: now,
+    );
     notifyListeners();
     _trackSync(_cloudSync.pushEntry(entries[index]));
   }
@@ -888,7 +908,12 @@ class JournalStore extends ChangeNotifier {
         clearBackground: backgroundId == null,
       );
     }).toList();
-    entries[index] = entries[index].copyWith(notes: updatedNotes);
+    final now = DateTime.now();
+    if (entry.id != null) await _db.touchEntry(entry.id!, now);
+    entries[index] = entries[index].copyWith(
+      notes: updatedNotes,
+      updatedAt: now,
+    );
     notifyListeners();
     _trackSync(_cloudSync.pushEntry(entries[index]));
   }
@@ -919,7 +944,12 @@ class JournalStore extends ChangeNotifier {
         clearTag: tag == null,
       );
     }).toList();
-    entries[index] = entries[index].copyWith(notes: updatedNotes);
+    final now = DateTime.now();
+    if (entry.id != null) await _db.touchEntry(entry.id!, now);
+    entries[index] = entries[index].copyWith(
+      notes: updatedNotes,
+      updatedAt: now,
+    );
     notifyListeners();
     _trackSync(_cloudSync.pushEntry(entries[index]));
   }
@@ -932,9 +962,12 @@ class JournalStore extends ChangeNotifier {
     await _db.updateEntryEmotion(entry.id!, emotion);
     final index = entries.indexWhere((e) => e.id == entry.id);
     if (index == -1) return;
+    final now = DateTime.now();
+    await _db.touchEntry(entry.id!, now);
     entries[index] = entries[index].copyWith(
       emotion: emotion,
       clearEmotion: emotion == null,
+      updatedAt: now,
     );
     notifyListeners();
     _trackSync(_cloudSync.pushEntry(entries[index]));
@@ -995,7 +1028,12 @@ class JournalStore extends ChangeNotifier {
         reminderListId: reminderSync.listId,
       );
     }).toList();
-    entries[index] = entries[index].copyWith(tasks: updatedTasks);
+    final now = DateTime.now();
+    if (entry.id != null) await _db.touchEntry(entry.id!, now);
+    entries[index] = entries[index].copyWith(
+      tasks: updatedTasks,
+      updatedAt: now,
+    );
     notifyListeners();
     _trackSync(_cloudSync.pushEntry(entries[index]));
   }
@@ -1076,7 +1114,12 @@ class JournalStore extends ChangeNotifier {
           isAllDay: effectiveAllDay,
         );
       }).toList();
-      entries[index] = entries[index].copyWith(tasks: updatedTasks);
+      final now = DateTime.now();
+      if (entry.id != null) await _db.touchEntry(entry.id!, now);
+      entries[index] = entries[index].copyWith(
+        tasks: updatedTasks,
+        updatedAt: now,
+      );
       notifyListeners();
       _trackSync(_cloudSync.pushEntry(entries[index]));
     }
@@ -1108,43 +1151,133 @@ class JournalStore extends ChangeNotifier {
         if (t.id != task.id) return t;
         return t.copyWith(notifyAt: notifyAt, clearNotify: notifyAt == null);
       }).toList();
-      entries[index] = entries[index].copyWith(tasks: updatedTasks);
+      final now = DateTime.now();
+      if (entry.id != null) await _db.touchEntry(entry.id!, now);
+      entries[index] = entries[index].copyWith(
+        tasks: updatedTasks,
+        updatedAt: now,
+      );
       notifyListeners();
       _trackSync(_cloudSync.pushEntry(entries[index]));
     }
   }
 
+  /// リモート側の[remote]がローカルの[local]より新しい([JournalEntry.updatedAt]
+  /// 比較)と判定した場合に、ローカルの行(id)は維持したまま中身をリモートで
+  /// 丸ごと上書きする。置き換え前のタスクが持っていたカレンダー予定/Apple
+  /// リマインダーは、新しいタスク行（新しいローカルidを持つ）には引き継がれ
+  /// ないため、孤立させないよう先に削除してから置き換える。フィールド単位の
+  /// マージではなく、タイムスタンプによるlast-write-winsの「巻き戻し」である点は
+  /// [fullSync]のpush側（常に全文字段を上書きする[CloudSyncService.pushEntry]）
+  /// と対称的な設計。添付画像([JournalEntry.images])はクラウド同期対象外の
+  /// ローカル専用データなので、置き換え前の値をそのまま引き継ぐ。
+  Future<JournalEntry?> _pullRemoteIntoLocal(
+    JournalEntry local,
+    JournalEntry remote, {
+    required bool canSyncMedia,
+  }) async {
+    if (local.id == null) return null;
+    for (final task in local.tasks) {
+      await _deleteTaskCalendarEvent(task);
+      await _deleteTaskAppleReminder(task);
+    }
+    final replaced = await _db.replaceEntryContent(local.id!, remote);
+    final finalizedTasks = await _finalizeImportedTasks(replaced.tasks);
+    final finalEntry = replaced.copyWith(
+      tasks: finalizedTasks,
+      images: local.images,
+    );
+    final index = entries.indexWhere((e) => e.id == local.id);
+    if (index != -1) {
+      entries[index] = finalEntry;
+    }
+    notifyListeners();
+    if (canSyncMedia) {
+      final downloaded = await _mediaSync.downloadMissingMedia(
+        entryId: local.id!,
+        remoteId: remote.remoteId,
+        localPaths: finalEntry.imagePaths,
+      );
+      if (!downloaded) return null;
+    }
+    return finalEntry;
+  }
+
   /// メールアカウントのサインアップ/サインイン後、または手動の「クラウドから復元」
-  /// 操作から呼ぶ。まず現在のローカルの全エントリをクラウドへpushし（この端末で
-  /// 未同期のまま溜まっていたデータをアップロード）、次にクラウド上にあってこの
-  /// 端末にまだ無いエントリを取り込む（削除の伝播は行わない — データを失わない
-  /// ことを優先した意図的な仕様）。
+  /// 操作から呼ぶ。同じremoteIdのエントリが端末とリモートの両方に存在する場合は
+  /// [JournalEntry.updatedAt]を比較し、新しい方の内容を採用する
+  /// （[_pullRemoteIntoLocal]/[CloudSyncService.pushEntry]、どちらのタイミングでも
+  /// タイムスタンプは書き込まれる）。同点/比較不能（リモートがこの修正より前に
+  /// 書かれたドキュメントでupdated_atを持たない等）の場合は、従来どおりローカルを
+  /// pushする側へ倒す——移行途中のデータで急に挙動が変わって混乱しないための
+  /// フォールバック（[CloudSyncService._entryFromFirestore]が該当ケースをログに
+  /// 残す）。リモートにしか無いエントリは取り込む一方、削除の伝播は行わない
+  /// （データを失わないことを優先した意図的な仕様）。
   Future<void> fullSync({bool canSyncMedia = false}) async {
     if (_syncing) return;
     _syncing = true;
     var success = true;
     try {
-      for (final entry in entries) {
-        if (!await _cloudSync.pushEntry(entry)) success = false;
-        if (canSyncMedia && entry.id != null) {
-          final uploaded = await _mediaSync.uploadPendingMedia(
-            entryId: entry.id!,
-            remoteId: entry.remoteId,
-          );
-          if (!uploaded) success = false;
-        }
-      }
       final remoteEntries = await _cloudSync.fetchAll();
       if (remoteEntries == null) {
         success = false;
       } else {
-        final localRemoteIds = entries
-            .map((e) => e.remoteId)
-            .whereType<String>()
-            .toSet();
+        final remoteByRemoteId = <String, JournalEntry>{
+          for (final remote in remoteEntries)
+            if (remote.remoteId != null) remote.remoteId!: remote,
+        };
+        final handledRemoteIds = <String>{};
+
+        // 既存のローカルエントリ: リモートに同じremoteIdが無ければpush
+        // （この端末でまだ一度もバックアップされていない）。あれば新しい方を
+        // 採用する。
+        for (final local in List<JournalEntry>.from(entries)) {
+          final remoteId = local.remoteId;
+          final remote = remoteId == null
+              ? null
+              : remoteByRemoteId[remoteId];
+          if (remote == null) {
+            if (!await _cloudSync.pushEntry(local)) success = false;
+            if (canSyncMedia && local.id != null) {
+              final uploaded = await _mediaSync.uploadPendingMedia(
+                entryId: local.id!,
+                remoteId: local.remoteId,
+              );
+              if (!uploaded) success = false;
+            }
+            continue;
+          }
+          handledRemoteIds.add(remoteId!);
+          if (remote.updatedAt.isAfter(local.updatedAt)) {
+            // リモートの方が新しい ⇒ ローカルへ取り込む。ここではpushしない
+            // （pushするとリモートの新しい内容をローカルの古い内容で
+            // 上書きしてしまい、まさに直したかった事故が起きる）。
+            if (await _pullRemoteIntoLocal(
+                  local,
+                  remote,
+                  canSyncMedia: canSyncMedia,
+                ) ==
+                null) {
+              success = false;
+            }
+          } else {
+            // ローカルの方が新しい、または同点/比較不能。後者は従来どおりの
+            // 「pushして押し切る」挙動へのフォールバック。
+            if (!await _cloudSync.pushEntry(local)) success = false;
+            if (canSyncMedia && local.id != null) {
+              final uploaded = await _mediaSync.uploadPendingMedia(
+                entryId: local.id!,
+                remoteId: local.remoteId,
+              );
+              if (!uploaded) success = false;
+            }
+          }
+        }
+
+        // ローカルに存在しないエントリ（他端末で新規作成されたもの等）を取り込む。
         for (final remote in remoteEntries) {
           if (remote.remoteId == null ||
-              localRemoteIds.contains(remote.remoteId)) {
+              handledRemoteIds.contains(remote.remoteId)) {
             continue;
           }
           final saved = await addEntry(remote, skipCloudPush: true);
