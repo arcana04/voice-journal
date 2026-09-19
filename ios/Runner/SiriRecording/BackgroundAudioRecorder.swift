@@ -170,7 +170,7 @@ actor BackgroundAudioRecorder {
             recorder?.pause()
             isInterrupted = true
         case .ended:
-            let optionsValue = info[AVAudioSessionInterruptionOptionsKey] as? UInt
+            let optionsValue = info[AVAudioSessionInterruptionOptionKey] as? UInt
             let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue ?? 0)
             if options.contains(.shouldResume) {
                 let session = AVAudioSession.sharedInstance()
