@@ -48,4 +48,16 @@ class NotionStore extends ChangeNotifier {
     await _service.setConnected(null);
     notifyListeners();
   }
+
+  /// アカウント切り替え/アカウント削除時に呼ぶ。[disconnect]と違い、この
+  /// 端末は既に前のアカウントの認証状態を離れているためバックエンドの
+  /// notionDisconnectは呼ばない（呼んでも新しい/次のアカウントの連携を
+  /// 誤って解除してしまいかねない）——あくまで「前の持ち主の接続済み表示」を
+  /// この端末上から消すだけのローカルな後始末。
+  Future<void> clear() async {
+    isConnected = false;
+    connectedPageTitle = null;
+    await _service.clear();
+    notifyListeners();
+  }
 }

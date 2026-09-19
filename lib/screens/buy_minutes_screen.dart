@@ -30,6 +30,10 @@ class _BuyMinutesScreenState extends State<BuyMinutesScreen> {
   bool _busy = false;
 
   Future<void> _purchase(Package package) async {
+    // 連打/高速ダブルタップ対策。onPressedはbuild()時点の_busy値でしか
+    // 無効化されず、setState後の再描画が次フレームまで反映されないため、
+    // その間に飛んでくる2回目の呼び出しをここで即座に弾く（二重課金防止）。
+    if (_busy) return;
     final l10n = AppLocalizations.of(context)!;
     // 匿名のまま課金すると、再インストール等で匿名uidがリセットされた際に
     // 購入を復元する手段が無くなるため、購入前にアカウントへのログインを必須にする。

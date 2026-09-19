@@ -56,6 +56,11 @@ class RecordingChannel: NSObject {
                 let recording = await BackgroundAudioRecorder.shared.isRecording
                 result(recording)
             }
+        case "currentPath":
+            Task {
+                let path = await BackgroundAudioRecorder.shared.currentRecordingPath
+                result(path)
+            }
         default:
             result(FlutterMethodNotImplemented)
         }

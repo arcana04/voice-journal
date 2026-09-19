@@ -53,7 +53,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 26,
+      version: 27,
       // tasks/notes/entry_imagesはON DELETE CASCADEをスキーマに宣言しているが、
       // SQLiteは外部キー制約自体をデフォルトで無効にしており、接続のたびに
       // 明示的に有効化しないとその宣言は一切効かない（各deleteメソッドが手動で
@@ -129,7 +129,7 @@ class DbService {
         await db.execute('''
           CREATE TABLE weekly_reports (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            week_key TEXT NOT NULL UNIQUE,
+            week_key TEXT NOT NULL,
             week_start TEXT NOT NULL,
             week_end TEXT NOT NULL,
             mood_headline TEXT NOT NULL,
@@ -150,7 +150,9 @@ class DbService {
             completed_tasks INTEGER NOT NULL,
             created_at TEXT NOT NULL,
             entry_ids_signature TEXT NOT NULL DEFAULT '',
-            locale TEXT NOT NULL DEFAULT ''
+            locale TEXT NOT NULL DEFAULT '',
+            letter_unlocked INTEGER NOT NULL DEFAULT 0,
+            UNIQUE(week_key, locale)
           )
         ''');
       },
@@ -399,6 +401,99 @@ class DbService {
             db,
             "ALTER TABLE weekly_reports ADD COLUMN locale TEXT NOT NULL DEFAULT ''",
           );
+        }
+        if (oldVersion < 27) {
+          // v26でlocale列を足したが、week_keyのUNIQUE制約はそのままだった
+          // ため、saveWeeklyReportのupsert(ConflictAlgorithm.replace)が
+          // week_key単位で行を上書きしてしまい、別言語で生成し直すと前の
+          // 言語のスナップショットが破壊されていた。一意制約を
+          // (week_key, locale)の組に変更する必要があるが、SQLiteはUNIQUE
+          // 制約の変更をALTER TABLEでサポートしないため、テーブルを
+          // 作り直す。
+          //
+          // 併せて、「先週比」比較で使っていた「week_endが日曜20:00固定なら
+          // 確定済みの週」という判定を、週の集計対象期間を正しく拡張する
+          // 修正（entries.whereの境界の隙間で日曜20:00〜月曜0:00の記録が
+          // 毎週必ず取りこぼされていた問題の修正）に伴って廃止する。以後は
+          // week_endが「週の実際の終端」を表すようになり、そこから解禁済み
+          // かどうかを逆算できなくなるため、letter_unlocked列を新設し、
+          // 既存行は保存時点のweek_start/week_endから当時解禁済みだったか
+          // どうかを逆算して埋める。
+          await db.execute('''
+            CREATE TABLE weekly_reports_new (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              week_key TEXT NOT NULL,
+              week_start TEXT NOT NULL,
+              week_end TEXT NOT NULL,
+              mood_headline TEXT NOT NULL,
+              emotion_narrative TEXT NOT NULL,
+              top_keywords_json TEXT NOT NULL,
+              shining_ideas_json TEXT NOT NULL,
+              highlight_quote_json TEXT NOT NULL,
+              advice TEXT NOT NULL,
+              weekly_letter TEXT NOT NULL DEFAULT '',
+              emotion_counts_json TEXT NOT NULL,
+              daily_emotions_json TEXT NOT NULL,
+              daily_emotion_counts_json TEXT,
+              mood_moments_json TEXT NOT NULL DEFAULT '[]',
+              brain_map_json TEXT NOT NULL DEFAULT '[]',
+              diary_count INTEGER NOT NULL,
+              idea_count INTEGER NOT NULL,
+              total_tasks INTEGER NOT NULL,
+              completed_tasks INTEGER NOT NULL,
+              created_at TEXT NOT NULL,
+              entry_ids_signature TEXT NOT NULL DEFAULT '',
+              locale TEXT NOT NULL DEFAULT '',
+              letter_unlocked INTEGER NOT NULL DEFAULT 0,
+              UNIQUE(week_key, locale)
+            )
+          ''');
+          // 移行前はweek_keyがUNIQUEだったため、既存行の間でweek_keyの重複は
+          // 起こり得ない（1週につき常に1件）。そのままコピーしてよい。
+          await db.execute('''
+            INSERT INTO weekly_reports_new (
+              id, week_key, week_start, week_end, mood_headline,
+              emotion_narrative, top_keywords_json, shining_ideas_json,
+              highlight_quote_json, advice, weekly_letter,
+              emotion_counts_json, daily_emotions_json,
+              daily_emotion_counts_json, mood_moments_json, brain_map_json,
+              diary_count, idea_count, total_tasks, completed_tasks,
+              created_at, entry_ids_signature, locale
+            )
+            SELECT
+              id, week_key, week_start, week_end, mood_headline,
+              emotion_narrative, top_keywords_json, shining_ideas_json,
+              highlight_quote_json, advice, weekly_letter,
+              emotion_counts_json, daily_emotions_json,
+              daily_emotion_counts_json, mood_moments_json, brain_map_json,
+              diary_count, idea_count, total_tasks, completed_tasks,
+              created_at, entry_ids_signature, locale
+            FROM weekly_reports
+          ''');
+          await db.execute('DROP TABLE weekly_reports');
+          await db.execute(
+            'ALTER TABLE weekly_reports_new RENAME TO weekly_reports',
+          );
+
+          final rows = await db.query(
+            'weekly_reports',
+            columns: ['id', 'week_start', 'week_end'],
+          );
+          for (final row in rows) {
+            final weekStart = DateTime.tryParse(row['week_start'] as String);
+            final weekEnd = DateTime.tryParse(row['week_end'] as String);
+            if (weekStart == null || weekEnd == null) continue;
+            final cutoff = weekStart.add(const Duration(days: 6, hours: 20));
+            final wasUnlocked = !weekEnd.isBefore(cutoff);
+            if (wasUnlocked) {
+              await db.update(
+                'weekly_reports',
+                {'letter_unlocked': 1},
+                where: 'id = ?',
+                whereArgs: [row['id']],
+              );
+            }
+          }
         }
       },
     );
@@ -829,8 +924,10 @@ class DbService {
     );
   }
 
-  /// [weekKey]（週の月曜日の日付、例: '2026-08-24'）で upsert する。同じ週に
-  /// 何度開いても最新の内容で上書きされる。
+  /// [weekKey]+[SavedWeeklyReport.locale]の組で upsert する（一意制約は
+  /// (week_key, locale)。[DbService._open]参照）。同じ週・同じ表示言語に
+  /// 何度開いても最新の内容で上書きされるが、言語が違えば別行として残るため、
+  /// 表示言語を切り替えても他方の言語のキャッシュを破壊しない。
   Future<void> saveWeeklyReport(SavedWeeklyReport report) async {
     final db = await _database;
     await db.insert(
@@ -840,18 +937,54 @@ class DbService {
     );
   }
 
+  /// 履歴一覧用。同じ週に複数言語のスナップショットが保存されている場合
+  /// （現在進行中の週を複数の表示言語で開いた後、週が終わって履歴入りした
+  /// 場合など）、週ごとに1件だけ（最後に生成されたもの）を返す——履歴画面は
+  /// 「週の一覧」であって「(週,言語)の一覧」ではないため、同じ週が複数
+  /// 並んで見えてしまうのを避ける。
   Future<List<SavedWeeklyReport>> listWeeklyReports() async {
     final db = await _database;
-    final rows = await db.query('weekly_reports', orderBy: 'week_start DESC');
+    final rows = await db.rawQuery('''
+      SELECT wr.* FROM weekly_reports wr
+      INNER JOIN (
+        SELECT week_key, MAX(id) AS max_id
+        FROM weekly_reports
+        GROUP BY week_key
+      ) latest ON wr.week_key = latest.week_key AND wr.id = latest.max_id
+      ORDER BY wr.week_start DESC
+    ''');
     return rows.map(SavedWeeklyReport.fromMap).toList();
   }
 
+  /// 言語を問わず、その週で最後に保存されたスナップショットを1件返す
+  /// （「先週比」比較用。比較に使うのは件数などの集計値のみで、言語ごとの
+  /// テキストには依存しないため、locale一致は問わない）。
   Future<SavedWeeklyReport?> getWeeklyReportByWeekKey(String weekKey) async {
     final db = await _database;
     final rows = await db.query(
       'weekly_reports',
       where: 'week_key = ?',
       whereArgs: [weekKey],
+      orderBy: 'id DESC',
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return SavedWeeklyReport.fromMap(rows.first);
+  }
+
+  /// 現在の週のキャッシュ判定用。[weekKey]と[locale]の両方が一致する行だけを
+  /// 返す——一意制約が(week_key, locale)の組になったため、これで初めて
+  /// 「今の表示言語で以前生成済みか」を正しく判定できる
+  /// （[[project_voicejournal_knowledge_base_chat]]参照）。
+  Future<SavedWeeklyReport?> getWeeklyReportByWeekKeyAndLocale(
+    String weekKey,
+    String locale,
+  ) async {
+    final db = await _database;
+    final rows = await db.query(
+      'weekly_reports',
+      where: 'week_key = ? AND locale = ?',
+      whereArgs: [weekKey, locale],
       limit: 1,
     );
     if (rows.isEmpty) return null;

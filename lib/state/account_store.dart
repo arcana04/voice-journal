@@ -125,17 +125,35 @@ class AccountStore extends ChangeNotifier {
   /// 新アカウントの「クラウドから復元」で新アカウント側のFirestoreへ誤って
   /// 送信されてしまう恐れがある。ローカルデータの持ち主として記録済みの
   /// uidと、今回サインインしたuidが食い違う場合（＝別の既存アカウントへの
-  /// 切り替え）だけ、ローカルデータを消してから新しい持ち主を記録する
-  /// （[[project_voicejournal_knowledge_base_chat]]参照）。記録が無い場合
-  /// （この端末で初めての実アカウント紐付け）は消さずにそのまま採用する——
-  /// 匿名のまま使っていたデータを初回サインインで引き継ぐ既存の挙動を壊さない
-  /// ため。
+  /// 切り替え）は、ローカルデータを消してから新しい持ち主を記録する
+  /// （[[project_voicejournal_knowledge_base_chat]]参照）。
+  ///
+  /// このメソッドは[signInWithCredential]のうち、匿名ユーザーの
+  /// `linkWithCredential`がそのまま成功するケース（uidが変わらない、
+  /// 匿名データの初回昇格）では呼ばれない——そちらは常に安全なので
+  /// [setLocalDataOwnerUid]を直接呼ぶだけで済ませている。つまりここに
+  /// 到達するのは「currentUserが既に実アカウント」か、「匿名ユーザーの
+  /// リンクが`credential-already-in-use`で失敗し、既に別の場所で使われて
+  /// いる既存アカウントへのサインインにフォールバックした」場合のいずれか
+  /// であり、どちらも「このnewUidが今のローカルデータの持ち主だとは
+  /// 確認できていない」点は同じ。
+  ///
+  /// 以前は記録が無い場合（previousOwner == null）を「この端末で初めての
+  /// 実アカウント紐付け」とみなして無条件でスキップしていたが、これは
+  /// 誤りだった: 匿名のまま日記を書いていた端末で、他の端末で既に使われて
+  /// いる別の既存アカウントにサインインした場合（上記のフォールバック
+  /// ルート）もprevious Owner==nullになるため、素通りしてしまい、匿名で
+  /// 書いた（＝本来その既存アカウントとは無関係な）日記データが
+  /// [_afterAuthSuccess]のfullSyncでそのままその既存アカウントの
+  /// Firestoreへpushされる、という実在するクロスアカウント漏えい経路が
+  /// あった。安全側に倒し、previousOwnerがnewUidと一致することが確認できる
+  /// 場合（＝同じアカウントへ再サインインしただけ）以外は常に消す。
   Future<void> _guardAccountSwitch(
     String newUid, [
     Future<void> Function()? beforeLocalWipe,
   ]) async {
     final previousOwner = await _settings.getLocalDataOwnerUid();
-    if (previousOwner != null && previousOwner != newUid) {
+    if (previousOwner != newUid) {
       await beforeLocalWipe?.call();
       await DbService.instance.wipeAllLocalData();
     }

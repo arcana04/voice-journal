@@ -73,4 +73,13 @@ class CustomWordsStore extends ChangeNotifier {
     await _service.setWords(words);
     notifyListeners();
   }
+
+  /// アカウント切り替え/アカウント削除時、前の持ち主の登録語をメモリ上からも
+  /// 消す（[CustomWordsService.clear]は永続化層だけなので、これを呼ばないと
+  /// 画面上には次の再起動までwordsが残ったまま表示されてしまう）。
+  Future<void> clear() async {
+    words = [];
+    await _service.clear();
+    notifyListeners();
+  }
 }

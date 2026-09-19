@@ -8,6 +8,7 @@ class SettingsService {
   static const _darkModePref = 'dark_mode';
   static const _hasSeenOnboardingPref = 'has_seen_onboarding';
   static const _aiConsentGivenPref = 'ai_consent_given';
+  static const _onboardingConsentStepSeenPref = 'onboarding_consent_step_seen';
   static const _trialEndsAtPref = 'trial_ends_at';
   static const _hasSeenNotificationHintPref = 'has_seen_notification_hint';
   static const _accentColorIndexPref = 'accent_color_index';
@@ -45,16 +46,22 @@ class SettingsService {
   /// [setLocalDataOwnerUid]の更新）はその後に非同期で完了するため、ごく短い
   /// 間だけ「currentUserは新アカウントなのに、ローカルデータはまだ前の
   /// アカウントのもの」という状態が存在しうる。この間に何かがクラウド書き込みを
-  /// 起こすと、前アカウントのデータが新アカウントのFirestore/Storageへ紛れ込む
-  /// （現状そのような呼び出し経路は無いが、将来の機能追加で再発しうる潜在リスク）。
-  /// 記録が無い（この端末で初めての紐付け）場合は、通常の初回同期を妨げない
-  /// よう素通り（true）する。
+  /// 起こすと、前アカウントのデータが新アカウントのFirestore/Storageへ紛れ込む。
+  ///
+  /// 記録が無い（[getLocalDataOwnerUid]がnull）場合を無条件でtrue扱いに
+  /// していたのは誤りだった——匿名のままこの端末を使い続けている間
+  /// （[FirebaseAuth.instance.currentUser]が匿名ユーザーのまま）は記録が
+  /// 無くて当然なので通常の同期を妨げないが、既に実アカウントへ切り替わって
+  /// いる（匿名ではない）のに記録がまだ無い/追いついていない場合は、
+  /// [AccountStore._guardAccountSwitch]のローカルデータ消去がまだ完了して
+  /// いない可能性（またはそれ自体が漏れている可能性）を意味するため、
+  /// 安全側（false=同期させない）に倒す。
   Future<bool> currentUserOwnsLocalData() async {
-    final currentUid = FirebaseAuth.instance.currentUser?.uid;
-    if (currentUid == null) return false;
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return false;
     final ownerUid = await getLocalDataOwnerUid();
-    if (ownerUid == null) return true;
-    return ownerUid == currentUid;
+    if (ownerUid == null) return currentUser.isAnonymous;
+    return ownerUid == currentUser.uid;
   }
 
   Future<SummaryLevel> getSummaryLevel() async {
@@ -162,6 +169,25 @@ class SettingsService {
   Future<void> setAiConsentGiven(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_aiConsentGivenPref, value);
+  }
+
+  /// 「同意ステップを含む今のオンボーディングフローを実際に完了したか」の
+  /// 印。[SettingsStore.load]が、同意フラグ導入前からの既存ユーザー
+  /// （[_hasSeenOnboardingPref]はtrueだがこの印は無い）だけを対象に
+  /// [_aiConsentGivenPref]を補完でtrueにするための判定材料。この印自体は
+  /// [SettingsStore.completeOnboarding]が、_finish()の同意チェックを
+  /// 通過した場合にのみtrueで書き込む——同意なしにオンボーディングを
+  /// 完了する経路（スワイプでの同意ページ迂回など）がもしまた生まれても、
+  /// この印は立たないため、次回起動時に誤って「同意済み」へ補完されることは
+  /// ない。
+  Future<bool> getOnboardingConsentStepSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_onboardingConsentStepSeenPref) ?? false;
+  }
+
+  Future<void> setOnboardingConsentStepSeen(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_onboardingConsentStepSeenPref, value);
   }
 
   /// レビュー画面で「時刻付きタスクには自動で通知が設定される」ことを示す

@@ -217,8 +217,19 @@ class SavedWeeklyReport {
 
   /// 生成時点でのアプリ表示言語（言語コード、例: 'ja'/'en'）。表示言語を
   /// 切り替えた後も古い言語のまま表示され続けるのを防ぐため、キャッシュの
-  /// 再利用判定([weekly_report_screen.dart]参照)に使う。
+  /// 再利用判定([weekly_report_screen.dart]参照)に使う。同じ週でも言語ごとに
+  /// 別行として保存する（週の一意キーは(weekKey, locale)の組。[DbService]
+  /// 参照）。
   final String locale;
+
+  /// 保存時点で「週刊レター解禁」（日曜20:00）を過ぎていたかどうか。
+  /// 「先週比」比較用に、前週のスナップショットが確定済み（中途半端な
+  /// 週の途中経過ではない）かどうかを判定するのに使う
+  /// ([weekly_report_screen.dart]の_loadPreviousReport参照)。以前はweekEndが
+  /// 「解禁後は日曜20:00固定」だったことを利用してweekEndから逆算していたが、
+  /// weekEndの意味を「週の実際の終端」に変更したため、この状態を独立して
+  /// 保持する必要がある。
+  final bool letterUnlocked;
 
   SavedWeeklyReport({
     this.id,
@@ -237,6 +248,7 @@ class SavedWeeklyReport {
     required this.createdAt,
     this.entryIdsSignature = '',
     this.locale = '',
+    this.letterUnlocked = false,
   });
 
   Map<String, Object?> toMap() {
@@ -274,6 +286,7 @@ class SavedWeeklyReport {
       'created_at': createdAt.toIso8601String(),
       'entry_ids_signature': entryIdsSignature,
       'locale': locale,
+      'letter_unlocked': letterUnlocked ? 1 : 0,
     };
   }
 
@@ -348,6 +361,7 @@ class SavedWeeklyReport {
       createdAt: DateTime.parse(map['created_at'] as String),
       entryIdsSignature: map['entry_ids_signature'] as String? ?? '',
       locale: map['locale'] as String? ?? '',
+      letterUnlocked: (map['letter_unlocked'] as int? ?? 0) == 1,
     );
   }
 }

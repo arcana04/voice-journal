@@ -11,7 +11,13 @@ private enum FlowState {
     case uploading
     case reviewing(ReviewContext)
     case saved
-    case error(String)
+    /// retryが非nilの場合、その場でアップロードをやり直せる
+    /// (音声ファイルは強制終了からの復元用マーカーがEntryStore.save成功まで
+    /// 消えないため、ここで「閉じる」を押しても失われない)。
+    case error(message: String, retry: PendingUpload?)
+    /// 前回、録音は完了(またはアップロード成功の可能性あり)したのに
+    /// EntryStore.saveまで届かなかった録音ファイルが見つかった状態。
+    case orphanFound(URL)
 }
 
 private struct ReviewContext {
@@ -20,6 +26,11 @@ private struct ReviewContext {
     let emotion: String?
     let createdAt: Date
     let entryId: String
+}
+
+private struct PendingUpload {
+    let audioURL: URL
+    let allowedCategories: Set<EntryCategory>
 }
 
 struct ContentView: View {
@@ -52,6 +63,26 @@ struct ContentView: View {
         .padding()
         .onAppear {
             recorder.requestPermissionIfNeeded { _ in }
+            checkForOrphanRecording()
+        }
+        .onChange(of: recorder.interruptedRecordingURL) { newValue in
+            guard let url = newValue else { return }
+            recorder.interruptedRecordingURL = nil
+            let allowedForThisUpload = selectedCategories
+            selectedCategories = Set(EntryCategory.allCases)
+            flow = .error(
+                message: "録音が中断されました。ここまでの内容を送信できます。",
+                retry: PendingUpload(audioURL: url, allowedCategories: allowedForThisUpload)
+            )
+        }
+    }
+
+    /// アップロード未完了のまま残っている録音ファイル(前回の強制終了・
+    /// クラッシュ等)があれば、通常の録音操作より先にその処理を促す。
+    private func checkForOrphanRecording() {
+        guard case .idle = flow, !recorder.isRecording else { return }
+        if let url = AudioRecorder.recoverableRecordingURL {
+            flow = .orphanFound(url)
         }
     }
 
@@ -83,15 +114,34 @@ struct ContentView: View {
                 .foregroundColor(.green)
             Text("保存できました")
                 .font(.footnote)
-        case .error(let message):
+        case .error(let message, let retry):
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundColor(.red)
             Text(message)
                 .font(.caption2)
                 .foregroundColor(.red)
                 .multilineTextAlignment(.center)
+            if let retry {
+                Button("送信する") {
+                    performUpload(url: retry.audioURL, allowedCategories: retry.allowedCategories)
+                }
+                .buttonStyle(.borderedProminent)
+            }
             Button("閉じる") { flow = .idle }
                 .buttonStyle(.bordered)
+        case .orphanFound(let url):
+            Image(systemName: "arrow.triangle.2.circlepath")
+                .foregroundColor(.orange)
+            Text("前回未送信の録音が見つかりました")
+                .font(.caption2)
+                .multilineTextAlignment(.center)
+            Button("送信する") {
+                performUpload(url: url, allowedCategories: Set(EntryCategory.allCases))
+            }
+            .buttonStyle(.borderedProminent)
+            Button("破棄する") { discardOrphan(url: url) }
+                .buttonStyle(.bordered)
+                .tint(.red)
         }
     }
 
@@ -206,7 +256,11 @@ struct ContentView: View {
             } catch {
                 await MainActor.run {
                     isSaving = false
-                    flow = .error("\(error)")
+                    // 元となる項目自体はrecordButton側のperformUploadで既にFirestoreへ
+                    // 保存済み(データを失わないことを優先する設計)なので、ここでの失敗は
+                    // 「編集内容の上書きに失敗した」だけであり、録音のアップロードとは
+                    // 別物のため再試行ボタンは出さない(音声ファイルの再送は不要)。
+                    flow = .error(message: "\(error)", retry: nil)
                 }
             }
         }
@@ -219,41 +273,62 @@ struct ContentView: View {
             // チップを全選択へ戻す(iPhone側home_screen.dartの_toggleRecordingと同じ流れ)。
             let allowedForThisUpload = selectedCategories
             selectedCategories = Set(EntryCategory.allCases)
-            flow = .uploading
-            Task {
-                do {
-                    let result = try await VoiceMemoUploader.upload(
-                        audioFileURL: url,
-                        allowedCategories: allowedForThisUpload
-                    )
-                    let createdAt = Date()
-                    let entryId = EntryStore.generateEntryId()
-                    // まずAIの分類結果をそのまま保存する(データを失わないことを優先)。
-                    // このあとの画面で編集しても、指を離すまでの間にアプリが落ちる等
-                    // しても記録自体は既に残っている。
-                    try await EntryStore.save(result: result, createdAt: createdAt, entryId: entryId)
-                    await MainActor.run {
-                        draftItems = result.draftItems()
-                        flow = .reviewing(
-                            ReviewContext(
-                                summary: result.summary,
-                                comfortMessage: result.comfort_message,
-                                emotion: result.emotion,
-                                createdAt: createdAt,
-                                entryId: entryId
-                            )
-                        )
-                    }
-                } catch {
-                    await MainActor.run {
-                        flow = .error("\(error)")
-                    }
-                }
-            }
+            performUpload(url: url, allowedCategories: allowedForThisUpload)
         } else {
             flow = .idle
             recorder.start()
         }
+    }
+
+    /// 録音済みファイルのアップロード〜初回保存。通常の録音停止直後、
+    /// アップロード失敗後の再試行、中断された録音の送信、前回の未送信録音の
+    /// 復元、いずれの場合もここを通す。
+    private func performUpload(url: URL, allowedCategories: Set<EntryCategory>) {
+        flow = .uploading
+        Task {
+            do {
+                let result = try await VoiceMemoUploader.upload(
+                    audioFileURL: url,
+                    allowedCategories: allowedCategories
+                )
+                let createdAt = Date()
+                let entryId = EntryStore.generateEntryId()
+                // まずAIの分類結果をそのまま保存する(データを失わないことを優先)。
+                // このあとの画面で編集しても、指を離すまでの間にアプリが落ちる等
+                // しても記録自体は既に残っている。
+                try await EntryStore.save(result: result, createdAt: createdAt, entryId: entryId)
+                // ここまで来た時点でこの録音はFirestoreへ安全に残っているため、
+                // 強制終了時の復元用マーカー(このURLを指しているものに限る)を消す。
+                AudioRecorder.clearRecoverableRecording(matching: url, deleteFile: true)
+                await MainActor.run {
+                    draftItems = result.draftItems()
+                    flow = .reviewing(
+                        ReviewContext(
+                            summary: result.summary,
+                            comfortMessage: result.comfort_message,
+                            emotion: result.emotion,
+                            createdAt: createdAt,
+                            entryId: entryId
+                        )
+                    )
+                }
+            } catch {
+                await MainActor.run {
+                    // ここで「閉じる」を選んでも、強制終了時の復元用マーカーは
+                    // EntryStore.save成功まで消していないため、このファイルは
+                    // 次回起動時にorphanFoundとして再度アップロードを促せる。
+                    flow = .error(
+                        message: "\(error)",
+                        retry: PendingUpload(audioURL: url, allowedCategories: allowedCategories)
+                    )
+                }
+            }
+        }
+    }
+
+    private func discardOrphan(url: URL) {
+        AudioRecorder.clearRecoverableRecording(matching: url, deleteFile: true)
+        flow = .idle
     }
 }
 

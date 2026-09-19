@@ -88,12 +88,26 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
     // 月曜始まりの今週（進行中の週）を対象にする。過去に完成した週は履歴として
     // 保存済みのスナップショットのみを見る（ここでの再生成対象にはしない）。
     _weekStart = today.subtract(Duration(days: now.weekday - 1));
-    // 週刊レターは日曜20:00に「解禁」される特別な演出。それまではグラフ類
-    // だけ最新の記録まで反映し続け、レターの解禁後は日曜20:00時点の内容で
-    // 固定する（後から開いても中身が変わらないようにするため）。
+    // 週刊レターは日曜20:00に「解禁」される特別な演出——だが、これは表示上の
+    // タイミングの話であって、「どの記録をこの週の集計に含めるか」とは
+    // 別物として扱う。以前は解禁後、_weekEndを日曜20:00に固定していたため、
+    // 日曜20:00〜月曜0:00の間に作られた記録が、今週（_weekEndより後という
+    // 理由で除外）にも来週（次週の_weekStartは月曜0:00で、それより前という
+    // 理由で除外）にも属せず、毎週必ず取りこぼされていた
+    // （[[project_voicejournal_knowledge_base_chat]]参照）。
+    // 集計対象の期間は常に「月曜0:00〜翌月曜0:00」のフルの週とし、まだ週の
+    // 途中なら「今」で打ち切るだけにする。表示上の解禁タイミング判定
+    // （_letterUnlocked）はこれまでどおり日曜20:00の_letterCutoffで行う。
     _letterCutoff = _weekStart.add(const Duration(days: 6, hours: 20));
     _letterUnlocked = !now.isBefore(_letterCutoff);
-    _weekEnd = _letterUnlocked ? _letterCutoff : now;
+    final weekTrueEnd = _weekStart.add(const Duration(days: 7));
+    // ちょうど週が終わり切った瞬間ちょうど(翌月曜0:00)を含めてしまうと、
+    // 日付だけの表示（MM.dd）が翌週の日付にずれて見えるため、表示上は
+    // 週の最後の瞬間(日曜23:59:59.999)に丸めておく。実質的な集計結果には
+    // 影響しない（その1ミリ秒の間に記録が作られることは実運用上ない）。
+    _weekEnd = now.isBefore(weekTrueEnd)
+        ? now
+        : weekTrueEnd.subtract(const Duration(milliseconds: 1));
     _weekKey = _dateKey(_weekStart);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -111,18 +125,20 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
   /// (=比較UI非表示)。
   ///
   /// 前週のスナップショットが、日曜20:00（レター解禁＝週の確定）より前に
-  /// 開かれて保存された途中経過(weekEndがその時点のnow)である場合は、
-  /// 比較対象として使わない——中途半端な週と比較すると誤解を招く前週比に
-  /// なってしまうため（[[project_voicejournal_knowledge_base_chat]]参照）。
-  /// この判定は新しいDBカラムを増やさず、既存のweekStart/weekEndから
-  /// 「確定済みの週かどうか」を計算するだけで行う。
+  /// 開かれて保存された途中経過である場合は、比較対象として使わない
+  /// ——中途半端な週と比較すると誤解を招く前週比になってしまうため
+  /// （[[project_voicejournal_knowledge_base_chat]]参照）。
+  /// 以前はweekEndが「日曜20:00固定」だったことを利用してこれを逆算して
+  /// いたが、weekEndの意味を「週の実際の終端（月曜0:00〜翌月曜0:00の
+  /// フルの週、記録を取りこぼさないための対応）」に変更したため、weekEndから
+  /// はもう判定できない。保存時点の解禁状態をそのまま[SavedWeeklyReport.
+  /// letterUnlocked]に保持し、それを直接見る。
   Future<void> _loadPreviousReport() async {
     final previousWeekStart = _weekStart.subtract(const Duration(days: 7));
     final previousWeekKey = _dateKey(previousWeekStart);
     final previous = await DbService.instance.getWeeklyReportByWeekKey(previousWeekKey);
     if (!mounted) return;
-    final previousCutoff = previousWeekStart.add(const Duration(days: 6, hours: 20));
-    final isComplete = previous != null && !previous.weekEnd.isBefore(previousCutoff);
+    final isComplete = previous != null && previous.letterUnlocked;
     setState(() => _previousReport = isComplete ? previous : null);
   }
 
@@ -139,7 +155,8 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
     final entries = context
         .read<JournalStore>()
         .entries
-        .where((e) => e.createdAt.isAfter(_weekStart) && e.createdAt.isBefore(_weekEnd))
+        .where((e) =>
+            !e.createdAt.isBefore(_weekStart) && e.createdAt.isBefore(_weekEnd))
         .toList();
 
     final emotionCounts = <EmotionTag, int>{};
@@ -200,16 +217,19 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       _totalTasks = totalTasks;
     });
 
-    // 前回このweek_keyで保存したスナップショットと日記・アイデア・タスクの件数
-    // (かつ記録idの集合)が一致するなら、その間に記録が変わっていないとみなし
-    // てAI呼び出しを省略する。LLMの出力は毎回同じにはならないため、何も変わって
-    // いないのに開くたびにキーワード（脳内マップ）やレターの中身がブレてしまう
-    // のを防ぐ。
-    final cached = await DbService.instance.getWeeklyReportByWeekKey(_weekKey);
-    if (!mounted) return;
+    // 前回この(week_key, locale)で保存したスナップショットと日記・アイデア・
+    // タスクの件数(かつ記録idの集合)が一致するなら、その間に記録が変わって
+    // いないとみなしてAI呼び出しを省略する。LLMの出力は毎回同じにはならない
+    // ため、何も変わっていないのに開くたびにキーワード（脳内マップ）やレター
+    // の中身がブレてしまうのを防ぐ。localeも一致条件に含める（かつキーも
+    // week_key+localeにする）ことで、表示言語を切り替えた際に別言語の
+    // キャッシュを誤って使ったり、上書きで破壊したりしないようにする
+    // （[[project_voicejournal_knowledge_base_chat]]参照）。
     final currentLocale = Localizations.localeOf(context).languageCode;
+    final cached = await DbService.instance
+        .getWeeklyReportByWeekKeyAndLocale(_weekKey, currentLocale);
+    if (!mounted) return;
     if (cached != null &&
-        cached.locale == currentLocale &&
         cached.entryIdsSignature == entryIdsSignature &&
         cached.diaryCount == diaryCount &&
         cached.ideaCount == ideaCount &&
@@ -253,6 +273,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
           entryIdsSignature: entryIdsSignature,
           createdAt: DateTime.now(),
           locale: currentLocale,
+          letterUnlocked: _letterUnlocked,
         ),
       );
     } catch (_) {

@@ -36,4 +36,20 @@ class VideoThumbnailService {
       return null;
     }
   }
+
+  /// [videoPath]に対応するキャッシュ済みサムネイルを削除する。添付動画自体が
+  /// 削除される際に呼ぶ（[ImageStorageService.deleteImage]参照）。
+  /// video_thumbnailパッケージは出力ファイル名を内部で決めるため、このセッション
+  /// 中に一度でも[getOrCreateThumbnail]を呼んでいてメモリキャッシュにパスが
+  /// 残っている場合のみ削除できる——アプリ再起動後、一度も表示していない
+  /// サムネイルは対象外（アカウント切り替え等の全削除は
+  /// [ImageStorageService.deleteAllImages]がディレクトリごと消すのでカバーされる）。
+  Future<void> deleteThumbnailFor(String videoPath) async {
+    final cached = _memoryCache.remove(videoPath);
+    if (cached == null) return;
+    try {
+      final file = File(cached);
+      if (await file.exists()) await file.delete();
+    } catch (_) {}
+  }
 }

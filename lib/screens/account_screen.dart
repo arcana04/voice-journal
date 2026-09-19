@@ -9,7 +9,9 @@ import '../l10n/app_localizations.dart';
 import '../models/media_usage.dart';
 import '../services/auth_service.dart';
 import '../state/account_store.dart';
+import '../state/custom_words_store.dart';
 import '../state/journal_store.dart';
+import '../state/notion_store.dart';
 import '../state/subscription_store.dart';
 
 /// Google/Appleサインイン・アカウント管理画面。
@@ -67,6 +69,26 @@ class _AccountScreenState extends State<AccountScreen> {
     await _showMessage(l10n.accountErrorTitle, message);
   }
 
+  /// [AccountStore.signInWithCredential]/[AccountStore.deleteAccount]の
+  /// `beforeLocalWipe`に渡す後始末をまとめたもの。[DbService.wipeAllLocalData]
+  /// が消すSQLite以外にも、前のアカウントに紐づくローカル状態
+  /// （通知・カレンダー予定・Appleリマインダー・添付画像は
+  /// [JournalStore.teardownAllLocalSideEffects]、カスタム用語集・Notion
+  /// 接続表示はSharedPreferencesベースで別ストアが保持している）が複数
+  /// あるため、実際にローカルデータが消される直前に全部まとめて呼ぶ——
+  /// 1箇所でも呼び忘れると、その分だけ前の持ち主の情報が新しい持ち主に
+  /// 見えてしまう（端末共有時のクロスアカウント漏えい）。
+  Future<void> _beforeLocalWipe() async {
+    final journalStore = context.read<JournalStore>();
+    final customWordsStore = context.read<CustomWordsStore>();
+    final notionStore = context.read<NotionStore>();
+    await journalStore.teardownAllLocalSideEffects();
+    if (!mounted) return;
+    await customWordsStore.clear();
+    if (!mounted) return;
+    await notionStore.clear();
+  }
+
   Future<void> _afterAuthSuccess(String uid) async {
     if (!mounted) return;
     await context.read<SubscriptionStore>().switchUser(uid);
@@ -91,10 +113,9 @@ class _AccountScreenState extends State<AccountScreen> {
     setState(() => _busy = true);
     try {
       final accountStore = context.read<AccountStore>();
-      final journalStore = context.read<JournalStore>();
       final uid = await accountStore.signInWithCredential(
         accountStore.googleCredential,
-        beforeLocalWipe: journalStore.teardownAllLocalSideEffects,
+        beforeLocalWipe: _beforeLocalWipe,
       );
       await _afterAuthSuccess(uid);
     } on SignInCancelledException {
@@ -110,10 +131,9 @@ class _AccountScreenState extends State<AccountScreen> {
     setState(() => _busy = true);
     try {
       final accountStore = context.read<AccountStore>();
-      final journalStore = context.read<JournalStore>();
       final uid = await accountStore.signInWithCredential(
         accountStore.appleCredential,
-        beforeLocalWipe: journalStore.teardownAllLocalSideEffects,
+        beforeLocalWipe: _beforeLocalWipe,
       );
       await _afterAuthSuccess(uid);
     } on SignInCancelledException {
@@ -183,7 +203,7 @@ class _AccountScreenState extends State<AccountScreen> {
     setState(() => _busy = true);
     try {
       final uid = await context.read<AccountStore>().deleteAccount(
-        beforeLocalWipe: context.read<JournalStore>().teardownAllLocalSideEffects,
+        beforeLocalWipe: _beforeLocalWipe,
       );
       if (!mounted) return;
       await context.read<SubscriptionStore>().switchUser(uid);

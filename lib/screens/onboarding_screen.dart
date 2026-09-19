@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
-import '../state/settings_store.dart';
 import 'account_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -51,14 +49,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   // このメソッドに到達できるのは、必ず_aiConsentPageIndexで_aiConsentChecked
-  // がtrueになった場合のみ（_next()のガード、および_skip()が最終ページへ直接
-  // 飛ばさずスキップ不可の同意ページで止めることの両方で保証している）。
-  // 以前は「スキップ」ボタンが同意ページ自体を丸ごと迂回してこの完了処理を
-  // 直接呼べてしまい、マイク許可・AI送信への同意が一度も提示されないまま
-  // 録音・AI送信が可能になっていた（App Store審査ガイドライン5.1.1(i)/
-  // 5.1.2(i)対応が無効化される不具合）。
+  // がtrueになった場合のみのはず（_next()のガード、PageViewのスワイプを
+  // physicsで無効化して同意ページをジェスチャーで飛び越えられないように
+  // したこと、および_skip()が最終ページへ直接飛ばさずスキップ不可の同意
+  // ページで止めることの3つで保証している）。以前は「スキップ」ボタンが
+  // 同意ページ自体を丸ごと迂回してこの完了処理を直接呼べてしまい、さらに
+  // その後、指でPageViewを直接スワイプして同意ページを（チェックを入れずに）
+  // 素通りしても同じ穴が残っていた——ボタンの_next()ガードは「今そのページに
+  // いる間」しか効かず、スワイプでページが進んだ後は最終ページの
+  // 「はじめる」ボタンがガード無しで_finish()を直接呼べてしまっていた。
+  // マイク許可・AI送信への同意が一度も提示されないまま録音・AI送信が可能に
+  // なっていた（App Store審査ガイドライン5.1.1(i)/5.1.2(i)対応が無効化される
+  // 不具合）。ここでの!_aiConsentCheckedチェックは、上記の防御が将来また
+  // 破られた場合に備えた多重防御（defense in depth）——同意が確認できない
+  // 限り、絶対にwidget.onFinished()を呼んでメイン画面への進入を許さない。
   void _finish() {
-    context.read<SettingsStore>().setAiConsentGiven(_aiConsentChecked);
+    if (!_aiConsentChecked) {
+      setState(() => _page = _aiConsentPageIndex);
+      _controller.jumpToPage(_aiConsentPageIndex);
+      return;
+    }
     widget.onFinished();
   }
 
@@ -103,6 +113,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Expanded(
               child: PageView(
                 controller: _controller,
+                // 指でのスワイプ操作そのものを禁止する——以前はここに制限が無く、
+                // 「次へ」ボタンの_next()ガードを迂回して同意ページを直接
+                // スワイプで素通りできてしまっていた（_finish()参照）。ページ
+                // 送りは_next()/_skipToConsent()経由のPageController操作
+                // （jumpToPage/nextPage/animateToPage）のみで行う——これらは
+                // physicsの影響を受けないため、ボタン経由のページ送りは従来
+                // どおり機能する。
+                physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (value) => setState(() => _page = value),
                 children: [
                   _HeroOnboardingPage(

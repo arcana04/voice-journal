@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart' as record_pkg;
 
 import 'background_recording_service.dart';
@@ -24,6 +25,28 @@ class RecorderService {
 
   final record_pkg.AudioRecorder? _androidRecorder =
       Platform.isIOS ? null : record_pkg.AudioRecorder();
+
+  /// Android側で今まさに書き込み中の録音ファイルのパス（無ければnull）。
+  /// オーファン録音スキャン([findOrphanedRecordings])が、開始直後でまだ
+  /// [isRecording]がtrueを返す前のこのファイルを誤って削除しないよう、
+  /// 除外パスとして使う。
+  String? _androidCurrentPath;
+
+  /// 録音ファイルの保存先ディレクトリ。iOSの`NSTemporaryDirectory`
+  /// （[Directory.systemTemp]相当）は「アプリ未起動中にOSがいつでも中身を
+  /// 消してよい」領域と定義されており、強制終了からのリカバリ（次回起動まで
+  /// ファイルが残っている前提）と矛盾する。ネイティブ側
+  /// （ios/Runner/SiriRecording/BackgroundAudioRecorder.swift）と同じ
+  /// `Application Support/recordings`ディレクトリを使うことで、Android/iOS
+  /// 双方とも永続領域に保存されるようにする。
+  static Future<Directory> _recordingsDir() async {
+    final base = await getApplicationSupportDirectory();
+    final dir = Directory('${base.path}/recordings');
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+    return dir;
+  }
 
   Future<bool> hasPermission() {
     if (Platform.isIOS) {
@@ -67,7 +90,7 @@ class RecorderService {
   /// で除外すること。
   static Future<List<String>> findOrphanedRecordings({String? excludePath}) async {
     try {
-      final dir = Directory.systemTemp;
+      final dir = await _recordingsDir();
       if (!await dir.exists()) return const [];
       final entries = await dir
           .list()
@@ -108,12 +131,23 @@ class RecorderService {
     return FlutterForegroundTask.isRunningService;
   }
 
+  /// 今まさに書き込み中の録音ファイルのパス（無ければnull）。
+  /// オーファン録音スキャンの除外パスとして呼び出し側（home_screen.dart）が使う。
+  Future<String?> currentRecordingPath() {
+    if (Platform.isIOS) {
+      return _channel.invokeMethod<String>('currentPath');
+    }
+    return Future.value(_androidCurrentPath);
+  }
+
   Future<void> start() async {
     if (Platform.isIOS) {
       await _channel.invokeMethod('start');
     } else {
+      final dir = await _recordingsDir();
       final path =
-          '${Directory.systemTemp.path}/voicejournal_${DateTime.now().millisecondsSinceEpoch}.m4a';
+          '${dir.path}/voicejournal_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      _androidCurrentPath = path;
       await _androidRecorder!.start(
         const record_pkg.RecordConfig(encoder: record_pkg.AudioEncoder.aacLc),
         path: path,
@@ -128,6 +162,7 @@ class RecorderService {
     final path = Platform.isIOS
         ? await _channel.invokeMethod<String>('stop')
         : await _androidRecorder!.stop();
+    _androidCurrentPath = null;
     await BackgroundRecordingService.stop();
     return path;
   }
@@ -138,6 +173,7 @@ class RecorderService {
     } else {
       await _androidRecorder!.cancel();
     }
+    _androidCurrentPath = null;
     await BackgroundRecordingService.stop();
   }
 

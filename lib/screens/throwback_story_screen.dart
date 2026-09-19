@@ -96,6 +96,24 @@ class _ThrowbackStoryScreenState extends State<ThrowbackStoryScreen>
 
   @override
   Widget build(BuildContext context) {
+    // 呼び出し元（throwback_story_button.dart）は空リストならそもそも
+    // この画面を開かないが、それに頼り切らない防御的ガード——空リストで
+    // 開かれた場合、下のwidget.items[_index]は境界外アクセスで即クラッシュ
+    // する。
+    if (widget.items.isEmpty) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Align(
+            alignment: Alignment.topRight,
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white),
+              onPressed: () => Navigator.of(context).maybePop(),
+            ),
+          ),
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(

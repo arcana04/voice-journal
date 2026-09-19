@@ -48,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final ReviewPromptService _reviewPrompt = ReviewPromptService();
   RecordButtonState _state = RecordButtonState.idle;
   bool _isStartingRecording = false;
+  bool _isStopping = false;
   Duration _elapsed = Duration.zero;
   Duration _maxDuration = kMaxRecordingDuration;
   Timer? _timer;
@@ -176,8 +177,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     // ファイル」と誤認識して削除してしまわないよう、録音中は何もしない
     // （UIの復元は[_reconcileRecordingState]に任せる）。
     if (await _recorder.isRecording() || !mounted) return;
-    final orphaned = await RecorderService.findOrphanedRecordings();
+    // 開始直後でまだisRecording()がtrueを返す前の録音ファイルを、たった今
+    // 始まったばかりの録音だと知らずに「前回の未処理ファイル」として誤って
+    // 巻き込まないよう、判明していれば除外パスとして渡す
+    // （ディープリンク等による自動録音開始との競合対策）。
+    final excludePath = await _recorder.currentRecordingPath();
+    final orphaned = await RecorderService.findOrphanedRecordings(
+      excludePath: excludePath,
+    );
     if (orphaned.isEmpty || !mounted) return;
+    // ここまでの間に録音が始まっていないか念のため再確認してから削除に進む。
+    if (await _recorder.isRecording() || !mounted) return;
 
     // 万一2件以上残っていても複雑にしないよう、最新の1件だけ扱い、
     // それ以外は静かに削除する。
@@ -410,17 +420,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           });
         });
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) async {
+      // ネイティブ側が実際にはもう音声をキャプチャしていないか（電話・Siri等の
+      // 割り込みで一時停止されたまま再開できなかった場合など）を毎秒確認する。
+      // これが無いと、割り込み後も画面は「録音中」の表示とタイマーを進め続け、
+      // ユーザーは無音区間に気づけない（iOS側はBackgroundAudioRecorder.swiftの
+      // 割り込みハンドラでisRecording()をfalseに切り替える）。
+      if (!await _recorder.isRecording()) {
+        if (!mounted || _state != RecordButtonState.recording) return;
+        await _stopAndProcess(auto: true);
+        return;
+      }
+      if (!mounted || _state != RecordButtonState.recording) return;
       final next = _elapsed + const Duration(seconds: 1);
       if (next >= _maxDuration) {
         setState(() => _elapsed = _maxDuration);
-        _stopAndProcess(auto: true);
+        await _stopAndProcess(auto: true);
         return;
       }
       if (_lastSoundAt != null &&
           DateTime.now().difference(_lastSoundAt!) >=
               kSilenceAutoStopDuration) {
-        _stopAndProcess(auto: true);
+        await _stopAndProcess(auto: true);
         return;
       }
       setState(() => _elapsed = next);
@@ -463,76 +484,87 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _stopAndProcess({bool auto = false}) async {
-    _timer?.cancel();
-    _amplitudeSub?.cancel();
-    _amplitudeSub = null;
-    String? path;
+    // 無音/最大時間検知による自動停止と、手動タップ・割り込み検知等による停止が
+    // ほぼ同時に発生すると、_stateがまだ`.recording`のうちに両方がこの関数へ
+    // 入ってしまうことがある。ガード無しだと_recorder.stop()が二重に呼ばれ、
+    // 2回目はネイティブ側で「録音中でない」エラーとなり、録音自体は成功して
+    // いるのに失敗ダイアログが出てしまう（実際に発生した不具合）。
+    if (_isStopping) return;
+    _isStopping = true;
     try {
-      path = await _recorder.stop();
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _state = RecordButtonState.idle);
-      _showResultDialog(
-        AppLocalizations.of(context)!.recordingStopFailedTitle,
-        '$e',
-      );
-      return;
-    }
-    final allowedCategories = _selectedCategories;
-    setState(() {
-      _state = RecordButtonState.processing;
-      _selectedCategories = {...ReviewCategory.values};
-      _micLevel = 0.0;
-    });
-    _hapticRecordingStopped(auto: auto);
-    _startProcessingPhraseCycle();
-
-    if (path == null) {
-      _stopProcessingPhraseCycle();
-      if (!mounted) return;
-      setState(() => _state = RecordButtonState.idle);
-      _showResultDialog(
-        AppLocalizations.of(context)!.recordingErrorTitle,
-        AppLocalizations.of(context)!.recordingSaveFailed,
-      );
-      return;
-    }
-
-    if (!mounted) return;
-
-    try {
-      final customWords = context.read<CustomWordsStore>().words;
-      final settings = context.read<SettingsStore>();
-      final entry = await _backend.processVoiceMemo(
-        File(path),
-        customWords: customWords,
-        summaryLevel: settings.summaryLevel,
-        allowedCategories: allowedCategories,
-        locale: Localizations.localeOf(context).languageCode,
-        autoNotificationsEnabled: settings.autoNotificationsEnabled,
-        reminderOffsetMinutes: settings.reminderOffsetMinutes,
-        allDayReminderHour: settings.allDayReminderHour,
-      );
-      if (!mounted) return;
-      _applyDraft(entry, allowedCategories);
-      // 保存が完了した録音だけをここで削除する。Androidでは削除しないと
-      // 端末に録音ファイルが残り続け、次回起動時のオーファン録音検知
-      // ([_checkForOrphanedRecording])が「未処理の録音」と誤検知して、
-      // 既に保存済みの内容を重複保存・クォータ二重消費させてしまっていた。
-      // 逆に処理が失敗した場合はここで消してしまうと録音そのものが復旧
-      // 不能になるため、あえて残しておき、次回起動時のオーファン検知経由で
-      // ユーザーが再度処理を試せるようにする。
+      _timer?.cancel();
+      _amplitudeSub?.cancel();
+      _amplitudeSub = null;
+      String? path;
       try {
-        await File(path).delete();
-      } catch (_) {}
-    } catch (e) {
-      if (!mounted) return;
-      // 録音ファイルは削除せず残してあるので、リトライの価値がある失敗
-      // （クォータ超過等の即再発するエラーではない）に限り、アプリ再起動を
-      // 待たずその場でオーファン録音として再処理を案内する。
-      if (_handleProcessingError(e)) {
-        unawaited(_checkForOrphanedRecording(offerRecovery: true));
+        path = await _recorder.stop();
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _state = RecordButtonState.idle);
+        _showResultDialog(
+          AppLocalizations.of(context)!.recordingStopFailedTitle,
+          '$e',
+        );
+        return;
       }
+      final allowedCategories = _selectedCategories;
+      setState(() {
+        _state = RecordButtonState.processing;
+        _selectedCategories = {...ReviewCategory.values};
+        _micLevel = 0.0;
+      });
+      _hapticRecordingStopped(auto: auto);
+      _startProcessingPhraseCycle();
+
+      if (path == null) {
+        _stopProcessingPhraseCycle();
+        if (!mounted) return;
+        setState(() => _state = RecordButtonState.idle);
+        _showResultDialog(
+          AppLocalizations.of(context)!.recordingErrorTitle,
+          AppLocalizations.of(context)!.recordingSaveFailed,
+        );
+        return;
+      }
+
+      if (!mounted) return;
+
+      try {
+        final customWords = context.read<CustomWordsStore>().words;
+        final settings = context.read<SettingsStore>();
+        final entry = await _backend.processVoiceMemo(
+          File(path),
+          customWords: customWords,
+          summaryLevel: settings.summaryLevel,
+          allowedCategories: allowedCategories,
+          locale: Localizations.localeOf(context).languageCode,
+          autoNotificationsEnabled: settings.autoNotificationsEnabled,
+          reminderOffsetMinutes: settings.reminderOffsetMinutes,
+          allDayReminderHour: settings.allDayReminderHour,
+        );
+        if (!mounted) return;
+        _applyDraft(entry, allowedCategories);
+        // 保存が完了した録音だけをここで削除する。Androidでは削除しないと
+        // 端末に録音ファイルが残り続け、次回起動時のオーファン録音検知
+        // ([_checkForOrphanedRecording])が「未処理の録音」と誤検知して、
+        // 既に保存済みの内容を重複保存・クォータ二重消費させてしまっていた。
+        // 逆に処理が失敗した場合はここで消してしまうと録音そのものが復旧
+        // 不能になるため、あえて残しておき、次回起動時のオーファン検知経由で
+        // ユーザーが再度処理を試せるようにする。
+        try {
+          await File(path).delete();
+        } catch (_) {}
+      } catch (e) {
+        if (!mounted) return;
+        // 録音ファイルは削除せず残してあるので、リトライの価値がある失敗
+        // （クォータ超過等の即再発するエラーではない）に限り、アプリ再起動を
+        // 待たずその場でオーファン録音として再処理を案内する。
+        if (_handleProcessingError(e)) {
+          unawaited(_checkForOrphanedRecording(offerRecovery: true));
+        }
+      }
+    } finally {
+      _isStopping = false;
     }
   }
 

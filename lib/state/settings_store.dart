@@ -38,13 +38,23 @@ class SettingsStore extends ChangeNotifier {
     darkMode = await _service.getDarkMode();
     hasSeenOnboarding = await _service.getHasSeenOnboarding();
     aiConsentGiven = await _service.getAiConsentGiven();
-    // aiConsentGivenはこのセッションで新設したフラグ。オンボーディングは以前
-    // から同意チェックボックスを表示していた（スキップボタンがそれを迂回できる
-    // バグが今回のセッションで見つかり別途修正済み）ため、既にオンボーディングを
-    // 完了している既存ユーザーは、フラグが無いだけで実際には同意画面を経由して
-    // いる可能性が高い。今後このフラグを根拠に機能を制限する場面が増えても
-    // 既存ユーザーを不当にブロックしないよう、ここで一度だけ補完する。
-    if (hasSeenOnboarding && !aiConsentGiven) {
+    // aiConsentGivenはこのセッションで新設したフラグ。同意ステップの導入
+    // より前にオンボーディングを完了していた"本当に"既存のユーザーは、
+    // フラグが無いだけで実際には（同意ステップが存在しなかった）旧版の
+    // オンボーディングを経由済みのはずなので、ここで一度だけ補完する。
+    //
+    // ただし「hasSeenOnboarding == true」だけを根拠に無条件で補完していた
+    // 以前の実装には抜けがあった: 同意ページ自体をスワイプ操作で迂回できる
+    // バグ（onboarding_screen.dart参照、別途修正済み）と組み合わさると、
+    // 「同意ステップがある今のフローを通ったが実際にはチェックしなかった」
+    // ユーザーの false が、次回起動時にこの補完ロジックによって黙って
+    // true に書き換えられてしまい、同意を得ていない事実が消えてしまって
+    // いた。[_service.getOnboardingConsentStepSeen]（今のフロー＝同意
+    // ページを含むフローを実際に通過したか）で両者を区別し、今のフロー
+    // 経由のユーザーには決して補完しない——false は false のまま正直に
+    // 残す。
+    final onboardedWithConsentStep = await _service.getOnboardingConsentStepSeen();
+    if (hasSeenOnboarding && !onboardedWithConsentStep && !aiConsentGiven) {
       aiConsentGiven = true;
       await _service.setAiConsentGiven(true);
     }
@@ -89,9 +99,18 @@ class SettingsStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// [OnboardingScreen]の`onFinished`から呼ばれる。同スクリーンの_finish()は
+  /// _aiConsentCheckedがtrueの場合にしか呼ばないため、ここに到達した時点で
+  /// マイク許可+AI送信への同意は確実に得られている。同意ステップを含む今の
+  /// フローを実際に完了した証として[setOnboardingConsentStepSeen]も併せて
+  /// 記録する（[load]の互換バックフィル処理が、本当の既存ユーザーとの区別に
+  /// 使う）。
   Future<void> completeOnboarding() async {
     hasSeenOnboarding = true;
+    aiConsentGiven = true;
     await _service.setHasSeenOnboarding(true);
+    await _service.setAiConsentGiven(true);
+    await _service.setOnboardingConsentStepSeen(true);
     notifyListeners();
   }
 

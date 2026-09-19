@@ -2006,8 +2006,70 @@ async function decrementLifetimePurchaseCounter(): Promise<void> {
   });
 }
 
+interface RevenueCatEntitlement {
+  expires_date: string | null;
+}
+
+interface RevenueCatSubscriberResponse {
+  subscriber?: {
+    entitlements?: Record<string, RevenueCatEntitlement>;
+  };
+}
+
+/**
+ * RevenueCatのSubscriber REST APIを直接問い合わせて、指定uidが今実際に
+ * pro entitlementを保持しているか（集約された最終状態）を返す。
+ *
+ * CANCELLATION/EXPIRATION/返金の各Webhookイベントは、あくまで1つの購入
+ * （トランザクション）の終了を知らせるものでしかなく、event.entitlement_ids
+ * もそのトランザクション固有の情報でしかない。同じuidが買い切りと
+ * サブスクの両方を持っている場合（アプリが意図的に許容している組み合わせ。
+ * PaywallScreen/PurchaseServiceのコメント参照）、片方が終了しただけで
+ * isProを剥奪すると、まだ有効なもう片方の権利まで一緒に失われてしまう。
+ * これを避けるため、剥奪系のイベントを適用する前に、RevenueCat側の
+ * 「今の集約された状態」を直接確認する。
+ *
+ * RevenueCatはentitlements.<id>を、同じentitlementを付与する複数の購入が
+ * ある場合は最も有効期限が遠いもの（null=無期限を含む）に解決して返す仕様
+ * のため、ここで返ってきたexpires_dateをそのままisPro/hasMediaSyncの最終値
+ * として使ってよい。
+ *
+ * API呼び出し自体が失敗した場合は例外を投げる。ここでcatchして「確認でき
+ * なかったのでとりあえずfalseにする」というフォールバックは意図的に採らない
+ * ——それでは結局「一時的なAPI障害で誤ってPro会員を失効させる」という、
+ * このヘルパーで防ぎたいのと同じ種類のバグを再導入してしまう。例外は
+ * revenueCatWebhookの外側のtry/catchに伝播させ、5xxを返してRevenueCat側の
+ * 自動リトライ（同じevent.id）に委ねる——このハンドラは既にイベントID単位の
+ * 冪等性ガード（processedWebhookEvents）を持っているため、リトライされても
+ * 安全に再処理できる。つまり「確認できるまでは剥奪しない」が安全側の挙動になる。
+ */
+async function resolveActualProEntitlement(
+  uid: string,
+  apiKey: string
+): Promise<{ isPro: boolean; hasMediaSync: boolean }> {
+  const response = await fetch(
+    `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(uid)}`,
+    { headers: { Authorization: `Bearer ${apiKey}` } }
+  );
+  if (!response.ok) {
+    throw new Error(
+      `resolveActualProEntitlement: RevenueCat request failed with status ${response.status} for uid ${uid}`
+    );
+  }
+  const data = (await response.json()) as RevenueCatSubscriberResponse;
+  const entitlement = data.subscriber?.entitlements?.[PRO_ENTITLEMENT_ID];
+  const isPro =
+    !!entitlement &&
+    (entitlement.expires_date === null ||
+      new Date(entitlement.expires_date).getTime() > Date.now());
+  // 買い切みプラン（expires_date: null）はisProではあるがメディア同期の対象外
+  // ——applyProStatusのhasMediaSync解説コメント参照。
+  const hasMediaSync = isPro && entitlement?.expires_date !== null;
+  return { isPro, hasMediaSync };
+}
+
 export const revenueCatWebhook = onRequest(
-  { secrets: [revenueCatWebhookSecret] },
+  { secrets: [revenueCatWebhookSecret, revenueCatSecretApiKey] },
   async (req, res) => {
     const expected = revenueCatWebhookSecret.value();
     const authHeader = req.get("Authorization") ?? "";
@@ -2153,9 +2215,38 @@ export const revenueCatWebhook = onRequest(
         return;
       }
       if (eventType === "CANCELLATION" && isRefund) {
-        await applyProStatus(uid, false, false, "webhook:CANCELLATION:refund", eventTimestampMs);
+        // このイベント単体は「返金されたこの購入」の終了でしかない。同じuidが
+        // 買い切り+サブスクのように複数の有効な権利を持っている場合、もう片方が
+        // まだ生きていればisProを剥奪してはいけないため、書き込み前にRevenueCat
+        // 側の集約状態を確認する（resolveActualProEntitlement参照）。
+        const apiKey = revenueCatSecretApiKey.value();
+        let actualIsPro = false;
+        let actualHasMediaSync = false;
+        if (apiKey) {
+          const actual = await resolveActualProEntitlement(uid, apiKey);
+          actualIsPro = actual.isPro;
+          actualHasMediaSync = actual.hasMediaSync;
+        } else {
+          // シークレット未設定では確認しようがない。以前からの挙動（この
+          // イベント単体でfalseに倒す）を維持する——恒久的に確認不能なまま
+          // 「剥奪しない」を貫くと、シークレットが設定漏れの間ずっと返金済み
+          // ユーザーがPro扱いのままになってしまうため。
+          logger.warn(
+            "revenueCatWebhook refund: REVENUECAT_SECRET_API_KEY not set, cannot verify other active grants",
+            { uid }
+          );
+        }
+        await applyProStatus(
+          uid,
+          actualIsPro,
+          actualHasMediaSync,
+          "webhook:CANCELLATION:refund",
+          eventTimestampMs
+        );
         // 買い切りプラン（非失効=expiration_at_msが無い）の返金なら、購入時の
         // 増分と対称にカウンタも1減らす。サブスクの返金ではスキップする。
+        // （このカウンタは「返金されたこの取引自体が買い切り枠だったか」を
+        // 表すので、ユーザーの集約isProがどう決着したかとは無関係に判定する。）
         if (event?.expiration_at_ms === null || event?.expiration_at_ms === undefined) {
           await decrementLifetimePurchaseCounter();
         }
@@ -2163,6 +2254,8 @@ export const revenueCatWebhook = onRequest(
           uid,
           eventType,
           reason: cancelOrExpirationReason,
+          isPro: actualIsPro,
+          protectedByOtherGrant: actualIsPro,
         });
         res.status(200).send("ok");
         return;
@@ -2181,14 +2274,35 @@ export const revenueCatWebhook = onRequest(
       // 上記以外のCANCELLATION（返金でない通常の解約予約）は期限が来るまで
       // 有効のまま据え置き、それ以外の未知イベントも状態を変えない。
       if (activeEventTypes.has(eventType) || inactiveEventTypes.has(eventType)) {
-        const isPro =
+        const naiveIsPro =
           activeEventTypes.has(eventType) &&
           (!event?.entitlement_ids ||
             event.entitlement_ids.includes(PRO_ENTITLEMENT_ID));
-        const hasMediaSync =
-          isPro &&
+        let isPro = naiveIsPro;
+        let hasMediaSync =
+          naiveIsPro &&
           event?.expiration_at_ms !== null &&
           event?.expiration_at_ms !== undefined;
+        // naiveIsPro=falseになるのはEXPIRATION（このuidのこの購入が失効した）
+        // のときだけ。これも1つの購入の失効でしかないため、同じuidが買い切り
+        // 等の別の有効な権利をまだ持っている場合はisProを剥奪してはいけない。
+        // activeEventTypes側（isPro=trueになるケース）は剥奪の心配が無いので
+        // 確認不要——不要なAPI呼び出しを避ける。
+        if (!naiveIsPro && eventType === "EXPIRATION") {
+          const apiKey = revenueCatSecretApiKey.value();
+          if (apiKey) {
+            const actual = await resolveActualProEntitlement(uid, apiKey);
+            isPro = actual.isPro;
+            hasMediaSync = actual.hasMediaSync;
+          } else {
+            // シークレット未設定では確認しようがない。以前からの挙動
+            // （このイベント単体でfalseに倒す）を維持する。
+            logger.warn(
+              "revenueCatWebhook EXPIRATION: REVENUECAT_SECRET_API_KEY not set, cannot verify other active grants",
+              { uid }
+            );
+          }
+        }
         await applyProStatus(uid, isPro, hasMediaSync, `webhook:${eventType}`, eventTimestampMs);
         // EXPIRATIONで、かつ非失効（買い切り等）の権利が失われた場合も
         // 返金と同じ扱いでカウンタを1減らす。
@@ -2207,9 +2321,34 @@ export const revenueCatWebhook = onRequest(
         // 移動元アカウントのisPro/カスタムクレームが永久にtrueのまま残り、
         // 実質タダでPro権限を持ち続けてしまう。
         if (eventType === "TRANSFER" && event?.transferred_from) {
+          // ここも「この購入が移動した」という1トランザクション分の情報でしか
+          // ないため、移動元(fromUid)が別の独立した権利（自分自身の買い切り等）
+          // をまだ持っている場合はisProを剥奪してはいけない。EXPIRATION/返金の
+          // 各分岐と同じくresolveActualProEntitlementでRevenueCat側の集約状態を
+          // 確認してから適用する（失敗時は例外を伝播させ、外側のtry/catchで
+          // 5xx→RevenueCatの自動リトライに委ねる——確認できるまでは剥奪しない）。
+          const transferApiKey = revenueCatSecretApiKey.value();
           for (const fromUid of event.transferred_from) {
             if (!fromUid || fromUid === uid) continue;
-            await applyProStatus(fromUid, false, false, "webhook:TRANSFER:source", eventTimestampMs);
+            let fromIsPro = false;
+            let fromHasMediaSync = false;
+            if (transferApiKey) {
+              const actual = await resolveActualProEntitlement(fromUid, transferApiKey);
+              fromIsPro = actual.isPro;
+              fromHasMediaSync = actual.hasMediaSync;
+            } else {
+              logger.warn(
+                "revenueCatWebhook TRANSFER: REVENUECAT_SECRET_API_KEY not set, cannot verify other active grants",
+                { fromUid }
+              );
+            }
+            await applyProStatus(
+              fromUid,
+              fromIsPro,
+              fromHasMediaSync,
+              "webhook:TRANSFER:source",
+              eventTimestampMs
+            );
           }
           logger.info("revenueCatWebhook revoked transfer source", {
             uid,
@@ -2235,16 +2374,6 @@ export const revenueCatWebhook = onRequest(
     }
   }
 );
-
-interface RevenueCatEntitlement {
-  expires_date: string | null;
-}
-
-interface RevenueCatSubscriberResponse {
-  subscriber?: {
-    entitlements?: Record<string, RevenueCatEntitlement>;
-  };
-}
 
 /**
  * クライアント（SubscriptionStore）から明示的に呼ばれ、RevenueCatのSubscriber
@@ -2983,9 +3112,15 @@ async function structure(
   locale: Locale,
   allowedCategories: Set<AllowedCategory>,
   timeZone: string,
+  // 呼び出し側が「今」を一度だけ確定させてここに渡す。ここで改めて
+  // `new Date()` を取り直すと、この後のOpenAI呼び出し（数秒〜、深夜0時を
+  // 跨ぐこともある）の間に時刻が進んでしまい、プロンプトに埋め込んだ
+  // 「今日」「現在時刻」と、呼び出し元がtoClientResponse()で曜日解決・
+  // 時刻繰り上げ判定に使う「今」がズレて、最大で1週間近く日付がズレる
+  // 事例につながっていたため（[[project_voicejournal_knowledge_base_chat]]参照）。
+  now: Date,
   glossary?: string
 ): Promise<StructuredResult> {
-  const now = new Date();
   const categoryNote = buildCategoryRestrictionNote(allowedCategories, locale);
   const promptBuilder = {
     ja: buildSystemPrompt,
@@ -3064,12 +3199,18 @@ function advanceIsoDateByOneDay(dateStr: string): string {
  * 実際には一部のケース（正午等）でこれを忘れ、深夜0時など別のケースでは
  * 正しく繰り上げる、という一貫しない挙動が確認された。繰り返しパターン
  * ({@link expandRecurringTask}用、recurrenceを持つ元タスク)はここでは
- * 触らない——各出現日ごとの時刻はexpandRecurringTask側で個別に決まるため。 */
+ * 触らない——各出現日ごとの時刻はexpandRecurringTask側で個別に決まるため。
+ * 同様に、due_weekdayで曜日名を明示指定されたタスク（{@link resolveTaskDueWeekday}
+ * 適用後も元のdue_weekdayフィールド自体は残る）もここでは触らない——「今週の
+ * 水曜正午に」のように話者がユーザー自身の言葉で曜日を名指ししている場合、
+ * その時刻が発話時点で過去でも「翌日（＝別の曜日）」へ勝手にずらすのは誤り
+ * （ユーザーが明示した曜日と矛盾する）。この関数が対象とすべきなのは、
+ * 曜日・日付の言及が一切無く時刻だけが語られたケースに限る。 */
 function rollPastTimeOfDayToTomorrow(
   task: StructuredResult["tasks"][number],
   nowLocalDateTime: string
 ): StructuredResult["tasks"][number] {
-  if (task.recurrence) return task;
+  if (task.recurrence || task.due_weekday) return task;
   const isoDateTime = /^(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}:\d{2}$/;
   const m = task.reminder_at ? isoDateTime.exec(task.reminder_at) : null;
   if (!m || task.reminder_at! >= nowLocalDateTime) return task;
@@ -3248,6 +3389,11 @@ export const processVoiceMemo = onCall(
       // 失敗した場合も、文字起こし自体は成功しているのに何も得られない点は
       // transcribe()の失敗と同じなので、ここでも同様に払い戻す。
       try {
+        // structure()に渡す「今」をここで一度だけ確定させ、toClientResponse()
+        // の曜日解決・時刻繰り上げ判定にも同じ値を使う——別々に`new Date()`を
+        // 呼ぶと、間にあるOpenAI呼び出しの所要時間ぶん（深夜0時を跨ぐ場合を
+        // 含む）だけ「今」がズレてしまうため（詳細はstructure()側のコメント参照）。
+        const now = new Date();
         const structured = await structure(
           apiKey,
           transcript,
@@ -3255,12 +3401,13 @@ export const processVoiceMemo = onCall(
           loc,
           allowed,
           effectiveTimeZone,
+          now,
           glossary
         );
         return toClientResponse(
           structured,
-          localDateString(effectiveTimeZone, new Date()),
-          `${localDateString(effectiveTimeZone, new Date())}T${localTimeString(effectiveTimeZone, new Date())}:00`
+          localDateString(effectiveTimeZone, now),
+          `${localDateString(effectiveTimeZone, now)}T${localTimeString(effectiveTimeZone, now)}:00`
         );
       } catch (structureErr) {
         await refundDailyQuota(uid, effectiveTimeZone);
@@ -5105,6 +5252,18 @@ export const askKnowledgeBase = onCall(
         loc,
         effectiveTimeZone
       );
+
+      // 質問文・クライアント提供contextだけのチェックでは、埋め込み検索で
+      // 拾われた「過去の記録」自体に自傷・希死念慮に関連する内容が含まれる
+      // ケースを見逃してしまう（質問自体は無害でも、ヒットした過去の記録に
+      // 危険な言葉が含まれていることがある）。LLMに渡す直前の実際のコンテキスト
+      // 全文に対しても同じ判定をかけ、該当すればAI呼び出し自体を行わず固定の
+      // 相談窓口情報を返す（generateWeeklyReportが週の記録全文をチェックして
+      // いるのと同じ考え方）。
+      if (CRISIS_KEYWORD_PATTERN[loc].test(effectiveContext.toLowerCase())) {
+        return { answer: CRISIS_RESOURCE_MESSAGE[loc], sources: [] };
+      }
+
       const answer = await answerKnowledgeBaseQuestion(
         apiKey,
         trimmedQuestion,
@@ -5816,6 +5975,9 @@ export const processTextMemo = onCall(
       await consumeDailyQuota(uid, loc, effectiveTimeZone);
 
       const apiKey = openAiApiKey.value();
+      // structure()に渡す「今」をここで一度だけ確定させ、toClientResponse()の
+      // 曜日解決・時刻繰り上げ判定にも同じ値を使う（詳細はstructure()側のコメント参照）。
+      const now = new Date();
       let structured;
       try {
         structured = await structure(
@@ -5824,7 +5986,8 @@ export const processTextMemo = onCall(
           normalizeSummaryLevel(summaryLevel),
           loc,
           allowed,
-          effectiveTimeZone
+          effectiveTimeZone,
+          now
         );
       } catch (structureErr) {
         // GPT呼び出しが失敗した場合、ユーザーは何も得られていないのに
@@ -5834,8 +5997,8 @@ export const processTextMemo = onCall(
       }
       return toClientResponse(
         structured,
-        localDateString(effectiveTimeZone, new Date()),
-        `${localDateString(effectiveTimeZone, new Date())}T${localTimeString(effectiveTimeZone, new Date())}:00`
+        localDateString(effectiveTimeZone, now),
+        `${localDateString(effectiveTimeZone, now)}T${localTimeString(effectiveTimeZone, now)}:00`
       );
     } catch (err) {
       if (err instanceof HttpsError) {

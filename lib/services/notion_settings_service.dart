@@ -27,4 +27,13 @@ class NotionSettingsService {
       await prefs.setString(_pageTitlePref, pageTitle);
     }
   }
+
+  /// アカウント切り替え/アカウント削除で呼ぶ。[DbService.wipeAllLocalData]は
+  /// SQLiteしか消さず、この「接続済みヒント」はSharedPreferencesに保存して
+  /// いるため対象外だった——前のアカウントが接続していたNotionページの
+  /// タイトルが、新しいアカウントの設定画面に「接続済み」としてそのまま
+  /// 表示され続けてしまっていた（実際のトークンはサーバー側でuid別に
+  /// 管理されているため送信自体は前のアカウントのページへは行かないが、
+  /// 表示上は前のアカウント名義のページ名が漏れ、UIの状態も実態と食い違う）。
+  Future<void> clear() => setConnected(null);
 }

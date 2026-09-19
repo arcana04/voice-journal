@@ -4,10 +4,15 @@ import 'dart:typed_data';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../utils/media_type.dart';
+import 'video_thumbnail_service.dart';
+
 /// 日記に添付する画像を、端末の永続領域（アプリのドキュメントディレクトリ）に
 /// コピーして保存する。image_pickerが返す一時ファイルはOSに消される可能性が
 /// あるため、選択直後にコピーして参照パスをDBに保存する。
 class ImageStorageService {
+  final VideoThumbnailService _thumbnails = VideoThumbnailService();
+
   Future<Directory> _imagesDir() async {
     final docsDir = await getApplicationDocumentsDirectory();
     final imagesDir = Directory(p.join(docsDir.path, 'diary_images'));
@@ -41,6 +46,12 @@ class ImageStorageService {
     if (await file.exists()) {
       await file.delete();
     }
+    // 動画の場合、対応するキャッシュ済みサムネイルも一緒に消す。放置すると
+    // Documents/video_thumbnails配下に元動画が無くなった孤児サムネイルが
+    // 溜まり続ける（[VideoThumbnailService.deleteThumbnailFor]参照）。
+    if (isVideoPath(path)) {
+      await _thumbnails.deleteThumbnailFor(path);
+    }
   }
 
   /// アカウント切り替え/削除時、端末ローカルの添付画像を全て消す。
@@ -48,6 +59,19 @@ class ImageStorageService {
     final imagesDir = await _imagesDir();
     if (await imagesDir.exists()) {
       await imagesDir.delete(recursive: true);
+    }
+    await _deleteAllThumbnails();
+  }
+
+  /// 動画サムネイルのキャッシュディレクトリを丸ごと消す。個々の動画パスを
+  /// 辿らずに済むよう、[deleteAllImages]と同じ「全消去」経路でのみ使う。
+  Future<void> _deleteAllThumbnails() async {
+    final docsDir = await getApplicationDocumentsDirectory();
+    final thumbsDir = Directory(p.join(docsDir.path, 'video_thumbnails'));
+    if (await thumbsDir.exists()) {
+      try {
+        await thumbsDir.delete(recursive: true);
+      } catch (_) {}
     }
   }
 }
