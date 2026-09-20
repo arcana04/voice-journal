@@ -557,9 +557,16 @@ class DbService {
         'due_date': task.dueDate?.toIso8601String(),
         'reminder_at': task.reminderAt?.toIso8601String(),
         'reminder_end_at': task.reminderEndAt?.toIso8601String(),
-        'done': 0,
+        // task.doneをそのまま使う（以前はここで常に0を書き込んでいたため、
+        // fullSyncが他端末発の完了済みタスクを持つエントリをこの端末に初めて
+        // 取り込む際([JournalStore.addEntry]経由でこのメソッドを呼ぶ)、
+        // 完了状態が silently 未完了へ巻き戻っていた。その後この端末で
+        // touchEntryが呼ばれてpushされると、他端末側の完了済み状態まで
+        // 上書きしてしまう恐れがあった）。
+        'done': task.done ? 1 : 0,
         'is_all_day': task.isAllDay ? 1 : 0,
         'notify_at': task.notifyAt?.toIso8601String(),
+        'notion_page_url': task.notionPageUrl,
       });
       savedTasks.add(
         TaskItem(
@@ -570,8 +577,10 @@ class DbService {
           dueDate: task.dueDate,
           reminderAt: task.reminderAt,
           reminderEndAt: task.reminderEndAt,
+          done: task.done,
           isAllDay: task.isAllDay,
           notifyAt: task.notifyAt,
+          notionPageUrl: task.notionPageUrl,
         ),
       );
     }
@@ -589,6 +598,7 @@ class DbService {
         'idea_status': note.ideaStatus,
         'pinned': note.pinned ? 1 : 0,
         'tag': note.tag,
+        'notion_page_url': note.notionPageUrl,
       });
       savedNotes.add(
         NoteItem(
@@ -604,6 +614,7 @@ class DbService {
           ideaStatus: note.ideaStatus,
           pinned: note.pinned,
           tag: note.tag,
+          notionPageUrl: note.notionPageUrl,
         ),
       );
     }

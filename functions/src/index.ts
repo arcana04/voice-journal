@@ -1604,6 +1604,26 @@ async function grantBonusMinutes(uid: string, seconds: number): Promise<void> {
     .set({ bonusSecondsBalance: FieldValue.increment(seconds) }, { merge: true });
 }
 
+/** grantBonusMinutesの取り消し（追加分数パックがApple/Google経由で返金された場合用）。
+ * 返金されたのに付与済みのボーナス秒数だけがユーザーの手元に残り続けると、
+ * 「購入代金は返してもらいつつ機能はそのまま使える」形の実質無料化を許してしまう。
+ * 既に一部/全部を消費済みで残高がseconds未満の場合は0未満にはしない
+ * （マイナス残高を作ると、後で別のボーナスパックを正規購入した際の加算処理と
+ * 絡んで挙動が分かりにくくなるため、素朴に0でクランプする）。 */
+async function refundBonusMinutes(uid: string, seconds: number): Promise<void> {
+  const db = getFirestore();
+  const userRef = db.collection("users").doc(uid);
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(userRef);
+    const bonusSecondsBalance = (snap.data()?.bonusSecondsBalance as number | undefined) ?? 0;
+    tx.set(
+      userRef,
+      { bonusSecondsBalance: Math.max(0, bonusSecondsBalance - seconds) },
+      { merge: true }
+    );
+  });
+}
+
 function hashWatchDeviceSecret(secret: string): string {
   return createHash("sha256").update(secret).digest("hex");
 }
@@ -2389,7 +2409,11 @@ export const revenueCatWebhook = onRequest(
       // Pro本体とは無関係な返金でPro会員が誤って失効し、買い切りカウンタも
       // 誤って減算されてしまう。
       if (eventType === "CANCELLATION" && isRefund && event?.product_id === EXTRA_MINUTES_PACK_PRODUCT_ID) {
-        logger.info("revenueCatWebhook refund for extra-minutes pack ignored (not Pro-related)", {
+        // Pro本体のisPro/hasMediaSyncには無関係だが、購入時に加算した
+        // ボーナス秒数はここで取り消さないと「返金されたのに付与された分数は
+        // 使い放題のまま」という実質無料化を許してしまうため、忘れず取り消す。
+        await refundBonusMinutes(uid, EXTRA_MINUTES_PACK_SECONDS);
+        logger.info("revenueCatWebhook refund for extra-minutes pack: bonus seconds revoked", {
           uid,
           eventType,
         });
@@ -5458,7 +5482,14 @@ export const askKnowledgeBase = onCall(
     if (!question || !question.trim()) {
       throw new HttpsError("invalid-argument", MESSAGES[loc].noText);
     }
-    const trimmedQuestion = question.trim();
+    // question・context共に元々長さの上限が無く、レート制限内であっても
+    // 1回の呼び出しで巨大な文字列を送るだけでOpenAI課金を跳ね上げられて
+    // しまう（generateWeeklyReportのcontextで対処済みだったのと同じ抜け穴が
+    // askKnowledgeBase側には残っていた）。通常のチャット入力で現実的に
+    // 収まる範囲より十分大きい値で切り詰める。
+    const ASK_KNOWLEDGE_BASE_QUESTION_MAX_CHARS = 4000;
+    const ASK_KNOWLEDGE_BASE_CONTEXT_MAX_CHARS = 40000;
+    const trimmedQuestion = question.trim().slice(0, ASK_KNOWLEDGE_BASE_QUESTION_MAX_CHARS);
 
     // クライアントの表示履歴をそのまま信用せず、質問・回答の両方が非空の
     // 文字列であるものだけを、暴走防止のため長さも切り詰めて使う。
@@ -5482,7 +5513,7 @@ export const askKnowledgeBase = onCall(
     // 進ませない。questionだけでなく、クライアントが自由記述で送れるcontext
     // （優先質問機能などで使われる）も同じくチェックする——questionには
     // 危険な言葉が無くてもcontext側にだけ含まれるケースを見逃さないため。
-    const trimmedContext = (context ?? "").trim();
+    const trimmedContext = (context ?? "").trim().slice(0, ASK_KNOWLEDGE_BASE_CONTEXT_MAX_CHARS);
     if (
       CRISIS_KEYWORD_PATTERN[loc].test(trimmedQuestion.toLowerCase()) ||
       (trimmedContext && CRISIS_KEYWORD_PATTERN[loc].test(trimmedContext.toLowerCase()))
@@ -5503,7 +5534,7 @@ export const askKnowledgeBase = onCall(
         apiKey,
         uid,
         trimmedQuestion,
-        (context ?? "").trim(),
+        trimmedContext,
         loc,
         effectiveTimeZone
       );

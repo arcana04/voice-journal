@@ -96,10 +96,7 @@ class AccountStore extends ChangeNotifier {
       }
       try {
         final result = await user.linkWithCredential(credential);
-        // linkWithCredentialはuidを変えない（匿名→本アカウントへの昇格）ため
-        // 切替ガードは不要だが、このuidを「ローカルデータの持ち主」として
-        // 記録しておく（初めての紐付けの場合、以後の切替検知の基準になる）。
-        await _settings.setLocalDataOwnerUid(result.user!.uid);
+        await _guardFreshLink(result.user!.uid, beforeLocalWipe);
         notifyListeners();
         return result.user!.uid;
       } on FirebaseAuthException catch (e) {
@@ -130,13 +127,12 @@ class AccountStore extends ChangeNotifier {
   ///
   /// このメソッドは[signInWithCredential]のうち、匿名ユーザーの
   /// `linkWithCredential`がそのまま成功するケース（uidが変わらない、
-  /// 匿名データの初回昇格）では呼ばれない——そちらは常に安全なので
-  /// [setLocalDataOwnerUid]を直接呼ぶだけで済ませている。つまりここに
-  /// 到達するのは「currentUserが既に実アカウント」か、「匿名ユーザーの
-  /// リンクが`credential-already-in-use`で失敗し、既に別の場所で使われて
-  /// いる既存アカウントへのサインインにフォールバックした」場合のいずれか
-  /// であり、どちらも「このnewUidが今のローカルデータの持ち主だとは
-  /// 確認できていない」点は同じ。
+  /// 匿名データの初回昇格）では呼ばれない——そちらは[_guardFreshLink]参照。
+  /// つまりここに到達するのは「currentUserが既に実アカウント」か、
+  /// 「匿名ユーザーのリンクが`credential-already-in-use`で失敗し、既に
+  /// 別の場所で使われている既存アカウントへのサインインにフォールバックした」
+  /// 場合のいずれかであり、どちらも「このnewUidが今のローカルデータの
+  /// 持ち主だとは確認できていない」点は同じ。
   ///
   /// 以前は記録が無い場合（previousOwner == null）を「この端末で初めての
   /// 実アカウント紐付け」とみなして無条件でスキップしていたが、これは
@@ -154,6 +150,32 @@ class AccountStore extends ChangeNotifier {
   ]) async {
     final previousOwner = await _settings.getLocalDataOwnerUid();
     if (previousOwner != newUid) {
+      await beforeLocalWipe?.call();
+      await DbService.instance.wipeAllLocalData();
+    }
+    await _settings.setLocalDataOwnerUid(newUid);
+  }
+
+  /// [signInWithCredential]の`linkWithCredential`成功パス専用のガード。
+  /// linkWithCredentialはuidを変えない（匿名→本アカウントへの昇格）ため、
+  /// 一見「ガード不要」に見える——実際、記録が無い場合（previousOwner ==
+  /// null、＝この端末で初めての実アカウント紐付け）はローカルの匿名データが
+  /// そのままこのuidの所有物になるだけなので消してはならない。
+  /// [_guardAccountSwitch]と違いここではnullを「安全」として扱う。
+  ///
+  /// ただし例外がある: `signOut`はlocalDataOwnerUidを消さずに新しい匿名uid
+  /// を再発行するため（[signOut]参照）、「サインアウト→(前アカウントの
+  /// データが残ったまま)匿名で使用→新しい/別のアカウントへ紐付け」という
+  /// 経路では、previousOwnerに前アカウントの実uidが残ったままこの
+  /// linkWithCredentialが（新しいuidで）成功する。この場合はローカル
+  /// SQLiteに前アカウントのデータが残っているので、previousOwnerが
+  /// 記録されており、かつ今回のuidと食い違う場合は消す。
+  Future<void> _guardFreshLink(
+    String newUid, [
+    Future<void> Function()? beforeLocalWipe,
+  ]) async {
+    final previousOwner = await _settings.getLocalDataOwnerUid();
+    if (previousOwner != null && previousOwner != newUid) {
       await beforeLocalWipe?.call();
       await DbService.instance.wipeAllLocalData();
     }
