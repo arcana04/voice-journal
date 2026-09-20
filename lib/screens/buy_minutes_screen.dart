@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../config/revenuecat_config.dart';
 import '../l10n/app_localizations.dart';
 import '../services/purchase_service.dart';
-import '../state/account_store.dart';
-import '../widgets/require_sign_in_sheet.dart';
 
 /// Pro/買い切みプランの月間録音時間の上限に達したユーザー向けの、消費型IAP
 /// 「追加60分パック」購入画面。PaywallScreenはサブスク/買い切りの3枠固定
@@ -35,12 +32,11 @@ class _BuyMinutesScreenState extends State<BuyMinutesScreen> {
     // その間に飛んでくる2回目の呼び出しをここで即座に弾く（二重課金防止）。
     if (_busy) return;
     final l10n = AppLocalizations.of(context)!;
-    // 匿名のまま課金すると、再インストール等で匿名uidがリセットされた際に
-    // 購入を復元する手段が無くなるため、購入前にアカウントへのログインを必須にする。
-    if (!context.read<AccountStore>().isSignedIn) {
-      final signedIn = await showRequireSignInSheet(context);
-      if (!mounted || !signedIn) return;
-    }
+    // Appleガイドライン5.1.1(v)違反(2026-09-20審査却下)により、購入前の
+    // サインイン必須化は撤廃。RevenueCatのapp_user_idは起動時点で既に
+    // Firebaseの匿名uidに紐付けている(PurchaseService.initialize)ため、
+    // 匿名のままでも購入は問題なく機能する。他端末での反映が必要な場合のみ、
+    // 設定画面からいつでも任意にサインインできる。
     setState(() => _busy = true);
     try {
       final purchased = await _purchases.purchaseConsumable(package);

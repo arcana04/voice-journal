@@ -12,9 +12,7 @@ import '../l10n/app_localizations.dart';
 import '../services/lifetime_plan_service.dart';
 import '../services/purchase_service.dart';
 import '../services/reminder_service.dart';
-import '../state/account_store.dart';
 import '../state/subscription_store.dart';
-import '../widgets/require_sign_in_sheet.dart';
 
 /// Proプランへの加入を促す画面。RevenueCatの「現在のOffering」に設定された
 /// パッケージ（月額・年額・買い切り）を1枚ずつ選べるカードとして一覧表示し、
@@ -84,12 +82,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
     final package = _selected;
     if (package == null) return;
     final l10n = AppLocalizations.of(context)!;
-    // 匿名のまま課金すると、再インストール等で匿名uidがリセットされた際に
-    // 購入を復元する手段が無くなるため、購入前にアカウントへのログインを必須にする。
-    if (!context.read<AccountStore>().isSignedIn) {
-      final signedIn = await showRequireSignInSheet(context);
-      if (!mounted || !signedIn) return;
-    }
+    // Appleガイドライン5.1.1(v)違反(2026-09-20審査却下)により、購入前の
+    // サインイン必須化は撤廃。RevenueCatのapp_user_idは起動時点で既に
+    // Firebaseの匿名uidに紐付けている(PurchaseService.initialize)ため、
+    // 匿名のままでも購入・後日のRestoreは問題なく機能する。他端末での
+    // Pro反映が必要な場合のみ、設定画面からいつでも任意にサインインできる。
     // 画面を開いた時点では枠があっても、購入ボタンを押すまでの間に他の誰かが
     // 埋めてしまう可能性があるため、実際に購入を投げる直前にもう一度確認する
     // （100人限定を超えて売ってしまわないための最後の砦）。
@@ -137,13 +134,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   Future<void> _restore() async {
     final l10n = AppLocalizations.of(context)!;
-    // _purchase()と同じ理由。匿名のままRestoreすると、購入履歴が今の匿名
-    // uidに紐付いてしまい、本来使っているアカウントのFirestoreへは
-    // isProが反映されない（サインインし直しても復元されない状態になる）。
-    if (!context.read<AccountStore>().isSignedIn) {
-      final signedIn = await showRequireSignInSheet(context);
-      if (!mounted || !signedIn) return;
-    }
+    // _purchase()と同じ理由でサインイン必須化は撤廃(Appleガイドライン
+    // 5.1.1(v))。匿名のままでもRevenueCatは現在のapp_user_id(匿名uid)に
+    // Restoreを反映する。他端末でPro状態を揃えたい場合は設定画面から
+    // 任意にサインインすればよい。
     setState(() => _busy = true);
     try {
       final restored = await context.read<SubscriptionStore>().restore();
