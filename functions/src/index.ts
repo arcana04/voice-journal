@@ -796,6 +796,7 @@ For an interval like "biweekly", "every other week", or "every two weeks", also 
 [Hedged intentions are NOT confirmed actions]
 A statement is not a task just because it names a concrete thing to do. Watch for hedge language such as "maybe", "I think", "I've been thinking about", "if I ever", "I'd want to", "not sure when/if" — when hedge language like this is present, classify it as [notes category="アイデア"] even if a specific action noun follows (e.g. "maybe I'll start Spanish lessons this year" is an idea, not a task; "if I ever get a raise, I'd want a new chair" is an idea, not a task). Only classify as a task when the speaker states or implies an actual decision or commitment — already scheduled, already started, or stated with confident intent ("I'm going to", "I need to") without hedging.
 Be careful not to over-generalize this to reluctance or resignation about something already decided: phrases like "I guess I have to...", "I suppose I should...", "ugh, I've got to..." express reluctance, not uncertainty about whether it will happen — especially when paired with an already-fixed time/date or an existing appointment. For example, "I guess I have to go to the dentist tomorrow" is a confirmed task (the appointment is already set; "I guess" only voices reluctance), unlike the genuine-uncertainty examples above, which cast real doubt on whether the thing happens at all.
+When a statement is a hedged idea, do NOT also create a task for the same action, even if it mentions a date/time-like phrase (e.g. "maybe I'll repaint the fence this weekend" mentions "this weekend", but stays an idea only — do not additionally emit a "repaint the fence" task with a resolved due date). The date-like phrase is just part of the idea's own wording, not a separate confirmed commitment. Each utterance produces an entry in exactly one category, never in two categories at once.
 ${categoryNote}
 
 ${buildNotesStyleSectionEn(summaryLevel)}
@@ -890,6 +891,7 @@ Para un intervalo como "biweekly", "cada dos semanas" o "quincenal", añade tamb
 [Las intenciones con reservas NO son acciones confirmadas]
 Que se mencione una acción concreta no basta para clasificarlo como tarea. Presta atención a expresiones de duda como "quizás", "tal vez", "estoy pensando en", "si algún día", "me gustaría", "no sé cuándo/si" — cuando aparezca este tipo de lenguaje dubitativo, clasifícalo como [notes category="アイデア"] aunque le siga un sustantivo de acción concreto (por ejemplo, "tal vez empiece clases de español este año" es una idea, no una tarea; "si algún día me suben el sueldo, querría una silla nueva" es una idea, no una tarea). Clasifica como tarea solo cuando el hablante exprese o implique una decisión o compromiso real — ya programado, ya iniciado, o expresado con intención segura ("voy a", "tengo que") sin reservas.
 Ten cuidado de no generalizar esto a la resignación o la desgana sobre algo ya decidido: frases como "supongo que tengo que...", "qué pereza, tengo que..." expresan desgana, no incertidumbre sobre si ocurrirá, especialmente cuando van acompañadas de una hora/fecha ya fijada o una cita ya existente. Por ejemplo, "supongo que mañana tengo que ir al dentista" es una tarea confirmada (la cita ya está fijada; "supongo" solo expresa desgana), a diferencia de los ejemplos de incertidumbre genuina de arriba, que sí cuestionan si algo va a ocurrir.
+Cuando una frase sea una idea con reservas, NO crees además una tarea para la misma acción, aunque mencione una expresión de fecha/hora (p. ej. "tal vez repinte la valla este fin de semana" menciona "este fin de semana", pero sigue siendo solo una idea — no generes además una tarea "repintar la valla" con una fecha límite resuelta). La expresión de fecha es solo parte de la propia idea, no un compromiso confirmado aparte. Cada frase produce una entrada en exactamente una categoría, nunca en dos a la vez.
 ${categoryNote}
 
 ${buildNotesStyleSectionEs(summaryLevel)}
@@ -984,6 +986,7 @@ Bei einem Intervall wie "biweekly", "alle zwei Wochen" oder "vierzehntägig" fü
 [Vage formulierte Absichten sind KEINE bestätigten Handlungen]
 Eine konkrete Handlung wird nicht schon dadurch zur Aufgabe, dass sie genannt wird. Achte auf einschränkende Formulierungen wie "vielleicht", "ich glaube", "ich denke darüber nach", "falls ich mal", "ich würde gerne", "weiß nicht wann/ob" — wenn solche Formulierungen vorkommen, klassifiziere es als [notes category="アイデア"], auch wenn danach ein konkretes Handlungssubstantiv folgt (z. B. ist "vielleicht fange ich dieses Jahr mit Spanischkursen an" eine Idee, keine Aufgabe; "falls ich mal eine Gehaltserhöhung bekomme, würde ich gerne einen neuen Stuhl haben" ist eine Idee, keine Aufgabe). Klassifiziere nur dann als Aufgabe, wenn die sprechende Person eine tatsächliche Entscheidung oder Verpflichtung ausdrückt oder impliziert — bereits geplant, bereits begonnen, oder mit sicherer Absicht ohne Einschränkung geäußert ("ich werde", "ich muss").
 Achte darauf, dies nicht auf Widerwillen oder Resignation gegenüber etwas bereits Entschiedenem zu verallgemeinern: Formulierungen wie "ich schätze, ich muss...", "na gut, dann muss ich wohl..." drücken Widerwillen aus, keine Unsicherheit darüber, ob es passiert — besonders wenn eine bereits feststehende Zeit oder ein bereits vereinbarter Termin genannt wird. Zum Beispiel ist "ich schätze, ich muss morgen zum Zahnarzt" eine bestätigte Aufgabe (der Termin steht bereits fest; die Formulierung drückt nur Widerwillen aus) — anders als die echten Unsicherheits-Beispiele oben, die tatsächlich infrage stellen, ob etwas überhaupt passiert.
+Wenn eine Aussage eine vage formulierte Idee ist, erstelle NICHT zusätzlich eine Aufgabe für dieselbe Handlung, selbst wenn ein datums-/zeitähnlicher Ausdruck genannt wird (z. B. erwähnt "vielleicht streiche ich dieses Wochenende den Zaun" zwar "dieses Wochenende", bleibt aber nur eine Idee — erzeuge nicht zusätzlich eine Aufgabe "Zaun streichen" mit einem aufgelösten Fälligkeitsdatum). Der datumsähnliche Ausdruck ist nur Teil der Formulierung der Idee selbst, keine separate bestätigte Verpflichtung. Jede Äußerung erzeugt einen Eintrag in genau einer Kategorie, niemals in zweien gleichzeitig.
 ${categoryNote}
 
 ${buildNotesStyleSectionDe(summaryLevel)}
@@ -1077,6 +1080,7 @@ due_weekday를 사용하는 경우 due_date는 null로 두세요.
 [망설이는 표현은 "확정된 행동"이 아닙니다]
 구체적인 행동이 언급된다고 해서 그것만으로 tasks가 되지는 않습니다. "아마", "~인 것 같아", "~할까 생각 중이야", "혹시라도", "~하고 싶어", "언제/할지 모르겠어" 같은 망설이는 표현이 있으면, 구체적인 행동 명사가 뒤따르더라도 [notes category="アイデア"]로 분류하세요(예: "아마 올해 스페인어 시작할까 봐"는 아이디어이지 할 일이 아님, "혹시라도 월급 오르면 새 의자 사고 싶어"도 아이디어). 화자가 실제로 결정했거나, 이미 시작했거나, 망설임 없이 확실한 의지로 말한 경우("~할 거야", "~해야 해")에만 tasks로 분류하세요.
 이것을 이미 결정된 일에 대한 체념이나 내키지 않는 마음으로 일반화하지 않도록 주의하세요: "그냥 ~해야지 뭐", "어쩔 수 없이 ~해야겠지" 같은 표현은 실제로 일어날지에 대한 불확실성이 아니라 내키지 않는 마음을 나타낼 뿐입니다. 특히 이미 정해진 시간·약속과 함께 언급되는 경우 더욱 그렇습니다. 예를 들어 "내일 그냥 치과 가야지 뭐"는 확정된 할 일입니다(약속은 이미 정해져 있고, 그 말투는 내키지 않는 마음만 나타낼 뿐) — 이는 실제로 일어날지 자체가 불확실한 위의 진짜 망설임 예시와는 다릅니다.
+어떤 발언이 망설이는 아이디어로 분류되었다면, 날짜·시간처럼 보이는 표현이 포함되어 있더라도 같은 행동에 대해 별도로 tasks를 추가로 만들지 마세요(예: "이번 주말에 울타리 페인트칠이나 할까"는 "이번 주말"을 언급하지만 여전히 아이디어일 뿐입니다 — 여기서 확정된 마감일을 가진 "울타리 페인트칠" tasks를 별도로 만들면 안 됩니다). 날짜처럼 보이는 표현은 그 아이디어 자체의 표현 일부일 뿐, 별도의 확정된 약속이 아닙니다. 하나의 발언은 정확히 하나의 카테고리에만 항목을 만들어야 하며, 두 카테고리에 동시에 만들어서는 안 됩니다.
 ${categoryNote}
 
 ${buildNotesStyleSectionKo(summaryLevel)}
@@ -1171,6 +1175,7 @@ Pour un intervalle comme « biweekly », « toutes les deux semaines » ou « un
 [Une intention hésitante n'est PAS une action confirmée]
 Ce n'est pas parce qu'une action concrète est mentionnée que c'est automatiquement une tâche. Fais attention aux formulations hésitantes comme "peut-être", "je pense", "je songe à", "si jamais", "j'aimerais", "je ne sais pas quand/si" — quand ce type de langage est présent, classe-le en [notes category="アイデア"] même si un nom d'action concret suit (par exemple, "je vais peut-être commencer des cours d'espagnol cette année" est une idée, pas une tâche ; "si jamais j'ai une augmentation, j'aimerais une nouvelle chaise" est une idée, pas une tâche). Ne classe en tâche que lorsque la personne exprime ou implique une décision ou un engagement réel — déjà planifié, déjà commencé, ou énoncé avec une intention affirmée sans hésitation ("je vais", "il faut que je").
 Attention à ne pas généraliser cela à la résignation ou au manque d'envie face à quelque chose déjà décidé : des formulations comme « je suppose que je dois... », « bon, il va falloir que... » expriment un manque d'envie, pas une incertitude sur le fait que ça arrive — surtout quand elles sont accompagnées d'une heure/date déjà fixée ou d'un rendez-vous déjà existant. Par exemple, « je suppose que je dois aller chez le dentiste demain » est une tâche confirmée (le rendez-vous est déjà fixé ; « je suppose » n'exprime qu'un manque d'envie), contrairement aux exemples d'incertitude réelle ci-dessus, qui remettent vraiment en question si la chose va se produire.
+Quand une phrase est une idée hésitante, ne crée PAS aussi une tâche pour la même action, même si elle mentionne une expression de date/heure (par ex. « je repeindrai peut-être la clôture ce week-end » mentionne « ce week-end », mais reste seulement une idée — ne génère pas en plus une tâche « repeindre la clôture » avec une date d'échéance résolue). L'expression de date fait simplement partie de la formulation de l'idée elle-même, pas d'un engagement confirmé séparé. Chaque énoncé produit une entrée dans exactement une catégorie, jamais dans deux à la fois.
 ${categoryNote}
 
 ${buildNotesStyleSectionFr(summaryLevel)}
@@ -3532,6 +3537,17 @@ function rollPastTimeOfDayToTomorrow(
   };
 }
 
+/** モデルがJSONのnullではなく文字列"null"（"none"/"n/a"等も含む、大文字小文字
+ * 問わず）をそのまま出力することがある（due_hintで実際に確認された——UIに
+ * その文字列がそのまま表示されてしまっていた）。UIに渡す前に、null相当の
+ * 文字列は実際のnullへ正規化しておく。 */
+function sanitizeOptionalText(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || /^(null|none|n\/a)$/i.test(trimmed)) return null;
+  return value;
+}
+
 function toClientResponse(
   structured: StructuredResult,
   todayDateStr: string,
@@ -3563,7 +3579,7 @@ function toClientResponse(
       }
       return {
         title: task.title,
-        due_hint: task.due_hint ?? null,
+        due_hint: sanitizeOptionalText(task.due_hint),
         due_date: task.due_date && isoDate.test(task.due_date) ? task.due_date : null,
         reminder_at: reminderAt,
         reminder_end_at: reminderEndAt,
@@ -3578,7 +3594,7 @@ function toClientResponse(
         note.category === "アイデア" || note.category === "感情ログ"
           ? note.category
           : "感情ログ",
-      title: note.title ?? null,
+      title: sanitizeOptionalText(note.title),
       content: note.content ?? "",
     })),
     comfort_message: structured.comfort_message ?? null,
