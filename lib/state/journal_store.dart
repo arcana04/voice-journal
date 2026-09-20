@@ -261,7 +261,13 @@ class JournalStore extends ChangeNotifier {
         ? null
         : (task.calendarId ?? selectedCalendarId);
 
-    if (task.reminderAt == null || task.done) {
+    // 終日タスク（isAllDay: due_dateはあるが具体的な時刻の言及が無くreminderAtが
+    // null）は、以前はreminderAtが無いというだけでカレンダー同期そのものが
+    // 丸ごとスキップされていた——upsertEvent自体はallDayフラグでの終日予定作成に
+    // 対応しているのに、その手前で弾かれていたバグ。due_dateを開始日として使う。
+    final calendarStart = task.reminderAt ?? (task.isAllDay ? task.dueDate : null);
+
+    if (calendarStart == null || task.done) {
       if (task.calendarEventId != null && existingCalendarId != null) {
         try {
           await _calendar.deleteEvent(existingCalendarId, task.calendarEventId!);
@@ -290,8 +296,8 @@ class JournalStore extends ChangeNotifier {
         calendarId: targetCalendarId,
         eventId: task.calendarEventId,
         title: task.title,
-        start: task.reminderAt!,
-        end: task.reminderEndAt,
+        start: calendarStart,
+        end: task.isAllDay ? null : task.reminderEndAt,
         allDay: task.isAllDay,
       );
       if (calendarSyncError) {
