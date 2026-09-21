@@ -76,7 +76,15 @@ class BackendService {
 
     try {
       final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
-      final callable = functions.httpsCallable('processVoiceMemo');
+      // サーバー側(processVoiceMemo)はPro15分録音のffmpeg処理・Whisper転写を
+      // 見込んでtimeoutSeconds: 300を確保しているが、cloud_functionsパッケージの
+      // HttpsCallableOptions.timeoutはデフォルト60秒しかない。指定しないと、長め
+      // の録音や回線が遅い時にサーバーがまだ処理中でもクライアント側が先に
+      // タイムアウトしてエラー表示になってしまう(実際に発生した不具合)。
+      final callable = functions.httpsCallable(
+        'processVoiceMemo',
+        options: HttpsCallableOptions(timeout: const Duration(seconds: 290)),
+      );
       final result = await callable.call<Map<String, dynamic>>({
         'audioBase64': audioBase64,
         'mimeType': 'audio/m4a',
