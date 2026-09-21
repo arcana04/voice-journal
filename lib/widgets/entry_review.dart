@@ -119,6 +119,14 @@ class _EntryReviewState extends State<EntryReview> {
           item.type = DraftItemType.diary;
           item.noteCategory = kNoteCategoryFeeling;
       }
+      // 元々いたバケット内の位置のまま残ると、保存後の並び順にもその古い位置が
+      // 引き継がれてしまう(例: タスク欄から日記に移した項目が、既存の日記本文
+      // より上に表示され続ける)。移動先バケットの末尾に差し込み直す。
+      _items.remove(item);
+      final lastIndexOfBucket = _items.lastIndexWhere(
+        (i) => _bucketOf(i) == bucket,
+      );
+      _items.insert(lastIndexOfBucket + 1, item);
     });
   }
 
