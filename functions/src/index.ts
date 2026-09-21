@@ -3132,10 +3132,12 @@ const RECURRENCE_MAX_OCCURRENCES = 60;
  * reminder_at/reminder_end_atの時刻だけを流用し、日付部分は各出現日に
  * 差し替える。recurrenceが無い・不正な場合は元のタスクをそのまま1件返す。
  * end_dateが省略されている場合（話者が終了時期に触れていない）は、
- * due_weekdayの単一曜日版と同じ「終了時期不明なら直近の該当日1件だけ」
- * という設計に合わせ、複数曜日のうち最初に来る1件だけをdue_dateとして
- * 解決する（無期限にどんどん展開する仕様は2026-09-21にユーザー判断で
- * 撤回済み）。 */
+ * due_weekdayの単一曜日版と同じ「終了時期不明なら直近の該当日だけ」という
+ * 設計に合わせつつ、指定された曜日それぞれについて直近1件ずつを返す
+ * （「毎週火・木」なら火曜1件+木曜1件。全体で最初に見つかった1件だけに
+ * 絞ると、他の曜日が丸ごと消える不具合があったため）。無期限にどんどん
+ * 展開し続ける仕様（各曜日を何週間分も自動生成する）は2026-09-21に
+ * ユーザー判断で撤回済み。 */
 function expandRecurringTask(
   task: StructuredResult["tasks"][number]
 ): StructuredResult["tasks"] {
@@ -3163,38 +3165,42 @@ function expandRecurringTask(
   const startMs = Date.UTC(sy, sm - 1, sd);
 
   if (!rec.end_date || !isoDate.test(rec.end_date)) {
-    // 終了日の言及が無い: 開始日以降で最初に該当する曜日を1件だけ返す
-    // （intervalWeeksは開始週=週番号0なので初回の判定には影響しない）。
-    for (let ms = startMs, i = 0; i < 14; ms += 24 * 60 * 60 * 1000, i++) {
+    // 終了日の言及が無い: 指定された曜日それぞれについて、開始日以降で
+    // 最初に該当する日を1件ずつ返す（例:「毎週火・木」なら火曜1件+木曜1件。
+    // 以前は全体で最初に見つかった1件だけを返しており、火曜より後にしか
+    // 来ない木曜が丸ごと消える不具合があった）。
+    const isoDateTimeRe = /^\d{4}-\d{2}-\d{2}T(\d{2}:\d{2}:\d{2})$/;
+    const startTimeMatch = task.reminder_at
+      ? isoDateTimeRe.exec(task.reminder_at)
+      : null;
+    const endTimeMatch = task.reminder_end_at
+      ? isoDateTimeRe.exec(task.reminder_end_at)
+      : null;
+    const remainingWeekdays = new Set(wantedWeekdays);
+    const results: StructuredResult["tasks"] = [];
+    for (
+      let ms = startMs, i = 0;
+      i < 14 && remainingWeekdays.size > 0;
+      ms += 24 * 60 * 60 * 1000, i++
+    ) {
+      const dow = new Date(ms).getUTCDay();
+      if (!remainingWeekdays.has(dow)) continue;
+      remainingWeekdays.delete(dow);
       const d = new Date(ms);
-      if (!wantedWeekdays.has(d.getUTCDay())) continue;
       const dateStr = [
         d.getUTCFullYear(),
         String(d.getUTCMonth() + 1).padStart(2, "0"),
         String(d.getUTCDate()).padStart(2, "0"),
       ].join("-");
-      const isoDateTimeRe = /^\d{4}-\d{2}-\d{2}T(\d{2}:\d{2}:\d{2})$/;
-      const startTimeMatch = task.reminder_at
-        ? isoDateTimeRe.exec(task.reminder_at)
-        : null;
-      const endTimeMatch = task.reminder_end_at
-        ? isoDateTimeRe.exec(task.reminder_end_at)
-        : null;
-      return [
-        {
-          title: task.title,
-          due_hint: task.due_hint ?? null,
-          due_date: dateStr,
-          reminder_at: startTimeMatch
-            ? `${dateStr}T${startTimeMatch[1]}`
-            : null,
-          reminder_end_at: endTimeMatch
-            ? `${dateStr}T${endTimeMatch[1]}`
-            : null,
-        },
-      ];
+      results.push({
+        title: task.title,
+        due_hint: task.due_hint ?? null,
+        due_date: dateStr,
+        reminder_at: startTimeMatch ? `${dateStr}T${startTimeMatch[1]}` : null,
+        reminder_end_at: endTimeMatch ? `${dateStr}T${endTimeMatch[1]}` : null,
+      });
     }
-    return [task];
+    return results.length > 0 ? results : [task];
   }
 
   const [ey, em, ed] = rec.end_date.split("-").map(Number);
