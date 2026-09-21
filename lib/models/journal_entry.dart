@@ -67,6 +67,11 @@ class TaskItem {
   /// を既定値にする——固定時刻だと録音した時間帯によってはそれ自体が既に
   /// 過去ということが起こり得るが、相対時間なら常に未来になる。「この後」
   /// という言い回し自体が近い未来を指すニュアンスとも合う。
+  /// 期限が明日以降であっても、[hour]が既存のsettings値(例:16時)より遅い
+  /// 時間帯（例:21時）に録音した場合、「前日[hour]時」は同様にすでに過去に
+  /// なる——この場合も同じ「今から2時間後」のフォールバックを使う（実際に
+  /// 発生した不具合: 21時に「明日歯医者」を録音すると前日16時＝今日16時が
+  /// 既に過去のため、通知が一切飛ばなかった）。
   /// 期限が過去（すでに期日超過）の場合は、通知時刻を推測する意味が無いため
   /// 既定値を設定しない（null＝通知なし、従来どおりの挙動）。
   static DateTime? defaultAllDayNotifyAt(DateTime dueDate, {int hour = 16}) {
@@ -78,7 +83,8 @@ class TaskItem {
       return now.add(const Duration(hours: 2));
     }
     final dayBefore = dueDay.subtract(const Duration(days: 1));
-    return DateTime(dayBefore.year, dayBefore.month, dayBefore.day, hour);
+    final candidate = DateTime(dayBefore.year, dayBefore.month, dayBefore.day, hour);
+    return candidate.isBefore(now) ? now.add(const Duration(hours: 2)) : candidate;
   }
 
   TaskItem copyWith({
