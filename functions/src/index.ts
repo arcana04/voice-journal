@@ -698,7 +698,7 @@ due_weekday を使う場合、due_date は null のままにしてください�
 7. 話者が一息に多数(4件、5件以上)の予定・締切を列挙する場合(一日または一週間分の予定を読み上げる等)、それぞれを個別の時刻付きタスクとしてすべて抽出してください。項目数が多いことは、複数の項目を1つのタスクにまとめたり、統合したり、黙って取りこぼしたりする理由にはなりません。同じ書き起こしの中に他にアイデアや感情が含まれている場合も同様で、どのカテゴリも他のカテゴリを押しのけないようにしてください。
 これは「XをY(いつ)にする、だからZもしないと」のように、2つの行動が"だから/なので"で繋がっているだけの短い文にも同様に当てはまります。それぞれの行動を別々のタスクにし、それぞれ自分に本来属する日時だけを持たせてください——片方を取りこぼしたり、日時が異なる(あるいは片方には日時の言及が無い)のに一方の日時をもう一方にもコピーしたりしないでください。
 具体例:「今週じゃなくて来週末に実家に帰る予定だから、その前に車を点検に出しておかないと」は、必ず「実家に帰る」(due_weekdayで来週末の該当曜日、weeks_ahead:1)と「車を点検に出す」(同じday/weeks_ahead+days_before:1——「その前に」はその前日を借りる形になる、due_hintは裸の「その前に」ではなく「実家に帰る前に」)の2件の別々のタスクになるべきです——どちらか一方だけになったり、借りられる基準日があるのに車の点検の方のdue_weekdayを省略したり、前日ではなく同じ日にしてしまったりしてはいけません。
-8. 話者が個々の日付を列挙するのではなく、繰り返しのパターンで期間を指定する場合(例:「今月末まで毎週火曜と木曜」「今週の月・水・金」「今週は毎日」)、日付を自分で1つずつ計算しようとしないでください（間違いやすいため）。代わりに、そのタスクのオブジェクトに recurrence フィールドを追加し、繰り返す曜日・開始日・終了日を構造化して渡してください。実際の日付展開はアプリ側のコードが正確に行います。recurrence を使う場合、due_date は null のままにして構いません。reminder_at/reminder_end_at に時刻の言及があれば、日付部分は start_date と同じ値にした上でいつも通り入れてください（時刻部分だけが使われます）。
+8. 話者が個々の日付を列挙するのではなく、2つ以上の曜日にまたがる繰り返しパターンで語る場合(例:「今月末まで毎週火曜と木曜」「今週の月・水・金」「今週は毎日」だけでなく、終了時期の言及が一切無いパターン——「火曜と木曜にジムに通い始めようと思う」「月・水・金で今週から通う」のような場合も含む)、日付を自分で1つずつ計算しようとしないでください（間違いやすいため）。代わりに、そのタスクのオブジェクトに recurrence フィールドを追加し、繰り返す曜日・開始日を構造化して渡してください。実際の日付展開はアプリ側のコードが正確に行います。話者が終了時期に一切触れていない場合でも、日付を持たないタスクのまま放置せず必ずrecurrenceを使ってください——その場合は end_date を省略するだけで構いません。アプリ側のコードは end_date が無い場合、「終了時期が不明なら直近で最初に該当する1件だけを解決する」という扱いにします(単一曜日のdue_weekdayと同じ考え方。下記参照)。end_date を入れてよいのは、話者が具体的な終了日・「今週」「今月末まで」のように明確な期間の区切りを実際に述べている場合だけです。recurrence を使う場合、due_date は null のままにして構いません。reminder_at/reminder_end_at に時刻の言及があれば、日付部分は start_date と同じ値にした上でいつも通り入れてください(時刻部分だけが使われます)。
 「隔週」「2週間に1回」「biweekly」のような間隔を伴う表現の場合は、recurrenceオブジェクトに"interval_weeks":2も追加してください(省略時は1=毎週の意味)。特に英語の"biweekly"は「2週間に1回」と「週2回」の両方の意味で実際に使われる曖昧な単語なので、話者が明示的に「週2回」「twice a week」だと分かる言い方をしていない限り、「2週間に1回」(interval_weeks:2)として解釈してください。
 
 【ヘッジ表現は「確定した行動」ではない】
@@ -797,7 +797,7 @@ When using due_weekday, leave due_date as null.
 7. When the speaker lists many events/appointments/deadlines in one breath (four, five, or more — e.g. reciting a full day's or week's schedule), extract every single one as its own separate task with its own time. A long list is never a reason to summarize multiple items into one task, merge them, or silently drop any of them — and this holds even when the same transcript also contains an idea or a feeling elsewhere; no category should crowd out any other.
 This also applies to a short sentence naming just two chained actions (e.g. "I'm doing X next weekend, so I should do Y before then"): each action becomes its own separate task, and each keeps only the due date/time that actually belongs to it grammatically — do not drop either task, and do not copy one task's date onto the other one when they don't share the same timing (here, X is due next weekend, while Y is only due sometime before that, which may mean Y gets no specific due_date at all if no exact date is stated for it).
 Concrete example: "Not this weekend, but next weekend I'm driving up to see my parents, so I should probably get the car checked out before then" MUST produce exactly two separate tasks — "Drive up to see parents" (due_weekday: day matching the weekend, weeks_ahead: 1) AND "Get the car checked" (same day/weeks_ahead as the anchor task PLUS days_before: 1, since "before then" borrows the day before that deadline, with due_hint "before visiting parents", not the bare "before then") — never just one of the two, never omitting the due_weekday on the car-check task now that an anchor date exists to borrow, and never leaving off days_before so it lands on the same day as the trip instead of the day before.
-8. When the speaker describes a recurring pattern over a date range instead of literally listing each date (e.g. "every Tuesday and Thursday for the rest of this month", "Monday, Wednesday, and Friday this week", "every day this week"), do NOT try to compute the individual matching dates yourself (this is error-prone). Instead, add a "recurrence" field to that task object with the repeating weekdays, start date, and end date, structured — the app's own code will expand this into the correct individual dates precisely. When using recurrence, due_date can stay null. If a time is mentioned, still fill reminder_at/reminder_end_at as usual, using start_date as the date portion (only the time-of-day part is actually used).
+8. When the speaker describes a recurring pattern over more than one weekday instead of literally listing each date (e.g. "every Tuesday and Thursday for the rest of this month", "Monday, Wednesday, and Friday this week", "every day this week", but also an open-ended one with no end mentioned at all, like "I'm going to start going to the gym on Tuesdays and Thursdays" or "gym on Mondays, Wednesdays, and Fridays starting this week"), do NOT try to compute the individual matching dates yourself (this is error-prone). Instead, add a "recurrence" field to that task object with the repeating weekdays and start date, structured — the app's own code will expand this into the correct individual dates precisely. Still use "recurrence" (never leave the task with no structured date at all) even when the speaker never states an end date — just omit "end_date" in that case; the app's code already treats a missing end_date as "no known end, so resolve just the single nearest matching occurrence" (the same fallback behavior as a plain single-weekday due_weekday task, see below). Include "end_date" only when the speaker actually states or clearly implies a bound (a specific end date, "this week", "for the rest of the month", etc.). When using recurrence, due_date can stay null. If a time is mentioned, still fill reminder_at/reminder_end_at as usual, using start_date as the date portion (only the time-of-day part is actually used).
 For an interval like "biweekly", "every other week", or "every two weeks", also set "interval_weeks": 2 on the recurrence object (it defaults to 1, meaning every matching week). Note that "biweekly" itself is genuinely ambiguous in English — it can mean either "every two weeks" or "twice a week" — so default to interpreting it as "every two weeks" (interval_weeks: 2) unless the speaker gives an explicit signal that they mean twice a week (e.g. naming two different weekdays for one "weekly" cadence, or saying "twice a week"/"twice weekly" outright).
 
 [Hedged intentions are NOT confirmed actions]
@@ -897,7 +897,7 @@ Al usar due_weekday, deja due_date en null.
 7. Cuando el hablante enumera muchos eventos/citas/plazos de un tirón (cuatro, cinco o más — p. ej. recitando la agenda completa de un día o una semana), extrae cada uno como su propia tarea separada con su propia hora. Una lista larga nunca es motivo para resumir varios elementos en una sola tarea, fusionarlos o descartar alguno silenciosamente — y esto se cumple incluso cuando la misma transcripción también contiene una idea o un sentimiento en otra parte; ninguna categoría debe eclipsar a las demás.
 Esto también se aplica a una frase corta que nombra solo dos acciones encadenadas (p. ej. "voy a hacer X el próximo fin de semana, así que debería hacer Y antes de eso"): cada acción se convierte en su propia tarea separada, y cada una conserva solo la fecha/hora que realmente le corresponde — no descartes ninguna de las dos tareas, ni copies la fecha de una a la otra cuando no comparten el mismo momento (aquí, X vence el próximo fin de semana, mientras que Y solo vence en algún momento antes de eso, lo cual puede significar que Y no tenga ninguna due_date concreta si no se indica una fecha exacta para ella).
 Ejemplo concreto: "No este fin de semana, sino el próximo, voy a ir a visitar a mis padres, así que probablemente debería revisar el coche antes de eso" DEBE producir exactamente dos tareas separadas — "Ir a visitar a mis padres" (due_weekday: día del fin de semana, weeks_ahead: 1) Y "Revisar el coche" (mismo day/weeks_ahead que la tarea ancla MÁS days_before: 1, ya que "antes de eso" toma prestado el día anterior a ese plazo, con due_hint "antes de visitar a mis padres", no el simple "antes de eso") — nunca solo una de las dos, nunca omitiendo el due_weekday de la tarea del coche habiendo una fecha ancla que tomar prestada, y nunca sin days_before para que no caiga el mismo día del viaje en vez del día anterior.
-8. Cuando el hablante describe un patrón recurrente en un rango de fechas en lugar de enumerar cada fecha literalmente (p. ej. "todos los martes y jueves durante el resto de este mes", "lunes, miércoles y viernes esta semana", "todos los días esta semana"), NO intentes calcular tú mismo cada fecha coincidente (es propenso a errores). En su lugar, añade un campo "recurrence" a esa tarea con los días de la semana que se repiten, la fecha de inicio y la fecha de fin, de forma estructurada — el propio código de la app expandirá esto en las fechas individuales correctas. Si usas recurrence, due_date puede quedar en null. Si se menciona una hora, rellena igualmente reminder_at/reminder_end_at como de costumbre, usando start_date como parte de fecha (solo se usará la parte de la hora).
+8. Cuando el hablante describe un patrón recurrente en más de un día de la semana en lugar de enumerar cada fecha literalmente (p. ej. "todos los martes y jueves durante el resto de este mes", "lunes, miércoles y viernes esta semana", "todos los días esta semana", pero también uno abierto sin ningún final mencionado, como "voy a empezar a ir al gimnasio los martes y jueves" o "gimnasio los lunes, miércoles y viernes empezando esta semana"), NO intentes calcular tú mismo cada fecha coincidente (es propenso a errores). En su lugar, añade un campo "recurrence" a esa tarea con los días de la semana que se repiten y la fecha de inicio, de forma estructurada — el propio código de la app expandirá esto en las fechas individuales correctas. Usa "recurrence" siempre (nunca dejes la tarea sin ninguna fecha estructurada) incluso cuando el hablante nunca mencione una fecha de fin — simplemente omite "end_date" en ese caso; el código de la app ya trata un end_date ausente como "no hay fin conocido, así que resuelve solo la única ocurrencia más cercana" (el mismo comportamiento de reserva que una tarea due_weekday de un solo día, ver más abajo). Incluye "end_date" solo cuando el hablante realmente indique o implique claramente un límite (una fecha de fin concreta, "esta semana", "durante el resto del mes", etc.). Si usas recurrence, due_date puede quedar en null. Si se menciona una hora, rellena igualmente reminder_at/reminder_end_at como de costumbre, usando start_date como parte de fecha (solo se usará la parte de la hora).
 Para un intervalo como "biweekly", "cada dos semanas" o "quincenal", añade también "interval_weeks": 2 al objeto recurrence (el valor por defecto es 1, es decir, cada semana coincidente). Ten en cuenta que la palabra inglesa "biweekly" es genuinamente ambigua — puede significar tanto "cada dos semanas" como "dos veces por semana" — así que interprétala por defecto como "cada dos semanas" (interval_weeks: 2) a menos que la persona dé una señal explícita de que se refiere a dos veces por semana (p. ej. menciona dos días distintos de la semana para una sola cadencia "semanal", o dice "dos veces por semana" explícitamente).
 
 [Las intenciones con reservas NO son acciones confirmadas]
@@ -997,7 +997,7 @@ Bei Verwendung von due_weekday lass due_date auf null.
 7. Wenn die sprechende Person in einem Atemzug viele Termine/Ereignisse/Fristen aufzählt (vier, fünf oder mehr — z. B. den kompletten Tages- oder Wochenplan aufsagt), extrahiere jeden einzelnen als eigene separate Aufgabe mit eigener Uhrzeit. Eine lange Liste ist niemals ein Grund, mehrere Punkte zu einer Aufgabe zusammenzufassen, sie zu verschmelzen oder einen davon stillschweigend fallen zu lassen — das gilt auch, wenn dasselbe Transkript an anderer Stelle zusätzlich eine Idee oder ein Gefühl enthält; keine Kategorie darf eine andere verdrängen.
 Das gilt genauso für einen kurzen Satz, der nur zwei verkettete Handlungen nennt (z. B. "ich mache X nächstes Wochenende, also sollte ich vorher noch Y erledigen"): Jede Handlung wird zu einer eigenen separaten Aufgabe, und jede behält nur das Datum/die Uhrzeit, die ihr tatsächlich zugehört — lass keine der beiden Aufgaben weg, und übertrage nicht das Datum der einen auf die andere, wenn sie nicht denselben Zeitpunkt teilen (hier ist X nächstes Wochenende fällig, während Y nur irgendwann davor fällig ist, was bedeuten kann, dass Y gar kein konkretes due_date bekommt, wenn dafür kein genaues Datum genannt wird).
 Konkretes Beispiel: "Nicht dieses Wochenende, aber nächstes Wochenende fahre ich zu meinen Eltern, also sollte ich vorher wohl das Auto checken lassen" MUSS genau zwei separate Aufgaben ergeben — "Zu den Eltern fahren" (due_weekday: Wochenend-Tag, weeks_ahead: 1) UND "Auto checken lassen" (gleiches day/weeks_ahead wie die Bezugs-Aufgabe PLUS days_before: 1, da "vorher" sich den Tag vor dieser Frist ausleiht, mit due_hint "vor dem Besuch bei den Eltern", nicht dem bloßen "davor") — niemals nur eine der beiden, niemals ohne due_weekday bei der Auto-Aufgabe obwohl ein Bezugsdatum zum Übernehmen vorhanden ist, und niemals ohne days_before, sodass sie auf denselben Tag wie die Fahrt statt auf den Tag davor fällt.
-8. Wenn die sprechende Person statt einzelne Daten aufzuzählen ein wiederkehrendes Muster über einen Zeitraum beschreibt (z. B. "jeden Dienstag und Donnerstag für den Rest dieses Monats", "Montag, Mittwoch und Freitag diese Woche", "jeden Tag diese Woche"), versuche NICHT, die einzelnen passenden Daten selbst zu berechnen (das ist fehleranfällig). Füge stattdessen dieser Aufgabe ein "recurrence"-Feld hinzu, das die sich wiederholenden Wochentage, das Start- und das Enddatum strukturiert enthält — der Code der App selbst berechnet daraus präzise die einzelnen Daten. Bei Verwendung von recurrence kann due_date null bleiben. Wenn eine Uhrzeit genannt wird, fülle reminder_at/reminder_end_at trotzdem wie gewohnt, wobei du als Datumsteil start_date verwendest (nur der Uhrzeit-Teil wird tatsächlich benutzt).
+8. Wenn die sprechende Person statt einzelne Daten aufzuzählen ein wiederkehrendes Muster über mehr als einen Wochentag beschreibt (z. B. "jeden Dienstag und Donnerstag für den Rest dieses Monats", "Montag, Mittwoch und Freitag diese Woche", "jeden Tag diese Woche", aber auch ein offenes Muster ganz ohne genanntes Ende, wie "ich fange an, dienstags und donnerstags ins Fitnessstudio zu gehen" oder "Fitnessstudio montags, mittwochs und freitags, ab dieser Woche"), versuche NICHT, die einzelnen passenden Daten selbst zu berechnen (das ist fehleranfällig). Füge stattdessen dieser Aufgabe ein "recurrence"-Feld hinzu, das die sich wiederholenden Wochentage und das Startdatum strukturiert enthält — der Code der App selbst berechnet daraus präzise die einzelnen Daten. Verwende "recurrence" auch dann (lass die Aufgabe nie ganz ohne strukturiertes Datum), wenn die sprechende Person kein Enddatum nennt — lass in diesem Fall einfach "end_date" weg; der Code der App behandelt ein fehlendes end_date bereits als "kein bekanntes Ende, also nur das einzelne nächstgelegene passende Vorkommen auflösen" (dasselbe Rückfallverhalten wie bei einer einfachen due_weekday-Aufgabe mit nur einem Wochentag, siehe unten). Füge "end_date" nur hinzu, wenn die sprechende Person tatsächlich eine Begrenzung nennt oder eindeutig impliziert (ein konkretes Enddatum, "diese Woche", "für den Rest des Monats" usw.). Bei Verwendung von recurrence kann due_date null bleiben. Wenn eine Uhrzeit genannt wird, fülle reminder_at/reminder_end_at trotzdem wie gewohnt, wobei du als Datumsteil start_date verwendest (nur der Uhrzeit-Teil wird tatsächlich benutzt).
 Bei einem Intervall wie "biweekly", "alle zwei Wochen" oder "vierzehntägig" füge dem recurrence-Objekt zusätzlich "interval_weeks": 2 hinzu (Standardwert ist 1, also jede passende Woche). Beachte, dass das englische Wort "biweekly" tatsächlich mehrdeutig ist — es kann sowohl "alle zwei Wochen" als auch "zweimal pro Woche" bedeuten — interpretiere es daher standardmäßig als "alle zwei Wochen" (interval_weeks: 2), es sei denn, die sprechende Person signalisiert explizit "zweimal pro Woche" (z. B. durch Nennung zweier unterschiedlicher Wochentage für eine einzelne "wöchentliche" Kadenz oder durch ausdrückliches "zweimal die Woche").
 
 [Vage formulierte Absichten sind KEINE bestätigten Handlungen]
@@ -1096,7 +1096,7 @@ due_weekday를 사용하는 경우 due_date는 null로 두세요.
 7. 화자가 한 번에 많은(4개, 5개 이상) 일정/약속/마감을 나열하는 경우(하루나 일주일치 일정을 쭉 읊는 등), 각각을 자신만의 시간을 가진 별도의 할 일로 모두 추출하세요. 목록이 길다는 이유로 여러 항목을 하나의 할 일로 요약하거나 합치거나 조용히 빠뜨려서는 안 됩니다 — 같은 녹취록에 아이디어나 감정이 다른 곳에 함께 있어도 마찬가지이며, 어떤 카테고리도 다른 카테고리를 밀어내서는 안 됩니다.
 이는 "X를 (언제) 할 건데, 그래서 Y도 해야 해"처럼 두 가지 행동이 "그래서"로만 연결된 짧은 문장에도 똑같이 적용됩니다. 각 행동을 별도의 할 일로 만들고, 각각 실제로 자신에게 속하는 날짜·시간만 부여하세요 — 어느 한쪽을 빠뜨리거나, 시점이 다른데(또는 한쪽은 날짜 언급이 아예 없는데) 한쪽의 날짜를 다른 쪽에도 그대로 복사하지 마세요.
 구체적인 예: "이번 주말 말고 다음 주말에 부모님 뵈러 갈 건데, 그 전에 차 점검을 받아야 할 것 같아"는 반드시 "부모님 뵈러 가기"(due_weekday: 주말 요일, weeks_ahead: 1) 그리고 "차 점검받기"(기준 할 일과 동일한 day/weeks_ahead에 days_before: 1을 추가 — "그 전에"가 그 마감의 하루 전을 빌려오는 형태, due_hint는 맨 "그 전에"가 아니라 "부모님 뵈러 가기 전에")라는 정확히 두 개의 별도 할 일이 되어야 합니다 — 둘 중 하나만 나오거나, 빌려올 기준 날짜가 있는데도 차 점검 쪽의 due_weekday를 생략하거나, days_before 없이 여행 당일과 같은 날로 만들어서는 안 됩니다.
-8. 화자가 개별 날짜를 나열하는 대신 기간에 대한 반복 패턴으로 말하는 경우(예: "이번 달 말까지 매주 화요일과 목요일", "이번 주 월·수·금", "이번 주 매일"), 개별 날짜를 직접 계산하려 하지 마세요(실수하기 쉽습니다). 대신 해당 할 일 객체에 반복되는 요일, 시작일, 종료일을 구조화한 recurrence 필드를 추가하세요 — 실제 개별 날짜 전개는 앱 코드가 정확하게 처리합니다. recurrence를 사용하는 경우 due_date는 null로 두어도 됩니다. 시각이 언급되었다면 reminder_at/reminder_end_at도 평소처럼 채우되, 날짜 부분은 start_date와 동일한 값을 사용하세요(실제로는 시각 부분만 사용됩니다).
+8. 화자가 개별 날짜를 나열하는 대신 2개 이상의 요일에 걸친 반복 패턴으로 말하는 경우(예: "이번 달 말까지 매주 화요일과 목요일", "이번 주 월·수·금", "이번 주 매일"뿐 아니라, 끝나는 시점 언급이 전혀 없는 경우도 포함 — "화요일이랑 목요일에 헬스장 다니기 시작할까 해", "이번 주부터 월·수·금으로 헬스장 다니려고" 등), 개별 날짜를 직접 계산하려 하지 마세요(실수하기 쉽습니다). 대신 해당 할 일 객체에 반복되는 요일과 시작일을 구조화한 recurrence 필드를 추가하세요 — 실제 개별 날짜 전개는 앱 코드가 정확하게 처리합니다. 화자가 종료 시점을 전혀 언급하지 않은 경우에도 할 일에 구조화된 날짜가 전혀 없는 채로 두지 말고 반드시 recurrence를 사용하세요 — 이 경우 end_date만 생략하면 됩니다. 앱 코드는 end_date가 없으면 "종료 시점을 모르니 가장 가까운 날짜 1건만 해결한다"로 처리합니다(아래의 단일 요일 due_weekday와 동일한 대체 동작). end_date는 화자가 실제로 구체적인 종료일이나 "이번 주", "이번 달 말까지"처럼 명확한 기간을 언급한 경우에만 넣으세요. recurrence를 사용하는 경우 due_date는 null로 두어도 됩니다. 시각이 언급되었다면 reminder_at/reminder_end_at도 평소처럼 채우되, 날짜 부분은 start_date와 동일한 값을 사용하세요(실제로는 시각 부분만 사용됩니다).
 "격주", "2주에 한 번"처럼 간격이 있는 표현의 경우 recurrence 객체에 "interval_weeks": 2도 추가하세요(기본값은 1, 즉 매주를 의미). 영어 단어 "biweekly"는 실제로 "2주에 한 번"과 "주 2회" 두 가지 뜻으로 모두 쓰이는 진짜 모호한 단어이므로, 화자가 명시적으로 "주 2회"임을 나타내지 않는 한(예: 하나의 "매주" 패턴에 서로 다른 두 요일을 언급하거나 "주 2회"라고 직접 말하는 경우) 기본적으로 "2주에 한 번"(interval_weeks: 2)으로 해석하세요.
 
 [망설이는 표현은 "확정된 행동"이 아닙니다]
@@ -1196,7 +1196,7 @@ En utilisant due_weekday, laisse due_date à null.
 7. Quand la personne énumère beaucoup d'événements/rendez-vous/échéances d'un coup (quatre, cinq ou plus — par ex. en récitant tout un planning de journée ou de semaine), extrais chacun comme sa propre tâche séparée avec sa propre heure. Une longue liste n'est jamais une raison de résumer plusieurs éléments en une seule tâche, de les fusionner, ou d'en laisser tomber un silencieusement — même lorsque la même transcription contient aussi une idée ou un sentiment ailleurs ; aucune catégorie ne doit en éclipser une autre.
 Cela s'applique aussi à une phrase courte qui ne nomme que deux actions enchaînées (par ex. « je fais X le week-end prochain, donc je devrais faire Y avant ça ») : chaque action devient sa propre tâche séparée, et chacune ne garde que la date/heure qui lui appartient réellement — ne laisse tomber aucune des deux tâches, et ne recopie pas la date de l'une sur l'autre quand elles n'ont pas le même moment (ici, X est prévu le week-end prochain, tandis que Y est seulement prévu à un moment avant cela, ce qui peut signifier que Y n'a aucune due_date précise si aucune date exacte n'est donnée pour elle).
 Exemple concret : « Pas ce week-end, mais le week-end prochain je vais voir mes parents, donc je devrais sans doute faire vérifier la voiture avant ça » DOIT produire exactement deux tâches séparées — « Aller voir mes parents » (due_weekday : jour du week-end, weeks_ahead : 1) ET « Faire vérifier la voiture » (même day/weeks_ahead que la tâche de référence PLUS days_before : 1, puisque « avant ça » emprunte le jour précédant cette échéance, avec due_hint « avant d'aller voir mes parents », pas le simple « avant ça ») — jamais une seule des deux, jamais en omettant la due_weekday de la tâche voiture alors qu'une date de référence existe à emprunter, et jamais sans days_before au point de tomber le même jour que le voyage plutôt que la veille.
-8. Quand la personne décrit un motif récurrent sur une période au lieu d'énumérer chaque date littéralement (par ex. "tous les mardis et jeudis jusqu'à la fin du mois", "lundi, mercredi et vendredi cette semaine", "tous les jours cette semaine"), n'essaie PAS de calculer toi-même chaque date correspondante (c'est source d'erreurs). Ajoute plutôt à cette tâche un champ "recurrence" structuré avec les jours de la semaine qui se répètent, la date de début et la date de fin — le code de l'application se chargera lui-même d'obtenir précisément les dates individuelles. En utilisant recurrence, due_date peut rester null. Si une heure est mentionnée, renseigne quand même reminder_at/reminder_end_at comme d'habitude, en utilisant start_date comme partie date (seule la partie heure sera réellement utilisée).
+8. Quand la personne décrit un motif récurrent sur plus d'un jour de la semaine au lieu d'énumérer chaque date littéralement (par ex. "tous les mardis et jeudis jusqu'à la fin du mois", "lundi, mercredi et vendredi cette semaine", "tous les jours cette semaine", mais aussi un motif ouvert sans aucune fin mentionnée, comme "je vais commencer à aller à la salle de sport les mardis et jeudis" ou "salle de sport les lundis, mercredis et vendredis à partir de cette semaine"), n'essaie PAS de calculer toi-même chaque date correspondante (c'est source d'erreurs). Ajoute plutôt à cette tâche un champ "recurrence" structuré avec les jours de la semaine qui se répètent et la date de début — le code de l'application se chargera lui-même d'obtenir précisément les dates individuelles. Utilise "recurrence" même quand la personne ne mentionne aucune date de fin (ne laisse jamais la tâche sans aucune date structurée) — omets simplement "end_date" dans ce cas ; le code de l'application traite déjà une end_date absente comme « aucune fin connue, donc ne résous que la seule occurrence la plus proche » (le même comportement de repli qu'une tâche due_weekday à un seul jour, voir plus bas). N'inclus "end_date" que lorsque la personne indique ou implique clairement une limite (une date de fin précise, "cette semaine", "jusqu'à la fin du mois", etc.). En utilisant recurrence, due_date peut rester null. Si une heure est mentionnée, renseigne quand même reminder_at/reminder_end_at comme d'habitude, en utilisant start_date comme partie date (seule la partie heure sera réellement utilisée).
 Pour un intervalle comme « biweekly », « toutes les deux semaines » ou « une semaine sur deux », ajoute aussi "interval_weeks": 2 à l'objet recurrence (la valeur par défaut est 1, c'est-à-dire chaque semaine correspondante). Notez que le mot anglais « biweekly » est réellement ambigu — il peut signifier aussi bien « toutes les deux semaines » que « deux fois par semaine » — interprète-le donc par défaut comme « toutes les deux semaines » (interval_weeks : 2), sauf si la personne signale explicitement qu'elle veut dire deux fois par semaine (par ex. en citant deux jours de la semaine différents pour une seule cadence « hebdomadaire », ou en disant explicitement « deux fois par semaine »).
 
 [Une intention hésitante n'est PAS une action confirmée]
@@ -3085,7 +3085,11 @@ interface StructuredResult {
     recurrence?: {
       weekdays: string[];
       start_date: string;
-      end_date: string;
+      /** 話者が終了時期に触れていない場合は省略可（例:「毎週月・水・金で
+       * 通う」で期間の言及が無い場合）——その場合はコード側が直近の該当日
+       * 1件だけをdue_dateとして解決する（due_weekdayの単一曜日版と同じ
+       * 「終了時期不明なら1件だけ生成」という設計）。 */
+      end_date?: string | null;
       /** 「隔週」「biweekly」等の間隔指定。省略時は1（毎週）。 */
       interval_weeks?: number;
     } | null;
@@ -3126,7 +3130,12 @@ const RECURRENCE_MAX_OCCURRENCES = 60;
 /** タスクにrecurrenceが指定されていれば、曜日対応表を使わずコード側の
  * 確定的なカレンダー演算だけで個々の日付に展開する。時刻部分は
  * reminder_at/reminder_end_atの時刻だけを流用し、日付部分は各出現日に
- * 差し替える。recurrenceが無い・不正な場合は元のタスクをそのまま1件返す。 */
+ * 差し替える。recurrenceが無い・不正な場合は元のタスクをそのまま1件返す。
+ * end_dateが省略されている場合（話者が終了時期に触れていない）は、
+ * due_weekdayの単一曜日版と同じ「終了時期不明なら直近の該当日1件だけ」
+ * という設計に合わせ、複数曜日のうち最初に来る1件だけをdue_dateとして
+ * 解決する（無期限にどんどん展開する仕様は2026-09-21にユーザー判断で
+ * 撤回済み）。 */
 function expandRecurringTask(
   task: StructuredResult["tasks"][number]
 ): StructuredResult["tasks"] {
@@ -3138,9 +3147,7 @@ function expandRecurringTask(
     !Array.isArray(rec.weekdays) ||
     rec.weekdays.length === 0 ||
     !rec.start_date ||
-    !isoDate.test(rec.start_date) ||
-    !rec.end_date ||
-    !isoDate.test(rec.end_date)
+    !isoDate.test(rec.start_date)
   ) {
     return [task];
   }
@@ -3153,8 +3160,44 @@ function expandRecurringTask(
   if (wantedWeekdays.size === 0) return [task];
 
   const [sy, sm, sd] = rec.start_date.split("-").map(Number);
-  const [ey, em, ed] = rec.end_date.split("-").map(Number);
   const startMs = Date.UTC(sy, sm - 1, sd);
+
+  if (!rec.end_date || !isoDate.test(rec.end_date)) {
+    // 終了日の言及が無い: 開始日以降で最初に該当する曜日を1件だけ返す
+    // （intervalWeeksは開始週=週番号0なので初回の判定には影響しない）。
+    for (let ms = startMs, i = 0; i < 14; ms += 24 * 60 * 60 * 1000, i++) {
+      const d = new Date(ms);
+      if (!wantedWeekdays.has(d.getUTCDay())) continue;
+      const dateStr = [
+        d.getUTCFullYear(),
+        String(d.getUTCMonth() + 1).padStart(2, "0"),
+        String(d.getUTCDate()).padStart(2, "0"),
+      ].join("-");
+      const isoDateTimeRe = /^\d{4}-\d{2}-\d{2}T(\d{2}:\d{2}:\d{2})$/;
+      const startTimeMatch = task.reminder_at
+        ? isoDateTimeRe.exec(task.reminder_at)
+        : null;
+      const endTimeMatch = task.reminder_end_at
+        ? isoDateTimeRe.exec(task.reminder_end_at)
+        : null;
+      return [
+        {
+          title: task.title,
+          due_hint: task.due_hint ?? null,
+          due_date: dateStr,
+          reminder_at: startTimeMatch
+            ? `${dateStr}T${startTimeMatch[1]}`
+            : null,
+          reminder_end_at: endTimeMatch
+            ? `${dateStr}T${endTimeMatch[1]}`
+            : null,
+        },
+      ];
+    }
+    return [task];
+  }
+
+  const [ey, em, ed] = rec.end_date.split("-").map(Number);
   const endMs = Date.UTC(ey, em - 1, ed);
   if (endMs < startMs) return [task];
 
