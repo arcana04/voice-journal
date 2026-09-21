@@ -185,17 +185,38 @@ class _EntryReviewState extends State<EntryReview> {
           ),
         )
         .toList();
-    final notes = _items
-        .where((i) => i.type == DraftItemType.diary && i.text.trim().isNotEmpty)
-        .map(
-          (i) => NoteItem(
-            category: i.noteCategory,
-            title: i.noteTitle,
-            content: i.text.trim(),
-          ),
-        )
-        .toList();
+    final notes = _mergedNotes();
     widget.onSave(tasks, notes);
+  }
+
+  /// 日記/アイデアは同じ日の同じカテゴリなら1枠=1つのタイトル+本文として
+  /// 保存する(日記編集画面・一覧画面で強制的にタイトル・本文の入力欄が
+  /// 複数組できてしまうのを避けるため)。確認画面では別々のカードとして
+  /// 編集できたままにしたいので、この統合は保存の直前にだけ行う。
+  List<NoteItem> _mergedNotes() {
+    final merged = <String, NoteItem>{};
+    final order = <String>[];
+    for (final i in _items) {
+      if (i.type != DraftItemType.diary) continue;
+      final text = i.text.trim();
+      if (text.isEmpty) continue;
+      final existing = merged[i.noteCategory];
+      if (existing == null) {
+        order.add(i.noteCategory);
+        merged[i.noteCategory] = NoteItem(
+          category: i.noteCategory,
+          title: i.noteTitle,
+          content: text,
+        );
+      } else {
+        merged[i.noteCategory] = NoteItem(
+          category: existing.category,
+          title: existing.title ?? i.noteTitle,
+          content: '${existing.content}\n\n$text',
+        );
+      }
+    }
+    return [for (final category in order) merged[category]!];
   }
 
   @override
