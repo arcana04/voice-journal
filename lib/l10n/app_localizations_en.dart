@@ -1441,6 +1441,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addCardButton => 'Add card';
 
   @override
+  String get addNoteButton => 'Add another entry';
+
+  @override
   String get genericProcessingError => 'An error occurred while processing';
 
   @override

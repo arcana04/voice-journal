@@ -492,6 +492,7 @@
   "orphanedRecordingDiscardedMessage": "L'appli s'est fermée pendant l'enregistrement la dernière fois, donc cet enregistrement n'a pas été sauvegardé",
   "dragCardHere": "Fais glisser une carte ici",
   "addCardButton": "Ajouter une carte",
+  "addNoteButton": "Ajouter une autre entrée",
 
   "genericProcessingError": "Une erreur s'est produite pendant le traitement",
   "usageFetchError": "Échec du chargement de l'état d'utilisation",

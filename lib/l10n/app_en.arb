@@ -492,6 +492,7 @@
   "orphanedRecordingDiscardedMessage": "The app closed while recording last time, so that recording wasn't saved",
   "dragCardHere": "Drag a card here",
   "addCardButton": "Add card",
+  "addNoteButton": "Add another entry",
 
   "genericProcessingError": "An error occurred while processing",
   "usageFetchError": "Failed to load usage status",

@@ -857,6 +857,37 @@ class JournalStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 日記編集画面の「エントリを追加」ボタンから、既存entryへ同じカテゴリの
+  /// noteを新たに1件追加する。AI仕分け側でカードが複数枚に分かれてしまった
+  /// ケースを、逆に手動でまた分けたい場合の救済手段。
+  Future<NoteItem> addNoteToEntry(
+    JournalEntry entry, {
+    required String category,
+    String? title,
+    required String content,
+  }) async {
+    if (entry.id == null) {
+      return NoteItem(category: category, title: title, content: content);
+    }
+    final note = await _db.insertNoteForEntry(
+      entry.id!,
+      category: category,
+      title: title,
+      content: content,
+    );
+    final index = entries.indexWhere((e) => e.id == entry.id);
+    if (index == -1) return note;
+    final now = DateTime.now();
+    await _db.touchEntry(entry.id!, now);
+    entries[index] = entries[index].copyWith(
+      notes: [...entries[index].notes, note],
+      updatedAt: now,
+    );
+    notifyListeners();
+    _trackSync(_cloudSync.pushEntry(entries[index]));
+    return note;
+  }
+
   Future<void> updateNoteText(
     JournalEntry entry,
     NoteItem note, {

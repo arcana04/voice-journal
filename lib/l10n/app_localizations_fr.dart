@@ -1467,6 +1467,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get addCardButton => 'Ajouter une carte';
 
   @override
+  String get addNoteButton => 'Ajouter une autre entrée';
+
+  @override
   String get genericProcessingError =>
       'Une erreur s\'est produite pendant le traitement';
 

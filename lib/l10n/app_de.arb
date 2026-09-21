@@ -492,6 +492,7 @@
   "orphanedRecordingDiscardedMessage": "Die App wurde letztes Mal während der Aufnahme beendet, daher wurde diese Aufnahme nicht gespeichert",
   "dragCardHere": "Ziehe eine Karte hierher",
   "addCardButton": "Karte hinzufügen",
+  "addNoteButton": "Weiteren Eintrag hinzufügen",
 
   "genericProcessingError": "Beim Verarbeiten ist ein Fehler aufgetreten",
   "usageFetchError": "Nutzungsstatus konnte nicht geladen werden",

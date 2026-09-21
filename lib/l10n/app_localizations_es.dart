@@ -1457,6 +1457,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get addCardButton => 'Añadir tarjeta';
 
   @override
+  String get addNoteButton => 'Añadir otra entrada';
+
+  @override
   String get genericProcessingError =>
       'Se produjo un error durante el procesamiento';
 

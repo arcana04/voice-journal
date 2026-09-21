@@ -2716,6 +2716,12 @@ abstract class AppLocalizations {
   /// **'Add card'**
   String get addCardButton;
 
+  /// No description provided for @addNoteButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another entry'**
+  String get addNoteButton;
+
   /// No description provided for @genericProcessingError.
   ///
   /// In en, this message translates to:

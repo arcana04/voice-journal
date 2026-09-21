@@ -1387,6 +1387,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get addCardButton => 'カードを追加';
 
   @override
+  String get addNoteButton => 'エントリを追加';
+
+  @override
   String get genericProcessingError => '処理中にエラーが発生しました';
 
   @override

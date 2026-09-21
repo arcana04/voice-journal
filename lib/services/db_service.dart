@@ -778,6 +778,30 @@ class DbService {
     );
   }
 
+  /// 既存entryへ新しいnoteを1件追加する（日記編集画面の「エントリを追加」用）。
+  /// [insertEntry]内のnote挿入と同じ形だが、既存entryに対して1件だけ足す。
+  Future<NoteItem> insertNoteForEntry(
+    int entryId, {
+    required String category,
+    String? title,
+    required String content,
+  }) async {
+    final db = await _database;
+    final noteId = await db.insert('notes', {
+      'entry_id': entryId,
+      'category': category,
+      'title': title,
+      'content': content,
+    });
+    return NoteItem(
+      id: noteId,
+      entryId: entryId,
+      category: category,
+      title: title,
+      content: content,
+    );
+  }
+
   Future<void> updateNote(
     int noteId, {
     String? title,

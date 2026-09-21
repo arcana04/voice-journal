@@ -462,6 +462,7 @@
   "orphanedRecordingDiscardedMessage": "録音中にアプリが終了したため、その録音は保存されませんでした",
   "dragCardHere": "ここにカードをドラッグ",
   "addCardButton": "カードを追加",
+  "addNoteButton": "エントリを追加",
 
   "genericProcessingError": "処理中にエラーが発生しました",
   "usageFetchError": "利用状況の取得に失敗しました",

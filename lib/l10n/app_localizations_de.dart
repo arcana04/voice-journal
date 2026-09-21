@@ -1461,6 +1461,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get addCardButton => 'Karte hinzufügen';
 
   @override
+  String get addNoteButton => 'Weiteren Eintrag hinzufügen';
+
+  @override
   String get genericProcessingError =>
       'Beim Verarbeiten ist ein Fehler aufgetreten';
 

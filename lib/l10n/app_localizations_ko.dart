@@ -1389,6 +1389,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get addCardButton => '카드 추가';
 
   @override
+  String get addNoteButton => '항목 추가';
+
+  @override
   String get genericProcessingError => '처리 중 오류가 발생했습니다';
 
   @override

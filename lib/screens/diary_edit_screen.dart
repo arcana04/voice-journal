@@ -79,6 +79,47 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
     return _drafts = feelingNotes.map((n) => _NoteDraft(n)).toList();
   }
 
+  /// AI仕分けが1つの内容を複数枚のnoteに分けてしまった場合などに、ユーザーが
+  /// 手動でタイトル・本文の組を1つにまとめられるようにする救済手段。削除する
+  /// 前に、まだ保存されていない本文があれば[target]の末尾へ引き継ぐ（タイトルは
+  /// targetを優先し、targetが空なら削除する側のタイトルを引き継ぐ）。
+  Future<void> _removeNote(
+    JournalStore store,
+    JournalEntry entry,
+    _NoteDraft toRemove, {
+    _NoteDraft? mergeInto,
+  }) async {
+    if (mergeInto != null) {
+      final addition = toRemove.contentController.text.trim();
+      if (addition.isNotEmpty) {
+        final existingText = mergeInto.contentController.text.trim();
+        mergeInto.contentController.text = existingText.isEmpty
+            ? addition
+            : '$existingText\n\n$addition';
+      }
+      if (mergeInto.titleController.text.trim().isEmpty &&
+          toRemove.titleController.text.trim().isNotEmpty) {
+        mergeInto.titleController.text = toRemove.titleController.text.trim();
+      }
+    }
+    await store.deleteNotesFromEntry(entry, [toRemove.note]);
+    setState(() {
+      _drafts?.remove(toRemove);
+      toRemove.dispose();
+    });
+  }
+
+  Future<void> _addNote(JournalStore store, JournalEntry entry) async {
+    final note = await store.addNoteToEntry(
+      entry,
+      category: kNoteCategoryFeeling,
+      content: '',
+    );
+    setState(() {
+      (_drafts ??= []).add(_NoteDraft(note));
+    });
+  }
+
   @override
   void dispose() {
     for (final d in _drafts ?? const <_NoteDraft>[]) {
@@ -674,7 +715,32 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        for (final d in drafts) _buildNoteBlock(theme, d),
+                        for (final d in drafts)
+                          _buildNoteBlock(
+                            theme,
+                            d,
+                            // 2組目以降のタイトル・本文だけ削除できるようにする
+                            // (1組も無い状態にはしたくないので、最後の1件は
+                            // 削除ボタンを出さない)。1件しかまだ無い場合に
+                            // 中身を空のまま消したいだけなら、日記側の削除
+                            // ボタン(エントリ全体の削除)を使う想定。
+                            onRemove: drafts.length > 1
+                                ? () => _removeNote(
+                                    store,
+                                    entry,
+                                    d,
+                                    mergeInto: drafts.firstWhere((o) => o != d),
+                                  )
+                                : null,
+                          ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 24),
+                          child: TextButton.icon(
+                            onPressed: () => _addNote(store, entry),
+                            icon: const Icon(Icons.add, size: 18),
+                            label: Text(AppLocalizations.of(context)!.addNoteButton),
+                          ),
+                        ),
                         if (entry.images.isNotEmpty) ...[
                           const SizedBox(height: 8),
                           DiaryMediaCanvas(
@@ -762,25 +828,40 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
     return noteFontOptions[index].apply(scaled);
   }
 
-  Widget _buildNoteBlock(ThemeData theme, _NoteDraft d) {
+  Widget _buildNoteBlock(ThemeData theme, _NoteDraft d, {VoidCallback? onRemove}) {
     final l10n = AppLocalizations.of(context)!;
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextField(
-          controller: d.titleController,
-          style: _styledText(
-            theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          decoration: InputDecoration(
-            isDense: true,
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.zero,
-            hintText: l10n.titleHint,
-            hintStyle: theme.textTheme.titleLarge?.copyWith(
-              color: theme.colorScheme.outline,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextField(
+                controller: d.titleController,
+                style: _styledText(
+                  theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                decoration: InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  hintText: l10n.titleHint,
+                  hintStyle: theme.textTheme.titleLarge?.copyWith(
+                    color: theme.colorScheme.outline,
+                  ),
+                ),
+              ),
             ),
-          ),
+            if (onRemove != null)
+              IconButton(
+                icon: const Icon(Icons.close, size: 18),
+                style: pressableIconButtonStyle(context),
+                onPressed: onRemove,
+              ),
+          ],
         ),
         const SizedBox(height: 8),
         TextField(
