@@ -109,36 +109,6 @@ class _EntryReviewState extends State<EntryReview> {
   void _moveTo(DraftItem item, ReviewCategory bucket) {
     if (_bucketOf(item) == bucket) return;
     setState(() {
-      // 日記/アイデアは1枠=1つのタイトル+本文が前提のnote構造なので、既に
-      // 同じ枠にnoteがある状態でさらに移動してくると、タイトル・本文の入力欄が
-      // 2組できてしまう。移動先が日記/アイデアで既存のnoteがある場合は、新しい
-      // ブロックを作らずその本文の末尾に追記して1つのnoteにまとめる。
-      final targetNoteCategory = switch (bucket) {
-        ReviewCategory.idea => kNoteCategoryIdea,
-        ReviewCategory.diary => kNoteCategoryFeeling,
-        ReviewCategory.task => null,
-      };
-      DraftItem? mergeTarget;
-      if (targetNoteCategory != null) {
-        for (final i in _items.reversed) {
-          if (i != item &&
-              i.type == DraftItemType.diary &&
-              i.noteCategory == targetNoteCategory) {
-            mergeTarget = i;
-            break;
-          }
-        }
-      }
-      if (mergeTarget != null) {
-        final addition = item.text.trim();
-        if (addition.isNotEmpty) {
-          mergeTarget.text = mergeTarget.text.trim().isEmpty
-              ? addition
-              : '${mergeTarget.text.trim()}\n\n$addition';
-        }
-        _items.remove(item);
-        return;
-      }
       switch (bucket) {
         case ReviewCategory.task:
           item.type = DraftItemType.task;
