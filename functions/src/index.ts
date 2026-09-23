@@ -4237,12 +4237,19 @@ function advanceIsoDateByOneDay(dateStr: string): string {
  * 水曜正午に」のように話者がユーザー自身の言葉で曜日を名指ししている場合、
  * その時刻が発話時点で過去でも「翌日（＝別の曜日）」へ勝手にずらすのは誤り
  * （ユーザーが明示した曜日と矛盾する）。この関数が対象とすべきなのは、
- * 曜日・日付の言及が一切無く時刻だけが語られたケースに限る。 */
+ * 曜日・日付の言及が一切無く時刻だけが語られたケースに限る。
+ *
+ * 複数日スパン（{@link resolveTaskSpanEnd}が既にdue_date_endを確定させた
+ * タスク）もここでは対象外とする——due_dateだけを+1日しても、既に確定済みの
+ * due_date_end（およびreminder_end_atの日付部分）は連動して動かないため、
+ * 「今日9時から日曜まで」を発話時点で9時を過ぎてから録音した場合などに
+ * due_dateがdue_date_end以降にずれてしまい、期間が壊れる（終了日が開始日
+ * より前になる、またはスパンが1日短くなる）不具合が確認された。 */
 function rollPastTimeOfDayToTomorrow(
   task: StructuredResult["tasks"][number],
   nowLocalDateTime: string
 ): StructuredResult["tasks"][number] {
-  if (task.recurrence || task.due_weekday || task.due_month) return task;
+  if (task.recurrence || task.due_weekday || task.due_month || task.due_date_end) return task;
   const isoDateTime = /^(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}:\d{2}$/;
   const m = task.reminder_at ? isoDateTime.exec(task.reminder_at) : null;
   if (!m || task.reminder_at! >= nowLocalDateTime) return task;
