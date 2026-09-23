@@ -2851,8 +2851,8 @@ async function deleteDocsWithField(
  * での削除手段も提供する義務がある）への対応。呼び出し元は自分自身のuidしか
  * 操作できない（他人のデータを消す経路にはならない）。
  * 削除対象: Firestoreの users/{uid} 以下（entries/watchDevicesサブコレクション
- * を含め再帰削除）、usage/{uid}_*・watchRateLimit/{uid}_* の複合キー方式
- * ドキュメント群、processedWebhookEvents/{eventId}のうちこのuid分、
+ * を含め再帰削除）、usage/{uid}_*・usageMonth/{uid}_*・watchRateLimit/{uid}_*・
+ * aiRateLimit/{uid}_* の複合キー方式ドキュメント群、processedWebhookEvents/{eventId}のうちこのuid分、
  * （買い切りプラン保有者なら）counters/lifetimePurchasesの解放、Storageの
  * users/{uid}/ 配下の写真・動画、最後にFirebase Authのユーザー本体。
  * 各ステップは冪等（すでに無いものを消そうとしても失敗しない）ため、途中で
@@ -2908,7 +2908,9 @@ export const deleteAccount = onCall(
 
     await db.recursiveDelete(db.collection("users").doc(uid));
     await deleteDocsWithIdPrefix(db, "usage", `${uid}_`);
+    await deleteDocsWithIdPrefix(db, "usageMonth", `${uid}_`);
     await deleteDocsWithIdPrefix(db, "watchRateLimit", `${uid}_`);
+    await deleteDocsWithIdPrefix(db, "aiRateLimit", `${uid}_`);
 
     // processedWebhookEvents/{eventId}はrevenueCatWebhookの冪等性マーカーで、
     // uidをドキュメントIDではなくフィールドとして持つ(eventMarkerRef.create時に
