@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../models/emotion_tag.dart';
 import '../models/journal_entry.dart';
 import '../models/sync_failure_reason.dart';
+import 'custom_background_service.dart';
 import 'settings_service.dart';
 
 /// エントリ（日記・タスク・アイデア）をFirestore `users/{uid}/entries/{remoteId}`
@@ -58,6 +59,24 @@ class CloudSyncService {
     final copy = Map<String, dynamic>.from(map);
     copy.remove('id');
     copy.remove('entry_id');
+    return copy;
+  }
+
+  /// note.background_idは通常[DiaryBackground]の列挙値ID（同期して問題ない
+  /// 端末非依存の文字列）だが、Pro限定のカスタム背景機能を使った場合は
+  /// `custom:<絶対パス>`という、この端末の永続領域を指す絶対パスになる
+  /// （[CustomBackgroundService]参照）。これはcalendar_id/apple_reminder_list_id
+  /// と同種の「端末ローカルな識別子」で、同期してしまうと他端末（あるいは
+  /// iOSでコンテナIDが変わる再インストール後の同じ端末）ではそのパスに
+  /// 何も無く、カスタム背景が意図せず既定背景へフォールバックし続ける上、
+  /// 無意味なローカルパス文字列がFirestoreに残り続ける。DiaryBackground由来の
+  /// IDはそのまま同期し、custom:のものだけ除外する。
+  Map<String, dynamic> _stripLocalNoteKeys(Map<String, Object?> map) {
+    final copy = _stripLocalKeys(map);
+    final backgroundId = copy['background_id'] as String?;
+    if (CustomBackgroundService.isCustomBackgroundId(backgroundId)) {
+      copy.remove('background_id');
+    }
     return copy;
   }
 
@@ -191,7 +210,7 @@ class CloudSyncService {
           .toList(),
       'notes': _capNotesTotalForFirestore(
         entry.notes
-            .map((n) => _capNoteForFirestore(_stripLocalKeys(n.toMap())))
+            .map((n) => _capNoteForFirestore(_stripLocalNoteKeys(n.toMap())))
             .toList(),
       ),
     };
