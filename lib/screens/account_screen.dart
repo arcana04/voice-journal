@@ -110,6 +110,11 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
+    // 連打/高速ダブルタップ対策。onPressedはbuild()時点の_busy値でしか
+    // 無効化されず、setState後の再描画が次フレームまで反映されないため、
+    // その間に飛んでくる2回目の呼び出しをここで即座に弾く
+    // （PaywallScreen/BuyMinutesScreenと同じ理由）。
+    if (_busy) return;
     setState(() => _busy = true);
     try {
       final accountStore = context.read<AccountStore>();
@@ -128,6 +133,7 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _signInWithApple() async {
+    if (_busy) return;
     setState(() => _busy = true);
     try {
       final accountStore = context.read<AccountStore>();
@@ -146,6 +152,9 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _signOut() async {
+    // 連打対策。確認ダイアログを開く前段階で弾かないと、高速ダブルタップで
+    // 確認ダイアログが2枚重なって出てしまう（PaywallScreenと同じ理由）。
+    if (_busy) return;
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -177,6 +186,7 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _deleteAccount() async {
+    if (_busy) return;
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -221,6 +231,7 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _fullSync() async {
+    if (_busy) return;
     setState(() => _busy = true);
     try {
       final canSyncMedia = context.read<SubscriptionStore>().isProWithMediaSync;
