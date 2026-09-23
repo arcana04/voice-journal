@@ -80,6 +80,12 @@ class _EntryReviewState extends State<EntryReview> {
   String? _autofocusId;
   int _cardStaggerIndex = 0;
   final GlobalKey _saveButtonKey = GlobalKey();
+  // ポップインアニメーションを再生済みのitem.idを記録する。ListView内の
+  // カードはキー付きでState自体は保持されるはずだが、DragTargetのbuilder
+  // 再呼び出し等の巡り合わせでカードのStateが作り直された場合でも、二度と
+  // 同じカードが再アニメーションしないようにするための保険（Widget/Stateの
+  // ライフサイクルに依存しない、データ側での「再生済み」判定）。
+  final Set<String> _animatedItemIds = {};
 
   void _addItem(ReviewCategory bucket) {
     final id = 'new_${_newItemSeq++}';
@@ -458,9 +464,11 @@ class _EntryReviewState extends State<EntryReview> {
     // AIの仕分け結果が現れる瞬間を「光がカードへ収束する」演出にするため、
     // カード出現時だけ表示順に少しずつ遅れてポップインさせる（キー付きなので
     // 文字入力等の再ビルドでは初期化されず、一度きりのアニメーションになる）。
+    final alreadyPlayed = !_animatedItemIds.add(item.id);
     return _PopIn(
       key: ValueKey('pop_${item.id}'),
       index: _cardStaggerIndex++,
+      alreadyPlayed: alreadyPlayed,
       child: built,
     );
   }
@@ -472,8 +480,14 @@ class _EntryReviewState extends State<EntryReview> {
 class _PopIn extends StatefulWidget {
   final int index;
   final Widget child;
+  final bool alreadyPlayed;
 
-  const _PopIn({super.key, required this.index, required this.child});
+  const _PopIn({
+    super.key,
+    required this.index,
+    required this.child,
+    this.alreadyPlayed = false,
+  });
 
   @override
   State<_PopIn> createState() => _PopInState();
@@ -496,6 +510,12 @@ class _PopInState extends State<_PopIn> with SingleTickerProviderStateMixin {
       parent: _controller,
       curve: const Interval(0, 0.7, curve: Curves.easeOut),
     );
+    if (widget.alreadyPlayed) {
+      // Stateが作り直された場合でも、既に一度見せたカードは即座に最終状態
+      // (等倍・不透明)で描画し、ポップインを繰り返さない。
+      _controller.value = 1;
+      return;
+    }
     Future.delayed(Duration(milliseconds: 60 + widget.index * 70), () {
       if (mounted) _controller.forward();
     });
