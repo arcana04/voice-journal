@@ -278,13 +278,22 @@ class PurchaseService {
   /// 識別ユーザーをFirebase Authのuidに揃える。[Purchases.logOut]は使わない —
   /// ランダムな匿名IDが新規発行されてしまい、Cloud Functions側（isProUser）が
   /// 参照するFirebase uidとズレてしまうため、常に[Purchases.logIn]だけを使う。
+  ///
+  /// 匿名のまま購入した直後に、別端末で既に使っている既存アカウントへ
+  /// サインインする（uidが匿名時代の別物へ切り替わる）と、購入自体は
+  /// Apple/GoogleのレシートにひもづいたままだがRevenueCat側のアイデンティティ
+  /// だけ切り替わるため、アプリ上はProが消えたように見えてしまう
+  /// （[[project_voicejournal_knowledge_base_chat]]参照）。logIn直後に
+  /// restorePurchasesを呼び、同じ端末のレシートから新しいアイデンティティへ
+  /// 権利を自動で引き継がせることでこれを防ぐ。
   Future<void> switchAppUserId(String uid) async {
     if (!_configured) return;
     try {
       if (await Purchases.appUserID == uid) return;
       await Purchases.logIn(uid);
+      await Purchases.restorePurchases();
     } catch (e) {
-      debugPrint('RevenueCat logIn failed: $e');
+      debugPrint('RevenueCat logIn/restore failed: $e');
     }
   }
 }
