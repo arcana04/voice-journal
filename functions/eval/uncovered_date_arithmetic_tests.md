@@ -1,0 +1,50 @@
+# Date expressions still left to the model's own arithmetic — gap-hunting round
+
+## Background
+
+`due_weekday` (weekday-based), `due_month` (month-based relative), `relative_offset_minutes`
+(pure clock-relative), `span_days` (multi-day spans), and `recurrence` (weekly/monthly repeating
+patterns) have all been moved out of the model's own date arithmetic into deterministic code by
+now (see `round9_timing_and_classification_tests.md` and `month_relative_date_tests.md`). This
+file targets phrasings that fall OUTSIDE all of those buckets and are therefore still computed by
+the model itself in the generic `[Automatic due-date inference]` / `[Timed reminders]` prompt
+sections — the same category of instruction that has repeatedly produced silent self-calculation
+errors for every other date-math case tested so far. Nothing here is known-broken yet; this file
+exists to actually observe what currently happens before deciding whether any of these need their
+own deterministic field (the same pattern `due_month` followed).
+
+**How to run:** device language = English, no category filter chip selected. Type each transcript
+into the text-input fallback (NOT voice — keeps transcription noise out of it), then record what
+actually came out (due date / reminder time, all-day vs timed). Mark: ✅ match / ⚠️ partial / ❌ wrong.
+Note today's actual date when you run each one, since several are date-relative.
+
+**Reminder from the 9/22 deploy gotcha:** the text-input fallback calls `processTextMemo`, a
+separate Cloud Function from `processVoiceMemo` that happens to share the same prompt code. If a
+fix is deployed here later, deploy both:
+`firebase deploy --only functions:processVoiceMemo,functions:processTextMemo`.
+
+## Test cases
+
+| id | transcript | expected | actual | result | notes |
+|---|---|---|---|---|---|
+| gap-01-pure-day-count | "I keep putting this off, but my library books are due back and if I don't return them in 10 days I'm going to rack up a fine again, so let me actually get this on my radar this time." | 1 task, due date = exactly 10 calendar days from today, no weekday name involved | run 2026-09-23: "Return library books", due Oct 3 (Sat) | ✅ | correct — Sep 23 + 10 days = Oct 3 |
+| gap-02-week-from-today-no-weekday | "My trial subscription for that app is about to convert to paid if I don't cancel it, and I think I've got exactly a week from today before it charges me, so I need to remember to cancel before then." | 1 task, due date = exactly 7 calendar days from today | run 2026-09-23: "Cancel app subscription", due Sep 30 (Wed) | ✅ | correct — Sep 23 + 7 days = Sep 30, no due_weekday misfire |
+| gap-03-absolute-date-already-passed-this-year | "I really don't want to deal with this until the last minute like always, but my passport actually expires January 15th, and renewals apparently take a while, so I should start the paperwork with plenty of buffer before then." | 1 task, due date = January 15th of **next** year (since January of the current year has already passed) — only meaningful when run after January of the current year | run 2026-09-23: "Start passport renewal paperwork", due **Jan 15 (Thu)** = Jan 15 **2026** (already-past date, wrong) — should have been Jan 15 **2027** (Fri) | ❌→✅ | **Confirmed real bug, root cause found and fixed.** Explicit month-name+day mentions with no "next month"/"in N months" framing weren't routed through `due_month` at all — the model self-computed the date and, just like the pre-`due_month` weekday/month bugs, didn't reliably roll an already-passed absolute date into next year. Fixed by adding a `month` field (absolute calendar month 1-12) to `due_month` as an alternative to `months_ahead`, plus a `resolveTaskDueMonth` code path that rolls a full year (not just one month) forward when the named month+day has already passed this year. Added to the prose AND the literal JSON output-format example in all 6 locale prompts (the `due_month`-introduction gotcha struck again if this step is skipped). Verified against the resolver logic directly (not yet re-tested in the live app): Jan 15 recorded Sep 23 → 2027-01-15; Dec 3 (still ahead this year) → 2026-12-03; Sep 30 (this month, not yet passed) → 2026-09-30; Sep 10 (this month, already passed) → 2027-09-10 (rolls a full year, not just to next month). **Needs a live retest after deploy to confirm the model actually emits the new `month` field correctly for real transcripts.** |
+| gap-04-day-after-tomorrow | "Small thing but easy to forget — the day after tomorrow is trash pickup, so I need to actually remember to drag the bins out the night before this time instead of missing it again." | 1 task, due date = today + 2 calendar days | run 2026-09-23: 2 tasks — "Drag bins out for trash pickup" Sep 24 (Thu) [the night before pickup] and "Trash pickup" Sep 25 (Fri) [day after tomorrow] | ✅ | correct — the transcript actually names two distinct actions ("drag bins out the night before" + "trash pickup"), so splitting into 2 tasks is the right call, not a bug; both individual dates (Sep 25 = day-after-tomorrow, Sep 24 = the night before) are arithmetically correct |
+| gap-05-literal-midnight-reminder | "Our cat has this thing where she scratches at the door around midnight wanting to go out, so let's set an actual reminder for midnight tonight so I don't sleep through it and she doesn't wake up the whole house." | 1 task, reminder_at = today/tonight at literal 00:00 (midnight), NOT null | | | **specifically checking for a regression**: the server unconditionally nulls out any reminder_at ending in "T00:00:00" (added to fix the "date-only tasks defaulting to fake midnight" bug) — a genuine literal-midnight request may get silently eaten by that same safety net |
+| gap-06-every-n-days-recurrence | "Doctor wants me on this new medication where I take a dose every three days, not daily, so I want reminders set up for that going forward since it's such an easy schedule to lose track of." | a recurring reminder every 3 days, indefinitely (or a sane default window) | | | recurrence only has weekday-based (with interval_weeks) and monthly (day_of_month/interval_months) shapes — a pure day-interval cadence like "every 3 days" doesn't cleanly map to either; check what the model does when neither shape fits |
+| gap-07-every-other-day-recurrence | "I'm supposed to water the new plants every other day for the first month while they're establishing roots, so I want a repeating reminder for that instead of trying to remember the pattern myself." | a recurring reminder every 2 days, for roughly a month | | | same gap as gap-06, different everyday phrasing ("every other day" instead of "every N days") — worth testing both since they may be handled differently |
+| gap-08-mid-sentence-self-correction | "Let's plan to meet up Tuesday — actually no, scratch that, Wednesday works better for me since I've got a thing Tuesday night I forgot about." | 1 task, due_weekday resolves to Wednesday (the corrected/final day), NOT Tuesday (the retracted first mention) | | | checks whether the model correctly takes the speaker's self-correction as final rather than anchoring on the first-mentioned day |
+| gap-09-due-month-plus-explicit-time | "Invoice payment terms are net-30 this time around, so I need to get that paid by the 3rd of next month, ideally first thing — let's say by 9am so it's done before I even start my day." | 1 task, due_month resolves the date (3rd of next calendar month) AND reminder_at is that same date at 09:00 — the two must agree on the same calendar date | | | due_weekday+time-of-day consistency was already tested and enforced; due_month+time-of-day combined has not been explicitly tested |
+
+## What to do with results
+
+- ✅ across the board: no action needed, these phrasings are already handled correctly by the
+  model's own arithmetic and don't need a dedicated deterministic field.
+- Any ❌: note the actual (wrong) output in the table, then bring it back for a proper fix — likely
+  following the same pattern as `due_month` (add a deterministic field + resolver + update the
+  literal JSON output-format example in all 6 locale prompts, not just the prose).
+- gap-05 in particular: if it comes back null instead of literal midnight, that's a real product
+  decision to make (how would you ever distinguish "we don't know the time" from "user genuinely
+  means midnight" from the JSON alone?) rather than a pure bug — flag it for discussion rather than
+  a blind code fix.
