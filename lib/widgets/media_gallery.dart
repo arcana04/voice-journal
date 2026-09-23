@@ -68,6 +68,7 @@ class _VideoPlayerView extends StatefulWidget {
 class _VideoPlayerViewState extends State<_VideoPlayerView> {
   late final VideoPlayerController _controller;
   bool _ready = false;
+  bool _failed = false;
 
   @override
   void initState() {
@@ -77,6 +78,13 @@ class _VideoPlayerViewState extends State<_VideoPlayerView> {
         if (!mounted) return;
         setState(() => _ready = true);
         _controller.play();
+      }).catchError((Object error, StackTrace stackTrace) {
+        // ファイルが破損している/端末間移行でパスが無効になった等でinitialize()が
+        // 失敗すると、以前はcatchError無しで例外が握りつぶされ、ローディング
+        // スピナーが永久に回り続けたまま何も表示されなかった（写真側の
+        // missingMediaPlaceholderと同じ問題が動画にもあった）。
+        if (!mounted) return;
+        setState(() => _failed = true);
       });
   }
 
@@ -94,6 +102,9 @@ class _VideoPlayerViewState extends State<_VideoPlayerView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_failed) {
+      return missingMediaPlaceholder(context, 'video init failed', null);
+    }
     if (!_ready) {
       return const Center(child: CircularProgressIndicator(color: Colors.white));
     }
