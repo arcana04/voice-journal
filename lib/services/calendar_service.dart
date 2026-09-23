@@ -74,11 +74,18 @@ class CalendarService {
     DateTime effectiveEnd = end ?? start.add(const Duration(hours: 1));
     if (allDay) {
       effectiveStart = DateTime(start.year, start.month, start.day);
-      final endDateOnly = end != null
-          ? DateTime(end.year, end.month, end.day)
-          : effectiveStart;
-      // device_calendarの終日イベントは終了日時を「翌日の0時」として扱う
-      effectiveEnd = endDateOnly.add(const Duration(days: 1));
+      if (end == null) {
+        // 単日の終日予定。device_calendarは終了日時を「翌日の0時」として
+        // 扱うため、そのように1日分のイベントとして表示させる（従来通り）。
+        effectiveEnd = effectiveStart.add(const Duration(days: 1));
+      } else {
+        // 複数日にまたがる終日予定（[end]は最終日そのものを表す）。単日の
+        // 場合と同じ「+1日」をここにも適用すると、実機で確認したところ
+        // カレンダーアプリ側で実際の最終日より1日多く表示されてしまった
+        // （例:金〜日の3日間のはずが月曜まで4日間になる）ため、こちらは
+        // +1日をせず[end]の日付をそのまま終了日時として渡す。
+        effectiveEnd = DateTime(end.year, end.month, end.day);
+      }
     }
     final event = Event(
       calendarId,

@@ -53,7 +53,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 29,
+      version: 30,
       // tasks/notes/entry_imagesはON DELETE CASCADEをスキーマに宣言しているが、
       // SQLiteは外部キー制約自体をデフォルトで無効にしており、接続のたびに
       // 明示的に有効化しないとその宣言は一切効かない（各deleteメソッドが手動で
@@ -84,6 +84,7 @@ class DbService {
             title TEXT NOT NULL,
             due_hint TEXT,
             due_date TEXT,
+            due_date_end TEXT,
             reminder_at TEXT,
             reminder_end_at TEXT,
             done INTEGER NOT NULL DEFAULT 0,
@@ -532,6 +533,16 @@ class DbService {
             'UPDATE entries SET updated_at = created_at WHERE updated_at IS NULL',
           );
         }
+        if (oldVersion < 30) {
+          // 「金曜から日曜まで」のような複数日にまたがる終日の予定を、単日の
+          // due_dateしか持てなかったスキーマに追加で対応するための終了日列
+          // ([[project_voicejournal_knowledge_base_chat]]参照)。既存行は
+          // すべて単日タスクなのでNULLのままでよい。
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE tasks ADD COLUMN due_date_end TEXT',
+          );
+        }
       },
     );
   }
@@ -555,6 +566,7 @@ class DbService {
         'title': task.title,
         'due_hint': task.dueHint,
         'due_date': task.dueDate?.toIso8601String(),
+        'due_date_end': task.dueDateEnd?.toIso8601String(),
         'reminder_at': task.reminderAt?.toIso8601String(),
         'reminder_end_at': task.reminderEndAt?.toIso8601String(),
         // task.doneをそのまま使う（以前はここで常に0を書き込んでいたため、
@@ -575,6 +587,7 @@ class DbService {
           title: task.title,
           dueHint: task.dueHint,
           dueDate: task.dueDate,
+          dueDateEnd: task.dueDateEnd,
           reminderAt: task.reminderAt,
           reminderEndAt: task.reminderEndAt,
           done: task.done,
@@ -890,6 +903,11 @@ class DbService {
       'reminder_at': startAt?.toIso8601String(),
       'is_all_day': (startAt != null && isAllDay) ? 1 : 0,
       'due_date': dueDate?.toIso8601String(),
+      // このメソッドは単日の開始・終了時間を編集する画面からしか呼ばれない
+      // ため、呼ばれた時点で複数日スパンは（あれば）解除する——AIが提案した
+      // 複数日の予定をユーザーが手動で単日に編集し直したのに終了日だけ
+      // 古い値のまま残る、という食い違いを防ぐため。
+      'due_date_end': null,
     };
     if (startAt == null || isAllDay) {
       values['reminder_end_at'] = null;
@@ -1024,6 +1042,7 @@ class DbService {
         'title': task.title,
         'due_hint': task.dueHint,
         'due_date': task.dueDate?.toIso8601String(),
+        'due_date_end': task.dueDateEnd?.toIso8601String(),
         'reminder_at': task.reminderAt?.toIso8601String(),
         'reminder_end_at': task.reminderEndAt?.toIso8601String(),
         'done': task.done ? 1 : 0,
@@ -1038,6 +1057,7 @@ class DbService {
           title: task.title,
           dueHint: task.dueHint,
           dueDate: task.dueDate,
+          dueDateEnd: task.dueDateEnd,
           reminderAt: task.reminderAt,
           reminderEndAt: task.reminderEndAt,
           done: task.done,

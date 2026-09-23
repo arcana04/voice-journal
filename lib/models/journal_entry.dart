@@ -8,6 +8,13 @@ class TaskItem {
   final String? dueHint;
   final DateTime? dueDate;
 
+  /// 複数日にまたがる終日の予定の最終日（例:3日間の出張なら3日目の日付）。
+  /// 単日の予定はnull。[dueDate]が開始日、これが終了日で、カレンダー同期時に
+  /// 1件の複数日イベントとして登録する。時刻ありの予定の開始・終了は
+  /// [reminderAt]/[reminderEndAt]が担当するので、こちらは日付のみの
+  /// 終日イベント専用。
+  final DateTime? dueDateEnd;
+
   /// カレンダー同期される予定の開始日時。[reminderEndAt]と対で「開始・終了時間」を表す。
   final DateTime? reminderAt;
 
@@ -48,6 +55,7 @@ class TaskItem {
     required this.title,
     this.dueHint,
     this.dueDate,
+    this.dueDateEnd,
     this.reminderAt,
     this.reminderEndAt,
     this.done = false,
@@ -92,6 +100,8 @@ class TaskItem {
     String? title,
     DateTime? dueDate,
     bool clearDueDate = false,
+    DateTime? dueDateEnd,
+    bool clearDueDateEnd = false,
     DateTime? reminderAt,
     bool clearReminder = false,
     DateTime? reminderEndAt,
@@ -114,6 +124,9 @@ class TaskItem {
       title: title ?? this.title,
       dueHint: dueHint,
       dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
+      dueDateEnd: clearDueDate || clearDueDateEnd
+          ? null
+          : (dueDateEnd ?? this.dueDateEnd),
       reminderAt: clearReminder ? null : (reminderAt ?? this.reminderAt),
       reminderEndAt: clearReminder || clearReminderEndAt
           ? null
@@ -146,6 +159,7 @@ class TaskItem {
       'title': title,
       'due_hint': dueHint,
       'due_date': dueDate?.toIso8601String(),
+      'due_date_end': dueDateEnd?.toIso8601String(),
       'reminder_at': reminderAt?.toIso8601String(),
       'reminder_end_at': reminderEndAt?.toIso8601String(),
       'done': done ? 1 : 0,
@@ -161,6 +175,7 @@ class TaskItem {
 
   factory TaskItem.fromMap(Map<String, Object?> map) {
     final dueDateStr = map['due_date'] as String?;
+    final dueDateEndStr = map['due_date_end'] as String?;
     final reminderAtStr = map['reminder_at'] as String?;
     final reminderEndAtStr = map['reminder_end_at'] as String?;
     final notifyAtStr = map['notify_at'] as String?;
@@ -170,6 +185,7 @@ class TaskItem {
       title: (map['title'] as String?) ?? '',
       dueHint: map['due_hint'] as String?,
       dueDate: dueDateStr != null ? DateTime.tryParse(dueDateStr) : null,
+      dueDateEnd: dueDateEndStr != null ? DateTime.tryParse(dueDateEndStr) : null,
       reminderAt: reminderAtStr != null
           ? DateTime.tryParse(reminderAtStr)
           : null,
@@ -200,6 +216,7 @@ class TaskItem {
     int allDayReminderHour = 16,
   }) {
     final dueDateStr = json['due_date'] as String?;
+    final dueDateEndStr = json['due_date_end'] as String?;
     final reminderAtStr = json['reminder_at'] as String?;
     final reminderEndAtStr = json['reminder_end_at'] as String?;
     final reminderAt = reminderAtStr != null
@@ -218,10 +235,19 @@ class TaskItem {
             : null);
     // AIが期限日だけを抽出し、時刻を抽出できなかった場合は終日タスク扱いにする。
     final isAllDay = dueDate != null && reminderAt == null;
+    final parsedDueDateEnd = dueDateEndStr != null
+        ? DateTime.tryParse(dueDateEndStr)
+        : null;
+    // 終了日が開始日より前になることは無いはずだが（コード側で確定計算済み）、
+    // 万一の不整合に備えて開始日以前ならnull扱い（単日タスクにフォールバック）。
+    final dueDateEnd = (parsedDueDateEnd != null && dueDate != null && parsedDueDateEnd.isAfter(dueDate))
+        ? parsedDueDateEnd
+        : null;
     return TaskItem(
       title: (json['title'] as String? ?? '').trim(),
       dueHint: json['due_hint'] as String?,
       dueDate: dueDate,
+      dueDateEnd: dueDateEnd,
       reminderAt: reminderAt,
       reminderEndAt: reminderEndAtStr != null
           ? DateTime.tryParse(reminderEndAtStr)

@@ -20,6 +20,7 @@ class DraftItem {
     required this.text,
     this.dueHint,
     this.dueDate,
+    this.dueDateEnd,
     this.reminderAt,
     this.reminderEndAt,
     this.isAllDay = false,
@@ -33,6 +34,7 @@ class DraftItem {
   String text;
   final String? dueHint;
   final DateTime? dueDate;
+  final DateTime? dueDateEnd;
   final DateTime? reminderAt;
   final DateTime? reminderEndAt;
   final bool isAllDay;
@@ -178,6 +180,7 @@ class _EntryReviewState extends State<EntryReview> {
             title: i.text.trim(),
             dueHint: i.dueHint,
             dueDate: i.dueDate,
+            dueDateEnd: i.dueDateEnd,
             reminderAt: i.reminderAt,
             reminderEndAt: i.reminderEndAt,
             isAllDay: i.isAllDay,
@@ -738,6 +741,7 @@ class _CardShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final dueLabel = dueLabelFor(
       dueDate: item.dueDate,
+      dueDateEnd: item.dueDateEnd,
       dueHint: item.dueHint,
       locale: Localizations.localeOf(context).toString(),
     );

@@ -297,7 +297,28 @@ class JournalStore extends ChangeNotifier {
         eventId: task.calendarEventId,
         title: task.title,
         start: calendarStart,
-        end: task.isAllDay ? null : task.reminderEndAt,
+        // 終日タスクでdueDateEndがあれば（金曜〜日曜のような複数日の予定）
+        // それを終了日として渡す——upsertEvent側は元々この引数に対応して
+        // いたが、これまで呼び出し側が常にnullを渡していたため単日にしか
+        // ならなかった。時刻ありタスクはreminderEndAtを優先するが、それが
+        // 無く（終了時刻の明言が無く）dueDateEndだけがある複数日スパンの
+        // 場合（例:「金曜の朝出発、日曜の夜帰宅」で戻りの時刻だけ未定）は、
+        // dueDateEndを渡さないと予定がカレンダー上で開始日1日分にしか
+        // ならず旅行全体をカバーできない——最終日の終わり(23:59:59)まで
+        // 続く予定として渡す。
+        end: task.isAllDay
+            ? task.dueDateEnd
+            : (task.reminderEndAt ??
+                (task.dueDateEnd != null
+                    ? DateTime(
+                        task.dueDateEnd!.year,
+                        task.dueDateEnd!.month,
+                        task.dueDateEnd!.day,
+                        23,
+                        59,
+                        59,
+                      )
+                    : null)),
         allDay: task.isAllDay,
       );
       if (calendarSyncError) {

@@ -116,6 +116,7 @@ class CloudSyncService {
   /// （[[project_voicejournal_knowledge_base_chat]]参照）。
   static const _taskDateTimeFields = [
     'due_date',
+    'due_date_end',
     'reminder_at',
     'reminder_end_at',
     'notify_at',

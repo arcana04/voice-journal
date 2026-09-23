@@ -665,6 +665,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           text: task.title,
           dueHint: task.dueHint,
           dueDate: task.dueDate,
+          dueDateEnd: task.dueDateEnd,
           reminderAt: task.reminderAt,
           reminderEndAt: task.reminderEndAt,
           isAllDay: task.isAllDay,

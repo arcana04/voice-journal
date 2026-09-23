@@ -23,8 +23,11 @@ extension on _TaskFilter {
   };
 }
 
-bool _isSameDate(DateTime a, DateTime b) =>
-    a.year == b.year && a.month == b.month && a.day == b.day;
+/// 複数日にまたがる終日タスク（[TaskItem.dueDateEnd]）の最終日。単日タスクは
+/// [TaskItem.dueDate]自身を返す。フィルタ判定で「開始日だけ」ではなく
+/// 期間全体を見るために使う——3日間の旅行が2日目・3日目は「今日」フィルタに
+/// 出てこなくなる、といった見落としを防ぐ。
+DateTime _effectiveEndDate(TaskItem t) => t.dueDateEnd ?? t.dueDate!;
 
 bool _isThisWeek(DateTime date, DateTime now) {
   final startOfWeek = DateTime(
@@ -60,15 +63,23 @@ List<TaskItem> _filterTasks(List<TaskItem> tasks, _TaskFilter filter) {
     case _TaskFilter.all:
       return tasks.toList();
     case _TaskFilter.today:
+      final today = DateTime(now.year, now.month, now.day);
       return tasks
           .where(
-            (t) => !t.done && t.dueDate != null && _isSameDate(t.dueDate!, now),
+            (t) =>
+                !t.done &&
+                t.dueDate != null &&
+                !today.isBefore(DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day)) &&
+                !today.isAfter(_effectiveEndDate(t)),
           )
           .toList();
     case _TaskFilter.thisWeek:
       return tasks
           .where(
-            (t) => !t.done && t.dueDate != null && _isThisWeek(t.dueDate!, now),
+            (t) =>
+                !t.done &&
+                t.dueDate != null &&
+                (_isThisWeek(t.dueDate!, now) || _isThisWeek(_effectiveEndDate(t), now)),
           )
           .toList();
     case _TaskFilter.withinMonth:
@@ -77,7 +88,8 @@ List<TaskItem> _filterTasks(List<TaskItem> tasks, _TaskFilter filter) {
             (t) =>
                 !t.done &&
                 t.dueDate != null &&
-                _isWithinOneMonth(t.dueDate!, now),
+                (_isWithinOneMonth(t.dueDate!, now) ||
+                    _isWithinOneMonth(_effectiveEndDate(t), now)),
           )
           .toList();
     case _TaskFilter.completed:
