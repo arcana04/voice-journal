@@ -1125,6 +1125,14 @@ class JournalStore extends ChangeNotifier {
     final scheduledTask = task.copyWith(
       dueDate: newDueDate,
       clearDueDate: newDueDate == null,
+      // DbService.updateTaskScheduleはこのメソッドが呼ばれた時点で常に
+      // due_date_end列をnullにする（単日編集画面からしか呼ばれないため、
+      // AIが提案した複数日スパンが残っていれば解除する）。ここでも同様に
+      // clearDueDateEnd:trueを立てないと、DB上はnullなのにメモリ上の
+      // entries/カレンダー同期先にだけ古いdueDateEndが残ってしまう
+      // （次回起動時にDBから再読込されるまで、カレンダー予定の終了日が
+      // 古いまま・タスク一覧の期限表示もズレる）。
+      clearDueDateEnd: true,
       reminderAt: startAt,
       clearReminder: startAt == null,
       reminderEndAt: effectiveEndAt,
@@ -1159,6 +1167,7 @@ class JournalStore extends ChangeNotifier {
         return t.copyWith(
           dueDate: newDueDate,
           clearDueDate: newDueDate == null,
+          clearDueDateEnd: true,
           reminderAt: startAt,
           clearReminder: startAt == null,
           reminderEndAt: effectiveEndAt,
