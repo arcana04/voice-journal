@@ -19,14 +19,25 @@ enum KeychainStore {
     /// 表示されるのにrefreshTokenが実際には保存されておらず、次回のトークン
     /// 更新時に無言で「未ペアリング」エラーになる、というズレが起きる。
     /// そのため書き込みが本当に成功したかを呼び出し側が判定できるようBoolを返す。
+    /// SecItemDeleteしてからSecItemAddする実装だと、Addが失敗した場合(端末ロック中の
+    /// アクセス不可等)に直前まであった値ごと消えてしまい、書き込み失敗のはずが
+    /// 「以前の値も失う」という更に悪い結果になる(refreshTokenの定期更新
+    /// (validIdToken)でこれが起きると、新しいトークンの保存に失敗した瞬間に
+    /// 古い有効なトークンまで失われ、再ペアリングなしでは復旧できなくなる)。
+    /// そのため既存アイテムがあればSecItemUpdateでその場で置き換え、無い場合のみ
+    /// SecItemAddする(削除を経由しない)。
     @discardableResult
     static func set(_ value: String, for key: Key) -> Bool {
         let data = Data(value.utf8)
-        var query = baseQuery(for: key)
-        SecItemDelete(query as CFDictionary)
-        query[kSecValueData as String] = data
-        let status = SecItemAdd(query as CFDictionary, nil)
-        return status == errSecSuccess
+        let query = baseQuery(for: key)
+        let updateStatus = SecItemUpdate(query as CFDictionary, [kSecValueData as String: data] as CFDictionary)
+        if updateStatus == errSecSuccess {
+            return true
+        }
+        guard updateStatus == errSecItemNotFound else { return false }
+        var addQuery = query
+        addQuery[kSecValueData as String] = data
+        return SecItemAdd(addQuery as CFDictionary, nil) == errSecSuccess
     }
 
     static func read(_ key: Key) -> String? {

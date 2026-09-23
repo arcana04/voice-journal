@@ -85,8 +85,16 @@ actor FirebaseAuthClient {
         let result = try JSONDecoder().decode(RefreshResult.self, from: data)
 
         // securetoken.googleapis.comはリフレッシュのたびに新しいrefreshTokenを
-        // 返すことがあるため、常に最新のものを保存し直す。
-        KeychainStore.set(result.refresh_token, for: .refreshToken)
+        // 返すことがあるため、常に最新のものを保存し直す。以前はここの戻り値を
+        // 無視しており(completePairingで既に一度直した「保存失敗を成功扱い」と
+        // 同じ抜け穴)、書き込みが失敗しても気づけなかった。KeychainStore.set自体は
+        // 更新失敗時に既存の値を消さなくなったため致命的ではなくなったが、それでも
+        // 保存に失敗した場合はメモリ上のcachedIdTokenだけ新しくなり、Keychain上は
+        // 古いrefreshTokenのままという食い違いが起き得るため、次回はまた保存を
+        // 試みられるよう失敗時はメモリのキャッシュも更新しない。
+        guard KeychainStore.set(result.refresh_token, for: .refreshToken) else {
+            throw FirebaseAuthError.keychainWriteFailed
+        }
         cachedIdToken = result.id_token
         cachedIdTokenExpiry = Date().addingTimeInterval(TimeInterval(result.expires_in) ?? 3600)
         return result.id_token
