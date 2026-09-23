@@ -103,6 +103,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
       }
     }
     await store.deleteNotesFromEntry(entry, [toRemove.note]);
+    if (!mounted) return;
     setState(() {
       _drafts?.remove(toRemove);
       toRemove.dispose();
@@ -115,6 +116,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
       category: kNoteCategoryFeeling,
       content: '',
     );
+    if (!mounted) return;
     setState(() {
       (_drafts ??= []).add(_NoteDraft(note));
     });
