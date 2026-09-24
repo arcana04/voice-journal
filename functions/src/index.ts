@@ -3333,6 +3333,25 @@ const RECURRENCE_WEEKDAY_INDEX: Record<string, number> = {
  * 展開しないための保険（[[RecurringTaskScreen]]の200件上限と同じ考え方）。 */
 const RECURRENCE_MAX_OCCURRENCES = 60;
 
+/** モデルが同一の繰り返しタスクをtasks配列内に複数回出力してしまうことが
+ * ある（実機で確認: 「毎週火・金、ただし特定の1回は除外」のような曜日+
+ * 例外条件を含む複雑な繰り返し指示で、同じtitle・recurrenceのタスクが
+ * 3〜5個重複して出力され、expandRecurringTaskがそれぞれを独立に展開した
+ * 結果、同じ予定が暴走防止上限(60件)まで埋め尽くされた）。展開する前に
+ * title+recurrenceの組み合わせで重複を除去する保険を挟む。 */
+function dedupeRecurringTasks(
+  tasks: StructuredResult["tasks"]
+): StructuredResult["tasks"] {
+  const seen = new Set<string>();
+  return tasks.filter((task) => {
+    if (!task.recurrence) return true;
+    const key = `${task.title.trim().toLowerCase()} ${JSON.stringify(task.recurrence)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 /** タスクにrecurrenceが指定されていれば、曜日対応表を使わずコード側の
  * 確定的なカレンダー演算だけで個々の日付に展開する。時刻部分は
  * reminder_at/reminder_end_atの時刻だけを流用し、日付部分は各出現日に
@@ -3836,6 +3855,40 @@ function correctMismatchedWeekdayField(
   return { ...task, due_weekday: { ...dw, day: correctedDay } };
 }
 
+/** 「その前に」のような明示的な前後関係の表現が実際には無いのに、モデルが
+ * days_before/anchor_titleの仕組みを誤って発動させてしまうケースへの保険。
+ * 実機で確認: 「土曜11時に空港へ姉を迎えに行く、ただしフライトが遅れたら
+ * 日曜の朝にする」のような、時刻付きの確定した曜日を自分の発言の中で直接
+ * 述べているだけのタスクに、モデルが勝手にanchor_title「姉のフライト」を
+ * でっち上げてdays_before:1を付け、本来の土曜日より1日早い金曜日にずれて
+ * しまった。due_hint/titleにdue_weekday.dayと同じ曜日名が直接含まれている
+ * ということは、そのタスク自身が既に自分の曜日を明言している証拠であり、
+ * 借用元の日付から更にday_before分ずらす対象ではないと判断できる（正規の
+ * 借用パターンでは、プロンプトの指示通りdue_hintは「その前に」を借用先の
+ * 行動名に書き換える形（例:「いとこの結婚式の前に」）になり、借用先自身の
+ * 曜日名をdue_hintに含めることはない）。該当した場合はdays_beforeを0へ
+ * 補正する——day/weeks_ahead自体はモデルの判断を尊重する。 */
+function correctSpuriousDaysBefore(
+  task: StructuredResult["tasks"][number]
+): StructuredResult["tasks"][number] {
+  const dw = task.due_weekday;
+  if (!dw || !dw.days_before || dw.days_before <= 0) return task;
+  const dayIndex = RECURRENCE_WEEKDAY_INDEX[dw.day];
+  if (dayIndex === undefined) return task;
+
+  const mentionedIndex = weekdayIndexFromText(task.due_hint) ?? weekdayIndexFromText(task.title);
+  if (mentionedIndex === null || mentionedIndex !== dayIndex) return task;
+
+  logger.warn("processVoiceMemo: spurious days_before removed (due_hint/title names its own day)", {
+    taskTitle: task.title,
+    dueHint: task.due_hint,
+    day: dw.day,
+    originalDaysBefore: dw.days_before,
+  });
+
+  return { ...task, due_weekday: { ...dw, days_before: 0 } };
+}
+
 /** モデルがdue_weekdayの仕組みを使わず自力でdue_dateを計算してしまい、
  * 曜日そのものを取り違えるケース（例:「次の水曜日」のつもりが月曜の日付に
  * なる）への保険。実際に「基準イベントが事実文で語られ、曖昧な後続行動の
@@ -3878,6 +3931,96 @@ function correctMismatchedWeekdayDueDate(
     reminder_at: startTimeMatch ? `${correctedDate}T${startTimeMatch[1]}` : task.reminder_at,
     reminder_end_at: endTimeMatch ? `${correctedDate}T${endTimeMatch[1]}` : task.reminder_end_at,
   };
+}
+
+/** due_dateもdue_weekdayも無い（＝通知が一生飛ばない）のに、due_hint/title
+ * には曜日名が含まれているケースへの保険。実機テストで確認: 「日曜の朝に
+ * 代わりに行く」のような条件分岐・派生的な代替プランの中で語られる曜日は、
+ * 主タスクと違いdue_weekdayの仕組みに乗せ忘れられることがあった。
+ * {@link correctMismatchedWeekdayDueDate}は既にdue_dateがある前提の補正、
+ * これはdue_date自体が無い場合の穴を埋める版——直近の該当日
+ * （weeks_ahead:0相当）へ機械的に解決する。週数までは復元できないが、
+ * 「曜日の言及があるのにdue_dateがnullのまま」という一番実害の大きい
+ * 欠落だけは確実に防げる。 */
+function synthesizeMissingWeekdayDueDate(
+  task: StructuredResult["tasks"][number],
+  todayDateStr: string
+): StructuredResult["tasks"][number] {
+  if (task.due_date || task.due_weekday) return task; // 既に何らかの形で解決済み
+
+  const mentionedIndex = weekdayIndexFromText(task.due_hint) ?? weekdayIndexFromText(task.title);
+  if (mentionedIndex === null) return task;
+
+  const correctedDate = resolveWeekdayDate(todayDateStr, mentionedIndex, 0);
+  logger.warn("processVoiceMemo: missing due_date synthesized from weekday mention", {
+    taskTitle: task.title,
+    dueHint: task.due_hint,
+    correctedDate,
+  });
+
+  return { ...task, due_date: correctedDate };
+}
+
+/** due_hint/titleに含まれる固定日の祝日名の言語非依存の索引（月, 日）。
+ * due_month/due_weekdayのどちらの語彙にも入らない祝日名（例:
+ * "Christmas"）は、実機テストで確認した通りモデルが自力でdue_dateを
+ * 計算しようとして失敗し、due_hintの文字列だけが残ってdue_dateがnullの
+ * ままになることがあった。曜日名と同じ考え方で、コード側の確定的な
+ * フォールバックとして毎年固定日の主要な祝日だけを最小限カバーする
+ * （移動祝日のThanksgiving/Easter等は対象外——月内の第何何曜日という
+ * 別の計算が必要になるため、ここでは踏み込まない）。 */
+const FIXED_DATE_HOLIDAY_PATTERNS: { pattern: RegExp; month: number; day: number }[] = [
+  { pattern: /christmas|noël|navidad|weihnachten|크리스마스|クリスマス/i, month: 12, day: 25 },
+  { pattern: /new\s*year'?s?\s*eve|réveillon|nochevieja|silvester|除夜|大晦日/i, month: 12, day: 31 },
+  { pattern: /new\s*year'?s?\s*day|jour de l'an|año nuevo|neujahr|설날|元日|元旦/i, month: 1, day: 1 },
+  { pattern: /halloween|할로윈|ハロウィン/i, month: 10, day: 31 },
+  { pattern: /valentine'?s?\s*day|saint-valentin|san valentín|valentinstag|밸런타인데이|バレンタイン/i, month: 2, day: 14 },
+];
+
+function fixedDateHolidayFromText(
+  text: string | null | undefined
+): { month: number; day: number } | null {
+  if (!text) return null;
+  for (const { pattern, month, day } of FIXED_DATE_HOLIDAY_PATTERNS) {
+    if (pattern.test(text)) return { month, day };
+  }
+  return null;
+}
+
+/** {@link synthesizeMissingWeekdayDueDate}の祝日名版。曜日名と違い祝日名は
+ * due_weekdayの仕組みに乗らないため、weekday判定の後に別途この関数で
+ * due_dateの欠落を埋める。年またぎの判定はdue_monthの絶対月日版
+ * （resolveTaskDueMonth）と同じ考え方——今年のその日が既に過ぎていれば
+ * 来年へ繰り上げる。 */
+function synthesizeMissingHolidayDueDate(
+  task: StructuredResult["tasks"][number],
+  todayDateStr: string
+): StructuredResult["tasks"][number] {
+  if (task.due_date || task.due_weekday) return task;
+
+  const holiday = fixedDateHolidayFromText(task.due_hint) ?? fixedDateHolidayFromText(task.title);
+  if (!holiday) return task;
+
+  const [ty, tm, td] = todayDateStr.split("-").map(Number);
+  const todayMs = Date.UTC(ty, tm - 1, td);
+  let year = ty;
+  let candidateMs = Date.UTC(year, holiday.month - 1, holiday.day);
+  if (candidateMs < todayMs) {
+    year += 1;
+    candidateMs = Date.UTC(year, holiday.month - 1, holiday.day);
+  }
+  const correctedDate = [
+    year,
+    String(holiday.month).padStart(2, "0"),
+    String(holiday.day).padStart(2, "0"),
+  ].join("-");
+  logger.warn("processVoiceMemo: missing due_date synthesized from holiday mention", {
+    taskTitle: task.title,
+    dueHint: task.due_hint,
+    correctedDate,
+  });
+
+  return { ...task, due_date: correctedDate };
 }
 
 /** 「その前に」等でdays_before付きのdue_weekdayを持つタスク（例:
@@ -4415,10 +4558,13 @@ function toClientResponse(
 
   const debugTasksAfterSpanEnd = (structuredWithAnchors.tasks ?? [])
     .map((task) => correctMismatchedWeekdayField(task))
+    .map((task) => correctSpuriousDaysBefore(task))
     .map((task) => resolveTaskDueWeekday(task, todayDateStr))
     .map((task) => resolveTaskDueMonth(task, todayDateStr))
     .map((task) => resolveTaskRelativeOffset(task, nowLocalDateTime))
     .map((task) => correctMismatchedWeekdayDueDate(task, todayDateStr))
+    .map((task) => synthesizeMissingWeekdayDueDate(task, todayDateStr))
+    .map((task) => synthesizeMissingHolidayDueDate(task, todayDateStr))
     .map((task) => resolveTaskSpanEnd(task));
   logger.info("processVoiceMemo: tasks after resolveTaskSpanEnd (debug)", {
     tasks: debugTasksAfterSpanEnd.map((t) => ({
@@ -4431,8 +4577,9 @@ function toClientResponse(
 
   return {
     summary: structuredWithAnchors.summary ?? "",
-    tasks: debugTasksAfterSpanEnd
-      .map((task) => rollPastTimeOfDayToTomorrow(task, nowLocalDateTime))
+    tasks: dedupeRecurringTasks(
+      debugTasksAfterSpanEnd.map((task) => rollPastTimeOfDayToTomorrow(task, nowLocalDateTime))
+    )
       .flatMap(expandRecurringTask)
       .map((task) => {
       // モデルが「時刻不明」を表すつもりで0時(00:00:00)を入れてしまうことがある
