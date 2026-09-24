@@ -58,6 +58,25 @@ class BackendService {
     }
   }
 
+  /// App Checkはまだサーバー側で強制していない(functions/src/index.tsの
+  /// APP_CHECK_ENFORCED=false)のに、Firebase Functions SDK(Android/iOS)は
+  /// 認証トークンとApp Checkトークンを両方待ってから呼び出すため、App Check
+  /// トークン取得だけがネットワーク不調(キャプティブポータル等)で失敗しても
+  /// `ExecutionException: 1 out of 2 underlying tasks failed`として呼び出し
+  /// 自体を失敗させてしまう(実機で再現確認済み)。強制していない以上この
+  /// トークンが無くても処理できるはずなので、このパターンに限り1回だけ
+  /// 透過的にリトライする。
+  Future<T> _callWithAppCheckRetry<T>(Future<T> Function() call) async {
+    try {
+      return await call();
+    } on FirebaseFunctionsException {
+      rethrow;
+    } catch (e) {
+      if (!e.toString().contains('underlying tasks failed')) rethrow;
+      return await call();
+    }
+  }
+
   Future<JournalEntry> processVoiceMemo(
     File audioFile, {
     List<CustomWord> customWords = const [],
@@ -85,15 +104,17 @@ class BackendService {
         'processVoiceMemo',
         options: HttpsCallableOptions(timeout: const Duration(seconds: 290)),
       );
-      final result = await callable.call<Map<String, dynamic>>({
-        'audioBase64': audioBase64,
-        'mimeType': 'audio/m4a',
-        'customWords': customWords.map((w) => w.toJson()).toList(),
-        'summaryLevel': summaryLevel.wireValue,
-        'locale': locale,
-        'allowedCategories': allowedCategories.map((c) => c.wireValue).toList(),
-        'timeZone': timeZone,
-      });
+      final result = await _callWithAppCheckRetry(
+        () => callable.call<Map<String, dynamic>>({
+          'audioBase64': audioBase64,
+          'mimeType': 'audio/m4a',
+          'customWords': customWords.map((w) => w.toJson()).toList(),
+          'summaryLevel': summaryLevel.wireValue,
+          'locale': locale,
+          'allowedCategories': allowedCategories.map((c) => c.wireValue).toList(),
+          'timeZone': timeZone,
+        }),
+      );
       return _entryFromResponse(
         result.data,
         autoNotificationsEnabled: autoNotificationsEnabled,
@@ -124,13 +145,15 @@ class BackendService {
     try {
       final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
       final callable = functions.httpsCallable('processTextMemo');
-      final result = await callable.call<Map<String, dynamic>>({
-        'text': text,
-        'summaryLevel': summaryLevel.wireValue,
-        'locale': locale,
-        'allowedCategories': allowedCategories.map((c) => c.wireValue).toList(),
-        'timeZone': timeZone,
-      });
+      final result = await _callWithAppCheckRetry(
+        () => callable.call<Map<String, dynamic>>({
+          'text': text,
+          'summaryLevel': summaryLevel.wireValue,
+          'locale': locale,
+          'allowedCategories': allowedCategories.map((c) => c.wireValue).toList(),
+          'timeZone': timeZone,
+        }),
+      );
       return _entryFromResponse(
         result.data,
         autoNotificationsEnabled: autoNotificationsEnabled,
