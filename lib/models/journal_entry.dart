@@ -49,6 +49,11 @@ class TaskItem {
   /// Notion連携で送信済みの場合の、作成されたNotionページURL。未送信はnull。
   final String? notionPageUrl;
 
+  /// AI(processVoiceMemo/processTextMemo)が生成したタスクならtrue、
+  /// 手動作成画面(AIバイパス)で作られたタスクならfalse。レビュー依頼の
+  /// トリガー(「AIが作ったタスクを初めて完了した」)の判定に使う。
+  final bool aiGenerated;
+
   TaskItem({
     this.id,
     this.entryId,
@@ -66,6 +71,7 @@ class TaskItem {
     this.isAllDay = false,
     this.notifyAt,
     this.notionPageUrl,
+    this.aiGenerated = true,
   });
 
   /// 終日タスクにユーザーが明示的な通知時刻を設定していない場合の既定値
@@ -149,6 +155,7 @@ class TaskItem {
       notionPageUrl: clearNotionPageUrl
           ? null
           : (notionPageUrl ?? this.notionPageUrl),
+      aiGenerated: aiGenerated,
     );
   }
 
@@ -170,6 +177,7 @@ class TaskItem {
       'is_all_day': isAllDay ? 1 : 0,
       'notify_at': notifyAt?.toIso8601String(),
       'notion_page_url': notionPageUrl,
+      'ai_generated': aiGenerated ? 1 : 0,
     };
   }
 
@@ -200,6 +208,7 @@ class TaskItem {
       isAllDay: (map['is_all_day'] as int? ?? 0) == 1,
       notifyAt: notifyAtStr != null ? DateTime.tryParse(notifyAtStr) : null,
       notionPageUrl: map['notion_page_url'] as String?,
+      aiGenerated: (map['ai_generated'] as int? ?? 1) == 1,
     );
   }
 

@@ -856,6 +856,12 @@ class AppLocalizationsJa extends AppLocalizations {
       'オフにすると、カレンダー/リマインダーアプリへの反映だけ行い、端末への通知は作成しません';
 
   @override
+  String get recordingStartSoundTitle => '録音開始音';
+
+  @override
+  String get recordingStartSoundDescription => '録音が始まったときに軽い音を鳴らします';
+
+  @override
   String get reminderOffsetTitle => 'デフォルトの通知タイミング';
 
   @override

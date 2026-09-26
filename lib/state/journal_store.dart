@@ -21,6 +21,7 @@ import '../services/db_service.dart';
 import '../services/image_storage_service.dart';
 import '../services/media_sync_service.dart';
 import '../services/reminder_service.dart';
+import '../services/review_prompt_service.dart';
 
 class JournalStore extends ChangeNotifier {
   final DbService _db = DbService.instance;
@@ -28,6 +29,7 @@ class JournalStore extends ChangeNotifier {
   final ImageStorageService _images = ImageStorageService();
   final CalendarService _calendar = CalendarService.instance;
   final CalendarSettingsService _calendarSettings = CalendarSettingsService();
+  final ReviewPromptService _reviewPrompt = ReviewPromptService();
   final AppleRemindersService _appleReminders = AppleRemindersService.instance;
   final AppleRemindersSettingsService _appleRemindersSettings =
       AppleRemindersSettingsService();
@@ -518,6 +520,9 @@ class JournalStore extends ChangeNotifier {
     final newDone = !task.done;
     await _db.setTaskDone(task.id!, newDone);
     final updatedTask = task.copyWith(done: newDone);
+    if (newDone && task.aiGenerated) {
+      unawaited(_reviewPrompt.maybeRequestForFirstAiTaskCompletion());
+    }
 
     String? eventId = task.calendarEventId;
     String? calendarId = task.calendarId;

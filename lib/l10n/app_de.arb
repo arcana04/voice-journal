@@ -304,6 +304,8 @@
   "notificationDenied": "Nicht erlaubt (Erinnerungen werden nicht zugestellt)",
   "autoNotificationsTitle": "Erinnerungen automatisch einstellen",
   "autoNotificationsDescription": "Deaktivieren, um nur mit Kalender/Erinnerungen zu synchronisieren, ohne eine Gerätebenachrichtigung zu erstellen",
+  "recordingStartSoundTitle": "Ton bei Aufnahmestart",
+  "recordingStartSoundDescription": "Spielt einen leisen Ton ab, wenn die Aufnahme beginnt",
   "reminderOffsetTitle": "Standard-Erinnerungszeitpunkt",
   "reminderOffsetSheetTitle": "Erinnerungszeitpunkt",
   "reminderOffsetAtStartTime": "Zur Startzeit",

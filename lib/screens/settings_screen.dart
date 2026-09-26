@@ -258,6 +258,20 @@ class _SettingsScreenState extends State<SettingsScreen>
                     );
                   },
                 ),
+                Consumer<SettingsStore>(
+                  builder: (context, settings, _) {
+                    return _SettingsTile(
+                      icon: Icons.volume_up_rounded,
+                      color: _SettingsColors.blue,
+                      title: l10n.recordingStartSoundTitle,
+                      subtitle: l10n.recordingStartSoundDescription,
+                      trailing: Switch(
+                        value: settings.recordingStartSoundEnabled,
+                        onChanged: settings.setRecordingStartSoundEnabled,
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
             const SizedBox(height: 24),

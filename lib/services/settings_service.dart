@@ -17,6 +17,7 @@ class SettingsService {
   static const _reminderOffsetMinutesPref = 'reminder_offset_minutes';
   static const _autoNotificationsEnabledPref = 'auto_notifications_enabled';
   static const _allDayReminderHourPref = 'all_day_reminder_hour';
+  static const _recordingStartSoundEnabledPref = 'recording_start_sound_enabled';
 
   /// 端末ローカルのSQLiteデータが最後にどのアカウント(Firebase uid)のもので
   /// あったかを記録する。サインアウトはローカルデータを消さない設計のため、
@@ -144,6 +145,18 @@ class SettingsService {
   Future<void> setAllDayReminderHour(int value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_allDayReminderHourPref, value);
+  }
+
+  /// 録音開始時に軽い効果音を鳴らすかどうか（録音が確実に始まったことを
+  /// 音でも確認できるようにするため）。
+  Future<bool> getRecordingStartSoundEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_recordingStartSoundEnabledPref) ?? true;
+  }
+
+  Future<void> setRecordingStartSoundEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_recordingStartSoundEnabledPref, value);
   }
 
   Future<bool> getHasSeenOnboarding() async {

@@ -304,6 +304,8 @@
   "notificationDenied": "허용되지 않음(리마인더가 전달되지 않습니다)",
   "autoNotificationsTitle": "새 작업에 자동으로 알림 설정",
   "autoNotificationsDescription": "끄면 기기 알림 없이 캘린더/미리 알림 앱에만 반영됩니다",
+  "recordingStartSoundTitle": "녹음 시작음",
+  "recordingStartSoundDescription": "녹음이 시작될 때 가벼운 소리를 재생합니다",
   "reminderOffsetTitle": "기본 알림 시점",
   "reminderOffsetSheetTitle": "알림 시점",
   "reminderOffsetAtStartTime": "시작 시각 정각",

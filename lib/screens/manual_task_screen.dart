@@ -49,6 +49,7 @@ class _ManualTaskScreenState extends State<ManualTaskScreen> {
         reminderEndAt: _schedule.endAt,
         isAllDay: _schedule.isAllDay,
         notifyAt: _schedule.notifyAt,
+        aiGenerated: false,
       );
       final entry = JournalEntry(
         createdAt: DateTime.now(),

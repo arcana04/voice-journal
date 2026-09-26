@@ -7,6 +7,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// エラー直後などネガティブな文脈では絶対に呼ばないようにする。
 class ReviewPromptService {
   static const _lastShownPref = 'review_prompt_last_shown_epoch_ms';
+  static const _hasSeenUnlockedWeeklyReportPref =
+      'review_prompt_has_seen_unlocked_weekly_report';
+  static const _hasCompletedFirstAiTaskPref =
+      'review_prompt_has_completed_first_ai_task';
 
   /// この日数だけ経てば再度依頼して良い。OS側の年間上限とは別に、
   /// こちらからは無闇に呼ばないための自主的な間隔。_milestones同士の最短間隔
@@ -26,7 +30,31 @@ class ReviewPromptService {
   /// 節目のstreakでなければ何もしない。
   Future<void> maybeRequestForStreak(int streakDays) async {
     if (!_milestones.contains(streakDays)) return;
+    await _maybeShow();
+  }
 
+  /// 日曜20時解禁後の週刊脳内レポートを初めて見た直後に呼ぶ。履歴(過去の
+  /// 確定済みレポート)の閲覧は対象外——「今まさに解禁された」という驚きが
+  /// ある瞬間に限定するため。一度きりのトリガーなので内部で既読フラグを
+  /// 管理する。
+  Future<void> maybeRequestForFirstUnlockedWeeklyReport() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_hasSeenUnlockedWeeklyReportPref) ?? false) return;
+    await prefs.setBool(_hasSeenUnlockedWeeklyReportPref, true);
+    await _maybeShow();
+  }
+
+  /// AIが音声/テキストから自動生成したタスクを、ユーザーが初めて完了
+  /// (チェックオフ)した直後に呼ぶ。「AIに任せたら実際に生活が回った」という
+  /// 成功体験の瞬間。手動作成タスクの完了では呼ばない。
+  Future<void> maybeRequestForFirstAiTaskCompletion() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_hasCompletedFirstAiTaskPref) ?? false) return;
+    await prefs.setBool(_hasCompletedFirstAiTaskPref, true);
+    await _maybeShow();
+  }
+
+  Future<void> _maybeShow() async {
     final prefs = await SharedPreferences.getInstance();
     final lastShownMs = prefs.getInt(_lastShownPref);
     if (lastShownMs != null) {

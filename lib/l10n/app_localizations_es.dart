@@ -914,6 +914,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Desactívalo para solo sincronizar con tu calendario/recordatorios, sin crear una notificación en el dispositivo';
 
   @override
+  String get recordingStartSoundTitle => 'Sonido al iniciar grabación';
+
+  @override
+  String get recordingStartSoundDescription =>
+      'Reproduce un sonido suave cuando empieza la grabación';
+
+  @override
   String get reminderOffsetTitle => 'Aviso predeterminado';
 
   @override

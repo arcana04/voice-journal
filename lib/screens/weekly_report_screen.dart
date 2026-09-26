@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import '../models/journal_entry.dart';
 import '../models/weekly_report.dart';
 import '../services/backend_service.dart';
 import '../services/db_service.dart';
+import '../services/review_prompt_service.dart';
 import '../state/journal_store.dart';
 import '../state/subscription_store.dart';
 import '../utils/journal_context_format.dart';
@@ -34,6 +36,7 @@ class WeeklyReportScreen extends StatefulWidget {
 class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
   final BackendService _backend = BackendService();
   final ScreenshotController _shareController = ScreenshotController();
+  final ReviewPromptService _reviewPrompt = ReviewPromptService();
 
   List<JournalEntry> _weekEntries = [];
   Map<EmotionTag, int> _emotionCounts = {};
@@ -414,6 +417,11 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                           title: l10n.weeklyReportErrorTitle,
                           retryLabel: l10n.weeklyReportRetry,
                           onRetry: _retry,
+                        );
+                      }
+                      if (!_isHistoryView && _letterUnlocked) {
+                        unawaited(
+                          _reviewPrompt.maybeRequestForFirstUnlockedWeeklyReport(),
                         );
                       }
                       final emotionCounts = _isHistoryView

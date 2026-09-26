@@ -74,6 +74,7 @@ dependencies:
   sign_in_with_apple: ^8.2.0
   crypto: ^3.0.7
   watch_connectivity: ^0.2.9
+  audioplayers: ^6.1.0
 
 dev_dependencies:
   flutter_test:
@@ -125,6 +126,7 @@ flutter:
     - assets/images/diary_backgrounds/
     - assets/images/brain_map/
     - assets/icon/
+    - assets/sounds/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

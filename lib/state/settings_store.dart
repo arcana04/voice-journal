@@ -17,6 +17,7 @@ class SettingsStore extends ChangeNotifier {
   int reminderOffsetMinutes = 0;
   bool autoNotificationsEnabled = true;
   int allDayReminderHour = 16;
+  bool recordingStartSoundEnabled = true;
   bool _loaded = false;
   bool get loaded => _loaded;
 
@@ -64,6 +65,7 @@ class SettingsStore extends ChangeNotifier {
     reminderOffsetMinutes = await _service.getReminderOffsetMinutes();
     autoNotificationsEnabled = await _service.getAutoNotificationsEnabled();
     allDayReminderHour = await _service.getAllDayReminderHour();
+    recordingStartSoundEnabled = await _service.getRecordingStartSoundEnabled();
     _loaded = true;
     notifyListeners();
   }
@@ -136,6 +138,12 @@ class SettingsStore extends ChangeNotifier {
   Future<void> setDarkMode(bool value) async {
     darkMode = value;
     await _service.setDarkMode(value);
+    notifyListeners();
+  }
+
+  Future<void> setRecordingStartSoundEnabled(bool value) async {
+    recordingStartSoundEnabled = value;
+    await _service.setRecordingStartSoundEnabled(value);
     notifyListeners();
   }
 }

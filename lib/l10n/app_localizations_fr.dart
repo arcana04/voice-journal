@@ -923,6 +923,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Désactive pour ne synchroniser qu\'avec ton calendrier/tes rappels, sans créer de notification sur l\'appareil';
 
   @override
+  String get recordingStartSoundTitle => 'Son de début d\'enregistrement';
+
+  @override
+  String get recordingStartSoundDescription =>
+      'Joue un léger son quand l\'enregistrement commence';
+
+  @override
   String get reminderOffsetTitle => 'Délai de rappel par défaut';
 
   @override

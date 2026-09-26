@@ -901,6 +901,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Turn off to only sync to your calendar/reminders app, without creating a device notification';
 
   @override
+  String get recordingStartSoundTitle => 'Recording start sound';
+
+  @override
+  String get recordingStartSoundDescription =>
+      'Play a light sound when recording begins';
+
+  @override
   String get reminderOffsetTitle => 'Default reminder timing';
 
   @override

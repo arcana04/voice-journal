@@ -304,6 +304,8 @@
   "notificationDenied": "Non autorisées (les rappels ne seront pas envoyés)",
   "autoNotificationsTitle": "Configurer les notifications automatiquement",
   "autoNotificationsDescription": "Désactive pour ne synchroniser qu'avec ton calendrier/tes rappels, sans créer de notification sur l'appareil",
+  "recordingStartSoundTitle": "Son de début d'enregistrement",
+  "recordingStartSoundDescription": "Joue un léger son quand l'enregistrement commence",
   "reminderOffsetTitle": "Délai de rappel par défaut",
   "reminderOffsetSheetTitle": "Délai de rappel",
   "reminderOffsetAtStartTime": "À l'heure de début",

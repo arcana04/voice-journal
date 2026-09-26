@@ -1684,6 +1684,18 @@ abstract class AppLocalizations {
   /// **'Turn off to only sync to your calendar/reminders app, without creating a device notification'**
   String get autoNotificationsDescription;
 
+  /// No description provided for @recordingStartSoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording start sound'**
+  String get recordingStartSoundTitle;
+
+  /// No description provided for @recordingStartSoundDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a light sound when recording begins'**
+  String get recordingStartSoundDescription;
+
   /// No description provided for @reminderOffsetTitle.
   ///
   /// In en, this message translates to:

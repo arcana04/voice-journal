@@ -858,6 +858,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get autoNotificationsDescription => '끄면 기기 알림 없이 캘린더/미리 알림 앱에만 반영됩니다';
 
   @override
+  String get recordingStartSoundTitle => '녹음 시작음';
+
+  @override
+  String get recordingStartSoundDescription => '녹음이 시작될 때 가벼운 소리를 재생합니다';
+
+  @override
   String get reminderOffsetTitle => '기본 알림 시점';
 
   @override

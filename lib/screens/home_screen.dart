@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -44,6 +45,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final RecorderService _recorder = RecorderService();
+  final AudioPlayer _uiSoundPlayer = AudioPlayer(playerId: 'ui_sound');
   final BackendService _backend = BackendService();
   final ReviewPromptService _reviewPrompt = ReviewPromptService();
   RecordButtonState _state = RecordButtonState.idle;
@@ -154,6 +156,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _amplitudeSub?.cancel();
     _processingPhraseTimer?.cancel();
     _recorder.dispose();
+    _uiSoundPlayer.dispose();
     super.dispose();
   }
 
@@ -282,6 +285,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   /// 指先の感覚だけで「録音開始/停止/仕分け完了」が分かるようハプティクスを添える。
   void _hapticRecordingStarted() => HapticFeedback.mediumImpact();
 
+  /// 録音が実際に始まったことを音でも確認できるよう、明るいチャイム音を
+  /// 鳴らす（設定でオフにできる）。
+  void _playRecordingStartSoundIfEnabled() {
+    if (!mounted) return;
+    if (context.read<SettingsStore>().recordingStartSoundEnabled) {
+      unawaited(_uiSoundPlayer.play(AssetSource('sounds/recording_start.wav')));
+    }
+  }
+
   /// 手動タップでの停止はタップ自体が触覚フィードバックを兼ねるので軽く1回、
   /// 無音/最大時間到達による自動停止はユーザーが触れていない状態で起きるため
   /// 気づきやすいよう2回連続で鳴らして区別する。
@@ -392,6 +404,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _statusMessage = null;
     });
     _hapticRecordingStarted();
+    _playRecordingStartSoundIfEnabled();
     BackgroundRecordingService.updateNotificationText(
       '${_formatDuration(_elapsed)} / ${_formatDuration(_maxDuration)}',
     );

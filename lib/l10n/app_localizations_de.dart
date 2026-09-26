@@ -918,6 +918,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Deaktivieren, um nur mit Kalender/Erinnerungen zu synchronisieren, ohne eine Gerätebenachrichtigung zu erstellen';
 
   @override
+  String get recordingStartSoundTitle => 'Ton bei Aufnahmestart';
+
+  @override
+  String get recordingStartSoundDescription =>
+      'Spielt einen leisen Ton ab, wenn die Aufnahme beginnt';
+
+  @override
   String get reminderOffsetTitle => 'Standard-Erinnerungszeitpunkt';
 
   @override

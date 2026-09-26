@@ -53,7 +53,7 @@ class DbService {
     final path = join(dbPath, 'voicejournal.db');
     return openDatabase(
       path,
-      version: 30,
+      version: 31,
       // tasks/notes/entry_imagesはON DELETE CASCADEをスキーマに宣言しているが、
       // SQLiteは外部キー制約自体をデフォルトで無効にしており、接続のたびに
       // 明示的に有効化しないとその宣言は一切効かない（各deleteメソッドが手動で
@@ -95,6 +95,7 @@ class DbService {
             is_all_day INTEGER NOT NULL DEFAULT 0,
             notify_at TEXT,
             notion_page_url TEXT,
+            ai_generated INTEGER NOT NULL DEFAULT 1,
             FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE
           )
         ''');
@@ -543,6 +544,15 @@ class DbService {
             'ALTER TABLE tasks ADD COLUMN due_date_end TEXT',
           );
         }
+        if (oldVersion < 31) {
+          // レビュー依頼の新トリガー(「AIが作ったタスクを初めて完了した」)の
+          // 判定用。既存行はすべてAI仕分け経由(手動作成のAIバイパス機能が
+          // 導入される前から存在する行を含む)なのでデフォルトtrueでよい。
+          await _addColumnIfMissing(
+            db,
+            'ALTER TABLE tasks ADD COLUMN ai_generated INTEGER NOT NULL DEFAULT 1',
+          );
+        }
       },
     );
   }
@@ -579,6 +589,7 @@ class DbService {
         'is_all_day': task.isAllDay ? 1 : 0,
         'notify_at': task.notifyAt?.toIso8601String(),
         'notion_page_url': task.notionPageUrl,
+        'ai_generated': task.aiGenerated ? 1 : 0,
       });
       savedTasks.add(
         TaskItem(
@@ -594,6 +605,7 @@ class DbService {
           isAllDay: task.isAllDay,
           notifyAt: task.notifyAt,
           notionPageUrl: task.notionPageUrl,
+          aiGenerated: task.aiGenerated,
         ),
       );
     }
@@ -1049,6 +1061,7 @@ class DbService {
         'is_all_day': task.isAllDay ? 1 : 0,
         'notify_at': task.notifyAt?.toIso8601String(),
         'notion_page_url': task.notionPageUrl,
+        'ai_generated': task.aiGenerated ? 1 : 0,
       });
       savedTasks.add(
         TaskItem(
@@ -1064,6 +1077,7 @@ class DbService {
           isAllDay: task.isAllDay,
           notifyAt: task.notifyAt,
           notionPageUrl: task.notionPageUrl,
+          aiGenerated: task.aiGenerated,
         ),
       );
     }

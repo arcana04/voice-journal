@@ -278,6 +278,8 @@
   "allow": "許可する",
   "autoNotificationsTitle": "タスク作成時に自動で通知を設定",
   "autoNotificationsDescription": "オフにすると、カレンダー/リマインダーアプリへの反映だけ行い、端末への通知は作成しません",
+  "recordingStartSoundTitle": "録音開始音",
+  "recordingStartSoundDescription": "録音が始まったときに軽い音を鳴らします",
   "reminderOffsetTitle": "デフォルトの通知タイミング",
   "reminderOffsetSheetTitle": "通知タイミング",
   "reminderOffsetAtStartTime": "開始時刻ちょうど",

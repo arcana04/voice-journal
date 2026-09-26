@@ -304,6 +304,8 @@
   "notificationDenied": "No permitido (los recordatorios no se entregarán)",
   "autoNotificationsTitle": "Configurar notificaciones automáticamente",
   "autoNotificationsDescription": "Desactívalo para solo sincronizar con tu calendario/recordatorios, sin crear una notificación en el dispositivo",
+  "recordingStartSoundTitle": "Sonido al iniciar grabación",
+  "recordingStartSoundDescription": "Reproduce un sonido suave cuando empieza la grabación",
   "reminderOffsetTitle": "Aviso predeterminado",
   "reminderOffsetSheetTitle": "Aviso",
   "reminderOffsetAtStartTime": "A la hora de inicio",
